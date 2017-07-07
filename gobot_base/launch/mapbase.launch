@@ -1,0 +1,22 @@
+<?xml version="1.0"?>
+<launch>     
+    <param name="wheel_separation" value="0.45" />
+    <param name="wheel_radius" value="0.0725" />
+    <param name="ticks_per_rotation" value="823" />
+
+    <node pkg="urg_node" type="urg_node" name="hokuyo" >
+        <param name="frame_id" value="base_laser" />
+        <param name="min_ang" value="-1.832595715" />
+        <param name="max_ang" value="1.832595715" />
+        <!--param name="min_ang" value="-1.5707963" />
+        <param name="max_ang" value="1.5707963" /-->
+    </node>
+
+    <node pkg="tf2_ros" type="static_transform_publisher" name="base_link_to_laser" args="0.282 0 -0.014175 0 0 0 /base_link /base_laser"/>
+
+    <node pkg="gobot_base" type="wheels" name="wheels_controller" output="screen" required="true"/>
+    <node pkg="gobot_base" type="sensors" name="sensors_publisher" output="screen" required="true"/>
+    <node pkg="gobot_base" type="odom" name="odometry_publisher" output="screen" required="true"/>
+    <node pkg="gobot_base" type="twist" name="twist_to_wheels" output="screen" required="true"/>
+
+</launch>
