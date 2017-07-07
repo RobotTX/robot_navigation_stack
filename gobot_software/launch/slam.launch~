@@ -1,0 +1,22 @@
+<?xml version="1.0"?>
+<launch>
+		<node pkg="gobot_software" type="battery.py" name="battery" output="screen" required="true"/>
+		<node pkg="robot_pose_publisher" type="robot_pose_publisher" name ="robot_pose_publisher" required="true"/>
+		<node pkg="gobot_software" type="map_transfer" name ="map_transfer" output="screen" required="true"/>
+		<node pkg="gobot_software" type="robot_pos_transfer" name ="robot_pos_transfer" output="screen" required="true"/>
+		<node pkg="gobot_software" type="map_metadata_transfer" name ="map_metadata_transfer" output="screen" required="true"/>
+		<node pkg="gobot_software" type="read_new_map" name ="read_new_map" output="screen" required="true"/>
+		<node pkg="gobot_software" type="teleop" name ="teleop" output="screen" required="true"/>
+		<node pkg="gobot_software" type="play_path" name="play_path" output="screen" required="true"/>
+		<node pkg="gobot_software" type="command_system" name ="command_system" output="screen" required="true"/>
+		<node pkg="gobot_software" type="ping_server.py" name="ping_server" output="screen" required="true"/>
+		<node pkg="gobot_software" type="send_laser_data" name="send_laser_data" output="screen" required="true"/>
+		<!--
+		<node pkg="gobot_software" type="isLocalized_optimized" name="isLocalized_optimized" output="screen" required="true"/>
+		<node pkg="gobot_software" type="recover_position" name="recover_position" output="screen" required="true"/>
+		<node pkg="gobot_software" type="particle_cloud" name="particle_cloud" output="screen" required="true"/>
+<<<<<<< HEAD
+=======
+		-->
+>>>>>>> d222485533e457400dc53dfa293c17d4d51c4377
+</launch>

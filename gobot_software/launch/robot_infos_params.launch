@@ -1,0 +1,16 @@
+<?xml version="1.0"?>
+<launch>
+        <param name="map_id_file" type="string" value="$(find gobot_software)/Robot_Infos/mapId.txt" />
+        <param name="map_image_used" type="string" value="$(find gobot_move)/maps/used_map.pgm" />
+        <param name="last_known_position_file" type="string" value="$(find gobot_software)/Robot_Infos/lastKnownPosition.txt" />
+        <param name="path_file" type="string" value="$(find gobot_software)/Robot_Infos/path.txt" />
+        <param name="home_file" type="string" value="$(find gobot_software)/Robot_Infos/home.txt" />
+        <param name="path_stage_file" type="string" value="$(find gobot_software)/Robot_Infos/path_stage.txt" />
+        <param name="robot_name_file" type="string" value="$(find gobot_software)/Robot_Infos/name.txt" />
+        <param name="laser_file" type="string" value="$(find gobot_software)/Robot_Infos/laser.txt" />
+        <param name="battery_file" type="string" value="$(find gobot_software)/Robot_Infos/battery.txt" />
+        <param name="server_file" type="string" value="$(find gobot_software)/Robot_Infos/IP/serverIP.txt" />
+        <param name="ping_file" type="string" value="$(find gobot_software)/Robot_Infos/IP/ping.sh" />
+        <param name="ips_file" type="string" value="$(find gobot_software)/Robot_Infos/IP/serverIP.sh" />
+        <param name="robot_position_file" type="string" value="$(find gobot_software)/Robot_Infos/robot_position.txt" />
+</launch>

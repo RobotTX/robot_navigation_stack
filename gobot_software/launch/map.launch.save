@@ -1,0 +1,9 @@
+<?xml version="1.0"?>
+<launch>
+    <node pkg="gobot_map" type="map_transfer_boost" name="gobot_map" output="screen">
+        <param name="portMetadata" type="int" value="4000"/>
+        <param name="portRobot" type="int" value="4001"/>
+        <param name="portMap" type="int" value="4002"/>
+
+    </node>
+</launch>
