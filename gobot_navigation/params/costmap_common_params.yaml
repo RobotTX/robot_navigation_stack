@@ -5,12 +5,18 @@ footprint: [[-0.267, 0.3], [0.413, 0.3], [0.413, -0.3], [-0.267, -0.3]]
 # The larger footprint
 #footprint: [[-0.277, 0.31], [0.423, 0.31], [0.423, -0.31], [-0.277, -0.31]]
 
+resolution: 0.02
+robot_base_frame: /base_link
+global_frame: /map
 
-plugins:
-  - {name: static_map, type: "costmap_2d::StaticLayer"}
-  - {name: obstacle_layer, type: "costmap_2d::ObstacleLayer"}
-  #- {name: obstacles, type: "costmap_2d::VoxelLayer"}
-  - {name: inflation_layer, type: "costmap_2d::InflationLayer"}
+#plugins:
+    # Add the data from the map to the costmap
+    #- {name: static_map, type: "costmap_2d::StaticLayer"}
+    # Track the obstacle from the sensors and add them to the costmap
+    #- {name: obstacle_layer, type: "costmap_2d::ObstacleLayer"} # 2D costmap
+    #- {name: obstacles, type: "costmap_2d::VoxelLayer"} # 3D costmap
+    # Add inflation around the obstacle
+    #- {name: inflation_layer, type: "costmap_2d::InflationLayer"}
 
 obstacle_layer:
     observation_sources: laser_scan_sensor
@@ -19,7 +25,7 @@ obstacle_layer:
     laser_scan_sensor: {
         sensor_frame: base_laser, 
         data_type: LaserScan, 
-        topic: scan, 
+        topic: /scan, 
         marking: true, 
         clearing: true,
         expected_update_rate: 10,
@@ -29,5 +35,3 @@ obstacle_layer:
 inflation_layer:
     inflation_radius: 1.75
     cost_scaling_factor: 2.58
-    #inflation_radius: 0.55
-    #cost_scaling_factor: 10

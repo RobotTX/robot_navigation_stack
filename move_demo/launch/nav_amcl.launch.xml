@@ -1,0 +1,33 @@
+<?xml version="1.0"?>
+<launch>
+  <!-- boss.yaml -->
+<node pkg="map_server" type="map_server" name="map_server" args="$(find move_demo)/maps/boss_room.yaml" />
+<node pkg="amcl" type="amcl" name="amcl">
+	<param name="tf_broadcast" value="true" />
+        <param name="base_frame_id" value="/base_link" />
+        <param name="global_frame_id" value="/map" />
+        <param name="odom_frame_id" value="/odom" />
+        <param name="use_map_topic" value="false" />
+
+        <remap from="scan" to="/scan" />
+        <param name="odom_model_type" value="diff" />
+        <param name="transform_tolerance" value="0.2" />
+        <param name="gui_publish_rate" value="14"/>
+        <param name="laser_max_beams" value="5.5"/>
+        <param name="laser_max_range" value="5.0"/>
+        <param name="min_particles" value="500"/>
+        <param name="max_particles" value="8000"/>
+        <param name="kld_err" value="0.01"/>
+        <param name="kld_z" value="0.99"/>
+        <param name="update_min_a" value="0.5"/>
+        <param name="resample_interval" value="2"/>
+        <param name="transform_tolerance" value="1.0"/>
+        <param name="recovery_alpha_slow" value="0.001"/>
+        <param name="recovery_alpha_fast" value="0.1"/>
+	<param name="odom_alpha1" value="0.2" />
+	<param name="odom_alpha2" value="0.2" />
+	<param name="odom_alpha3" value="0.8" />
+	<param name="odom_alpha4" value="0.6" />
+  </node>
+</launch>
+

@@ -1,0 +1,31 @@
+<?xml version="1.0"?>
+<launch>
+  <node pkg="hokuyo_node" type="hokuyo_node" name="hokuyo" >
+    <param name="frame_id" value="base_laser" />
+    <param name="min_ang" value="-1.5707963" />
+    <param name="max_ang" value="1.5707963" />
+  </node>
+
+
+  <node pkg="wheel" type="MD49.py" name="wheel" />
+  <node pkg="sonar" type="sonar_bumper.py" name="sonar" />
+<!--
+  <node pkg="gobot_move" type="sonar_range.py" name="sonar_range" />
+-->
+  <node pkg="tf" type="static_transform_publisher" name="laser_to_base_link" args="0.288 0 0 0 0 0 /base_link /base_laser 50 "/>
+<!--
+  <node pkg="tf" type="static_transform_publisher" name="sonar0_to_base_link" args="-0.319 0 0 3.14 0 0 /base_link /sonar_zero_range 50 " />
+  <node pkg="tf" type="static_transform_publisher" name="sonar2_to_base_link" args="0.315 -0.068 0 0 0 0 /base_link /sonar_two_range 50 "/>
+  <node pkg="tf" type="static_transform_publisher" name="sonar4_to_base_link" args="0.315 0.068 0 0 0 0 /base_link /sonar_four_range 50 "/>
+  <node pkg="tf" type="static_transform_publisher" name="sonar6_to_base_link" args="-0.09 0.298 0 1.57 0 0 /base_link /sonar_six_range 50 "/>
+  <node pkg="tf" type="static_transform_publisher" name="sonar8_to_base_link" args="-0.09 -0.298 0  -1.57 0 0 /base_link /sonar_eight_range 50 "/>
+  <node pkg="tf" type="static_transform_publisher" name="sonarA_to_base_link" args="0 0 0.88 0 0 0 /base_link /sonar_A_range 50" />
+  <node pkg="tf" type="static_transform_publisher" name="sonarC_to_base_link" args="0 0 0.48 0 0 0 /base_link /sonar_C_range 50" />
+-->
+  <node pkg="move_demo" type="odom.py" name="odometry_publisher" />
+
+  <node pkg="gobot_move" type="twist.py" name="cmd_vel_listener" />
+
+  <node pkg="move_demo" type="getPhoneGoal.py" name="phone_control" />
+
+</launch>

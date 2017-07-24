@@ -1,5 +1,14 @@
 global_costmap:
+    map_type: costmap
     global_frame: /map
-    robot_base_frame: base_link
-    update_frequency: 5.0
+    robot_base_frame: /base_link
+    update_frequency: 2.0
+    publish_frequency: 2.0
     static_map: true
+    rolling_window: false
+    resolution: 0.02
+    plugins:
+        # Add the data from the map to the costmap
+        - {name: static_map, type: "costmap_2d::StaticLayer"}
+        # Add inflation around the obstacle
+        - {name: inflation_layer, type: "costmap_2d::InflationLayer"}

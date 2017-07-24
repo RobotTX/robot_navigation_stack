@@ -1,15 +1,15 @@
 DWAPlannerROS:
     # Robot Configuration Parameters
-    #Set the acceleration limits of the robot
-    acc_lim_th: 0.5
+    # Set the acceleration limits of the robot
+    acc_lim_th: 0.3
     acc_lim_x: 0.2
     acc_lim_y: 0
 
-    #Set the velocity limits of the robot
+    # Set the velocity limits of the robot
     max_trans_vel: 0.3
     min_trans_vel: 0.05
     max_vel_x: 0.3
-    min_vel_x: -0.05
+    min_vel_x: -0 #0.05
     max_vel_y: 0
     min_vel_y: 0
     max_rot_vel: 0.5
@@ -25,8 +25,8 @@ DWAPlannerROS:
     vx_samples: 10
     vy_samples: 0
 
-    #How far the robot must travel before oscillation flags are reset
+    # How far the robot must travel before oscillation flags are reset
     oscillation_reset_dist: 0.05
     
-    #Eat up the plan as the robot moves along it
+    # Eat up the plan as the robot moves along it
     prune_plan: true

@@ -31,7 +31,7 @@
     <xacro:property name="base_height" value="0.185" />
     <xacro:property name="lower_base_height" value="0.068" />
     <xacro:property name="base_space_height" value="0.022" />
-    <xacro:property name="base_space_width" value="0.2" />
+    <xacro:property name="base_space_width" value="0.25" />
 
     <!-- Laser -->
     <xacro:property name="laser_width" value="0.01" />
@@ -100,7 +100,7 @@
 
 
     <!-- Hokuyo Laser -->
-    <hokuyo_04lx_laser name="hokuyo" parent="base_link" ros_topic="/scan" update_rate="20" min_angle="${-pi/2}" max_angle="${pi/2}" translateX="${base_width/2 - 0.058}" translateY="0" translateZ="${-0.01 + originZ}" visualize="1"/>
+    <hokuyo_04lx_laser name="hokuyo" parent="base_link" ros_topic="/scan" update_rate="20" min_angle="${-2.094395102}" max_angle="${2.094395102}" translateX="${base_width/2 - 0.04266}" translateY="0" translateZ="${-0.01 + originZ}" visualize="1"/>
 
 
     <!-- Cliff sensor, IR technology on real robot but we use a sonar here to simulate -->
