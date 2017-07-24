@@ -2,6 +2,7 @@
 #include <tf/transform_broadcaster.h>
 #include <nav_msgs/Odometry.h>
 #include <gobot_base/GetEncoders.h>
+#include <gobot_base/OdomTestMsg.h>
 #include <std_srvs/Empty.h>
 
 int main(int argc, char** argv){
@@ -15,6 +16,7 @@ int main(int argc, char** argv){
         ros::service::call("resetEncoders", arg);
 
         ros::Publisher odom_pub = n.advertise<nav_msgs::Odometry>("odom", 50);
+        ros::Publisher odom_test_pub = n.advertise<gobot_base::OdomTestMsg>("odom_test", 50);
         tf::TransformBroadcaster odom_broadcaster;
 
         double x = 0.0;
@@ -22,7 +24,6 @@ int main(int argc, char** argv){
         double th = 0.0;
 
         ros::Time current_time, last_time;
-        current_time = ros::Time::now();
         last_time = ros::Time::now();
 
         int skipped = 0;
@@ -32,7 +33,7 @@ int main(int argc, char** argv){
         n.getParam("wheel_separation", wheel_separation);
         double wheel_radius;
         n.getParam("wheel_radius", wheel_radius);
-        int ticks_per_rotation;
+        double ticks_per_rotation;
         n.getParam("ticks_per_rotation", ticks_per_rotation);
 
         /// The encoders should be reinitialized to 0 every time we launch odom
@@ -41,10 +42,11 @@ int main(int argc, char** argv){
 
         double pi = 3.14159;
 
-        ros::Rate r(20.0);
+        ros::Rate r(20);
         while(n.ok()){
 
-            ros::spinOnce();               // check for incoming messages
+            // check for incoming messages
+            ros::spinOnce();
 
             gobot_base::GetEncoders encoders;
             if(ros::service::call("getEncoders", encoders)){
@@ -60,8 +62,8 @@ int main(int argc, char** argv){
                 last_right_encoder = encoders.response.rightEncoder;
 
                 // distance travelled by each wheel
-                double left_dist = (delta_left_encoder / (double) ticks_per_rotation) * 2 * wheel_radius * pi;
-                double right_dist = (delta_right_encoder / (double) ticks_per_rotation) * 2 * wheel_radius * pi;
+                double left_dist = (delta_left_encoder / ticks_per_rotation) * 2 * wheel_radius * pi;
+                double right_dist = (delta_right_encoder / ticks_per_rotation) * 2 * wheel_radius * pi;
 
                 // velocity of each wheel
                 double left_vel = left_dist / dt;
@@ -121,6 +123,14 @@ int main(int argc, char** argv){
 
                 //publish the message
                 odom_pub.publish(odom);
+
+                /// some test
+                gobot_base::OdomTestMsg odomTest;
+                odomTest.x = x;
+                odomTest.y = y;
+                odomTest.yaw = th;
+                odom_test_pub.publish(odomTest);
+
 
                 last_time = current_time;
             } else {

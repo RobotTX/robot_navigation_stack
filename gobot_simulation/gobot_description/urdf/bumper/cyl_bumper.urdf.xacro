@@ -1,0 +1,44 @@
+<?xml version="1.0"?>
+<robot name="cyl_bumper" xmlns:xacro="http://ros.org/wiki/xacro">
+    <xacro:include filename="$(find gobot_description)/urdf/bumper/bumper.gazebo.xacro" />
+
+    <xacro:macro name="cylinder_inertia" params="m r h">
+        <inertia  ixx="${m*(3*r*r+h*h)/12}" ixy = "0" ixz = "0"
+        iyy="${m*(3*r*r+h*h)/12}" iyz = "0"
+        izz="${m*r*r/2}" /> 
+    </xacro:macro>
+
+    <!-- Cylindric bumper -->
+    <xacro:macro name="cyl_bumper" params="name parent height radius translateX translateY translateZ collision jointLowerLimit jointUpperLimit jointVelocity">
+        <link name="${name}">
+            <visual>
+                <origin xyz="0 0 0" rpy="0 0  0 " /> 
+                <geometry>
+                    <cylinder length="${height}" radius="${radius}" />
+                </geometry>
+            </visual>
+            <collision>
+                <origin xyz="0 0 0" rpy="0 0 0 " />
+                <geometry>
+                    <cylinder length="${height}" radius="${radius}" />
+                </geometry>
+            </collision>
+            <inertial>
+                <mass value="0.1" />
+                <origin xyz="0 0 0" />
+                <cylinder_inertia  m="0.1" r="${radius}" h="${height}" />
+            </inertial>
+        </link>
+
+        <joint name="${name}_joint" type="prismatic">
+            <parent link="${parent}"/>
+            <child link="${name}"/>
+            <origin xyz="${translateX} ${translateY} ${translateZ}" rpy="0 0 0"/>
+            <axis xyz="01 0 0"/>
+            <limit effort="1" lower="${jointLowerLimit}" upper="${jointUpperLimit}" velocity="${jointVelocity}"/>
+        </joint>
+
+        <!-- gazebo extensions -->
+        <xacro:bumper_gazebo name="${name}" collision="${collision}" />
+    </xacro:macro>
+</robot>

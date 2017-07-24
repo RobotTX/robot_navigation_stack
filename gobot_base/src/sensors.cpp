@@ -1,18 +1,4 @@
-#include <ros/ros.h>
-#include <string>
-#include <unistd.h>
-#include <stdio.h>
-#include <stdlib.h>
-#include <gobot_base/SetSpeeds.h>
-#include <gobot_base/SetSpeeds.h>
-#include <gobot_base/BatteryMsg.h>
-#include <gobot_base/BumperMsg.h>
-#include <gobot_base/IrMsg.h>
-#include <gobot_base/ProximityMsg.h>
-#include <gobot_base/SonarMsg.h>
-#include <gobot_base/WeightMsg.h>
-#include <gobot_base/CliffMsg.h>
-#include "serial/serial.h"
+#include <gobot_base/sensors.hpp>
 
 
 ros::Publisher bumper_pub;

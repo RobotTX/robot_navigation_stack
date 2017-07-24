@@ -1,0 +1,39 @@
+TrajectoryPlannerROS:
+    # Robot Configuration Parameters
+    #Set the acceleration limits of the robot
+    acc_lim_theta: 0.3
+    acc_lim_x: 0.2
+    acc_lim_y: 0
+
+    #Set the velocity limits of the robot
+    max_vel_x: 0.3
+    min_vel_x: 0.05
+    max_vel_theta: 0.5
+    min_vel_theta: -0.5
+    min_in_place_rotational_vel: 0.1
+
+    #The velocity the robot will command when trying to escape from a stuck situation
+    escape_vel: -0.05
+
+    # Not a strafing robot
+    holonomic_robot: false
+
+    # Goal Tolerance Parameters
+    yaw_goal_tolerance: 0.05
+    xy_goal_tolerance: 0.1
+    latch_xy_goal_tolerance: false
+
+    # Forward Simulation Parameters
+    sim_time: 4.0
+    vx_samples: 10
+    vy_samples: 0
+
+
+    #We use the Dynamic Window Approach to control instead of Trajectory Rollout
+    dwa: true
+
+    #How far the robot must travel before oscillation flags are reset
+    oscillation_reset_dist: 0.05
+    
+    #Eat up the plan as the robot moves along it
+    prune_plan: true

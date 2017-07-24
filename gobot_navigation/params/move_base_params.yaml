@@ -1,0 +1,11 @@
+base_local_planner: dwa_local_planner/DWAPlannerROS
+#base_global_planner: navfn/NavfnROS
+base_global_planner: global_planner/GlobalPlanner
+
+controller_frequency: 10
+
+oscillation_timeout: 0.0
+
+#NavfnROS:
+GlobalPlanner:
+    allow_unknown: false

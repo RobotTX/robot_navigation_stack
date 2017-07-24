@@ -1,5 +1,6 @@
 <?xml version="1.0"?>
 <launch>
 	<include file="$(find gobot_base)/launch/mapbase.launch"/>
-	<include file="$(find gobot_move)/launch/gmapping.launch"/>
+    <include file="$(find gobot_navigation)/launch/gmapping.launch"/>
+    <include file="$(find gobot_navigation)/launch/move_base.launch"/>
 </launch>

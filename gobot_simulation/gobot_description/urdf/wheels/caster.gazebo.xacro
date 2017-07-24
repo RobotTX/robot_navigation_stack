@@ -1,0 +1,13 @@
+<?xml version="1.0"?>
+<root xmlns:xacro="http://ros.org/wiki/xacro">
+    <xacro:macro name="caster_wheel_gazebo" params="name">
+        <gazebo reference="${name}">
+            <material>Gazebo/Black</material>
+            <mu1 value="0"/>
+            <mu2 value="0"/>
+            <kp  value="10000000.0" />
+            <kd  value="1.0" />
+            <fdir1 value="1 0 0"/>
+        </gazebo>
+    </xacro:macro>
+</root>

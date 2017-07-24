@@ -1,0 +1,25 @@
+# Overall filter parameters
+min_particles: 100
+max_particles: 5000
+update_min_d: 0.2
+update_min_a: 0.523598776
+resample_interval: 2
+transform_tolerance: 0.2
+save_pose_rate: 0.5
+
+# Laser model parameters
+laser_min_range: -1.0
+laser_max_range: -1.0
+laser_max_beams: 30
+
+# Odometry model parameters
+odom_model_type: diff-corrected
+odom_alpha1: 0.005
+odom_alpha2: 0.005
+odom_alpha3: 0.010
+odom_alpha4: 0.005
+odom_alpha5: 0.003
+odom_frame_id: odom
+base_frame_id: base_link
+global_frame_id: map
+tf_broadcast: true

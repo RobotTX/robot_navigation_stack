@@ -1,25 +1,16 @@
-#include <ros/ros.h>
-#include <string>
-#include <iostream>
-#include <unistd.h>
-#include <stdio.h>
-#include <stdlib.h>
-#include <mutex>
-#include <std_srvs/Empty.h>
-#include <gobot_base/GetEncoders.h>
-#include <gobot_base/SetSpeeds.h>
-#include "serial/serial.h"
+#include <gobot_base/wheels.hpp>
 
-std::mutex mtx;
+std::mutex serialMutex;
 serial::Serial serialConnection;
+bool test = false;
 
 /// Write and read informations on the serial port
-std::vector<uint8_t> writeAndRead(std::vector<uint8_t> toWrite, int bytesToRead = 0){
+std::vector<uint8_t> writeAndRead(std::vector<uint8_t> toWrite, int bytesToRead){
     std::vector<uint8_t> buff;
 
     if(serialConnection.isOpen()){
         /// Lock the mutex so no one can write at the same time
-        mtx.lock();
+        serialMutex.lock();
 
         /// Send bytes to the MD49
         size_t bytes_wrote = serialConnection.write(toWrite);
@@ -29,7 +20,7 @@ std::vector<uint8_t> writeAndRead(std::vector<uint8_t> toWrite, int bytesToRead 
             serialConnection.read(buff, bytesToRead);
         
         /// Unlock the mutex
-        mtx.unlock();
+        serialMutex.unlock();
 
     } else {
         std::cout << "(wheels::writeAndRead) The serial connection is not opened, something is wrong" << std::endl;
@@ -86,14 +77,17 @@ bool initSerial() {
 
 /// Set the speed, 0 (full reverse)  128 (stop)   255 (full forward)
 bool setSpeeds(gobot_base::SetSpeeds::Request &req, gobot_base::SetSpeeds::Response &res){
-    uint8_t leftSpeed = req.directionL.compare("F") == 0 ? 128 - req.velocityL : 128 + req.velocityL;
-    uint8_t rightSpeed = req.directionR.compare("F") == 0 ? 128 - req.velocityR : 128 + req.velocityR;
+    if(req.velocityL <= 127 && req.velocityL <= 127){
+        uint8_t leftSpeed = req.directionL.compare("F") == 0 ? 128 - req.velocityL : 128 + req.velocityL;
+        uint8_t rightSpeed = req.directionR.compare("F") == 0 ? 128 - req.velocityR : 128 + req.velocityR;
 
-    std::cout << "(wheels::setSpeeds) Data : " << req.directionL << " " << (int) req.velocityL << " " << req.directionR << " " << (int) req.velocityR << std::endl;
-    
-    writeAndRead(std::vector<uint8_t>({0x00, 0x31, leftSpeed, 0x00, 0x32, rightSpeed}));
+        //std::cout << "(wheels::setSpeeds) Data : " << req.directionL << " " << (int) req.velocityL << " " << req.directionR << " " << (int) req.velocityR << std::endl;
+        
+        writeAndRead(std::vector<uint8_t>({0x00, 0x31, leftSpeed, 0x00, 0x32, rightSpeed}));
 
-    return true;
+        return true;
+    } else 
+        return false;
 }
 
 /// Get the encoders position
@@ -119,43 +113,56 @@ bool resetEncoders(std_srvs::Empty::Request &req, std_srvs::Empty::Response &res
 
 /// Just to test, we get the encoders and print them
 bool testEncoders(std_srvs::Empty::Request &req, std_srvs::Empty::Response &res){
+    test = true;
 
-    while(ros::ok()){
-        std::vector<uint8_t> encoders = writeAndRead(std::vector<uint8_t>({0x00, 0x25}), 8);
+    std::thread([](){
+        while(ros::ok() && test){
+            std::vector<uint8_t> encoders = writeAndRead(std::vector<uint8_t>({0x00, 0x25}), 8);
 
-        if(encoders.size() == 8){
-            int32_t leftEncoder = (encoders.at(0) << 24) + (encoders.at(1) << 16) + (encoders.at(2) << 8) + encoders.at(3);
-            int32_t rightEncoder = (encoders.at(4) << 24) + (encoders.at(5) << 16) + (encoders.at(6) << 8) + encoders.at(7);
-            std::cout << "(wheels::testEncoders) " << leftEncoder << " and " << rightEncoder << std::endl;
-        } else
-            std::cout << "(wheels::testEncoders) Got the wrong number of encoders data : " << encoders.size() << std::endl;
-    }
+            if(encoders.size() == 8){
+                int32_t leftEncoder = (encoders.at(0) << 24) + (encoders.at(1) << 16) + (encoders.at(2) << 8) + encoders.at(3);
+                int32_t rightEncoder = (encoders.at(4) << 24) + (encoders.at(5) << 16) + (encoders.at(6) << 8) + encoders.at(7);
+                std::cout << "(wheels::testEncoders) " << leftEncoder << " and " << rightEncoder << std::endl;
+            } else
+                std::cout << "(wheels::testEncoders) Got the wrong number of encoders data : " << encoders.size() << std::endl;
+        }
+    }).detach();
 
     return true;
 }
 
 /// Get the encoders and print the difference between the new and previous encoder every 1 sec
 bool testEncoders2(std_srvs::Empty::Request &req, std_srvs::Empty::Response &res){
-    ros::Rate r(1);
-    int32_t last_leftEncoder = 0;
-    int32_t last_rightEncoder = 0;
+    test = true;
 
-    while(ros::ok()){
-        std::vector<uint8_t> encoders = writeAndRead(std::vector<uint8_t>({0x00, 0x25}), 8);
+    std::thread([](){
+        int32_t last_leftEncoder = 0;
+        int32_t last_rightEncoder = 0;
+        ros::Rate r(1);
 
-        if(encoders.size() == 8){
-            int32_t leftEncoder = (encoders.at(0) << 24) + (encoders.at(1) << 16) + (encoders.at(2) << 8) + encoders.at(3);
-            int32_t rightEncoder = (encoders.at(4) << 24) + (encoders.at(5) << 16) + (encoders.at(6) << 8) + encoders.at(7);
-            
-            std::cout << "(wheels::testEncoders2) " << leftEncoder - last_leftEncoder << " and " << rightEncoder - last_rightEncoder << std::endl;
-    
-            last_leftEncoder = leftEncoder;
-            last_rightEncoder = rightEncoder;
+        while(ros::ok() && test){
+            std::vector<uint8_t> encoders = writeAndRead(std::vector<uint8_t>({0x00, 0x25}), 8);
 
-        } else
-            std::cout << "(wheels::testEncoders2) Got the wrong number of encoders data : " << encoders.size() << std::endl;
-        r.sleep();
-    }
+            if(encoders.size() == 8){
+                int32_t leftEncoder = (encoders.at(0) << 24) + (encoders.at(1) << 16) + (encoders.at(2) << 8) + encoders.at(3);
+                int32_t rightEncoder = (encoders.at(4) << 24) + (encoders.at(5) << 16) + (encoders.at(6) << 8) + encoders.at(7);
+                
+                std::cout << "(wheels::testEncoders2) " << leftEncoder - last_leftEncoder << " and " << rightEncoder - last_rightEncoder << std::endl;
+        
+                last_leftEncoder = leftEncoder;
+                last_rightEncoder = rightEncoder;
+
+            } else
+                std::cout << "(wheels::testEncoders2) Got the wrong number of encoders data : " << encoders.size() << std::endl;
+            r.sleep();
+        }
+    }).detach();
+
+    return true;
+}
+
+bool stopTests(std_srvs::Empty::Request &req, std_srvs::Empty::Response &res){
+    test = false;
 
     return true;
 }
@@ -171,6 +178,7 @@ int main(int argc, char **argv) {
         ros::ServiceServer resetEncodersSrv = nh.advertiseService("resetEncoders", resetEncoders);
         ros::ServiceServer testEncodersSrv = nh.advertiseService("testEncoders", testEncoders);
         ros::ServiceServer testEncodersSrv2 = nh.advertiseService("testEncoders2", testEncoders2);
+        ros::ServiceServer stopTestsSrv = nh.advertiseService("stopTests", stopTests);
 
         ros::spin();
     } else

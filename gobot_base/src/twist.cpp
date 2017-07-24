@@ -1,13 +1,4 @@
-#include <ros/ros.h>
-#include <string>
-#include <unistd.h>
-#include <stdio.h>
-#include <stdlib.h>
-#include <geometry_msgs/Twist.h>
-#include <gobot_base/BumperMsg.h>
-#include <gobot_base/SetSpeeds.h>
-#include <chrono>
-#include <thread>
+#include <gobot_base/twist.hpp>
 
 bool collision = false;
 bool moving_from_collision = false;
@@ -29,6 +20,8 @@ void newBumpersInfo(const gobot_base::BumperMsg::ConstPtr& bumpers){
     /// 0 : collision; 1 : no collision
     bool front = !(bumpers->bumper1 && bumpers->bumper2 && bumpers->bumper3 && bumpers->bumper4);
     bool back = !(bumpers->bumper5 && bumpers->bumper6 && bumpers->bumper7 && bumpers->bumper8);
+
+    //std::cout << "(twist::newBumpersInfo) Bumpers: " << bumpers->bumper1 << " " << bumpers->bumper2 << " " << bumpers->bumper3 << " " << bumpers->bumper4 << " " << bumpers->bumper5 << " " << bumpers->bumper6 << " " << bumpers->bumper7 << " " << bumpers->bumper8 << std::endl;
 
     /// check if we have a collision
     if(front || back){
@@ -77,7 +70,7 @@ void newCmdVel(const geometry_msgs::Twist::ConstPtr& twist){
         nh.getParam("wheel_separation", wheel_separation);
         double wheel_radius;
         nh.getParam("wheel_radius", wheel_radius);
-        int ticks_per_rotation;
+        double ticks_per_rotation;
         nh.getParam("ticks_per_rotation", ticks_per_rotation);
 
         /// if the velocity cmd is to tell the robot to stop, we just give 0 and don't calculate
@@ -97,13 +90,13 @@ void newCmdVel(const geometry_msgs::Twist::ConstPtr& twist){
             double right_vel_speed = ((right_vel_m_per_sec * ticks_per_rotation) / (2 * 3.14159 * wheel_radius) - b ) / a;
             double left_vel_speed = ((left_vel_m_per_sec * ticks_per_rotation) / (2 * 3.14159 * wheel_radius) - b ) / a;
 
-            std::cout << "(twist::newCmdVel) new vel " << right_vel_speed << " " << left_vel_speed << std::endl;
+            //std::cout << "(twist::newCmdVel) new vel " << right_vel_speed << " " << left_vel_speed << std::endl;
 
             setSpeed(right_vel_speed >= 0 ? 'F' : 'B', abs(right_vel_speed), left_vel_speed >= 0 ? 'F' : 'B', abs(left_vel_speed));
 
             /// just to show the actual real speed we gave to the wheels
-            double real_vel = (a * (int)right_vel_speed + b) / ticks_per_rotation * 2 * 3.14159 * wheel_radius;
-            std::cout << "(twist::newCmdVel) vel " << twist->linear.x << " m/s, compared to real vel " << real_vel << " m/s\n so a difference of " <<  real_vel - twist->linear.x << std::endl;
+            //double real_vel = (a * (int)right_vel_speed + b) / ticks_per_rotation * 2 * 3.14159 * wheel_radius;
+            //std::cout << "(twist::newCmdVel) linear vel " << twist->linear.x << " m/s, compared to real vel " << real_vel << " m/s\n so a difference of " <<  real_vel - twist->linear.x << std::endl;
         }
     }
 }
@@ -113,7 +106,7 @@ int main(int argc, char **argv) {
 
     ros::NodeHandle nh;
 
-    ros::Subscriber bumpersSub = nh.subscribe("bumpers", 1, newBumpersInfo);
+    ros::Subscriber bumpersSub = nh.subscribe("bumpers_topic", 1, newBumpersInfo);
     ros::Subscriber cmdVelSub = nh.subscribe("cmd_vel", 1, newCmdVel);
 
     ros::spin();

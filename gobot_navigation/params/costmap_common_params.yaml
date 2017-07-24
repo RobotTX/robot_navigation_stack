@@ -1,0 +1,33 @@
+obstacle_range: 4.0
+raytrace_range: 4.5
+# This is the real footprint but we want the footprint to be slightly larger than the robot's real contour
+footprint: [[-0.267, 0.3], [0.413, 0.3], [0.413, -0.3], [-0.267, -0.3]]
+# The larger footprint
+#footprint: [[-0.277, 0.31], [0.423, 0.31], [0.423, -0.31], [-0.277, -0.31]]
+
+
+plugins:
+  - {name: static_map, type: "costmap_2d::StaticLayer"}
+  - {name: obstacle_layer, type: "costmap_2d::ObstacleLayer"}
+  #- {name: obstacles, type: "costmap_2d::VoxelLayer"}
+  - {name: inflation_layer, type: "costmap_2d::InflationLayer"}
+
+obstacle_layer:
+    observation_sources: laser_scan_sensor
+    track_unknown_space: true
+
+    laser_scan_sensor: {
+        sensor_frame: base_laser, 
+        data_type: LaserScan, 
+        topic: scan, 
+        marking: true, 
+        clearing: true,
+        expected_update_rate: 10,
+        inf_is_valid: true
+    }
+
+inflation_layer:
+    inflation_radius: 1.75
+    cost_scaling_factor: 2.58
+    #inflation_radius: 0.55
+    #cost_scaling_factor: 10
