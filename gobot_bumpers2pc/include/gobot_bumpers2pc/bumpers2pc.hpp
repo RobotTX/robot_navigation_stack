@@ -10,7 +10,9 @@
 #include <XmlRpcValue.h>
 
 void newBumpersInfo(const gobot_base::BumperMsg::ConstPtr& bumpers);
+double xToY(const double x, const std::vector<std::vector<double>>& footprint, const bool front_bumper);
+void initBumperPC(const std::vector<std::vector<double>>& footprint, const std::vector<std::vector<double>>& bumpers_description);
 bool initParams(void);
-bool vectorFromXMLRPC(XmlRpc::XmlRpcValue list, std::vector<std::vector<double>> &vector);
+bool vectorFromXMLRPC(XmlRpc::XmlRpcValue list, std::vector<std::vector<double>>& vector);
 
 #endif

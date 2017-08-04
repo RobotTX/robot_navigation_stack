@@ -5,14 +5,14 @@ footprint: [[0.332, -0.3], [0.358, -0.29], [0.4, -0.234], [0.413, -0.164], [0.41
 
 # Bumpers description : [[bumper1_min_x, bumper1_max_x], 
 #                        [bumper2_min_x, bumper2_max_x], ...]
-bumpers_description: [[1, 2], 
-                      [3, 4], 
-                      [5, 6], 
-                      [7, 8], 
-                      [9, 10], 
-                      [11, 12], 
-                      [13, 14], 
-                      [15, 16]]
+bumpers_description: [[-0.295, -0.205], 
+                      [-0.22, 0.02], 
+                      [-0.02, 0.22], 
+                      [0.205, 0.295], 
+                      [-0.295, -0.205], 
+                      [-0.22, 0.02], 
+                      [-0.02, 0.22], 
+                      [0.205, 0.295]]
 
 # space between 2 points in the cloud
-space: 0.05
+space: 0.03
