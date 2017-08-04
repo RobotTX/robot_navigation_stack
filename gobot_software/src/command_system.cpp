@@ -164,10 +164,9 @@ bool execCommand(ros::NodeHandle n, const std::vector<std::string> command){
 		break;
 
 		case 'g':
-			// first param is g, second param is the new name, third param is ssid, 4th param is password
 			if(command.size() == 1){    
 				
-				std::cout << "(Command system) going to scan automatically" << std::endl;
+				std::cout << "(Command system) Going to scan automatically" << std::endl;
 				std::cout << "(Command system) Gobot start to scan a new map" << std::endl;
 				scanning = true;
 
@@ -176,11 +175,12 @@ bool execCommand(ros::NodeHandle n, const std::vector<std::string> command){
 	            system(cmd.c_str());
 
 	            sleep(5);
-	            /// Relaunch gobot_move
-	            //cmd = "roslaunch gobot_move scan.launch &";
-                cmd = "roslaunch gobot_move gazebo_scan.launch &";
+	            /// Relaunch gobot_navigation
+	            //cmd = "roslaunch gobot_navigation scan.launch &";
+                /// TODO scan automatically
+                cmd = "roslaunch gobot_navigation gazebo_scan.launch &";
 	            system(cmd.c_str());
-	            std::cout << "(New Map) We relaunched gobot_move" << std::endl;
+	            std::cout << "(New Map) We relaunched gobot_navigation" << std::endl;
 
 				status = sendAutoMap();
 
@@ -455,11 +455,11 @@ bool execCommand(ros::NodeHandle n, const std::vector<std::string> command){
 	            system(cmd.c_str());
 
 	            sleep(5);
-	            /// Relaunch gobot_move
-	            //cmd = "roslaunch gobot_move scan.launch &";
-                cmd = "roslaunch gobot_move gazebo_scan.launch &";
+	            /// Relaunch gobot_navigation
+	            //cmd = "roslaunch gobot_navigation scan.launch &";
+                cmd = "roslaunch gobot_navigation gazebo_scan.launch &";
 	            system(cmd.c_str());
-	            std::cout << "(New Map) We relaunched gobot_move" << std::endl;
+	            std::cout << "(New Map) We relaunched gobot_navigation" << std::endl;
 
 				status = sendAutoMap();
 			}
@@ -480,11 +480,11 @@ bool execCommand(ros::NodeHandle n, const std::vector<std::string> command){
 		            system(cmd.c_str());
 		            sleep(5);
 
-		            /// Relaunch gobot_move
-                    //cmd = "roslaunch gobot_move slam.launch &";
-                    cmd = "roslaunch gobot_move gazebo_slam.launch &";
+		            /// Relaunch gobot_navigation
+                    //cmd = "roslaunch gobot_navigation slam.launch &";
+                    cmd = "roslaunch gobot_navigation gazebo_slam.launch &";
 		            system(cmd.c_str());
-		            std::cout << "(New Map) We relaunched gobot_move" << std::endl;
+		            std::cout << "(New Map) We relaunched gobot_navigation" << std::endl;
 		        }
 
 				status = stopAutoMap();
@@ -564,11 +564,11 @@ bool execCommand(ros::NodeHandle n, const std::vector<std::string> command){
 	            cmd = "rosnode kill /robot_pos_transfer &";
 	            system(cmd.c_str());
 	            sleep(5);
-	            /// Relaunch gobot_move
+	            /// Relaunch gobot_navigation
 	            
 	            cmd = "roslaunch gobot_software slam.launch &";
 	            system(cmd.c_str());
-	            cmd = "roslaunch gobot_move slam.launch &";
+	            cmd = "roslaunch gobot_navigation slam.launch &";
 	            system(cmd.c_str());
 	            */
 	            status = true;
@@ -743,7 +743,7 @@ bool sendOnceMap(const int who){
 		std::cout << "(Command system) send_once_map_sender service started" << std::endl;
 		return true;
 	} else {
-		std::cerr << "(Command system) Failed to call service sendf_once_map_sender" << std::endl;
+		std::cerr << "(Command system) Failed to call service send_once_map_sender" << std::endl;
 		return false;
 	}
 }

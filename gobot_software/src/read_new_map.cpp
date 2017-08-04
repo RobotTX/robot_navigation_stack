@@ -183,7 +183,7 @@ void session(ros::NodeHandle n){
                         system(cmd.c_str());
 
                         sleep(5);
-                        std::cout << "(New Map) We killed gobot_move" << std::endl;
+                        std::cout << "(New Map) We killed gobot_navigation" << std::endl;
 
                         /// We delete the old path
                         std::string pathFile;
@@ -205,11 +205,11 @@ void session(ros::NodeHandle n){
                         ofs.close();
                         std::cout << "(New Map) Home deleted" << std::endl;
 
-                        /// Relaunch gobot_move
-                        //cmd = "roslaunch gobot_move slam.launch &";
-                        cmd = "roslaunch gobot_move gazebo_slam.launch &";
+                        /// Relaunch gobot_navigation
+                        //cmd = "roslaunch gobot_navigation slam.launch &";
+                        cmd = "roslaunch gobot_navigation gazebo_slam.launch &";
                         system(cmd.c_str());
-                        std::cout << "(New Map) We relaunched gobot_move" << std::endl;
+                        std::cout << "(New Map) We relaunched gobot_navigation" << std::endl;
                         message = "done 1";
 
                     } else {

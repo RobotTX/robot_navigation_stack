@@ -17,7 +17,7 @@ std::string metadata_string = "";
 void sendMap(const std::vector<uint8_t>& my_map){
 	try {
 		boost::system::error_code ignored_error;
-		std::cout << "(Map) Map size to send in uint8_t : " << my_map.size() << std::endl;
+		std::cout << "(Map::sendMap) Map size to send in uint8_t : " << my_map.size() << std::endl;
 		boost::asio::write(socket_map, boost::asio::buffer(my_map), boost::asio::transfer_all(), ignored_error);
 	} catch (std::exception& e) {
 		e.what();
@@ -31,14 +31,14 @@ void getMetaData(const nav_msgs::MapMetaData::ConstPtr& msg){
 
 void getMap(const nav_msgs::OccupancyGrid::ConstPtr& msg){
 	int map_size = msg->info.width * msg->info.height;
-	std::cout << "(Map) Just received a new map" << msg->info.width << " " << msg->info.height << " " << map_size << std::endl;
+	std::cout << "(Map::getMap) Just received a new map" << msg->info.width << " " << msg->info.height << " " << map_size << std::endl;
 	sendMap(compress(msg->data, msg->info.width, msg->info.height, 0));
 }
 
 /// TODO can we remove that ? and all that is related to particle cloud
 void getLocalMap(const nav_msgs::OccupancyGrid::ConstPtr& msg){
 	int map_size = msg->info.width * msg->info.height;
-	std::cout << "(Map) Just received a new map" << msg->info.width << " " << msg->info.height << " " << map_size << std::endl;
+	std::cout << "(Map::getLocalMap) Just received a new map" << msg->info.width << " " << msg->info.height << " " << map_size << std::endl;
 	sendMap(compress(msg->data, msg->info.width, msg->info.height, 3));
 }
 
@@ -50,7 +50,7 @@ std::vector<uint8_t> compress(const std::vector<int8_t> map, const int map_width
 
 	if(who == 0){
 		/// If we are scanning a new map, we send the published metadata with it
-	   	std::cout << "(Map) Map metadata (who = 0) : " << metadata_string << std::endl;
+	   	std::cout << "(Map::compress) Map metadata (who = 0) : " << metadata_string << std::endl;
 	   	for(int i = 0; i < metadata_string.size(); i++)
 	   		my_map.push_back(static_cast<uint8_t>(metadata_string.at(i)));
 	   	
@@ -67,20 +67,20 @@ std::vector<uint8_t> compress(const std::vector<int8_t> map, const int map_width
 		std::string mapIdFile;
 		if(n.hasParam("map_id_file")){
 			n.getParam("map_id_file", mapIdFile);
-			std::cout << "map_transfer got map id file " << mapIdFile << std::endl;
+			std::cout << "(Map::compress) map_transfer got map id file " << mapIdFile << std::endl;
 		}
 		std::string mapId("{0}");
 	   	std::ifstream ifMap(mapIdFile, std::ifstream::in);
 	   	
 	   	std::string mapDate("0");
 	   	if(ifMap){
-	   		getline(ifMap, mapId);
-	   		getline(ifMap, mapDate);
+	   		std::getline(ifMap, mapId);
+	   		std::getline(ifMap, mapDate);
 	   		ifMap.close();
 	   	}
 
 	   	std::string str = mapId + " " + mapDate + " " + metadata_string;
-	   	std::cout << "(Map) Map metadata (who = 1 or 2) : " << str << std::endl;
+	   	std::cout << "(Map::compress) Map metadata (who = 1 or 2) : " << str << std::endl;
 	   	for(int i = 0; i < str.size(); i++)
 	   		my_map.push_back(static_cast<uint8_t>(str.at(i)));
 	   	
@@ -106,8 +106,13 @@ std::vector<uint8_t> compress(const std::vector<int8_t> map, const int map_width
 
 
 	int map_size = map_width * map_height;
+    std::cout << "(Map::compress) Map size " << map_size << " " << map.size() << std::endl;
 	for(size_t i = 0; i < map_size; i++){
-		int curr = map.at(i);
+        int curr = 0;
+        if(i >= map.size())
+            curr = 205;
+        else
+            curr = map.at(i);
 
 		if(who == 0 || who == 3){
 		    if(curr < 0)
@@ -159,7 +164,7 @@ std::vector<uint8_t> compress(const std::vector<int8_t> map, const int map_width
 
 bool startMap(gobot_software::Port::Request &req,
     gobot_software::Port::Response &res){
-	std::cout << "(Map) Starting map_sender" << std::endl;
+	std::cout << "(Map::startMap) Starting map_sender" << std::endl;
 
 	int mapPort = req.port;	
 
@@ -173,9 +178,9 @@ bool startMap(gobot_software::Port::Request &req,
 	m_acceptor = tcp::acceptor(io_service, tcp::endpoint(tcp::v4(), mapPort));
 	m_acceptor.set_option(tcp::acceptor::reuse_address(true));
 
-	std::cout << "(Map) Connecting to ports : " << mapPort << std::endl;
+	std::cout << "(Map::startMap) Connecting to ports : " << mapPort << std::endl;
 	m_acceptor.accept(socket_map);
-	std::cout << "(Map) We are connected " << std::endl;
+	std::cout << "(Map::startMap) We are connected " << std::endl;
 
 	// if the robot disconnects while scanning it unsuscribes to /map
 	// startMap is called when the robot reconnects and we need to resub
@@ -188,7 +193,7 @@ bool startMap(gobot_software::Port::Request &req,
 }
 
 bool sendAutoMap(std_srvs::Empty::Request &req, std_srvs::Empty::Response &res){
-	std::cout << "(Map) SendAutoMap " << std::endl;
+	std::cout << "(Map::sendAutoMap) SendAutoMap " << std::endl;
 	ros::NodeHandle n;
 	sub_map.shutdown();
 	sub_map = n.subscribe("/map", 1, getMap);
@@ -198,7 +203,7 @@ bool sendAutoMap(std_srvs::Empty::Request &req, std_srvs::Empty::Response &res){
 
 bool sendLocalMap(std_srvs::Empty::Request &req, std_srvs::Empty::Response &res){
 
-	std::cout << "(Map) sendLocalMap " << std::endl;
+	std::cout << "(Map::sendLocalMap) sendLocalMap " << std::endl;
 
 	ros::NodeHandle n;
 	/// in case sub map would have subscribed to another topic before we unsubscribe first
@@ -208,7 +213,7 @@ bool sendLocalMap(std_srvs::Empty::Request &req, std_srvs::Empty::Response &res)
 }
 
 bool stopAutoMap(std_srvs::Empty::Request &req, std_srvs::Empty::Response &res){
-	std::cout << "(Map) StopAutoMap " << std::endl;
+	std::cout << "(Map::stopAutoMap) StopAutoMap " << std::endl;
 
 	sub_map.shutdown();
 	sendingMapWhileScanning = false;
@@ -217,7 +222,7 @@ bool stopAutoMap(std_srvs::Empty::Request &req, std_srvs::Empty::Response &res){
 }
 
 bool stopSendingLocalMap(std_srvs::Empty::Request& req, std_srvs::Empty::Response &res){
-	std::cout << "(Map) StopSendingLocalMap " << std::endl;
+	std::cout << "(Map::stopSendingLocalMap) StopSendingLocalMap " << std::endl;
 
 	sub_map.shutdown();
 
@@ -231,7 +236,7 @@ bool stopSendingLocalMap(std_srvs::Empty::Request& req, std_srvs::Empty::Respons
 // 3 : recovering position
 bool sendOnceMap(gobot_software::Port::Request &req,
     gobot_software::Port::Response &res){
-	std::cout << "(Map) SendOnceMap doing nothing for now" << std::endl;
+	std::cout << "(Map::sendOnceMap) SendOnceMap doing nothing for now" << std::endl;
 
 	int who = req.port;	
 
@@ -240,7 +245,7 @@ bool sendOnceMap(gobot_software::Port::Request &req,
     ros::NodeHandle n;
     if(n.hasParam("map_image_used")){
     	n.getParam("map_image_used", mapFileStr);
-    	std::cout << "map_transfer set map image file to " << mapFileStr << std::endl;
+    	std::cout << "(Map::sendOnceMap) map_transfer set map image file to " << mapFileStr << std::endl;
     }
 
 	std::string line;
@@ -248,33 +253,31 @@ bool sendOnceMap(gobot_software::Port::Request &req,
 
 	mapFile.open(mapFileStr);
 	if(mapFile.is_open()){
-		getline(mapFile, line);
-		std::cout << "(Map) 1 : " << line << std::endl;
+		std::getline(mapFile, line);
+		std::cout << "(Map::sendOnceMap) 1 : " << line << std::endl;
 
-		getline(mapFile, line);
+		std::getline(mapFile, line);
         if(line.at(0) == '#'){
-            std::cout << "(Map) Got a second line with # : " << line << std::endl;
-            getline(mapFile, line);
+            std::cout << "(Map::sendOnceMap) Got a second line with # : " << line << std::endl;
+            std::getline(mapFile, line);
         }
 
-		std::cout << "(Map) 2 : " << line << std::endl;
+		std::cout << "(Map::sendOnceMap) 2 : " << line << std::endl;
 
 		int width = std::stoi(line.substr(0,line.find_first_of(" ")));
-		int height = std::stoi(line);
+		int height = std::stoi(line.substr(line.find_first_of(" "), line.length()));
 		int map_size = width * height;
-		std::cout << "(Map) width : " << width << "\n(Map) height : " << height << "\n(Map) size : " << map_size << std::endl;
+		std::cout << "(Map::sendOnceMap) width : " << width << "\n(Map::sendOnceMap) height : " << height << "\n(Map::sendOnceMap) size : " << map_size << std::endl;
 
-		getline(mapFile, line);
-		std::cout << "(Map) 3 : " << line << std::endl;
+		std::getline(mapFile, line);
+		std::cout << "(Map::sendOnceMap) 3 : " << line << std::endl;
 
-		while(getline(mapFile, line)){
-			for(int i = 0; i < line.size(); i++){
+		while(std::getline(mapFile, line))
+			for(int i = 0; i < line.size(); i++)
 				my_map.push_back(static_cast<int8_t>(line.at(i)));
-			}
-		}
 
 		mapFile.close();
-		std::cout << "(Map) Got the whole map from file, about to compress and send it" << std::endl;
+		std::cout << "(Map::sendOnceMap) Got the whole map from file, about to compress and send it " << my_map.size() << std::endl;
 		sendMap(compress(my_map, width, height, who));
 
 		return true;
@@ -284,7 +287,7 @@ bool sendOnceMap(gobot_software::Port::Request &req,
 }
 
 bool stopMap(std_srvs::Empty::Request &req, std_srvs::Empty::Response &res){
-	std::cout << "(Map) Stopping map_sender" << std::endl;
+	std::cout << "(Map::stopMap) Stopping map_sender" << std::endl;
 	sub_map.shutdown();
 	socket_map.close();
 	m_acceptor.close();
@@ -294,7 +297,7 @@ bool stopMap(std_srvs::Empty::Request &req, std_srvs::Empty::Response &res){
 int main(int argc, char **argv){
 
 	ros::init(argc, argv, "map_transfer");
-	std::cout << "(Map) Ready to be launched." << std::endl;
+	std::cout << "(Map::main) Ready to be launched." << std::endl;
 
 	ros::NodeHandle n;
 

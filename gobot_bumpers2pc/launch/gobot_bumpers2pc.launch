@@ -1,0 +1,6 @@
+<?xml version="1.0"?>
+<launch>
+    <node pkg="gobot_bumpers2pc" type="bumpers2pc" name="bumpers2pc" output="screen" required="true">
+        <rosparam file="$(find gobot_bumpers2pc)/params/gobot_bumpers2pc.yaml" command="load" />
+    </node>
+</launch>

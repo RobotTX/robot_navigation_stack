@@ -1,7 +1,7 @@
 #include "auto_docking.hpp"
 
 /// we want the robot to be at most at 0.15 metres of its goal
-#define ROBOT_POS_TOLERANCE 0.15
+#define ROBOT_POS_TOLERANCE 0.05
 
 move_base_msgs::MoveBaseGoal currentGoal;
 std::shared_ptr<MoveBaseClient> ac(0);
@@ -79,8 +79,8 @@ bool startDocking(void){
             double homeOri = -(yaw*180/3.14159);//-(orientation+90)*3.14159/180);
 
             /// We want to go 1.5 metres in front of the charging station
-            double landingPointX = x + 1.0 * std::cos(yaw);
-            double landingPointY = y + 1.0 * std::sin(yaw);
+            double landingPointX = x + 1.5 * std::cos(yaw);
+            double landingPointY = y + 1.5 * std::sin(yaw);
             std::cout << "(auto_docking::startDocking) landing point : " << landingPointX << " " << landingPointY << " " << homeOri << std::endl;
 
             /// Create the goal

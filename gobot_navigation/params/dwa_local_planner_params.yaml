@@ -1,18 +1,18 @@
 DWAPlannerROS:
     # Robot Configuration Parameters
     # Set the acceleration limits of the robot
-    acc_lim_th: 0.3
-    acc_lim_x: 0.2
+    acc_lim_th: 1.0
+    acc_lim_x: 0.5
     acc_lim_y: 0
 
     # Set the velocity limits of the robot
-    max_trans_vel: 0.3
+    max_trans_vel: 0.35
     min_trans_vel: 0.05
-    max_vel_x: 0.3
-    min_vel_x: -0 #0.05
+    max_vel_x: 0.35
+    min_vel_x: -0.1
     max_vel_y: 0
     min_vel_y: 0
-    max_rot_vel: 0.5
+    max_rot_vel: 0.7
     min_rot_vel: 0.1
 
     # Goal Tolerance Parameters
@@ -21,7 +21,7 @@ DWAPlannerROS:
     latch_xy_goal_tolerance: false
 
     # Forward Simulation Parameters
-    sim_time: 2.5 # 4.0
+    sim_time: 4.0
     vx_samples: 10
     vy_samples: 0
 
@@ -30,3 +30,9 @@ DWAPlannerROS:
     
     # Eat up the plan as the robot moves along it
     prune_plan: true
+
+    # Trajectory Scoring
+    path_distance_bias: 32.0 # 32.0
+    goal_distance_bias: 24.0 # 24.0
+    occdist_scale: 0.01 # 0.01
+

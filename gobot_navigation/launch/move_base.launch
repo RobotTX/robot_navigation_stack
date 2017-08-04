@@ -6,6 +6,12 @@
         <rosparam file="$(find gobot_navigation)/params/costmap_common_params.yaml" command="load" ns="local_costmap" />
         <rosparam file="$(find gobot_navigation)/params/local_costmap_params.yaml" command="load" />
         <rosparam file="$(find gobot_navigation)/params/global_costmap_params.yaml" command="load" />
+
         <rosparam file="$(find gobot_navigation)/params/dwa_local_planner_params.yaml" command="load" />
+
+        <rosparam file="$(find gobot_navigation)/params/teb_local_planner_params.yaml" command="load" />
+        <rosparam file="$(find gobot_navigation)/params/costmap_converter_params.yaml" command="load" />
+
+        <rosparam file="$(find gobot_navigation)/params/eband_local_planner_params.yaml" command="load" />
     </node>
 </launch>
