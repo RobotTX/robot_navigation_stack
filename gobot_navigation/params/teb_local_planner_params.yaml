@@ -8,14 +8,14 @@ TebLocalPlannerROS:
     teb_autosize: True
     dt_ref: 0.3
     dt_hysteresis: 0.1
-    global_plan_overwrite_orientation: False # True
+    global_plan_overwrite_orientation: True
     exact_arc_length: True
     max_global_plan_lookahead_dist: 8.0
     feasibility_check_no_poses: 5
     global_plan_viapoint_sep: 0.3 # -0.1
     weight_viapoint: 50.0 # 1.0
     shrink_horizon_min_duration: 10.0
-    allow_init_backward_motion: false
+    allow_init_backward_motion: False
 
     # Robot
          
@@ -50,13 +50,13 @@ TebLocalPlannerROS:
     optimization_verbose: False
     penalty_epsilon: 0.08
     weight_max_vel_x: 2
-    weight_max_vel_theta: 10
+    weight_max_vel_theta: 10 # 1
     weight_acc_lim_x: 1
-    weight_acc_lim_theta: 1
+    weight_acc_lim_theta: 10 # 1
     weight_kinematics_nh: 1000
     weight_kinematics_forward_drive: 50
     weight_kinematics_turning_radius: 1
-    weight_optimaltime: 1
+    weight_optimaltime: 2 # 1
     weight_obstacle: 50
     weight_dynamic_obstacle: 10 # not in use yet
     selection_alternative_time_cost: False # not in use yet

@@ -6,62 +6,64 @@ ros::Subscriber statusSuscriber;
 struct point_ {
   double x;
   double y;
-} ;
+};
 
 std::vector<std::vector<point_>> bumpers_pc;
-double space;
+double space, bumpers_height, resolution;
+std::string pc_frame;
 
-/// Convert the bumpers info to a pointcloud
+/// Convert the bumpers info to a pointcloud and publish it
 void newBumpersInfo(const gobot_base::BumperMsg::ConstPtr& bumpers){
 
     pcl::PointCloud<pcl::PointXYZ> cloud;
-    cloud.header.frame_id = "base_link";
+    cloud.header.frame_id = pc_frame;
 
     /// 0 : collision; 1 : no collision
     if(!bumpers->bumper1)
         for(int j = 0; j < bumpers_pc.at(0).size(); ++j)
-            cloud.push_back(pcl::PointXYZ(bumpers_pc.at(0).at(j).y, -bumpers_pc.at(0).at(j).x, 0));
+            cloud.push_back(pcl::PointXYZ(bumpers_pc.at(0).at(j).y, -bumpers_pc.at(0).at(j).x, bumpers_height));
     if(!bumpers->bumper2)
         for(int j = 0; j < bumpers_pc.at(1).size(); ++j)
-            cloud.push_back(pcl::PointXYZ(bumpers_pc.at(1).at(j).y, -bumpers_pc.at(1).at(j).x, 0));
+            cloud.push_back(pcl::PointXYZ(bumpers_pc.at(1).at(j).y, -bumpers_pc.at(1).at(j).x, bumpers_height));
     if(!bumpers->bumper3)
         for(int j = 0; j < bumpers_pc.at(2).size(); ++j)
-            cloud.push_back(pcl::PointXYZ(bumpers_pc.at(2).at(j).y, -bumpers_pc.at(2).at(j).x, 0));
+            cloud.push_back(pcl::PointXYZ(bumpers_pc.at(2).at(j).y, -bumpers_pc.at(2).at(j).x, bumpers_height));
     if(!bumpers->bumper4)
         for(int j = 0; j < bumpers_pc.at(3).size(); ++j)
-            cloud.push_back(pcl::PointXYZ(bumpers_pc.at(3).at(j).y, -bumpers_pc.at(3).at(j).x, 0));
+            cloud.push_back(pcl::PointXYZ(bumpers_pc.at(3).at(j).y, -bumpers_pc.at(3).at(j).x, bumpers_height));
     if(!bumpers->bumper5)
         for(int j = 0; j < bumpers_pc.at(4).size(); ++j)
-            cloud.push_back(pcl::PointXYZ(bumpers_pc.at(4).at(j).y, -bumpers_pc.at(4).at(j).x, 0));
+            cloud.push_back(pcl::PointXYZ(bumpers_pc.at(4).at(j).y, -bumpers_pc.at(4).at(j).x, bumpers_height));
     if(!bumpers->bumper6)
         for(int j = 0; j < bumpers_pc.at(5).size(); ++j)
-            cloud.push_back(pcl::PointXYZ(bumpers_pc.at(5).at(j).y, -bumpers_pc.at(5).at(j).x, 0));
+            cloud.push_back(pcl::PointXYZ(bumpers_pc.at(5).at(j).y, -bumpers_pc.at(5).at(j).x, bumpers_height));
     if(!bumpers->bumper7)
         for(int j = 0; j < bumpers_pc.at(6).size(); ++j)
-            cloud.push_back(pcl::PointXYZ(bumpers_pc.at(6).at(j).y, -bumpers_pc.at(6).at(j).x, 0));
+            cloud.push_back(pcl::PointXYZ(bumpers_pc.at(6).at(j).y, -bumpers_pc.at(6).at(j).x, bumpers_height));
     if(!bumpers->bumper8)
         for(int j = 0; j < bumpers_pc.at(7).size(); ++j)
-            cloud.push_back(pcl::PointXYZ(bumpers_pc.at(7).at(j).y, -bumpers_pc.at(7).at(j).x, 0));
+            cloud.push_back(pcl::PointXYZ(bumpers_pc.at(7).at(j).y, -bumpers_pc.at(7).at(j).x, bumpers_height));
 
     pcPublisher.publish(cloud);
 }
 
+/// Get a X and find the corresponding Y on the footprint of the robot
 double xToY(const double x, const std::vector<std::vector<double>>& footprint, const bool front_bumper){
     double y = 0;
     if(front_bumper){
         for(int i = 0; i < footprint.size(); ++i){
             if(x >= footprint[i][1] && x <= footprint[(i+1)%footprint.size()][1]){
-                double slope = (footprint[(i+1)%footprint.size()][0] - footprint[i][0])/(footprint[(i+1)%footprint.size()][1] - footprint[i][1]);
+                double slope = (footprint[(i+1)%footprint.size()][0] - footprint[i][0])/(double)(footprint[(i+1)%footprint.size()][1] - footprint[i][1]);
                 double b = footprint[i][0] - slope * footprint[i][1];
-                y = slope * x + b;
+                y = slope * x + b + resolution + 0.01;
             }
         }
     } else {
         for(int i = footprint.size() -1; i >= 0; --i){
             if(x >= footprint[i][1] && x <= footprint[(i-1)%footprint.size()][1]){
-                double slope = (footprint[(i-1)%footprint.size()][0] - footprint[i][0])/(footprint[(i-1)%footprint.size()][1] - footprint[i][1]);
+                double slope = (footprint[(i-1)%footprint.size()][0] - footprint[i][0])/(double)(footprint[(i-1)%footprint.size()][1] - footprint[i][1]);
                 double b = footprint[i][0] - slope * footprint[i][1];
-                y = slope * x + b;
+                y = slope * x + b - resolution - 0.01;
             }
         }
     }
@@ -88,13 +90,13 @@ void initBumperPC(const std::vector<std::vector<double>>& footprint,
 
     std::cout << "(bumpers2pc::initBumperPC) min : " << min_x << " max : " << max_x << std::endl;
 
+    /// Read the bumpers description and place points in the cloud every 'space' meters
     for(int i = 0; i < bumpers_description.size(); ++i){
         std::vector<point_> bumper_pc;
         double x = bumpers_description.at(i).at(0);
 
         point_ point;
         while(x <= bumpers_description.at(i).at(1) - space && x <= max_x && x >= min_x){
-            //std::cout << "(bumpers2pc::initBumperPC) x : " << x << std::endl;
             point.x = x;
             point.y = xToY(x, footprint, i < bumpers_description.size()/2);
             bumper_pc.push_back(point);
@@ -173,9 +175,23 @@ bool initParams(void){
         std::cout <<  "(bumpers2pc::initParams) The space between elements should be positive" << std::endl;
         return false;
     }
-
-
     std::cout <<  "(bumpers2pc::initParams) space : " << space << std::endl;
+
+
+    /// We get the frame on which the bumpers are attached
+    nh.param("pc_frame", pc_frame, std::string("base_link"));
+    std::cout <<  "(bumpers2pc::initParams) pointcloud frame : " << pc_frame << std::endl;
+
+    /// We get the height of the bumpers compared to their frame
+    /// TODO could use a tf transform with a bumpers_frame instead
+    nh.param("bumpers_height", bumpers_height, 0.08);
+    std::cout <<  "(bumpers2pc::initParams) bumpers height : " << bumpers_height << std::endl;
+
+    /// We get the costmap resolution
+    nh.param("resolution", resolution, 0.02);
+    std::cout <<  "(bumpers2pc::initParams) resolution : " << resolution << std::endl;
+
+
 
     initBumperPC(footprint, bumpers_description);
 
@@ -237,7 +253,7 @@ int main(int argc, char* argv[]){
 
         if(initParams()){
 
-            // publish the pointcloud
+            // the pointcloud publisher
             pcPublisher = nh.advertise<pcl::PointCloud<pcl::PointXYZ> >("/bumpers_pc", 10);
 
             // get the bumpers information

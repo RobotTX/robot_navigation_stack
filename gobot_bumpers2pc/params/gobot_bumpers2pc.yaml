@@ -16,3 +16,6 @@ bumpers_description: [[-0.295, -0.205],
 
 # space between 2 points in the cloud
 space: 0.03
+
+pc_frame: "base_link"
+bumpers_height: 0.08

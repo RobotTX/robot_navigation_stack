@@ -15,7 +15,7 @@ recovery_behaviors: [
 ]
 
 # Determines whether or not to shutdown the costmaps of the node when move_base is in an inactive state
-shutdown_costmaps: True
+shutdown_costmaps: False # True
 
 # Distance at which obstacles will be cleared from the costmap when attempting to clear space in the map. 
 conservative_reset_dist: 10
@@ -32,7 +32,7 @@ oscillation_timeout: 15.0
 
 # To tell the planner not to use the unknown space as free space
 NavfnROS:
-    allow_unknown: false
+    allow_unknown: False
     # attempt to create a plan that is as close to the specified goal as possible 
     # but no further than default_tolerance away
     default_tolerance: 1.0
