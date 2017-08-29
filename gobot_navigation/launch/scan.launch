@@ -2,5 +2,5 @@
 <launch>
 	<include file="$(find gobot_base)/launch/mapbase.launch"/>
     <include file="$(find gobot_navigation)/launch/gmapping.launch"/>
-    <include file="$(find gobot_navigation)/launch/move_base.launch"/>
+    <include file="$(find gobot_navigation)/launch/scan_move_base.launch"/>
 </launch>

@@ -1,0 +1,10 @@
+<?xml version="1.0"?>
+<launch>
+    
+    <node pkg="hector_exploration_node" type="exploration_planner_node" name="hector_exploration_node" output="screen">
+        <rosparam file="$(find gobot_navigation)/params/scan_move_base_params.yaml" command="load" />
+        <rosparam file="$(find gobot_navigation)/params/costmap_common_params.yaml" command="load" ns="global_costmap" />
+    </node>
+
+    <node pkg="hector_exploration_node" type="move_base_controller.py" name="hector_to_move_base" output="screen" required="true"/>
+</launch>
