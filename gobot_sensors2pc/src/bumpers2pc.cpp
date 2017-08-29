@@ -1,7 +1,6 @@
-#include <gobot_bumpers2pc/bumpers2pc.hpp>
+#include <gobot_sensors2pc/bumpers2pc.hpp>
 
 ros::Publisher pcPublisher;
-ros::Subscriber statusSuscriber;
 
 struct point_ {
   double x;
@@ -9,7 +8,7 @@ struct point_ {
 };
 
 std::vector<std::vector<point_>> bumpers_pc;
-double space, bumpers_height, resolution;
+double space, bumpers_height, resolution, front_offset, back_offset;
 std::string pc_frame;
 
 /// Convert the bumpers info to a pointcloud and publish it
@@ -50,12 +49,13 @@ void newBumpersInfo(const gobot_base::BumperMsg::ConstPtr& bumpers){
 /// Get a X and find the corresponding Y on the footprint of the robot
 double xToY(const double x, const std::vector<std::vector<double>>& footprint, const bool front_bumper){
     double y = 0;
+    std::cout << "(bumpers2pc::xToY) front_bumper : " << front_bumper << std::endl;
     if(front_bumper){
         for(int i = 0; i < footprint.size(); ++i){
             if(x >= footprint[i][1] && x <= footprint[(i+1)%footprint.size()][1]){
                 double slope = (footprint[(i+1)%footprint.size()][0] - footprint[i][0])/(double)(footprint[(i+1)%footprint.size()][1] - footprint[i][1]);
                 double b = footprint[i][0] - slope * footprint[i][1];
-                y = slope * x + b + resolution + 0.01;
+                y = slope * x + b + resolution + front_offset;
             }
         }
     } else {
@@ -63,7 +63,7 @@ double xToY(const double x, const std::vector<std::vector<double>>& footprint, c
             if(x >= footprint[i][1] && x <= footprint[(i-1)%footprint.size()][1]){
                 double slope = (footprint[(i-1)%footprint.size()][0] - footprint[i][0])/(double)(footprint[(i-1)%footprint.size()][1] - footprint[i][1]);
                 double b = footprint[i][0] - slope * footprint[i][1];
-                y = slope * x + b - resolution - 0.01;
+                y = slope * x + b - resolution - back_offset;
             }
         }
     }
@@ -187,6 +187,12 @@ bool initParams(void){
     nh.param("bumpers_height", bumpers_height, 0.08);
     std::cout <<  "(bumpers2pc::initParams) bumpers height : " << bumpers_height << std::endl;
 
+    nh.param("front_offset", front_offset, 0.01);
+    std::cout <<  "(bumpers2pc::initParams) front_offset : " << front_offset << std::endl;
+
+    nh.param("back_offset", back_offset, 0.01);
+    std::cout <<  "(bumpers2pc::initParams) back_offset : " << back_offset << std::endl;
+
     /// We get the costmap resolution
     nh.param("resolution", resolution, 0.02);
     std::cout <<  "(bumpers2pc::initParams) resolution : " << resolution << std::endl;
@@ -257,7 +263,7 @@ int main(int argc, char* argv[]){
             pcPublisher = nh.advertise<pcl::PointCloud<pcl::PointXYZ> >("/bumpers_pc", 10);
 
             // get the bumpers information
-            statusSuscriber = nh.subscribe("/bumpers_topic", 1, newBumpersInfo);
+            nh.subscribe("/bumpers_topic", 1, newBumpersInfo);
 
             ros::spin();
         }

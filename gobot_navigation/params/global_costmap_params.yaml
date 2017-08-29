@@ -11,6 +11,6 @@ global_costmap:
         # Add the data from the map to the costmap
         - {name: static_map, type: "costmap_2d::StaticLayer"}
         # Track the obstacle from the sensors and add them to the costmap
-        - {name: obstacle_layer, type: "costmap_2d::ObstacleLayer"} # 2D costmap
+        - {name: obstacle_layer, type: "costmap_2d::VoxelLayer"} # 3D costmap
         # Add inflation around the obstacles
         - {name: inflation_layer, type: "costmap_2d::InflationLayer"}

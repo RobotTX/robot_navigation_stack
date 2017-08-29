@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 2.8.3)
-project(gobot_bumpers2pc)
+project(gobot_sensors2pc)
 
 ## Compile as C++11, supported in ROS Kinetic and newer
 add_compile_options(-std=c++11)
@@ -121,7 +121,7 @@ include_directories(
 
 ## Declare a C++ library
 # add_library(${PROJECT_NAME}
-#   src/${PROJECT_NAME}/gobot_bumpers2pc.cpp
+#   src/${PROJECT_NAME}/gobot_sensors2pc.cpp
 # )
 
 ## Add cmake target dependencies of the library
@@ -132,7 +132,7 @@ include_directories(
 ## Declare a C++ executable
 ## With catkin_make all packages are built within a single CMake context
 ## The recommended prefix ensures that target names across packages don't collide
-# add_executable(${PROJECT_NAME}_node src/gobot_bumpers2pc_node.cpp)
+# add_executable(${PROJECT_NAME}_node src/gobot_sensors2pc_node.cpp)
 
 ## Rename C++ executable without prefix
 ## The above recommended prefix causes long target names, the following renames the
@@ -150,7 +150,10 @@ include_directories(
 # )
 
 add_executable(bumpers2pc src/bumpers2pc.cpp)
-target_link_libraries(bumpers2pc ${catkin_LIBRARIES} ${gobot_bumpers2pc} )
+target_link_libraries(bumpers2pc ${catkin_LIBRARIES} ${gobot_sensors2pc} )
+
+add_executable(sonars2pc src/sonars2pc.cpp)
+target_link_libraries(sonars2pc ${catkin_LIBRARIES} ${gobot_sensors2pc} )
 
 
 #############
@@ -193,7 +196,7 @@ target_link_libraries(bumpers2pc ${catkin_LIBRARIES} ${gobot_bumpers2pc} )
 #############
 
 ## Add gtest based cpp test target and link libraries
-# catkin_add_gtest(${PROJECT_NAME}-test test/test_gobot_bumpers2pc.cpp)
+# catkin_add_gtest(${PROJECT_NAME}-test test/test_gobot_sensors2pc.cpp)
 # if(TARGET ${PROJECT_NAME}-test)
 #   target_link_libraries(${PROJECT_NAME}-test ${PROJECT_NAME})
 # endif()

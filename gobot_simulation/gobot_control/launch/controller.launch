@@ -4,4 +4,5 @@
     <node pkg="gobot_control" type="bumper_controller" name ="bumper_controller" output="screen" required="true"/>
     <node pkg="gobot_control" type="proximity_controller" name ="proximity_controller" output="screen" required="true"/>
     <node pkg="gobot_control" type="battery_controller" name ="battery_controller" output="screen" required="true"/>
+    <node pkg="gobot_control" type="sonar_controller" name ="sonar_controller" output="screen" required="true"/>
 </launch>

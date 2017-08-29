@@ -55,6 +55,10 @@ add_executable(battery_controller src/battery_controller.cpp)
 target_link_libraries(battery_controller ${catkin_LIBRARIES} ${gobot_control})
 add_dependencies(battery_controller gobot_control_generate_messages_cpp)
 
+add_executable(sonar_controller src/sonar_controller.cpp)
+target_link_libraries(sonar_controller ${catkin_LIBRARIES} ${gobot_control})
+add_dependencies(sonar_controller gobot_control_generate_messages_cpp)
+
 add_library(gobot_diff_drive_plugin src/gobot_diff_drive_plugin.cpp)
 target_link_libraries(gobot_diff_drive_plugin ${catkin_LIBRARIES} ${GAZEBO_LIBRARIES} ${gobot_control})
 add_dependencies(gobot_diff_drive_plugin gobot_control_generate_messages_cpp)
