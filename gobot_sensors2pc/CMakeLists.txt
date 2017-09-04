@@ -150,10 +150,10 @@ include_directories(
 # )
 
 add_executable(bumpers2pc src/bumpers2pc.cpp)
-target_link_libraries(bumpers2pc ${catkin_LIBRARIES} ${gobot_sensors2pc} )
+target_link_libraries(bumpers2pc ${catkin_LIBRARIES} ${gobot_sensors2pc} ${gobot_base})
 
 add_executable(sonars2pc src/sonars2pc.cpp)
-target_link_libraries(sonars2pc ${catkin_LIBRARIES} ${gobot_sensors2pc} )
+target_link_libraries(sonars2pc ${catkin_LIBRARIES} ${gobot_sensors2pc} ${gobot_base})
 
 
 #############

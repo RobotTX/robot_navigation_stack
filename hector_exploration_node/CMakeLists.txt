@@ -1,6 +1,8 @@
 cmake_minimum_required(VERSION 2.8.3)
 project(hector_exploration_node)
 
+add_compile_options(-std=c++11)
+
 ## Find catkin macros and libraries
 ## if COMPONENTS list like find_package(catkin REQUIRED COMPONENTS xyz)
 ## is used, also find other catkin packages
@@ -104,6 +106,11 @@ include_directories(
 ## Declare a cpp executable
 # add_executable(hector_exploration_node_node src/hector_exploration_node_node.cpp)
 add_executable(exploration_planner_node src/exploration_node.cpp)
+
+
+add_executable(move_base_controller src/move_base_controller.cpp)
+target_link_libraries(move_base_controller ${catkin_LIBRARIES} ${hector_exploration_node})
+
 
 ## Add cmake target dependencies of the executable/library
 ## as an example, message headers may need to be generated before nodes
