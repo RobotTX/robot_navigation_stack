@@ -7,8 +7,13 @@ add_compile_options(-std=c++11)
 ## if COMPONENTS list like find_package(catkin REQUIRED COMPONENTS xyz)
 ## is used, also find other catkin packages
 find_package(catkin REQUIRED COMPONENTS
-  hector_exploration_planner
-  hector_nav_msgs
+    hector_exploration_planner
+    hector_nav_msgs
+    roscpp
+    rospy
+    actionlib
+    actionlib_msgs
+    message_generation
 )
 
 ## System dependencies are found with CMake's conventions
@@ -52,11 +57,10 @@ find_package(catkin REQUIRED COMPONENTS
 # )
 
 ## Generate services in the 'srv' folder
-# add_service_files(
-#   FILES
-#   Service1.srv
-#   Service2.srv
-# )
+add_service_files(
+    FILES
+    Exploration.srv
+)
 
 ## Generate actions in the 'action' folder
 # add_action_files(
@@ -66,10 +70,10 @@ find_package(catkin REQUIRED COMPONENTS
 # )
 
 ## Generate added messages and services with any dependencies listed here
-# generate_messages(
-#   DEPENDENCIES
-#   hector_nav_msgs
-# )
+generate_messages(
+    DEPENDENCIES
+    hector_nav_msgs
+)
 
 ###################################
 ## catkin specific configuration ##
@@ -81,7 +85,7 @@ find_package(catkin REQUIRED COMPONENTS
 ## CATKIN_DEPENDS: catkin_packages dependent projects also need
 ## DEPENDS: system dependencies of this project that dependent projects also need
 catkin_package(
-#  INCLUDE_DIRS include
+    INCLUDE_DIRS include
 #  LIBRARIES hector_exploration_node
 #  CATKIN_DEPENDS hector_exploration_planner hector_nav_msgs
 #  DEPENDS system_lib
@@ -95,7 +99,8 @@ catkin_package(
 ## Your package locations should be listed before other locations
 # include_directories(include)
 include_directories(
-  ${catkin_INCLUDE_DIRS}
+    include
+    ${catkin_INCLUDE_DIRS}
 )
 
 ## Declare a cpp library
@@ -118,7 +123,7 @@ target_link_libraries(move_base_controller ${catkin_LIBRARIES} ${hector_explorat
 
 ## Specify libraries to link a library or executable target against
 target_link_libraries(exploration_planner_node
-  ${catkin_LIBRARIES}
+    ${catkin_LIBRARIES}
 )
 
 #############

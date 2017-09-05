@@ -10,6 +10,7 @@
     <node pkg="tf" type="static_transform_publisher" name="top_sonar_to_base_link" args="0.413 0 0.88 0 0 0 /base_link /top_sonar 50" />
     <node pkg="tf" type="static_transform_publisher" name="mid_sonar_to_base_link" args="0.413 0 0.48 0 0 0 /base_link /mid_sonar 50" />
 
+    <node pkg="robot_pose_publisher" type="robot_pose_publisher" name ="robot_pose_publisher" required="true"/>
 
     <node pkg="move_base" type="move_base" respawn="false" name="move_base" output="screen" required="true">
         <rosparam file="$(find gobot_navigation)/params/move_base_params.yaml" command="load" />

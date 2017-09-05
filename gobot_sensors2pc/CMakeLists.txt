@@ -9,8 +9,8 @@ add_compile_options(-std=c++11)
 ## is used, also find other catkin packages
 find_package(catkin REQUIRED COMPONENTS
     roscpp
-    rospy
-    gobot_base
+    rospy REQUIRED COMPONENTS
+    gobot_base REQUIRED COMPONENTS
     pcl_ros
 )
 
@@ -69,10 +69,10 @@ find_package(catkin REQUIRED COMPONENTS
 # )
 
 ## Generate added messages and services with any dependencies listed here
-#generate_messages(
-#    DEPENDENCIES
-#    std_msgs  # Or other packages containing msgs
-#)
+generate_messages(
+    DEPENDENCIES
+    gobot_base  # Or other packages containing msgs
+)
 
 ################################################
 ## Declare ROS dynamic reconfigure parameters ##
