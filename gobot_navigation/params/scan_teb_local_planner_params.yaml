@@ -15,7 +15,7 @@ TebLocalPlannerROS:
     global_plan_viapoint_sep: 0.3 # -0.1
     weight_viapoint: 50.0 # 1.0
     shrink_horizon_min_duration: 10.0
-    allow_init_with_backwards_motion: True
+    allow_init_with_backwards_motion: False #True
 
     # Robot
          

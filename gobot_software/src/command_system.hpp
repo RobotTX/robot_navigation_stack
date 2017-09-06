@@ -33,6 +33,7 @@
 #include <nav_msgs/MapMetaData.h>
 #include <gobot_software/SetDockStatus.h>
 #include <gobot_software/GetDockStatus.h>
+#include <hector_exploration_node/Exploration.h>
 
 
 #define CMD_PORT 5600
@@ -67,5 +68,6 @@ void disconnect(void);
 bool resumeRecoveryPosition(void);
 bool setDockStatus(gobot_software::SetDockStatus::Request &req, gobot_software::SetDockStatus::Response &res);
 bool getDockStatus(gobot_software::GetDockStatus::Request &req, gobot_software::GetDockStatus::Response &res);
+bool stopExploration(void);
 
 #endif
