@@ -101,11 +101,11 @@ void doExploration(void){
                     /// so we only extract the last goal and move_base will be in charge of going there
                     goal.target_pose = poses.back();
 
-                    if(ac->isServerConnected())
+                    if(ac->isServerConnected() && exploring)
                         /// Send the goal to move_base
                         ac->sendGoal(goal);
                     else 
-                        ROS_INFO("(move_base_controller) No action server");
+                        ROS_INFO("(move_base_controller) No action server or we stopped exploring already");
                 } else {
                     ROS_INFO("(move_base_controller) No frontiers left.");
                     noFrontiersLeft++;
@@ -151,10 +151,10 @@ bool startExplorationSrv(hector_exploration_node::Exploration::Request &req, hec
             std::thread(doExploration).detach();
             return true;
         }
-    } else {
-        ROS_ERROR("(move_base_controller) We are already exploring");
-        return false;
-    }
+    } else
+        ROS_WARN("(move_base_controller) We were already exploring");
+    return true;
+
 }
 
 /// Service to stop the exploration
@@ -169,11 +169,10 @@ bool stopExploration(void){
         ROS_INFO("(move_base_controller) Stopped exploring");
         exploring = false;
         ac->cancelAllGoals();
-        return true;
-    } else {
-        ROS_ERROR("(move_base_controller) We are not exploring");
-        return false;
-    }
+    } else
+        ROS_WARN("(move_base_controller) We were not exploring");
+    
+    return true;
 }
 
 

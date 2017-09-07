@@ -162,7 +162,7 @@ int main(int argc, char **argv) {
     cliff_pub = nh.advertise<gobot_base::CliffMsg>("cliff_topic", 50);
 
     if(initSerial()){
-        ros::Rate r(20);
+        ros::Rate r(5);
         while(ros::ok()){
             ros::spinOnce();
 

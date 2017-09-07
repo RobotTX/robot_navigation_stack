@@ -13,7 +13,7 @@ ros::Publisher pub;
 ros::Subscriber particlesCloudSub;
 
 int test(const Cluster& dataSet, const int numberData, const int seq){
-	std::cout << dataSet.getMaxDistPoint().second << " ";
+	ROS_INFO("%d", dataSet.getMaxDistPoint().second);
 
 	// if the diameter of the cluster is < 2 then all the cloud is small enough and the position is valid.
 	if(dataSet.getMaxDistPoint().second <= 2)
@@ -28,8 +28,8 @@ int test(const Cluster& dataSet, const int numberData, const int seq){
 }
 
 void checkLocalization(const geometry_msgs::PoseArray& data){
-	std::cout << "__________________________________" << std::endl;
-	std::cout << "new position set" << std::endl;
+	ROS_INFO("__________________________________");
+	ROS_INFO("new position set");
 	
 	Cluster dataSet = Cluster(data.poses);
 	int numberData = data.poses.size();
@@ -55,7 +55,7 @@ void checkLocalization(const geometry_msgs::PoseArray& data){
 
 	    ss << "position found" ;
 	    
-	    std::cout << ss.str() << std::endl;
+	    ROS_INFO("%s", ss.str());
 
 	    msg.data = ss.str();
 
@@ -65,7 +65,7 @@ void checkLocalization(const geometry_msgs::PoseArray& data){
 		particlesCloudSub.shutdown();
 
 	} else
-		std::cout << "nok" << std::endl;
+		ROS_INFO("nok");
 }
 
 
@@ -76,7 +76,7 @@ bool checkLocalizationService(std_srvs::Empty::Request &req, std_srvs::Empty::Re
 }	
 
 bool stopCheckingLocalizationService(std_srvs::Empty::Request &req, std_srvs::Empty::Response &res){
-	std::cout << "Stop Checking Localization Service" << std::endl;
+	ROS_INFO("Stop Checking Localization Service");
 	particlesCloudSub.shutdown();
 	return true;
 }

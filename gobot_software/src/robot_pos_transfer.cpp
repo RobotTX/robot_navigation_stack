@@ -25,17 +25,17 @@ void readAck(const std::string position_to_send){
 				std::string ack;
 				iss >> ack;
                 if(ack.compare(""))
-                    std::cout << "potential ack " << ack << std::endl;
+                    ROS_INFO("(Robot Pos) potential ack %s", ack.c_str());
 				if(ack.compare("ack") == 0)
 					found_ack = true;
 			}
 			if(!found_ack){
 				boost::asio::write(socket_robot, boost::asio::buffer(position_to_send), boost::asio::transfer_all(), error);
-				std::cout << "confirmPositionRecovered resent status to application" << std::endl;
+				ROS_INFO("(Robot Pos) confirmPositionRecovered resent status to application");
 			}
 
 		} catch (std::exception& e) {
-			std::cout << e.what() << std::endl;
+			ROS_INFO("(Robot Pos) Exception : %s", e.what());
 		}
 	}
 }
@@ -52,9 +52,9 @@ bool confirmPositionRecovered(gobot_software::RecoveredPosition::Request &req, g
 	try {
 		boost::system::error_code ignored_error;
 		boost::asio::write(socket_robot, boost::asio::buffer(position), boost::asio::transfer_all(), ignored_error);
-		std::cout << "confirmPositionRecovered sent status to application" << std::endl;
+		ROS_INFO("(Robot Pos) confirmPositionRecovered sent status to application");
 	} catch (std::exception& e) {
-		std::cerr << e.what() << std::endl;
+		ROS_ERROR("(Robot Pos) Exception : %s", e.what());
 	}
 
 	// reads until ACK is found
@@ -68,7 +68,7 @@ void sendRobotPos(const std::string& robot_string){
 		boost::system::error_code ignored_error;
 		boost::asio::write(socket_robot, boost::asio::buffer(robot_string), boost::asio::transfer_all(), ignored_error);
 	} catch (std::exception& e) {
-		std::cerr << e.what() << std::endl;
+		ROS_ERROR("(Robot Pos) Exception : %s", e.what());
 	}
 }
 
@@ -86,7 +86,7 @@ void getRobotPos(const geometry_msgs::Pose::ConstPtr& msg){
 
 bool startRobotPos(gobot_software::Port::Request &req,
     gobot_software::Port::Response &res){
-	std::cout << "(Robot Pos) Starting robot_pos_sender" << std::endl;
+	ROS_INFO("(Robot Pos) Starting robot_pos_sender");
 	ros::NodeHandle n;
 
 	int robotPort = req.port;
@@ -101,9 +101,9 @@ bool startRobotPos(gobot_software::Port::Request &req,
 	m_acceptor = tcp::acceptor(io_service, tcp::endpoint(tcp::v4(), robotPort));
 	m_acceptor.set_option(tcp::acceptor::reuse_address(true));
 
-	std::cout << "(Robot Pos) Connecting to ports : " << robotPort << std::endl;
+	ROS_INFO("(Robot Pos) Connecting to ports : %d", robotPort);
 	m_acceptor.accept(socket_robot);
-	std::cout << "(Robot Pos) We are connected " << std::endl;
+	ROS_INFO("(Robot Pos) We are connected ");
 
 	sub_robot = n.subscribe("/robot_pose", 1, getRobotPos);
 
@@ -112,7 +112,7 @@ bool startRobotPos(gobot_software::Port::Request &req,
 
 bool stopRobotPos(std_srvs::Empty::Request &req, std_srvs::Empty::Response &res){
 	
-	std::cout << "(Robot Pos) Stopping robot_pos_sender" << std::endl;
+	ROS_INFO("(Robot Pos) Stopping robot_pos_sender");
 
 	sub_robot.shutdown();
 	socket_robot.close();
@@ -124,7 +124,7 @@ bool stopRobotPos(std_srvs::Empty::Request &req, std_srvs::Empty::Response &res)
 int main(int argc, char **argv){
 
 	ros::init(argc, argv, "robot_pos_transfer");
-	std::cout << "(Robot Pos) Ready to be launched." << std::endl;
+	ROS_INFO("(Robot Pos) Ready to be launched.");
 
 	ros::NodeHandle n;
 
@@ -140,9 +140,9 @@ int main(int argc, char **argv){
 	ros::service::waitForService("send_position_recovered_confirmation", 10);
 	
 	if(ros::service::exists("send_position_recovered_confirmation", true))
-		std::cout << "send_position_recovered_confirmation is available" << std::endl;
+		ROS_INFO("send_position_recovered_confirmation is available");
 	else
-		std::cout << "Oops send_position_recovered_confirmation is not available" << std::endl;
+		ROS_INFO("Oops send_position_recovered_confirmation is not available");
 
 	while(ros::ok()){
 		ros::spinOnce();

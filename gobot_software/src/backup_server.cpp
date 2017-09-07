@@ -27,12 +27,12 @@ void server(const unsigned short port){
 }
 
 void asyncAccept(boost::shared_ptr<boost::asio::io_service> io_service, boost::shared_ptr<tcp::acceptor> m_acceptor){
-	std::cout << "(Backup system) Waiting for connection" << std::endl;
+	ROS_INFO("(Backup system) Waiting for connection");
 
 	boost::shared_ptr<tcp::socket> socket = boost::shared_ptr<tcp::socket>(new tcp::socket(*io_service));
 
 	m_acceptor->accept(*socket);
-	std::cout << "(Backup system)  socket connected to " << socket->remote_endpoint().address().to_string() << std::endl;
+	ROS_INFO("(Backup system)  socket connected to %s", socket->remote_endpoint().address().to_string().c_str());
 	connected = true;
 	waiting = false;
 
@@ -44,20 +44,19 @@ void asyncAccept(boost::shared_ptr<boost::asio::io_service> io_service, boost::s
 
 void sendMessageToApplication(boost::shared_ptr<tcp::socket> socket, const std::string message){
 	
-	std::cout << "(Backup system) Sending message : " << message << std::endl;
+	ROS_INFO("(Backup system) Sending message : %s", message.c_str());
 
 	try {
 		boost::system::error_code ignored_error;
 		boost::asio::write(*socket, boost::asio::buffer(message, message.length()), boost::asio::transfer_all(), ignored_error);
-		std::cout << "(Backup system) Message sent succesfully" << std::endl;
+		ROS_INFO("(Backup system) Message sent succesfully");
 	} catch (std::exception& e) {
-		std::cerr << "(Backup system) Message not sent" << std::endl;
-		std::cerr << e.what() << std::endl;
+		ROS_ERROR("(Backup system) Message not sent : %s", e.what());
 	}
 }
 
 void session(boost::shared_ptr<tcp::socket> socket){
-	std::cout << "(Backup system) Waiting for a reboot order" << std::endl;
+	ROS_INFO("(Backup system) Waiting for a reboot order");
 	try {
 
 		std::string message("");
@@ -67,12 +66,12 @@ void session(boost::shared_ptr<tcp::socket> socket){
 
 			boost::system::error_code error;
 			size_t length = socket->read_some(boost::asio::buffer(buffer), error);
-			std::cout << "(Backup system) " << length << " byte(s) received" << std::endl;
+			ROS_INFO("(Backup system) %d  byte(s) received", length);
 			if (error == boost::asio::error::eof)
-				std::cout << "(Backup system) Got error eof" << std::endl;
+				ROS_INFO("(Backup system) Got error eof");
 			
 			if (error == boost::asio::error::connection_reset){
-				std::cout << "(Backup system) Connection closed" << std::endl;
+				ROS_INFO("(Backup system) Connection closed");
 				disconnect();
         	} else if (error) 
 				throw boost::system::system_error(error); // Some other error.
@@ -83,35 +82,35 @@ void session(boost::shared_ptr<tcp::socket> socket){
 			}
 
 			if(message.compare("reboot") == 0){
-				std::cout << "calling reboot" << std::endl;
+				ROS_INFO("calling reboot");
 				std::string cmd = "rosnode kill /play_path";
 	            system(cmd.c_str());
 	            cmd = "rosnode kill /move_base";
 	            system(cmd.c_str());
 	            sleep(3);
 	            system("sh ~/catkin_ws/src/gobot_software/src/start_gobot_move.sh &");
-	            std::cout << "Relaunched gobot_move" << std::endl;
+	            ROS_INFO("Relaunched gobot_move");
 	            sleep(5);
 	            system("sh ~/catkin_ws/src/gobot_software/src/start_gobot_software.sh &");
-	            std::cout << "Relaunched gobot_software" << std::endl;
+	            ROS_INFO("Relaunched gobot_software");
 	            sleep(3);
 			}
 			message = "";
 		}
 
 	} catch (std::exception& e) {
-		std::cerr << "(Backup system) Exception in thread: " << e.what() << "\n";
+		ROS_ERROR("(Backup system) Exception in thread : %s", e.what());
 	}
 }
 
 void serverDisconnected(const std_msgs::String::ConstPtr& msg){
-	std::cout << "server disconnected callback called" << std::endl;
+	ROS_INFO("server disconnected callback called");
 	disconnect();
 }
 
 void disconnect(void){
 	if(connected){
-		std::cout << "(Backup system) Robot could not find the application " << std::endl;
+		ROS_INFO("(Backup system) Robot could not find the application ");
 		connected = false;
 	}
 }
@@ -129,7 +128,7 @@ int main(int argc, char* argv[]){
 		server(CONNECTION_PORT);
 		
 	} catch (std::exception& e) {
-		std::cerr << "(Backup system) Exception: " << e.what() << std::endl;
+		ROS_ERROR("(Backup system) Exception : %s", e.what());
 	}
 
 	return 0;

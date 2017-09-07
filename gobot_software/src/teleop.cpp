@@ -15,7 +15,7 @@ ros::Publisher teleop_pub;
 ros::Publisher stop_pub;
 
 void session(boost::shared_ptr<tcp::socket> sock, ros::NodeHandle n){
-    std::cout << "(Teleop) session launched" << std::endl;
+    ROS_INFO("(Teleop) session launched");
 
     while(ros::ok() && connected){
         char data[max_length];
@@ -23,7 +23,7 @@ void session(boost::shared_ptr<tcp::socket> sock, ros::NodeHandle n){
         boost::system::error_code error;
         size_t length = sock->read_some(boost::asio::buffer(data), error);
         if ((error == boost::asio::error::eof) || (error == boost::asio::error::connection_reset)){
-            std::cout << "(Teleop) Connection closed" << std::endl;
+            ROS_INFO("(Teleop) Connection closed");
             connected = false;
             return;
         } else if (error) {
@@ -36,12 +36,12 @@ void session(boost::shared_ptr<tcp::socket> sock, ros::NodeHandle n){
 }
 
 void asyncAccept(boost::shared_ptr<boost::asio::io_service> io_service, boost::shared_ptr<tcp::acceptor> m_acceptor, ros::NodeHandle n){
-    std::cout << "(Teleop) Waiting for connection" << std::endl;
+    ROS_INFO("(Teleop) Waiting for connection");
 
     boost::shared_ptr<tcp::socket> sock = boost::shared_ptr<tcp::socket>(new tcp::socket(*io_service));
 
     m_acceptor->accept(*sock);
-    std::cout << "(Teleop) Command socket connected to " << sock->remote_endpoint().address().to_string() << std::endl;
+    ROS_INFO("(Teleop) Command socket connected to %s", sock->remote_endpoint().address().to_string().c_str());
     connected = true;
     waiting = false;
     boost::thread t(boost::bind(session, sock, n));
@@ -49,14 +49,14 @@ void asyncAccept(boost::shared_ptr<boost::asio::io_service> io_service, boost::s
 
 void serverDisconnected(const std_msgs::String::ConstPtr& msg){
     if(connected){
-        std::cout << "(Teleop) I heard " << std::endl;
+        ROS_INFO("(Teleop) I heard ");
         teleop(4);
         connected = false;
     }
 }
 
 void teleop(const int8_t val){
-    std::cout << "(Teleop) got data " << static_cast<int> (val) << std::endl;
+    ROS_INFO("(Teleop) got data %d", val);
     if(connected){
         double speed = 0.2;
         double turnSpeed = 1.0;
@@ -130,7 +130,7 @@ int main(int argc, char **argv){
     ros::init(argc, argv, "teleop");
     ros::NodeHandle n;
     
-    std::cout << "(Teleop) Ready to be launched." << std::endl;
+    ROS_INFO("(Teleop) Ready to be launched.");
 
     /// Subscribe to know when we disconnect from the server
     ros::Subscriber sub = n.subscribe("server_disconnected", 1000, serverDisconnected);
@@ -153,7 +153,7 @@ int main(int argc, char **argv){
 
         if(!connected && !waiting){
             
-            std::cout << "(Teleop) Ready to connect" << std::endl;
+            ROS_INFO("(Teleop) Ready to connect");
             boost::thread t(boost::bind(asyncAccept, io_service, m_acceptor, n));
 
             waiting = true;

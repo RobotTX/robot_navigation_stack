@@ -9,7 +9,7 @@ tcp::acceptor l_acceptor(io_service);
 
 bool startLaser(gobot_software::PortLaser::Request &req, gobot_software::PortLaser::Response &res){
     
-    std::cout << "(Laser) Starting laser_sender" << std::endl;
+    ROS_INFO("(Laser) Starting laser_sender");
     ros::NodeHandle n;
 
     int laserPort = req.port; 
@@ -19,9 +19,9 @@ bool startLaser(gobot_software::PortLaser::Request &req, gobot_software::PortLas
     l_acceptor = tcp::acceptor(io_service, tcp::endpoint(tcp::v4(), laserPort));
     l_acceptor.set_option(tcp::acceptor::reuse_address(true));
 
-    std::cout << "(Laser) Connecting to ports : " << laserPort << std::endl;
+    ROS_INFO("(Laser) Connecting to ports : %d", laserPort);
     l_acceptor.accept(socket_laser);
-    std::cout << "(Laser) We are connected " << std::endl;
+    ROS_INFO("(Laser) We are connected ");
 
     if(startLaser)
         sub_laser = n.subscribe("/scan", 1, getLaserData);
@@ -51,7 +51,7 @@ void sendLaserData(const std::vector<float>& scan){
 }
 
 bool sendLaser(std_srvs::Empty::Request &req, std_srvs::Empty::Response &res){
-    std::cout << "(Laser) send_laser_data_sender " << std::endl;
+    ROS_INFO("(Laser) send_laser_data_sender");
     ros::NodeHandle n;
     sub_laser.shutdown();
     sub_laser = n.subscribe("/scan", 1, getLaserData);
@@ -59,13 +59,13 @@ bool sendLaser(std_srvs::Empty::Request &req, std_srvs::Empty::Response &res){
 }
 
 bool stopSendLaser(std_srvs::Empty::Request &req, std_srvs::Empty::Response &res){
-    std::cout << "(Laser) stop_send_laser_data_sender " << std::endl;
+    ROS_INFO("(Laser) stop_send_laser_data_sender");
     sub_laser.shutdown();
     return true;
 }
 
 bool stopSendingLaserData(std_srvs::Empty::Request &req, std_srvs::Empty::Response &res){
-    std::cout << "(Laser) Stopping laser_sender" << std::endl;
+    ROS_INFO("(Laser) Stopping laser_sender");
     sub_laser.shutdown();
     socket_laser.close();
     l_acceptor.close();
@@ -75,7 +75,7 @@ bool stopSendingLaserData(std_srvs::Empty::Request &req, std_srvs::Empty::Respon
 int main(int argc, char **argv){
 
     ros::init(argc, argv, "laser_data_transfer");
-    std::cout << "(Laser) Ready to be launched." << std::endl;
+    ROS_INFO("(Laser) Ready to be launched.");
 
     ros::NodeHandle n;
 

@@ -10,18 +10,14 @@ int stage = 0;
 
 // holds whether the robot is ready to accept a new goal or not (already moving towards one)
 bool waitingForNextGoal = false;
+bool looping = false;
 
 std::vector<Point> path;
 Point currentGoal;
 
-ros::Publisher cancelPublisher;
 
 ros::Subscriber statusSuscriber;
 ros::Subscriber sub_robot;
-
-ros::ServiceServer _playPathService;
-ros::ServiceServer _pausePathService;
-ros::ServiceServer _stopPathService;
 
 
 void getRobotPos(const geometry_msgs::Pose::ConstPtr& msg){
@@ -31,10 +27,9 @@ void getRobotPos(const geometry_msgs::Pose::ConstPtr& msg){
 		if(std::abs(msg->position.x - currentGoal.x) < ROBOT_POS_TOLERANCE && std::abs(msg->position.y - currentGoal.y) < ROBOT_POS_TOLERANCE){
 			/// if the robot has already arrived, we want to wait for the next goal instead of repeating the same "success" functions
 			if(!waitingForNextGoal){
-				std::cout << "(PlayPath::getRobotPos) robot close enough to the goal" << std::endl;
-				std::cout << "(PlayPath::getRobotPos) robot position " << msg->position.x << " " << msg->position.y 
-				<< "\n(PlayPath::getRobotPos) robot goal " << currentGoal.x << " " << currentGoal.y
-				<< std::endl;
+				ROS_INFO("(PlayPath::getRobotPos) robot close enough to the goal");
+				ROS_INFO("(PlayPath::getRobotPos) robot position [%f, %f]", msg->position.x, msg->position.y);
+				ROS_INFO("(PlayPath::getRobotPos) robot goal [%f, %f]", currentGoal.x, currentGoal.y);
 				waitingForNextGoal = true;
 				goalReached();
 			}
@@ -48,7 +43,7 @@ void getStatus(const actionlib_msgs::GoalStatusArray::ConstPtr& goalStatusArray)
 		if(goalStatusArray->status_list[0].status == 3){
 			// if we reached the goal
 			if(!waitingForNextGoal){
-                std::cout << "(PlayPath::getStatus) robot close enough to the goal" << std::endl;
+                ROS_INFO("(PlayPath::getStatus) robot close enough to the goal");
                 waitingForNextGoal = true;
 				goalReached();
 			}
@@ -69,22 +64,30 @@ void getStatus(const actionlib_msgs::GoalStatusArray::ConstPtr& goalStatusArray)
 // called when the last goal has been reached
 void goalReached(){
 	if(currentGoal.isHome){
-		std::cout << "(PlayPath::goalReached) home reached" << std::endl;
+		ROS_INFO("(PlayPath::goalReached) home reached");
 	} else {
-		std::cout << "(PlayPath::goalReached) path point reached" << std::endl;
+		ROS_INFO("(PlayPath::goalReached) path point reached");
 		stage++;
 		if(stage >= path.size()){
 			// the robot successfully reached all its goals
-			std::cout << "(PlayPath::goalReached) I have completed my journey Master Joda, what will you have me do ?" << std::endl;
-			// resets the stage of the path to be able to play the path from the start again
-			stage = 10000;
-			// resets the current goal
-			currentGoal.x = -1;
-            setStageInFile(stage);
+			ROS_INFO("(PlayPath::goalReached) I have completed my journey Master Joda, what will you have me do ?");
+
+            if(looping){
+                ROS_INFO("(PlayPath::goalReached) Looping!!");
+                stage = 0;
+                setStageInFile(stage);
+                goNextPoint();
+            } else {
+                // resets the stage of the path to be able to play the path from the start again
+                stage = 10000;
+                // resets the current goal
+                currentGoal.x = -1;
+                setStageInFile(stage);
+            }
 		} else {
 			// reached a normal/path goal so we sleep the given time
 			if(currentGoal.waitingTime > 0){
-				std::cout << "(PlayPath::goalReached) goalReached going to sleep for " << currentGoal.waitingTime << " seconds" << std::endl;
+				ROS_INFO("(PlayPath::goalReached) goalReached going to sleep for %d seconds", currentGoal.waitingTime);
                 setStageInFile(stage);
 				sleep(currentGoal.waitingTime);
 			}
@@ -94,7 +97,7 @@ void goalReached(){
 }
 
 bool stopPathService(std_srvs::Empty::Request &req, std_srvs::Empty::Response &res){
-	std::cout << "(PlayPath::stopPathService) stopPathService called" << std::endl;
+	ROS_INFO("(PlayPath::stopPathService) stopPathService called");
 	/// if action server is up -> cancel
 	if(ac->isServerConnected())
 		ac->cancelAllGoals();
@@ -105,7 +108,7 @@ bool stopPathService(std_srvs::Empty::Request &req, std_srvs::Empty::Response &r
 }
 
 bool pausePathService(std_srvs::Empty::Request &req, std_srvs::Empty::Response &res){
-	std::cout << "(PlayPath::pausePathService) pausePathService called" << std::endl;
+	ROS_INFO("(PlayPath::pausePathService) pausePathService called");
 	if(ac->isServerConnected())
 		ac->cancelAllGoals();
 	return true;
@@ -115,9 +118,9 @@ void goNextPoint(){
 
 	// get the next point in the path list and tell the robot to go there
 	if(path.size()-1 == stage)
-		std::cout << "(PlayPath::goNextPoint) This is my final destination" << std::endl;
+		ROS_INFO("(PlayPath::goNextPoint) This is my final destination");
 
-	std::cout << "(PlayPath::goNextPoint) goNextPoint called " << stage << " " << path.at(stage).x << " " << path.at(stage).y << std::endl;
+	ROS_INFO("(PlayPath::goNextPoint) goNextPoint called %d [%f, %f]", stage, path.at(stage).x, path.at(stage).y);
 
     Point point;
     point.x = path.at(stage).x;
@@ -130,7 +133,7 @@ void goNextPoint(){
 
 // sends the next goal to the robot
 void goToPoint(const Point& point){
-	std::cout << "(PlayPath::goToPoint) goToPoint " << point.x << " " << point.y << std::endl;
+	ROS_INFO("(PlayPath::goToPoint) goToPoint [%f, %f]", point.x, point.y);
 	move_base_msgs::MoveBaseGoal goal;
 
 	goal.target_pose.header.frame_id = "map";
@@ -144,7 +147,7 @@ void goToPoint(const Point& point){
 
 	currentGoal = point;
 	if(ac->isServerConnected()) ac->sendGoal(goal);
-	else std::cout << "(PlayPath::goToPoint) no action server" << std::endl;
+	else ROS_INFO("(PlayPath::goToPoint) no action server");
 }
 
 void setStageInFile(const int _stage){
@@ -153,21 +156,21 @@ void setStageInFile(const int _stage){
 	ros::NodeHandle n;
 	if(n.hasParam("path_stage_file")){
 		n.getParam("path_stage_file", pathStageFile);
-		std::cout << "(PlayPath::setStageInFile) set path stage file to " << pathStageFile << std::endl;
+		ROS_INFO("(PlayPath::setStageInFile) set path stage file to %s", pathStageFile.c_str());
 	}
 	std::ofstream path_stage_file(pathStageFile, std::ios::out | std::ios::trunc);
 	// when the stage is < 0 it means the robot was blocked at stage -stage (which is > 0)
 	if(path_stage_file){
-		std::cout << "(PlayPath::setStageInFile) setStageInFile " << _stage << std::endl;
+		ROS_INFO("(PlayPath::setStageInFile) setStageInFile %d", _stage);
 		path_stage_file << _stage;
 		path_stage_file.close();
 	} else {
-		std::cout << "(PlayPath::setStageInFile) Sorry we were not able to find the file play_path.txt in order to keep track of the stage of the path to be played" << std::endl;
+		ROS_INFO("(PlayPath::setStageInFile) Sorry we were not able to find the file play_path.txt in order to keep track of the stage of the path to be played");
 	}
 }
 
 bool playPathService(std_srvs::Empty::Request &req, std_srvs::Empty::Response &res){
-	std::cout << "(PlayPath::playPathService) called while at stage : " << stage << std::endl;
+	ROS_INFO("(PlayPath::playPathService) called while at stage : %d", stage);
 
 	path = std::vector<Point>();
 
@@ -175,7 +178,7 @@ bool playPathService(std_srvs::Empty::Request &req, std_srvs::Empty::Response &r
 	std::string pathFile;
 	if(n.hasParam("path_file")){
 		n.getParam("path_file", pathFile);
-		std::cout << "(PlayPath::playPathService) set path file to " << pathFile << std::endl;
+		ROS_INFO("(PlayPath::playPathService) set path file to %s", pathFile.c_str());
 	}
 	std::ifstream file(pathFile, std::ios::in);
 
@@ -203,17 +206,17 @@ bool playPathService(std_srvs::Empty::Request &req, std_srvs::Empty::Response &r
         }
 
 	} else {
-		std::cerr << "(PlayPath::playPathService) sorry could not find the path file on the robot, returning false to the cmd system";
+		ROS_ERROR("(PlayPath::playPathService) sorry could not find the path file on the robot, returning false to the cmd system");
 		return false;
 	}
 
 	if(path.empty()){
-		std::cerr << "(PlayPath::playPathService) the path is empty, returning false to cmd system";
+		ROS_ERROR("(PlayPath::playPathService) the path is empty, returning false to cmd system");
 		return false;
 	}
 
 	for(size_t i = 0; i < path.size(); i++)
-		std::cout << "(PlayPath::playPathService) Stage " << i << " " << path.at(i).x << " " << path.at(i).y << " " << path.at(i).waitingTime << std::endl;
+		ROS_INFO("(PlayPath::playPathService) Stage %d [%f, %f], wait %d sec", i, path.at(i).x, path.at(i).y, path.at(i).waitingTime);
 
 
 	if(currentGoal.x == -1){
@@ -226,9 +229,21 @@ bool playPathService(std_srvs::Empty::Request &req, std_srvs::Empty::Response &r
 	return true;	
 }
 
+bool startLoopPathService(std_srvs::Empty::Request &req, std_srvs::Empty::Response &res){
+    ROS_INFO("(PlayPath::startLoopPathService) service called");
+    looping = true;
+    return true;
+}
+
+bool stopLoopPathService(std_srvs::Empty::Request &req, std_srvs::Empty::Response &res){
+    ROS_INFO("(PlayPath::stopLoopPathService) service called");
+    looping = false;
+    return true;
+}
+
 int main(int argc, char* argv[]){
 
-	std::cout << "(PlayPath) play path main running..." << std::endl;
+	ROS_INFO("(PlayPath) play path main running...");
 
 	try {
 
@@ -242,16 +257,19 @@ int main(int argc, char* argv[]){
 		ros::NodeHandle n;
 
 		// service to play the robot's path
-		_playPathService = n.advertiseService("play_path", playPathService);
+		ros::ServiceServer _playPathService = n.advertiseService("play_path", playPathService);
 
 		// service to pause the robot's path
-		_pausePathService = n.advertiseService("pause_path", pausePathService);
+		ros::ServiceServer _pausePathService = n.advertiseService("pause_path", pausePathService);
 
 		// service to stop the robot's path
-		_stopPathService = n.advertiseService("stop_path", stopPathService);
+		ros::ServiceServer _stopPathService = n.advertiseService("stop_path", stopPathService);
 
-		// to cancel a goal
-		cancelPublisher = n.advertise<actionlib_msgs::GoalID>("/move_base/cancel", 1000);
+        // service to make the path loop
+        ros::ServiceServer _startLoopPath = n.advertiseService("startLoopPath", startLoopPathService);
+
+        // service to stop the path loop
+        ros::ServiceServer _stopLoopPath = n.advertiseService("stopLoopPath", stopLoopPathService);
 
 		// tell the action client that we want to spin a thread by default
 		ac = std::shared_ptr<MoveBaseClient> (new MoveBaseClient("move_base", true));
@@ -267,12 +285,12 @@ int main(int argc, char* argv[]){
 			ROS_INFO("Waiting for the move_base action server to come up");
 
 		if(ac->isServerConnected())
-                        std::cout << "Play path:: Server is connected" << std::endl;
+                        ROS_INFO("Play path:: Server is connected");
 
 		ros::spin();
 
 	} catch (std::exception& e) {
-		std::cerr << "(Play path) Exception: " << e.what() << std::endl;
+		ROS_ERROR("(Play path) Exception : %s", e.what());
 	}
 
 	return 0;

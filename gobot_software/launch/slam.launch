@@ -2,6 +2,7 @@
 <launch>
 	
 	<include file="$(find gobot_software)/launch/robot_infos_params.launch"/>
+    <param name="simulation" type="bool" value="true" />
 
 	<!--node pkg="gobot_software" type="battery.py" name="battery" output="screen" required="false"/>
 	<node pkg="gobot_software" type="auto_charging.py" name="autocharging" output="screen" required="true" /-->

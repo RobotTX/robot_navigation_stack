@@ -58,7 +58,7 @@ bool startDocking(void){
     std::string homeFile;
     if(nh.hasParam("home_file")){
         nh.getParam("home_file", homeFile);
-        std::cout << "(auto_docking::startDocking) home file path : " << homeFile << std::endl;
+        ROS_INFO("(auto_docking::startDocking) home file path : %s", homeFile.c_str());
         std::ifstream ifs(homeFile);
 
         if(ifs.is_open()){
@@ -66,7 +66,7 @@ bool startDocking(void){
             ifs >> x >> y >> oriX >> oriY >> oriZ >> oriW;
             ifs.close();
 
-            std::cout << "(auto_docking::startDocking) home found : " << x << " " << y << " " << oriX << " " << oriY << " " << oriZ << " " << oriW << std::endl;
+            ROS_INFO("(auto_docking::startDocking) home found : [%f, %f] [%f, %f, %f, %f]", x, y, oriX, oriY, oriZ, oriW);
 
             /// Got a quaternion and want an orientation in radian
             tf::Matrix3x3 matrix = tf::Matrix3x3(tf::Quaternion(oriX , oriY , oriZ, oriW));
@@ -81,7 +81,7 @@ bool startDocking(void){
             /// We want to go 1.5 metres in front of the charging station
             double landingPointX = x + 1.5 * std::cos(yaw);
             double landingPointY = y + 1.5 * std::sin(yaw);
-            std::cout << "(auto_docking::startDocking) landing point : " << landingPointX << " " << landingPointY << " " << homeOri << std::endl;
+            ROS_INFO("(auto_docking::startDocking) landing point : [%f, %f, %f]", landingPointX, landingPointY, homeOri);
 
             /// Create the goal
             currentGoal.target_pose.header.stamp = ros::Time::now();
@@ -103,15 +103,15 @@ bool startDocking(void){
                 goalStatusSub = nh.subscribe("/move_base/status", 1, goalStatus);
                 robotPoseSub = nh.subscribe("/robot_pose", 1, newRobotPos);
 
-                std::cout << "(auto_docking::startDocking) service called successfully" << std::endl;
+                ROS_INFO("(auto_docking::startDocking) service called successfully");
 
                 return true;
             } else 
-                std::cout << "(auto_docking::startDocking) no action server" << std::endl;
+                ROS_INFO("(auto_docking::startDocking) no action server");
         } else
-            std::cout << "(auto_docking::startDocking) could not open the file " << homeFile << std::endl;
+            ROS_INFO("(auto_docking::startDocking) could not open the file %s", homeFile.c_str());
     } else
-        std::cout << "(auto_docking::startDocking) could not find the param home_file " << homeFile << std::endl;
+        ROS_INFO("(auto_docking::startDocking) could not find the param home_file %s", homeFile.c_str());
 
     return false;
 }
@@ -124,9 +124,9 @@ void newRobotPos(const geometry_msgs::Pose::ConstPtr& robotPos){
            std::abs(robotPos->position.y - currentGoal.target_pose.pose.position.y) < ROBOT_POS_TOLERANCE){
             /// if the robot has already arrived, we want to wait for the next goal instead of repeating the same "success" functions
             if(!landingPointReached){
-                std::cout << "(auto_docking::newRobotPos) newRobotPos robot close enough to the goal" << std::endl;
-                std::cout << "(auto_docking::newRobotPos) robot position " << robotPos->position.x << " " << robotPos->position.y << std::endl;
-                std::cout << "(auto_docking::newRobotPos) robot goal " << currentGoal.target_pose.pose.position.x << " " << currentGoal.target_pose.pose.position.y << std::endl;
+                ROS_INFO("(auto_docking::newRobotPos) newRobotPos robot close enough to the goal");
+                ROS_INFO("(auto_docking::newRobotPos) robot position [%f, %f]", robotPos->position.x, robotPos->position.y);
+                ROS_INFO("(auto_docking::newRobotPos) robot goal [%f, %f]", currentGoal.target_pose.pose.position.x, currentGoal.target_pose.pose.position.y);
                 landingPointReached = true;
                 findChargingStation();
             }
@@ -152,7 +152,7 @@ void goalStatus(const actionlib_msgs::GoalStatusArray::ConstPtr& goalStatusArray
         	/// Wait for the new goal to be published so the status is reset and we don't use the status of the previous goal
             newGoal = true;
         } else {
-            //std::cout << "(auto_docking::goalStatus) status : " << (int) goalStatusArray->status_list[0].status << std::endl;
+            //ROS_INFO("(auto_docking::goalStatus) status : %d", (int) goalStatusArray->status_list[0].status);
             /// NOTE not sure it's useful
             //landingPointReached = false;
         }
@@ -163,7 +163,7 @@ void goalStatus(const actionlib_msgs::GoalStatusArray::ConstPtr& goalStatusArray
 
 
 void findChargingStation(void){
-    std::cout << "(auto_docking::findChargingStation) called" << std::endl;
+    ROS_INFO("(auto_docking::findChargingStation) called");
 
     /// we don't need this subscriber anymore
     goalStatusSub.shutdown();
@@ -186,7 +186,7 @@ void findChargingStation(void){
 }
 
 bool setSpeed(const char directionR, const int velocityR, const char directionL, const int velocityL){
-    //std::cout << "(auto_docking::setSpeed) " << directionR << " " << velocityR << " " << directionL << " " << velocityL << std::endl;
+    //ROS_INFO("(auto_docking::setSpeed) %c %d %c %d", directionR, velocityR, directionL, velocityL);
     gobot_base::SetSpeeds speed; 
     speed.request.directionR = std::string(1, directionR);
     speed.request.velocityR = velocityR;
@@ -214,7 +214,7 @@ void newBumpersInfo(const gobot_base::BumperMsg::ConstPtr& bumpers){
     if(back){
         /// if it's a new collision, we stop the robot
         if(!collision){
-            std::cout << "(auto_docking::newBumpersInfo) just got a new collision" << std::endl;
+            ROS_INFO("(auto_docking::newBumpersInfo) just got a new collision");
             collision = true;
             collisionTime = std::chrono::system_clock::now();
             setSpeed('F', 0, 'F', 0);
@@ -227,7 +227,7 @@ void newBumpersInfo(const gobot_base::BumperMsg::ConstPtr& bumpers){
     } else {
         /// if we had a collision and the obstacle left
         if(collision){
-            std::cout << "(auto_docking::newBumpersInfo) the obstacle left after " << (double) (std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now() - collisionTime).count() / 1000) << " seconds" << std::endl;
+            ROS_INFO("(auto_docking::newBumpersInfo) the obstacle left after %d seconds", (double) (std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now() - collisionTime).count() / 1000));
             setSpeed('F', 0, 'F', 0);
             collision = false;
         }
@@ -238,12 +238,12 @@ void newBumpersInfo(const gobot_base::BumperMsg::ConstPtr& bumpers){
 void newIrSignal(const gobot_base::IrMsg::ConstPtr& irSignal){
     /// if we are charging
     if(docking && !collision){
-        std::cout << "(auto_docking::newIrSignal) new ir signal : " << irSignal->leftSignal << " " << irSignal->rearSignal << " " << irSignal->rightSignal << std::endl;
+        ROS_INFO("(auto_docking::newIrSignal) new ir signal : %d %d %d", irSignal->leftSignal, irSignal->rearSignal, irSignal->rightSignal);
 		/// if we got no signal
         if(irSignal->rearSignal == 0 && irSignal->leftSignal == 0 && irSignal->rightSignal == 0){
             /// if we just lost the ir signal, we start the timer
             if(!lostIrSignal){
-                std::cout << "(auto_docking::newIrSignal) just lost the ir signal" << std::endl;
+                ROS_INFO("(auto_docking::newIrSignal) just lost the ir signal");
                 lostIrSignal = true;
                 lastIrSignalTime = std::chrono::system_clock::now();
                 /// make the robot turn on itself
@@ -259,7 +259,7 @@ void newIrSignal(const gobot_base::IrMsg::ConstPtr& irSignal){
         } else {
             /// we got an ir signal; 
             if(lostIrSignal){
-                std::cout << "(auto_docking::newIrSignal) just retrieved the ir signal after " << (double) (std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now() - lastIrSignalTime).count() / 1000) << " seconds" << std::endl;
+                ROS_INFO("(auto_docking::newIrSignal) just retrieved the ir signal after %d seconds", (double) (std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now() - lastIrSignalTime).count() / 1000));
                 lostIrSignal = false;
             }
 
@@ -300,7 +300,7 @@ void newIrSignal(const gobot_base::IrMsg::ConstPtr& irSignal){
 /****************************************** STEP 3 : The robot is charging, so we align it with the charging station *********************************************************/
 
 void alignWithCS(void){
-    std::cout << "(auto_docking::alignWithCS) The robot is charging, checking the alignment" << std::endl;
+    ROS_INFO("(auto_docking::alignWithCS) The robot is charging, checking the alignment");
 
     bumperSub.shutdown();
     irSub.shutdown();
@@ -334,14 +334,14 @@ void newProximityInfo(const gobot_base::ProximityMsg::ConstPtr& proximitySignal)
 }
 
 void finishedDocking(const int16_t status){
-    std::cout << "(auto_docking::finishedDocking) Finished trying to dock with status " << status << std::endl;
+    ROS_INFO("(auto_docking::finishedDocking) Finished trying to dock with status %d", status);
     proximitySub.shutdown();
 
     /// If the battery is still charging, we succesfully docked the robot
     if(chargingFlag)
-        std::cout << "(auto_docking::finishedDocking) Finished docking and we are still charging" << std::endl;
+        ROS_INFO("(auto_docking::finishedDocking) Finished docking and we are still charging");
     else
-        std::cout << "(auto_docking::finishedDocking) Finished docking but we are not charging anymore.... oops" << std::endl;
+        ROS_INFO("(auto_docking::finishedDocking) Finished docking but we are not charging anymore.... oops");
 
     batterySub.shutdown();
 
@@ -355,7 +355,7 @@ void finishedDocking(const int16_t status){
 
 void failedDocking(const int status){
     attempt++;
-    std::cout << "(auto_docking::failedDocking) failed docking " << attempt << " time" << std::endl;
+    ROS_INFO("(auto_docking::failedDocking) failed docking %d time(s)", attempt);
 
     if(attempt <= 3)
         startDocking();
@@ -366,7 +366,7 @@ void failedDocking(const int status){
 }
 
 void stopDocking(void){
-    std::cout << "(auto_docking::stopDocking) called" << std::endl;
+    ROS_INFO("(auto_docking::stopDocking) called");
 
     setSpeed('F', 0, 'F', 0);
 
@@ -390,7 +390,7 @@ void stopDocking(void){
 }
 
 bool stopDockingService(std_srvs::Empty::Request &req, std_srvs::Empty::Response &res){
-    std::cout << "(auto_docking::stopDockingService) service called" << std::endl;
+    ROS_INFO("(auto_docking::stopDockingService) service called");
 
     stopDocking();
 
@@ -398,7 +398,7 @@ bool stopDockingService(std_srvs::Empty::Request &req, std_srvs::Empty::Response
 }
 
 bool startDockingService(std_srvs::Empty::Request &req, std_srvs::Empty::Response &res){
-    std::cout << "(auto_docking::startDockingService) service called" << std::endl;
+    ROS_INFO("(auto_docking::startDockingService) service called");
 
     docking = false;
     attempt = 0;

@@ -33,6 +33,8 @@ void getRobotPos(const geometry_msgs::Pose::ConstPtr& msg);
 void getStatus(const actionlib_msgs::GoalStatusArray::ConstPtr& _status);
 bool stopPathService(std_srvs::Empty::Request &req, std_srvs::Empty::Response &res);
 bool pausePathService(std_srvs::Empty::Request &req, std_srvs::Empty::Response &res);
+bool startLoopPathService(std_srvs::Empty::Request &req, std_srvs::Empty::Response &res);
+bool stopLoopPathService(std_srvs::Empty::Request &req, std_srvs::Empty::Response &res);
 void goNextPoint();
 bool playPathService(std_srvs::Empty::Request &req, std_srvs::Empty::Response &res);
 void goToPoint(const Point& point);

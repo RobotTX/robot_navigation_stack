@@ -48,10 +48,9 @@ void getRobotPos(const geometry_msgs::Pose::ConstPtr& msg){
 		if(std::abs(msg->position.x - currentGoal.first) < ROBOT_POS_TOLERANCE && std::abs(msg->position.y - currentGoal.second) < ROBOT_POS_TOLERANCE){
 			/// if the robot has already arrived, we want to wait for the next goal instead of repeat the same "success" functions
 			if(!waitingForNextGoal){
-				std::cout << "(PlayPath) getRobotPos robot close enough to the goal" << std::endl;
-				std::cout << "(PlayPath) robot position " << msg->position.x << " " << msg->position.y 
-				<< "\n(PlayPath) robot goal " << currentGoal.first << " " << currentGoal.second
-				<< std::endl;
+				ROS_INFO("(PlayPath) getRobotPos robot close enough to the goal");
+				ROS_INFO("(PlayPath) robot position [%f, %f]", msg->position.x, msg->position.y);
+				ROS_INFO("(PlayPath) robot goal [%d, %d]", currentGoal.first, currentGoal.second);
 				waitingForNextGoal = true;
 				currentGoal.first = -1;
 			}
@@ -73,18 +72,18 @@ void checkRecoveryStatus(const std_msgs::String& msg){
 		/// we tell the application the position was recovered
 		gobot_software::RecoveredPosition srv;
 		if(sendPositionRecoveredConfirmation.call(srv))
-			std::cout << "Service send position recovered confirmation called" << std::endl;
+			ROS_INFO("Service send position recovered confirmation called");
 		else
-			std::cout << "Service send position recovered confirmation could not be called" << std::endl;
+			ROS_INFO("Service send position recovered confirmation could not be called");
 	}
 }
 
 void checkEstimatedPosition(const geometry_msgs::PoseWithCovarianceStamped& msg){
 	// we check if the covariance of the position is within our expectations (the lower the covariance the more amcl is sure about the position of the robot)
 	// if any of the diagonal values is more than our threshold we return otherwise we can notify the application that the position was recovered
-	std::cout << "Current estimated pos " << msg.pose.pose.position.x << " " << msg.pose.pose.position.y << std::endl;
+	ROS_INFO("Current estimated pos [%f, %f]", msg.pose.pose.position.x, msg.pose.pose.position.y);
 	for(uint i = 0; i < 6; i++){
-		std::cout << " covariance diag " << i << " " << msg.pose.covariance[i * 6 + i] << std::endl;
+		ROS_INFO(" covariance diag %d %f", i, msg.pose.covariance[i * 6 + i]);
 		if(msg.pose.covariance[i * 6 + i] > 1) return;
 	}
 	// TODO call a service
@@ -97,7 +96,7 @@ void checkEstimatedPosition(const geometry_msgs::PoseWithCovarianceStamped& msg)
 }
 
 bool recoverPosition(std_srvs::Empty::Request &req, std_srvs::Empty::Response &res){
-	std::cout << "(RECOVER POSITION) recoverPosition service called";
+	ROS_INFO("(RECOVER POSITION) recoverPosition service called");
 	
 	ros::NodeHandle n;
 
@@ -242,7 +241,7 @@ ReducedVertex reducedVertexFromPixels(const coordinates pixelsCoordinates, const
 
 bool findNextPoint(){
 
-	std::cout << metadata.height << " " << metadata.width << " " << my_map.size() << robotOrigin.x << "" << robotOrigin.y << std::endl;
+	ROS_INFO("%d %d %lu %f %f", metadata.height, metadata.width, my_map.size(), robotOrigin.x, robotOrigin.y);
 	if(metadata.height != 0 && metadata.width != 0 && my_map.size() == metadata.width * metadata.height){
 		ReducedMap reducedMap = reduceMap(my_map, metadata.width, metadata.height);
 		
@@ -252,7 +251,7 @@ bool findNextPoint(){
 		graphFromReducedMap(reducedMap, graph, 8);
 
 		std::pair<ReducedVertex, int> furthestPoint = findFurthestPointInReducedGraph(robotOrigin, metadata, graph, reducedMap);
-		std::cout << furthestPoint.first.row << std::endl;
+		ROS_INFO("%d", furthestPoint.first.row);
 		if(furthestPoint.first.row != -1){
 		
 			move_base_msgs::MoveBaseGoal goal;
@@ -268,7 +267,7 @@ bool findNextPoint(){
 
 		    currentGoal = std::make_pair((furthestPoint.first.end) * metadata.resolution + metadata.x, (furthestPoint.first.row) * metadata.resolution + metadata.y);
 
-		    std::cout << "Only a test otherwise I would send this goal " << goal.target_pose.pose.position.x << " " << goal.target_pose.pose.position.y << std::endl;
+		    ROS_INFO("Only a test otherwise I would send this goal %f %f", goal.target_pose.pose.position.x, goal.target_pose.pose.position.y);
 			// TODO uncomment 
 			//ac->sendGoal(goal);
 		}
@@ -278,7 +277,7 @@ bool findNextPoint(){
 
 int main(int argc, char* argv[]){
 
-	std::cout << "(Recover position) recover position main running..." << std::endl;
+	ROS_INFO("(Recover position) recover position main running...");
 
 	try {
 
@@ -310,13 +309,13 @@ int main(int argc, char* argv[]){
 			ROS_INFO("Waiting for the move_base action server to come up");
 
 		if(ac->isServerConnected())
-                        std::cout << "Recover position:: Server is connected" << std::endl;
+            ROS_INFO("Recover position:: Server is connected");
 
 		ros::spin();
 
 	} catch (std::exception& e) {
 
-		std::cout << "Recover position exception " << e.what() << std::endl;
+		ROS_INFO("Recover position exception %s", e.what());
 	}
 	
 	return 0;

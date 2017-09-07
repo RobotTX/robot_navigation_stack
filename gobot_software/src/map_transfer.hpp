@@ -67,7 +67,7 @@ bool sendOnceMap(gobot_software::Port::Request &req, gobot_software::Port::Respo
 /**
  * Compresses the map in order to send it faster
  */
-std::vector<uint8_t> compress(const std::vector<int8_t> map, const int map_width, const int map_height, const int who);
+std::vector<uint8_t> compress(const std::vector<int8_t> map, const int map_width, const int map_height, const double map_resolution, const double _map_orixin_x, const double _map_orixin_y, const int who);
 
 /**
  * Send local map when the robot is recovering its position

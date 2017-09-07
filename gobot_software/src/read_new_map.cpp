@@ -5,6 +5,7 @@ using boost::asio::ip::tcp;
 const int max_length = 1024;
 bool waiting = false;
 bool connected = false;
+bool simulation = false;
 
 boost::asio::io_service io_service;
 tcp::socket socket_robot(io_service);
@@ -14,7 +15,7 @@ ros::Publisher map_pub;
 
 void session(ros::NodeHandle n){
     
-    std::cout << "(New Map) session launched" << std::endl;
+    ROS_INFO("(New Map) session launched");
     int gotMapData(0);
     std::string mapId("");
     std::string mapMetadata("");
@@ -30,7 +31,7 @@ void session(ros::NodeHandle n){
         boost::system::error_code error;
         size_t length = socket_robot.read_some(boost::asio::buffer(data), error);
         if ((error == boost::asio::error::eof) || (error == boost::asio::error::connection_reset)){
-            std::cout << "(New Map) Connection closed" << std::endl;
+            ROS_INFO("(New Map) Connection closed");
             connected = false;
             return;
         } else if (error) {
@@ -44,7 +45,7 @@ void session(ros::NodeHandle n){
                 /// The first ; means we got the mapId
                 /// the second means we got the metadata
                 /// the third means we got the map date
-                std::cout << "(New Map) ';' found" << std::endl;
+                ROS_INFO("(New Map) ';' found");
                 gotMapData++;
             } else {
                 if(gotMapData > 2)
@@ -61,14 +62,14 @@ void session(ros::NodeHandle n){
         // when the last 5 bytes are 254 we know we have received a complete map
         if(map.size() > 4 && static_cast<int>(map.at(map.size()-5)) == 254 && static_cast<int>(map.at(map.size()-4)) == 254
              && static_cast<int>(map.at(map.size()-3)) == 254 && static_cast<int>(map.at(map.size()-2)) == 254 && static_cast<int>(map.at(map.size()-1)) == 254){
-            std::cout << "(New Map) Last separator found" << std::endl;
+            ROS_INFO("(New Map) Last separator found");
 
 
             /// We check if we already have a map with the same id
             std::string mapIdFile;
             if(n.hasParam("map_id_file")){
                 n.getParam("map_id_file", mapIdFile);
-                std::cout << "(New Map) got map id file " << mapIdFile << std::endl;
+                ROS_INFO("(New Map) got map id file : %s", mapIdFile.c_str());
             }
             std::string mapIdFromFile("");
             std::ifstream ifMap(mapIdFile, std::ifstream::in);
@@ -79,27 +80,27 @@ void session(ros::NodeHandle n){
             }
 
             if(mapIdFromFile.compare(mapId) == 0)
-                std::cout << " SAME IDS " << std::endl;
+                ROS_INFO("(New Map) SAME IDS ");
 
             /// If we have a different map, we replace it
             if(mapIdFromFile.compare(mapId) != 0){
                 /// Save the id of the new map
-                std::cout << "(New Map) Id of the new map : " << mapId << std::endl;
-                std::cout << "(New Map) Date of the new map : " << mapDate << std::endl;
+                ROS_INFO("(New Map) Id of the new map : %s", mapId.c_str());
+                ROS_INFO("(New Map) Date of the new map : %s", mapDate.c_str());
                 std::string mapIdFile;
                 if(n.hasParam("map_id_file")){
                     n.getParam("map_id_file", mapIdFile);
-                    std::cout << "read_new_map set mapIdFile to " << mapIdFile << std::endl;
+                    ROS_INFO("read_new_map set mapIdFile to %s", mapIdFile.c_str());
                 }
 
                 std::ofstream ofs(mapIdFile, std::ofstream::out | std::ofstream::trunc);
                 if(ofs){
                     ofs << mapId << std::endl << mapDate << std::endl;
                     ofs.close();
-                    std::cout << "(New Map) Map id updated : " << mapId << " with date " << mapDate << std::endl;
+                    ROS_INFO("(New Map) Map id updated : %s with date %s", mapId.c_str(), mapDate.c_str());
 
                     /// Set the medatada of the new map
-                    std::cout << "(New Map) Map metadata before split : " << mapMetadata << std::endl;
+                    ROS_INFO("(New Map) Map metadata before split : %s", mapMetadata.c_str());
                     int width(0);
                     int height(0);
                     double resolution(0.0f);
@@ -109,11 +110,11 @@ void session(ros::NodeHandle n){
 
                     std::istringstream iss(mapMetadata);
                     iss >> width >> height >> resolution >> initPosX >> initPosY >> orientation;
-                    std::cout << "(New Map) Map metadata after split : " << width << " " << height << " " << resolution << " " << initPosX << " " << initPosY << " " << orientation << std::endl;
+                    ROS_INFO("(New Map) Map metadata after split : %d %d %f %f %f %f", width, height, resolution, initPosX, initPosY, orientation);
 
                     /// We remove the 5 last bytes as they are only there to identify the end of the map
                     map.erase(map.end() - 5, map.end());
-                    std::cout << "(New Map) Size of the map received : " << map.size() << std::endl;
+                    ROS_INFO("(New Map) Size of the map received : %d", map.size());
 
                     // if initPosX <= 100.0 it means we have just finished a scan and we have the position of the robot
                     if(initPosX > -100.0){
@@ -129,7 +130,7 @@ void session(ros::NodeHandle n){
                         std::string initialPoseFile;
                         if(n.hasParam("last_known_position_file")){
                             n.getParam("last_known_position_file", initialPoseFile);
-                            std::cout << "read_new_map set last known position file to " << initialPoseFile << std::endl;
+                            ROS_INFO("read_new_map set last known position file to %s", initialPoseFile.c_str());
                         } 
 
                         ofs.open(initialPoseFile, std::ofstream::out | std::ofstream::trunc);
@@ -144,7 +145,7 @@ void session(ros::NodeHandle n){
                             ofs.close();
 
                         } else {
-                            std::cout << "(New Map) Could not open the file to create a new initialPoseFile file " << initialPoseFile << std::endl;
+                            ROS_INFO("(New Map) Could not open the file to create a new initialPoseFile file %s", initialPoseFile.c_str());
                             message = "failed";
                         }
                     } 
@@ -154,7 +155,7 @@ void session(ros::NodeHandle n){
                     std::string mapFile;
                     if(n.hasParam("map_image_used")){
                         n.getParam("map_image_used", mapFile);
-                        std::cout << "read new map set map file to " << mapFile << std::endl;
+                        ROS_INFO("read new map set map file to %s", mapFile.c_str());
                     } 
                     ofs.open(mapFile, std::ofstream::out | std::ofstream::trunc);
 
@@ -176,48 +177,51 @@ void session(ros::NodeHandle n){
                         ofs << std::endl;
                         ofs.close();
 
-                        std::cout << "(New Map) New map pgm file created in " << mapFile << std::endl;
+                        ROS_INFO("(New Map) New map pgm file created in %s", mapFile.c_str());
 
                         /// Kill gobot move so that we'll restart it with the new map
                         std::string cmd = "rosnode kill /move_base";
                         system(cmd.c_str());
 
                         sleep(5);
-                        std::cout << "(New Map) We killed gobot_navigation" << std::endl;
+                        ROS_INFO("(New Map) We killed gobot_navigation");
 
                         /// We delete the old path
                         std::string pathFile;
                         if(n.hasParam("path_file")){
                             n.getParam("path_file", pathFile);
-                            std::cout << "read new map set path file to " << pathFile;
+                            ROS_INFO("read new map set path file to %s", pathFile.c_str());
                         }
                         ofs.open(pathFile, std::ofstream::out | std::ofstream::trunc);
                         ofs.close();
-                        std::cout << "(New Map) Path deleted" << std::endl;
+                        ROS_INFO("(New Map) Path deleted");
 
                         /// We delete the old home
                         std::string homeFile;
                         if(n.hasParam("home_file")){
                             n.getParam("home_file", homeFile);
-                            std::cout << "read new map home file to " << homeFile;
+                            ROS_INFO("read new map home file to %s", homeFile.c_str());
                         }
                         ofs.open(homeFile, std::ofstream::out | std::ofstream::trunc);
                         ofs.close();
-                        std::cout << "(New Map) Home deleted" << std::endl;
+                        ROS_INFO("(New Map) Home deleted");
 
                         /// Relaunch gobot_navigation
-                        //cmd = "roslaunch gobot_navigation slam.launch &";
-                        cmd = "roslaunch gobot_navigation gazebo_slam.launch &";
+                        if(simulation)
+                            cmd = "roslaunch gobot_navigation gazebo_slam.launch &";
+                        else
+                            cmd = "roslaunch gobot_navigation slam.launch &";
+
                         system(cmd.c_str());
-                        std::cout << "(New Map) We relaunched gobot_navigation" << std::endl;
+                        ROS_INFO("(New Map) We relaunched gobot_navigation");
                         message = "done 1";
 
                     } else {
-                        std::cout << "(New Map) Could not open the file to create a new pgm file " << mapFile << std::endl;
+                        ROS_INFO("(New Map) Could not open the file to create a new pgm file %s", mapFile.c_str());
                         message = "failed";
                     }
                 } else {
-                    std::cout << "(New Map) Map id could not be updated : " << mapId << " with date " << mapDate << std::endl;
+                    ROS_INFO("(New Map) Map id could not be updated : %s with date %s", mapId.c_str(), mapDate.c_str());
                     message = "failed";
                 }
             } else {
@@ -234,15 +238,15 @@ void session(ros::NodeHandle n){
             boost::asio::write(socket_robot, boost::asio::buffer(message, message.length()), boost::asio::transfer_all(), error);
 
             if(error) 
-                std::cout << "(New Map) Error : " << error.message() << std::endl;
+                ROS_INFO("(New Map) Error : %s", error.message());
             else 
-                std::cout << "(New Map) Message sent succesfully : " << message.length() << " bytes sent" << std::endl;
+                ROS_INFO("(New Map) Message sent succesfully : %d bytes sent", message.length());
         }
     }
 }
 
 void asyncAccept(ros::NodeHandle n){
-    std::cout << "(New Map) Waiting for connection" << std::endl;
+    ROS_INFO("(New Map) Waiting for connection");
 
     if(socket_robot.is_open())
         socket_robot.close();
@@ -255,7 +259,7 @@ void asyncAccept(ros::NodeHandle n){
     m_acceptor.set_option(tcp::acceptor::reuse_address(true));
 
     m_acceptor.accept(socket_robot);
-    std::cout << "(New Map) Command socket connected to " << socket_robot.remote_endpoint().address().to_string() << std::endl;
+    ROS_INFO("(New Map) Command socket connected to %s", socket_robot.remote_endpoint().address().to_string().c_str());
     connected = true;
     waiting = false;
     boost::thread t(boost::bind(session, n));
@@ -263,7 +267,7 @@ void asyncAccept(ros::NodeHandle n){
 
 void serverDisconnected(const std_msgs::String::ConstPtr& msg){
     if(connected){
-        std::cout << "(New Map) I heard " << std::endl;
+        ROS_INFO("(New Map) serverDisconnected");
         connected = false;
     }
 }
@@ -273,7 +277,7 @@ int main(int argc, char **argv){
     ros::init(argc, argv, "read_new_map");
     ros::NodeHandle n;
     
-    std::cout << "(New Map) Ready to be launched." << std::endl;
+    ROS_INFO("(New Map) Ready to be launched.");
 
     /// Subscribe to know when we disconnected from the server
     ros::Subscriber sub = n.subscribe("server_disconnected", 1000, serverDisconnected);
@@ -281,11 +285,14 @@ int main(int argc, char **argv){
     /// Advertise that we are going to publish to /map
     map_pub = n.advertise<nav_msgs::OccupancyGrid>("/map", 1000);
 
+    n.param<bool>("simulation", simulation, false);
+    ROS_INFO("(New Map) simulation : %d", simulation);
+
     ros::Rate r(10);
 
     while(ros::ok()){
         if(!connected && !waiting){
-            std::cout << "(New Map) Ready to connect" << std::endl;
+            ROS_INFO("(New Map) Ready to connect");
             boost::thread t(boost::bind(asyncAccept, n));
             waiting = true;
         }
