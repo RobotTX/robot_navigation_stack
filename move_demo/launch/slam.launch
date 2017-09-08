@@ -1,6 +1,0 @@
-<?xml version="1.0"?>
-<launch>
-        <include file="$(find move_demo)/launch/mapbase.launch.xml"/>
-        <include file="$(find move_demo)/launch/nav_amcl.launch.xml"/>
-	<include file="$(find move_demo)/launch/make_move_base.launch.xml" />
-</launch>

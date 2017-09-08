@@ -266,7 +266,7 @@ bool execCommand(ros::NodeHandle n, const std::vector<std::string> command){
                 }
                 
             } else 
-                ROS_INFO("(Command system) Parameter missing %d %d", command.size(), command.size()%4);
+                ROS_INFO("(Command system) Parameter missing %lu %lu", command.size(), command.size()%4);
         break;
 
         /// Command for the robot to play the saved path
@@ -358,7 +358,7 @@ bool execCommand(ros::NodeHandle n, const std::vector<std::string> command){
                 }
                 
             } else
-                ROS_INFO("(Command system) Not enough arguments, received %d arguments, 4 arguments expected", command.size());
+                ROS_INFO("(Command system) Not enough arguments, received %lu arguments, 4 arguments expected", command.size());
         break;
 
         // command to send the robot home
@@ -436,7 +436,7 @@ bool execCommand(ros::NodeHandle n, const std::vector<std::string> command){
             if(command.size() == 2)
                 status = sendOnceMap(std::stoi(command.at(1)));
              else 
-                ROS_INFO("(Command system) Not enough arguments, received %d arguments, 2 arguments expected", command.size()); 
+                ROS_INFO("(Command system) Not enough arguments, received %lu arguments, 2 arguments expected", command.size()); 
         break;
 
         /// Command for the robot to start a scan from the beggining
@@ -608,12 +608,12 @@ bool execCommand(ros::NodeHandle n, const std::vector<std::string> command){
 
         /// Default/Unknown command
         default:
-            ROS_ERROR("(Command system) Unknown command '%s' with %d arguments : ", command.at(0).c_str(), command.size()-1);
+            ROS_ERROR("(Command system) Unknown command '%s' with %lu arguments : ", command.at(0).c_str(), command.size()-1);
             if(command.size() < 10){
                 for(int i = 0; i < command.size(); i++)
                     ROS_ERROR("%s", command.at(i).c_str());
             } else 
-                ROS_WARN("(Command system) Too many arguments to display (%d)", command.size());
+                ROS_WARN("(Command system) Too many arguments to display (%lu)", command.size());
         break;
     }
     return status;
@@ -933,7 +933,7 @@ void getPorts(boost::shared_ptr<tcp::socket> sock, ros::NodeHandle n){
 
     boost::system::error_code error;
     size_t length = sock->read_some(boost::asio::buffer(data), error);
-    ROS_INFO("%d byte(s) received", length);
+    ROS_INFO("%lu byte(s) received", length);
 
     if ((error == boost::asio::error::eof) || (error == boost::asio::error::connection_reset)){
         ROS_INFO("(Command system) Connection closed");
@@ -963,7 +963,7 @@ void getPorts(boost::shared_ptr<tcp::socket> sock, ros::NodeHandle n){
             for(int i = 0; i < command.size(); i++)
                 ROS_INFO("'%s'", command.at(i).c_str());
         } else 
-            ROS_WARN("(Command system) Too many arguments to display (%d)", command.size());
+            ROS_WARN("(Command system) Too many arguments to display (%lu)", command.size());
 
         execCommand(n, command);
         ROS_INFO("(Command system) GetPorts done");
@@ -984,7 +984,7 @@ void session(boost::shared_ptr<tcp::socket> sock, ros::NodeHandle n){
 
             boost::system::error_code error;
             size_t length = sock->read_some(boost::asio::buffer(data), error);
-            ROS_INFO("(Command system) %d byte(s) received", length);
+            ROS_INFO("(Command system) %lu byte(s) received", length);
             if (error == boost::asio::error::eof)
                 ROS_ERROR("(Command system) Got error eof");
             
@@ -1016,7 +1016,7 @@ void session(boost::shared_ptr<tcp::socket> sock, ros::NodeHandle n){
                         for(int i = 0; i < command.size(); i++)
                             ROS_INFO("'%s'", command.at(i).c_str());
                     } else 
-                        ROS_WARN("(Command system) Too many arguments to display (%d)", command.size());
+                        ROS_WARN("(Command system) Too many arguments to display (%lu)", command.size());
 
                     std::string msg = (execCommand(n, command) ? "done" : "failed") + sep + commandStr;
                     sendMessageToPc(sock, msg);
@@ -1033,7 +1033,7 @@ void session(boost::shared_ptr<tcp::socket> sock, ros::NodeHandle n){
                     iss2 >> sub;
                 }
 
-                ROS_ERROR("(Command system) data received : %d byte(s) in str : %s", sub.length(), sub.c_str());
+                ROS_ERROR("(Command system) data received : %lu byte(s) in str : %s", sub.length(), sub.c_str());
                 for(int i = 0; i < max_length; i++)
                     if(static_cast<int>(data[i]) != 0)
                         ROS_ERROR("%d : %d or %c", i, static_cast<int>(data[i]), data[i]);
@@ -1099,7 +1099,7 @@ void asyncAccept(boost::shared_ptr<boost::asio::io_service> io_service, boost::s
             homeOri = -(yaw*180/3.14159) - 90;//-(orientation+90)*3.14159/180);
             ROS_INFO("(Command system) rotation %f", homeOri);
 
-            ROS_INFO("(Command system) Home : [%f, %f, %f]", homeX, homeY, homeOri);
+            ROS_INFO("(Command system) Home : [%s, %s, %f]", homeX.c_str(), homeY.c_str(), homeOri);
             dockStatus = 0;
             ifs.close();
         }
@@ -1145,7 +1145,7 @@ void asyncAccept(boost::shared_ptr<boost::asio::io_service> io_service, boost::s
         
         if(ifLaser){
             getline(ifLaser, laserStr);
-            ROS_INFO("(Command system) Laser activated : %d", laserStr);
+            ROS_INFO("(Command system) Laser activated : %s", laserStr.c_str());
             laserActivated = boost::lexical_cast<bool>(laserStr);
             ifLaser.close();
         }
