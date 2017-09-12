@@ -1,6 +1,45 @@
 # Gobot's catkin_ws sources
 
-Contain all the custom packaged to run Gobot : 
+Contain all the custom packaged to run Gobot
+
+## Getting Started
+
+### Prerequisites
+
+Packages you'll need to install in order to make everything works :
+* navigation
+* robot_pose_publisher
+* gmapping (actually just need open_slam)
+* hector_nav_msgs
+* teb_local_planner
+* hector_sensors_description (gazebo)
+* telop_twist_keyboard (if you want to make the robot with your keyboard)
+
+To install this packages : 
+
+```
+sudo apt install ros-kinetic-navigation
+sudo apt install ros-kinetic-robot-pose_publisher
+sudo apt install ros-kinetic-gmapping
+sudo apt install ros-kinetic-hector-nav-msgs
+sudo apt install ros-kinetic-teb_local-planner
+sudo apt install ros-kinetic-hector-sensors-description
+sudo apt install ros-kinetic-telop-twist-keyboard
+```
+
+### Installing
+
+To install all the packages, you need to remove these packages from the src first :
+* gobot_navigation
+* gobot_sensors2pc
+* gobot_simulation
+* gobot_software
+
+Then catkin_make, then add the packages above to the src, then catkin_make again.
+
+The packages above needs gobot_base to be compiled first and the dependencies in package.xml and CMakeLists.txt are not working correctly yet (need investigation).
+
+# Description of the packages :
 
 ## gmapping
 

@@ -62,6 +62,8 @@ bool initSerial() {
     serialConnection.close();
     serialConnection.open();
 
+    std::cout << "(wheels::initSerial) MD49 serial communication : " << serialConnection.isOpen() << std::endl;
+
     if(serialConnection.isOpen()){
         /// First 3 bytes : set the mode (see MD49 documentation)
         /// then 2 bytes to disable the 2 sec timeout
