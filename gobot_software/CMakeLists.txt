@@ -97,3 +97,7 @@ add_executable(auto_docking src/auto_docking.cpp)
 target_link_libraries(auto_docking ${catkin_LIBRARIES} ${gobot_software} ${Boost_FILESYSTEM_LIBRARY} ${Boost_SYSTEM_LIBRARY} )
 add_dependencies(auto_docking gobot_software_generate_messages_cpp)
 
+add_executable(initialPosePublisher src/initialPosePublisher.cpp)
+target_link_libraries(initialPosePublisher ${catkin_LIBRARIES} ${gobot_software} )
+add_dependencies(initialPosePublisher gobot_software_generate_messages_cpp)
+

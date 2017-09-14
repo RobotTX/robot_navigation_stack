@@ -19,7 +19,7 @@ double map_origin_y = -1;
 void sendMap(const std::vector<uint8_t>& my_map){
 	try {
 		boost::system::error_code ignored_error;
-		ROS_INFO("(Map::sendMap) Map size to send in uint8_t : %d", my_map.size());
+		ROS_INFO("(Map::sendMap) Map size to send in uint8_t : %lu", my_map.size());
 		boost::asio::write(socket_map, boost::asio::buffer(my_map), boost::asio::transfer_all(), ignored_error);
 	} catch (std::exception& e) {
 		e.what();
@@ -128,7 +128,7 @@ std::vector<uint8_t> compress(const std::vector<int8_t> map, const int map_width
 
 
 	int map_size = map_width * map_height;
-    ROS_INFO("(Map::compress) Map size %d vs %d", map_size, map.size());
+    ROS_INFO("(Map::compress) Map size %d vs %lu", map_size, map.size());
 	for(size_t i = 0; i < map_size; i++){
         int curr = 0;
         if(i >= map.size())
@@ -299,7 +299,7 @@ bool sendOnceMap(gobot_software::Port::Request &req,
 				my_map.push_back(static_cast<int8_t>(line.at(i)));
 
 		mapFile.close();
-		ROS_INFO("(Map::sendOnceMap) Got the whole map from file, about to compress and send it %d", my_map.size());
+		ROS_INFO("(Map::sendOnceMap) Got the whole map from file, about to compress and send it %lu", my_map.size());
 		sendMap(compress(my_map, width, height, map_resolution, map_origin_x, map_origin_y, who));
 
 		return true;

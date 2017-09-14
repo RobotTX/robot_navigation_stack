@@ -78,9 +78,9 @@ bool startDocking(void){
             matrix.getRPY(roll, pitch, yaw);
             double homeOri = -(yaw*180/3.14159);//-(orientation+90)*3.14159/180);
 
-            /// We want to go 1.5 metres in front of the charging station
-            double landingPointX = x + 1.5 * std::cos(yaw);
-            double landingPointY = y + 1.5 * std::sin(yaw);
+            /// We want to go 1 metre in front of the charging station
+            double landingPointX = x + 1.0 * std::cos(yaw);
+            double landingPointY = y + 1.0 * std::sin(yaw);
             ROS_INFO("(auto_docking::startDocking) landing point : [%f, %f, %f]", landingPointX, landingPointY, homeOri);
 
             /// Create the goal
@@ -227,7 +227,7 @@ void newBumpersInfo(const gobot_base::BumperMsg::ConstPtr& bumpers){
     } else {
         /// if we had a collision and the obstacle left
         if(collision){
-            ROS_INFO("(auto_docking::newBumpersInfo) the obstacle left after %d seconds", (double) (std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now() - collisionTime).count() / 1000));
+            ROS_INFO("(auto_docking::newBumpersInfo) the obstacle left after %f seconds", (double) (std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now() - collisionTime).count() / 1000));
             setSpeed('F', 0, 'F', 0);
             collision = false;
         }
@@ -249,9 +249,9 @@ void newIrSignal(const gobot_base::IrMsg::ConstPtr& irSignal){
                 /// make the robot turn on itself
                 if(leftFlag)
                     //if the left sensor is the last which saw the ir signal
-                    setSpeed('F', 3, 'B', 3);
-                else
                     setSpeed('B', 3, 'F', 3);
+                else
+                    setSpeed('F', 3, 'B', 3);
             } else
                 /// if we lost the signal for more than 20 seconds, we failed docking, else, the robot should still be turning on itself
                 if(std::chrono::duration_cast<std::chrono::seconds>(std::chrono::system_clock::now() - lastIrSignalTime).count() > 20)
@@ -259,7 +259,7 @@ void newIrSignal(const gobot_base::IrMsg::ConstPtr& irSignal){
         } else {
             /// we got an ir signal; 
             if(lostIrSignal){
-                ROS_INFO("(auto_docking::newIrSignal) just retrieved the ir signal after %d seconds", (double) (std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now() - lastIrSignalTime).count() / 1000));
+                ROS_INFO("(auto_docking::newIrSignal) just retrieved the ir signal after %f seconds", (double) (std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now() - lastIrSignalTime).count() / 1000));
                 lostIrSignal = false;
             }
 
@@ -269,29 +269,30 @@ void newIrSignal(const gobot_base::IrMsg::ConstPtr& irSignal){
                     setSpeed('B', 3, 'B', 3);
                 else if (irSignal->rearSignal == 2)
                     /// rear ir received signal 2, so robot turns right
-                    setSpeed('F', 3, 'B', 3);
+                    setSpeed('B', 3, 'F', 3);
                 else if (irSignal->rearSignal == 1)
                     /// rear ir received signal 1, so robot turns left
-                    setSpeed('B', 3, 'F', 3);
+                    setSpeed('F', 3, 'B', 3);
+                
             } else if (irSignal->leftSignal != 0){
                 /// received left signal
                 leftFlag = true;
                 if (irSignal->leftSignal == 3)
-                    setSpeed('F', 3, 'B', 3);
+                    setSpeed('B', 3, 'F', 3);
                 else if (irSignal->leftSignal == 2)
-                    setSpeed('F', 5, 'B', 3);
+                    setSpeed('B', 3, 'F', 5);
                 else if (irSignal->leftSignal == 1)
-                    setSpeed('F', 3, 'B', 5);
+                    setSpeed('B', 5, 'F', 3);
 
             } else if (irSignal->rightSignal != 0){
                 /// received right signal
                 leftFlag = false;
                 if (irSignal->rightSignal == 3)
-                    setSpeed('B', 3, 'F', 3);
+                    setSpeed('F', 3, 'B', 3);
                 else if (irSignal->rightSignal == 2)
-                    setSpeed('B', 3, 'F', 5);
+                    setSpeed('F', 3, 'B', 5);
                 else if (irSignal->rightSignal == 1)
-                    setSpeed('B', 5, 'F', 3);
+                    setSpeed('F', 5, 'B', 3);
             }
         }
     }

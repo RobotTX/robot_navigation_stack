@@ -13,7 +13,7 @@ ros::Publisher pub;
 ros::Subscriber particlesCloudSub;
 
 int test(const Cluster& dataSet, const int numberData, const int seq){
-	ROS_INFO("%d", dataSet.getMaxDistPoint().second);
+	ROS_INFO("%f", dataSet.getMaxDistPoint().second);
 
 	// if the diameter of the cluster is < 2 then all the cloud is small enough and the position is valid.
 	if(dataSet.getMaxDistPoint().second <= 2)
@@ -55,7 +55,7 @@ void checkLocalization(const geometry_msgs::PoseArray& data){
 
 	    ss << "position found" ;
 	    
-	    ROS_INFO("%s", ss.str());
+	    ROS_INFO("%s", ss.str().c_str());
 
 	    msg.data = ss.str();
 

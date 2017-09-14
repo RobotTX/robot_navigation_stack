@@ -44,6 +44,7 @@ int map_port = 4002;
 int laser_port = 4003;
 int recovered_position_port = 4004;
 int dockStatus = -2;
+bool looping = false;
 
 /// Separator which is just a char(31) => unit separator in ASCII
 static const std::string sep = std::string(1, 31);
@@ -593,14 +594,16 @@ bool execCommand(ros::NodeHandle n, const std::vector<std::string> command){
                 ROS_INFO("(Command system) Loop the path %s", command.at(1).c_str());
                 std_srvs::Empty arg;
                 if(std::stoi(command.at(1)) == 0){
-                    if(ros::service::call("/stopLoopPath", arg))
+                    if(ros::service::call("/stopLoopPath", arg)){
                         status = true;
-                    else
+                        looping = false;
+                    } else
                         ROS_INFO("(Command system) Could not call the service /stopLoopPath");
                 } else {
-                    if(ros::service::call("/startLoopPath", arg))
+                    if(ros::service::call("/startLoopPath", arg)){
                         status = true;
-                    else
+                        looping = true;
+                    } else
                         ROS_INFO("(Command system) Could not call the service /startLoopPath");
                 }
             }
@@ -1162,9 +1165,10 @@ void asyncAccept(boost::shared_ptr<boost::asio::io_service> io_service, boost::s
 
     std::string scan = (scanning) ? "1" : "0";
     std::string recover = (recovering) ? "1" : "0";
+    std::string looping_str = (looping) ? "1" : "0";
 
     sendMessageToPc(sock, "Connected" + sep + mapId + sep + mapDate + sep + homeX + sep + homeY + sep + std::to_string(homeOri) + sep
-        + scan + sep + recover + sep + laserStr + sep + path);
+        + scan + sep + recover + sep + laserStr + sep + looping_str + sep + path);
 
     boost::thread t(boost::bind(session, sock, n));
 }

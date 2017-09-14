@@ -19,10 +19,10 @@ To install this packages :
 
 ```
 sudo apt install ros-kinetic-navigation
-sudo apt install ros-kinetic-robot-pose_publisher
+sudo apt install ros-kinetic-robot-pose-publisher
 sudo apt install ros-kinetic-gmapping
 sudo apt install ros-kinetic-hector-nav-msgs
-sudo apt install ros-kinetic-teb_local-planner
+sudo apt install ros-kinetic-teb-local-planner
 sudo apt install ros-kinetic-hector-sensors-description
 sudo apt install ros-kinetic-telop-twist-keyboard
 ```

@@ -10,6 +10,8 @@ ros::Publisher battery_pub;
 ros::Publisher cliff_pub;
 serial::Serial serialConnection;
 
+int last_charging_current = -1;
+
 
 /// get the output of the given system command
 std::string getStdoutFromCommand(std::string cmd) {
@@ -93,7 +95,14 @@ void publishSensors(void){
             battery_data.Temperature = buff.at(36) * 256 + buff.at(37);
             battery_data.RemainCapacity = (buff.at(38) * 256 + buff.at(39))/100;
             battery_data.FullCapacity = (buff.at(40) * 256 + buff.at(41))/100;
-            battery_data.ChargingFlag = battery_data.ChargingCurrent > 500;
+
+            if(battery_data.ChargingCurrent > 500 || (last_charging_current > 0 && battery_data.ChargingCurrent - last_charging_current > 60))
+                battery_data.ChargingFlag = true;
+            else 
+                battery_data.ChargingFlag = false;
+
+            last_charging_current = battery_data.ChargingCurrent;
+            
             battery_pub.publish(battery_data);
 
             /// Weight data
@@ -103,7 +112,7 @@ void publishSensors(void){
 
             /// External button
             int32_t external_button = buff.at(45);
-            /// TODO do whatever with we want with it
+            /// TODO do whatever we want with it
 
             /*
             std::cout << "Sonars : " << sonar_data.distance1 << " " << sonar_data.distance2 << " " << sonar_data.distance3 << " " << sonar_data.distance4 
@@ -122,6 +131,8 @@ void publishSensors(void){
 
         } else
             std::cout << "(sensors::publishSensors) Check buff size : " << buff.size() << std::endl;
+            
+        serialConnection.flush();
     } else
         std::cout << "(sensors::publishSensors) Check srial connection" << std::endl;
 }
