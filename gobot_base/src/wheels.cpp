@@ -23,7 +23,7 @@ std::vector<uint8_t> writeAndRead(std::vector<uint8_t> toWrite, int bytesToRead)
         serialMutex.unlock();
 
     } else {
-        std::cout << "(wheels::writeAndRead) The serial connection is not opened, something is wrong" << std::endl;
+        ROS_INFO("(wheels::writeAndRead) The serial connection is not opened, something is wrong");
     }
 
     return buff;
@@ -52,7 +52,7 @@ bool initSerial() {
     std::string output = getStdoutFromCommand("ls -l /sys/class/tty/ttyUSB*");
     std::string port = "/dev" + output.substr(output.find(deviceNode) + deviceNode.size(), 8);
 
-    std::cout << "(wheels::initSerial) MD49 port : " << port << std::endl;
+    ROS_INFO("(wheels::initSerial) MD49 port : %s", port.c_str());
 
     // Set the serial port, baudrate and timeout in milliseconds
     serialConnection.setPort(port);
@@ -62,7 +62,7 @@ bool initSerial() {
     serialConnection.close();
     serialConnection.open();
 
-    std::cout << "(wheels::initSerial) MD49 serial communication : " << serialConnection.isOpen() << std::endl;
+    ROS_INFO("(wheels::initSerial) MD49 serial communication : %d", serialConnection.isOpen());
 
     if(serialConnection.isOpen()){
         /// First 3 bytes : set the mode (see MD49 documentation)
@@ -83,7 +83,7 @@ bool setSpeeds(gobot_base::SetSpeeds::Request &req, gobot_base::SetSpeeds::Respo
         uint8_t leftSpeed = req.directionL.compare("F") == 0 ? 128 - req.velocityL : 128 + req.velocityL;
         uint8_t rightSpeed = req.directionR.compare("F") == 0 ? 128 - req.velocityR : 128 + req.velocityR;
 
-        //std::cout << "(wheels::setSpeeds) Data : " << req.directionL << " " << (int) req.velocityL << " " << req.directionR << " " << (int) req.velocityR << std::endl;
+        //ROS_INFO("(wheels::setSpeeds) Data : %s %d %s %d", req.directionL.c_str(), (int) req.velocityL, req.directionR.c_str(), (int) req.velocityR);
         
         writeAndRead(std::vector<uint8_t>({0x00, 0x31, leftSpeed, 0x00, 0x32, rightSpeed}));
 
@@ -101,7 +101,7 @@ bool getEncoders(gobot_base::GetEncoders::Request &req, gobot_base::GetEncoders:
         res.rightEncoder = (encoders.at(4) << 24) + (encoders.at(5) << 16) + (encoders.at(6) << 8) + encoders.at(7);
         return true;
     } else {
-        std::cout << "(wheels::getEncoders) Got the wrong number of encoders data : " << encoders.size() << std::endl;
+        ROS_INFO("(wheels::getEncoders) Got the wrong number of encoders data : %lu", encoders.size());
         return false;
     }
 }
@@ -124,9 +124,9 @@ bool testEncoders(std_srvs::Empty::Request &req, std_srvs::Empty::Response &res)
             if(encoders.size() == 8){
                 int32_t leftEncoder = (encoders.at(0) << 24) + (encoders.at(1) << 16) + (encoders.at(2) << 8) + encoders.at(3);
                 int32_t rightEncoder = (encoders.at(4) << 24) + (encoders.at(5) << 16) + (encoders.at(6) << 8) + encoders.at(7);
-                std::cout << "(wheels::testEncoders) " << leftEncoder << " and " << rightEncoder << std::endl;
+                ROS_INFO("(wheels::testEncoders) %d and %d", leftEncoder, rightEncoder);
             } else
-                std::cout << "(wheels::testEncoders) Got the wrong number of encoders data : " << encoders.size() << std::endl;
+                ROS_INFO("(wheels::testEncoders) Got the wrong number of encoders data : %lu", encoders.size());
         }
     }).detach();
 
@@ -149,13 +149,13 @@ bool testEncoders2(std_srvs::Empty::Request &req, std_srvs::Empty::Response &res
                 int32_t leftEncoder = (encoders.at(0) << 24) + (encoders.at(1) << 16) + (encoders.at(2) << 8) + encoders.at(3);
                 int32_t rightEncoder = (encoders.at(4) << 24) + (encoders.at(5) << 16) + (encoders.at(6) << 8) + encoders.at(7);
                 
-                std::cout << "(wheels::testEncoders2) " << leftEncoder - last_leftEncoder << " and " << rightEncoder - last_rightEncoder << std::endl;
+                ROS_INFO("(wheels::testEncoders2) %d and %d", leftEncoder - last_leftEncoder, rightEncoder - last_rightEncoder);
         
                 last_leftEncoder = leftEncoder;
                 last_rightEncoder = rightEncoder;
 
             } else
-                std::cout << "(wheels::testEncoders2) Got the wrong number of encoders data : " << encoders.size() << std::endl;
+                ROS_INFO("(wheels::testEncoders2) Got the wrong number of encoders data : %lu", encoders.size());
             r.sleep();
         }
     }).detach();
@@ -184,7 +184,7 @@ int main(int argc, char **argv) {
 
         ros::spin();
     } else
-        std::cout << "(wheels::main) Could not open the serial communication" << std::endl;
+        ROS_INFO("(wheels::main) Could not open the serial communication");
 
     return 0;
 }

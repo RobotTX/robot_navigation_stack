@@ -68,6 +68,7 @@ add_service_files(
     FILES
     GetEncoders.srv
     SetSpeeds.srv
+    IsCharging.srv
 )
 
 ## Generate actions in the 'action' folder

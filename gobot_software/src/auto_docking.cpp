@@ -66,52 +66,56 @@ bool startDocking(void){
             ifs >> x >> y >> oriX >> oriY >> oriZ >> oriW;
             ifs.close();
 
-            ROS_INFO("(auto_docking::startDocking) home found : [%f, %f] [%f, %f, %f, %f]", x, y, oriX, oriY, oriZ, oriW);
+            if(x != 0 || y != 0 || oriX != 0 || oriY != 0 || oriZ != 0 || oriW != 0){
 
-            /// Got a quaternion and want an orientation in radian
-            tf::Matrix3x3 matrix = tf::Matrix3x3(tf::Quaternion(oriX , oriY , oriZ, oriW));
+                ROS_INFO("(auto_docking::startDocking) home found : [%f, %f] [%f, %f, %f, %f]", x, y, oriX, oriY, oriZ, oriW);
 
-            tfScalar roll;
-            tfScalar pitch;
-            tfScalar yaw;
+                /// Got a quaternion and want an orientation in radian
+                tf::Matrix3x3 matrix = tf::Matrix3x3(tf::Quaternion(oriX , oriY , oriZ, oriW));
 
-            matrix.getRPY(roll, pitch, yaw);
-            double homeOri = -(yaw*180/3.14159);//-(orientation+90)*3.14159/180);
+                tfScalar roll;
+                tfScalar pitch;
+                tfScalar yaw;
 
-            /// We want to go 1 metre in front of the charging station
-            double landingPointX = x + 1.0 * std::cos(yaw);
-            double landingPointY = y + 1.0 * std::sin(yaw);
-            ROS_INFO("(auto_docking::startDocking) landing point : [%f, %f, %f]", landingPointX, landingPointY, homeOri);
+                matrix.getRPY(roll, pitch, yaw);
+                double homeOri = -(yaw*180/3.14159);//-(orientation+90)*3.14159/180);
 
-            /// Create the goal
-            currentGoal.target_pose.header.stamp = ros::Time::now();
-            currentGoal.target_pose.pose.position.x = landingPointX;
-            currentGoal.target_pose.pose.position.y = landingPointY;
-            currentGoal.target_pose.pose.position.z = 0;
-            currentGoal.target_pose.pose.orientation.x = oriX;
-            currentGoal.target_pose.pose.orientation.y = oriY;
-            currentGoal.target_pose.pose.orientation.z = oriZ;
-            currentGoal.target_pose.pose.orientation.w = oriW;
-            
-            /// send the goal
-            if(ac->isServerConnected()) {
-                ac->sendGoal(currentGoal);
+                /// We want to go 1 metre in front of the charging station
+                double landingPointX = x + 1.0 * std::cos(yaw);
+                double landingPointY = y + 1.0 * std::sin(yaw);
+                ROS_INFO("(auto_docking::startDocking) landing point : [%f, %f, %f]", landingPointX, landingPointY, homeOri);
 
-                docking = true;
+                /// Create the goal
+                currentGoal.target_pose.header.stamp = ros::Time::now();
+                currentGoal.target_pose.pose.position.x = landingPointX;
+                currentGoal.target_pose.pose.position.y = landingPointY;
+                currentGoal.target_pose.pose.position.z = 0;
+                currentGoal.target_pose.pose.orientation.x = oriX;
+                currentGoal.target_pose.pose.orientation.y = oriY;
+                currentGoal.target_pose.pose.orientation.z = oriZ;
+                currentGoal.target_pose.pose.orientation.w = oriW;
+                
+                /// send the goal
+                if(ac->isServerConnected()) {
+                    ac->sendGoal(currentGoal);
 
-                /// will allow us to check that we arrived at our destination
-                goalStatusSub = nh.subscribe("/move_base/status", 1, goalStatus);
-                robotPoseSub = nh.subscribe("/robot_pose", 1, newRobotPos);
+                    docking = true;
 
-                ROS_INFO("(auto_docking::startDocking) service called successfully");
+                    /// will allow us to check that we arrived at our destination
+                    goalStatusSub = nh.subscribe("/move_base/status", 1, goalStatus);
+                    robotPoseSub = nh.subscribe("/robot_pose", 1, newRobotPos);
 
-                return true;
-            } else 
-                ROS_INFO("(auto_docking::startDocking) no action server");
+                    ROS_INFO("(auto_docking::startDocking) service called successfully");
+
+                    return true;
+                } else 
+                    ROS_ERROR("(auto_docking::startDocking) no action server");
+            } else
+                ROS_ERROR("(auto_docking::startDocking) home is not valid (probably not set)");
         } else
-            ROS_INFO("(auto_docking::startDocking) could not open the file %s", homeFile.c_str());
+            ROS_ERROR("(auto_docking::startDocking) could not open the file %s", homeFile.c_str());
     } else
-        ROS_INFO("(auto_docking::startDocking) could not find the param home_file %s", homeFile.c_str());
+        ROS_ERROR("(auto_docking::startDocking) could not find the param home_file %s", homeFile.c_str());
 
     return false;
 }
@@ -137,25 +141,22 @@ void newRobotPos(const geometry_msgs::Pose::ConstPtr& robotPos){
 // to get the status of the robot (completion of the path towards its goal, SUCCEEDED = reached its goal, ACTIVE = currently moving towards its goal)
 void goalStatus(const actionlib_msgs::GoalStatusArray::ConstPtr& goalStatusArray){
     if(docking){
-        if(goalStatusArray->status_list[0].status == 3){
+        if(goalStatusArray->status_list[0].status == actionlib_msgs::GoalStatus::SUCCEEDED){
             /// if we reached the goal for the fisrt time
             if(!landingPointReached && newGoal){
                 landingPointReached = true;
                 findChargingStation();
             }
-        } else if(goalStatusArray->status_list[0].status == 4 || goalStatusArray->status_list[0].status == 5){
+        } else if(goalStatusArray->status_list[0].status == actionlib_msgs::GoalStatus::ABORTED 
+            || goalStatusArray->status_list[0].status == actionlib_msgs::GoalStatus::REJECTED){
             /// if the goal could not be reached
             if(!landingPointReached && newGoal)
                 failedDocking(-4);
             
-        } else if(goalStatusArray->status_list[0].status == 0 || goalStatusArray->status_list[0].status == 1){
+        } else if(goalStatusArray->status_list[0].status == actionlib_msgs::GoalStatus::PENDING 
+            || goalStatusArray->status_list[0].status == actionlib_msgs::GoalStatus::ACTIVE)
         	/// Wait for the new goal to be published so the status is reset and we don't use the status of the previous goal
             newGoal = true;
-        } else {
-            //ROS_INFO("(auto_docking::goalStatus) status : %d", (int) goalStatusArray->status_list[0].status);
-            /// NOTE not sure it's useful
-            //landingPointReached = false;
-        }
     }
 }
 
@@ -214,7 +215,7 @@ void newBumpersInfo(const gobot_base::BumperMsg::ConstPtr& bumpers){
     if(back){
         /// if it's a new collision, we stop the robot
         if(!collision){
-            ROS_INFO("(auto_docking::newBumpersInfo) just got a new collision");
+            ROS_WARN("(auto_docking::newBumpersInfo) just got a new collision");
             collision = true;
             collisionTime = std::chrono::system_clock::now();
             setSpeed('F', 0, 'F', 0);
@@ -243,7 +244,7 @@ void newIrSignal(const gobot_base::IrMsg::ConstPtr& irSignal){
         if(irSignal->rearSignal == 0 && irSignal->leftSignal == 0 && irSignal->rightSignal == 0){
             /// if we just lost the ir signal, we start the timer
             if(!lostIrSignal){
-                ROS_INFO("(auto_docking::newIrSignal) just lost the ir signal");
+                ROS_WARN("(auto_docking::newIrSignal) just lost the ir signal");
                 lostIrSignal = true;
                 lastIrSignalTime = std::chrono::system_clock::now();
                 /// make the robot turn on itself
@@ -342,7 +343,7 @@ void finishedDocking(const int16_t status){
     if(chargingFlag)
         ROS_INFO("(auto_docking::finishedDocking) Finished docking and we are still charging");
     else
-        ROS_INFO("(auto_docking::finishedDocking) Finished docking but we are not charging anymore.... oops");
+        ROS_WARN("(auto_docking::finishedDocking) Finished docking but we are not charging anymore.... oops");
 
     batterySub.shutdown();
 

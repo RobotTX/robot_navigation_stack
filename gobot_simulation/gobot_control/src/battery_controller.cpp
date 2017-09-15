@@ -15,6 +15,12 @@ bool chargingFlagLeft = false;
 bool chargingFlagRight = false;
 int nb = 20;
 
+bool isChargingService(gobot_base::IsCharging::Request &req, gobot_base::IsCharging::Response &res){
+    res.isCharging = (chargingFlagLeft & chargingFlagRight);
+
+    return true;
+}
+
 void newLeftBattery(const gazebo_msgs::ContactsState::ConstPtr& msg){
     if(!chargingFlagLeft && msg->states.size() > 0)
         nb = 20;
@@ -55,6 +61,7 @@ int main(int argc, char **argv){
     ros::NodeHandle n;
     
     ros::ServiceServer setBatteryService = n.advertiseService("setBattery", setBattery);
+    ros::ServiceServer isChargingSrv = n.advertiseService("isCharging", isChargingService);
 
     ros::Publisher batteryPublisher = n.advertise<gobot_base::BatteryMsg>("battery_topic", 50);
 

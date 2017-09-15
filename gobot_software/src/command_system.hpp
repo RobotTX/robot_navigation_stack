@@ -42,32 +42,143 @@ using boost::asio::ip::tcp;
 
 template<typename Out>
 void split(const std::string &s, const char delim, Out result);
-bool execCommand(ros::NodeHandle n, const std::vector<std::string> command);
-void session(boost::shared_ptr<tcp::socket> sock, ros::NodeHandle n);
-void asyncAccept(boost::shared_ptr<boost::asio::io_service> io_service, boost::shared_ptr<tcp::acceptor> m_acceptor, ros::NodeHandle n);
-void startRobotPos(void);
-void stopRobotPos(void);
-bool startMap(void);
-bool sendOnceMap(const int who);
-bool sendAutoMap(void);
-bool stopAutoMap(void);
-bool stopMap(void);
-void server(const unsigned short port, ros::NodeHandle n);
-void getPorts(boost::shared_ptr<tcp::socket> sock, ros::NodeHandle n);
-bool sendMessageToPc(boost::shared_ptr<tcp::socket> sock, const std::string message);
-bool startLaserData(const bool startLaser);
-bool sendLaserData(void);
-bool stopSendLaserData(void);
-bool stopLaserData(void);
-bool stopParticleCloudData(void);
-void stopTwist(void);
-bool recoverPosition(void);
-bool stopRecoveringPosition(void);
-bool sendLocalMap(void);
-void disconnect(void);
-bool resumeRecoveryPosition(void);
+bool execCommand(const std::vector<std::string> command);
+
+/*********************************** COMMAND FUNCTIONS ***********************************/
+
+/// a
+bool renameRobot(const std::vector<std::string> command);
+
+/// NOT USED ANYMORE
+/// b
+bool changeWifi(const std::vector<std::string> command);
+
+/// c
+bool newGoal(const std::vector<std::string> command);
+
+/// d
+bool pausePath(const std::vector<std::string> command);
+
+/// e
+bool playScan(const std::vector<std::string> command);
+
+/// f
+bool pauseScan(const std::vector<std::string> command);
+
+/// g
+bool startScanAndAutoExplore(const std::vector<std::string> command);
+
+/// h
+bool robotStartup(const std::vector<std::string> command);
+
+/// i
+bool newPath(const std::vector<std::string> command);
+
+/// j
+bool playPath(const std::vector<std::string> command);
+
+/// NOT USED ANYMORE
+/// k
+bool deletePath(const std::vector<std::string> command);
+
+/// l
+bool stopPath(const std::vector<std::string> command);
+
+/// m
+bool stopAndDeletePath(const std::vector<std::string> command);
+
+/// n
+bool newChargingStation(const std::vector<std::string> command);
+
+/// o
+bool goToChargingStation(const std::vector<std::string> command);
+
+/// p
+bool stopGoingToChargingStation(const std::vector<std::string> command);
+
+/// q
+bool sendLaserData(const std::vector<std::string> command);
+
+/// r
+bool stopSendingLaserData(const std::vector<std::string> command);
+
+/// s
+bool sendMapOnce(const std::vector<std::string> command);
+
+/// t
+bool startNewScan(const std::vector<std::string> command);
+
+/// u
+bool stopScanning(const std::vector<std::string> command);
+
+/// v
+bool recoverPosition(const std::vector<std::string> command);
+
+/// w
+bool pauseRecoveringPosition(const std::vector<std::string> command);
+
+/// x
+bool stopRecoveringPosition(const std::vector<std::string> command);
+
+/// y
+bool resumeRecoveringPosition(const std::vector<std::string> command);
+
+/// z
+bool restartEverything(const std::vector<std::string> command);
+
+/// ,
+bool startAutoExplore(const std::vector<std::string> command);
+
+/// .
+bool stopAutoExplore(const std::vector<std::string> command);
+
+/// /
+bool loopPath(const std::vector<std::string> command);
+
+
+/*********************************** SOME FUNCTIONS USED MULTIPLE TIMES ***********************************/
+
+bool sendMapAutomatically(void);
+
+bool stopSendingMapAutomatically(void);
+
+
+/*********************************** SERVICES ***********************************/
+
 bool setDockStatus(gobot_software::SetDockStatus::Request &req, gobot_software::SetDockStatus::Response &res);
+
 bool getDockStatus(gobot_software::GetDockStatus::Request &req, gobot_software::GetDockStatus::Response &res);
-bool stopExploration(void);
+
+
+/*********************************** STARTUP CONNECTION FUNCTIONS ***********************************/
+
+void startRobotPosConnection(void);
+
+void stopRobotPosConnection(void);
+
+bool startMapConnection(void);
+
+bool stopMapConnection(void);
+
+bool startLaserDataConnection(const bool startLaser);
+
+bool stopLaserDataConnection(void);
+
+/*********************************** COMMUNICATION FUNCTIONS ***********************************/
+
+void getPorts(boost::shared_ptr<tcp::socket> sock);
+
+void session(boost::shared_ptr<tcp::socket> sock);
+
+bool sendMessageToPc(boost::shared_ptr<tcp::socket> sock, const std::string message);
+
+void asyncAccept(boost::shared_ptr<boost::asio::io_service> io_service, boost::shared_ptr<tcp::acceptor> m_acceptor);
+
+void server(const unsigned short port);
+
+void serverDisconnected(const std_msgs::String::ConstPtr& msg);
+
+void disconnect(void);
+
 
 #endif

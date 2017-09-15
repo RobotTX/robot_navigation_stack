@@ -5,7 +5,7 @@ bool moving_from_collision = false;
 std::chrono::system_clock::time_point collisionTime;
 
 bool setSpeed(const char directionR, const int velocityR, const char directionL, const int velocityL){
-    //std::cout << "(auto_docking::setSpeed) " << directionR << " " << velocityR << " " << directionL << " " << velocityL << std::endl;
+    //ROS_INFO("(auto_docking::setSpeed) %c %d %c %d", directionR , velocityR, directionL, velocityL);
     gobot_base::SetSpeeds speed; 
     speed.request.directionR = std::string(1, directionR);
     speed.request.velocityR = velocityR;
@@ -21,13 +21,14 @@ void newBumpersInfo(const gobot_base::BumperMsg::ConstPtr& bumpers){
     bool front = !(bumpers->bumper1 && bumpers->bumper2 && bumpers->bumper3 && bumpers->bumper4);
     bool back = !(bumpers->bumper5 && bumpers->bumper6 && bumpers->bumper7 && bumpers->bumper8);
 
-    //std::cout << "(twist::newBumpersInfo) Bumpers: " << bumpers->bumper1 << " " << bumpers->bumper2 << " " << bumpers->bumper3 << " " << bumpers->bumper4 << " " << bumpers->bumper5 << " " << bumpers->bumper6 << " " << bumpers->bumper7 << " " << bumpers->bumper8 << std::endl;
+    //ROS_INFO("(twist::newBumpersInfo) Bumpers: %d %d %d %d || %d %d %d %d ", bumpers->bumper1, bumpers->bumper2, bumpers->bumper3, bumpers->bumper4,
+    // bumpers->bumper5, bumpers->bumper6, bumpers->bumper7, bumpers->bumper8);
 
     /// check if we have a collision
     if(front || back){
         /// if it's a new collision, we stop the robot
         if(!collision){
-            std::cout << "(twist::newBumpersInfo) just got a new collision" << std::endl;
+            ROS_INFO("(twist::newBumpersInfo) just got a new collision");
             collision = true;
             collisionTime = std::chrono::system_clock::now();
             setSpeed('F', 0, 'F', 0);
@@ -56,7 +57,7 @@ void newBumpersInfo(const gobot_base::BumperMsg::ConstPtr& bumpers){
     } else {
         /// if we had a collision and the obstacle left
         if(collision && !moving_from_collision){
-            std::cout << "(twist::newBumpersInfo) the obstacle left after " << (double) (std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now() - collisionTime).count() / 1000) << " seconds" << std::endl;
+            ROS_INFO("(twist::newBumpersInfo) the obstacle left after %f seconds", (double) (std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now() - collisionTime).count() / 1000));
             collision = false;
         }
     }
@@ -90,13 +91,13 @@ void newCmdVel(const geometry_msgs::Twist::ConstPtr& twist){
             double right_vel_speed = ((right_vel_m_per_sec * ticks_per_rotation) / (2 * 3.14159 * wheel_radius) - b ) / a;
             double left_vel_speed = ((left_vel_m_per_sec * ticks_per_rotation) / (2 * 3.14159 * wheel_radius) - b ) / a;
 
-            //std::cout << "(twist::newCmdVel) new vel " << right_vel_speed << " " << left_vel_speed << std::endl;
+            //ROS_INFO("(twist::newCmdVel) new vel %f %f", right_vel_speed, left_vel_speed);
 
             setSpeed(right_vel_speed >= 0 ? 'F' : 'B', abs(right_vel_speed), left_vel_speed >= 0 ? 'F' : 'B', abs(left_vel_speed));
 
             /// just to show the actual real speed we gave to the wheels
             //double real_vel = (a * (int)right_vel_speed + b) / ticks_per_rotation * 2 * 3.14159 * wheel_radius;
-            //std::cout << "(twist::newCmdVel) linear vel " << twist->linear.x << " m/s, compared to real vel " << real_vel << " m/s\n so a difference of " <<  real_vel - twist->linear.x << std::endl;
+            //ROS_INFO("(twist::newCmdVel) linear vel %f m/s, compared to real vel %f  m/s\n so a difference of %f", twist->linear.x, real_vel, real_vel - twist->linear.x);
         }
     }
 }
