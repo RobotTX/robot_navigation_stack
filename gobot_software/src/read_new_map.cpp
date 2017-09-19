@@ -114,7 +114,7 @@ void session(ros::NodeHandle n){
 
                     /// We remove the 5 last bytes as they are only there to identify the end of the map
                     map.erase(map.end() - 5, map.end());
-                    ROS_INFO("(New Map) Size of the map received : %d", map.size());
+                    ROS_INFO("(New Map) Size of the map received : %lu", map.size());
 
                     // if initPosX <= 100.0 it means we have just finished a scan and we have the position of the robot
                     if(initPosX > -100.0){
@@ -238,9 +238,9 @@ void session(ros::NodeHandle n){
             boost::asio::write(socket_robot, boost::asio::buffer(message, message.length()), boost::asio::transfer_all(), error);
 
             if(error) 
-                ROS_INFO("(New Map) Error : %s", error.message());
+                ROS_INFO("(New Map) Error : %s", error.message().c_str());
             else 
-                ROS_INFO("(New Map) Message sent succesfully : %d bytes sent", message.length());
+                ROS_INFO("(New Map) Message sent succesfully : %lu bytes sent", message.length());
         }
     }
 }

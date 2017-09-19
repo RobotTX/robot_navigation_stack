@@ -66,7 +66,7 @@ void session(boost::shared_ptr<tcp::socket> socket){
 
 			boost::system::error_code error;
 			size_t length = socket->read_some(boost::asio::buffer(buffer), error);
-			ROS_INFO("(Backup system) %d  byte(s) received", length);
+			ROS_INFO("(Backup system) %lu  byte(s) received", length);
 			if (error == boost::asio::error::eof)
 				ROS_INFO("(Backup system) Got error eof");
 			

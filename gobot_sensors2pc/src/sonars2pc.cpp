@@ -20,32 +20,32 @@ void newSonarsInfo(const gobot_base::SonarMsg::ConstPtr& sonars){
     pcl::PointCloud<pcl::PointXYZ> frontRight;
     frontRight.header.frame_id = front_right_frame;
     frontRight.push_back(pcl::PointXYZ(0, sonars->distance2, 0));
-    rearPublisher.publish(frontRight);
+    frontRightPublisher.publish(frontRight);
     
     pcl::PointCloud<pcl::PointXYZ> frontLeft;
     frontLeft.header.frame_id = front_left_frame;
     frontLeft.push_back(pcl::PointXYZ(0, sonars->distance3, 0));
-    rearPublisher.publish(frontLeft);
+    frontLeftPublisher.publish(frontLeft);
     
     pcl::PointCloud<pcl::PointXYZ> leftCloud;
     leftCloud.header.frame_id = left_frame;
     leftCloud.push_back(pcl::PointXYZ(0, sonars->distance4, 0));
-    rearPublisher.publish(leftCloud);
+    leftPublisher.publish(leftCloud);
     
     pcl::PointCloud<pcl::PointXYZ> rightCloud;
     rightCloud.header.frame_id = right_frame;
     rightCloud.push_back(pcl::PointXYZ(0, sonars->distance5, 0));
-    rearPublisher.publish(rightCloud);
+    rightPublisher.publish(rightCloud);
     
     pcl::PointCloud<pcl::PointXYZ> topCloud;
     topCloud.header.frame_id = top_frame;
     topCloud.push_back(pcl::PointXYZ(0, sonars->distance6, 0));
-    rearPublisher.publish(topCloud);
+    topPublisher.publish(topCloud);
     
     pcl::PointCloud<pcl::PointXYZ> midCloud;
     midCloud.header.frame_id = mid_frame;
     midCloud.push_back(pcl::PointXYZ(0, sonars->distance7, 0));
-    rearPublisher.publish(midCloud);
+    midPublisher.publish(midCloud);
 }
 
 bool initParams(void){
@@ -60,6 +60,8 @@ bool initParams(void){
     nh.param("right_frame", right_frame, std::string("/right_sonar"));
     nh.param("top_frame", top_frame, std::string("/top_sonar"));
     nh.param("mid_frame", mid_frame, std::string("/mid_sonar"));
+
+    return true;
 }
 
 
@@ -84,7 +86,7 @@ int main(int argc, char* argv[]){
             topPublisher = nh.advertise<pcl::PointCloud<pcl::PointXYZ> >("/top_sonar_pc", 10);
 
             // get the sonars information
-            nh.subscribe("/sonar_topic", 1, newSonarsInfo);
+            ros::Subscriber sonarSub = nh.subscribe("/sonar_topic", 1, newSonarsInfo);
 
             ros::spin();
         }

@@ -87,7 +87,7 @@ void goalReached(){
 		} else {
 			// reached a normal/path goal so we sleep the given time
 			if(currentGoal.waitingTime > 0){
-				ROS_INFO("(PlayPath::goalReached) goalReached going to sleep for %d seconds", currentGoal.waitingTime);
+				ROS_INFO("(PlayPath::goalReached) goalReached going to sleep for %f seconds", currentGoal.waitingTime);
                 setStageInFile(stage);
 				sleep(currentGoal.waitingTime);
 			}
@@ -216,7 +216,7 @@ bool playPathService(std_srvs::Empty::Request &req, std_srvs::Empty::Response &r
 	}
 
 	for(size_t i = 0; i < path.size(); i++)
-		ROS_INFO("(PlayPath::playPathService) Stage %d [%f, %f], wait %d sec", i, path.at(i).x, path.at(i).y, path.at(i).waitingTime);
+		ROS_INFO("(PlayPath::playPathService) Stage %lu [%f, %f], wait %f sec", i, path.at(i).x, path.at(i).y, path.at(i).waitingTime);
 
 
 	if(currentGoal.x == -1){
