@@ -12,6 +12,7 @@ serial::Serial serialConnection;
 
 
 /// get the output of the given system command
+//tx//feedback string from executing command
 std::string getStdoutFromCommand(std::string cmd) {
     std::string data;
     FILE * stream;
