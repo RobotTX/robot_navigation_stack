@@ -53,8 +53,13 @@ void backToStart(void){
     ROS_INFO("(move_base_controller) Back to start launched...");
     switch(back_to_start_when_finished){
         case 1:
-            /// TODO We go back to a charging station
-            ROS_WARN("(move_base_controller) Trying to go back to a charging station after mapping, not implemented yet");
+        {
+            std_srvs::Empty arg;
+            if(ros::service::call("startDocking", arg))
+                ROS_INFO("(move_base_controller) Trying to go back to a charging station after mapping");
+            else 
+                ROS_ERROR("(move_base_controller) Couldn't call service startDocking");
+        }
         break;
         case 2:
         {
@@ -72,7 +77,7 @@ void backToStart(void){
         }
         break;
         default:
-            ROS_ERROR("(move_base_controller) back_to_start_when_finished value not used : %d", back_to_start_when_finished);
+            ROS_ERROR("(move_base_controller) back_to_start_when_finished value not defined : %d", back_to_start_when_finished);
         break;
     }
 }

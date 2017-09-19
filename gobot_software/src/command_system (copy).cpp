@@ -880,7 +880,7 @@ bool getDockStatus(gobot_software::GetDockStatus::Request &req, gobot_software::
 
 bool lowBattery(std_srvs::Empty::Request &req, std_srvs::Empty::Response &res){
     ROS_INFO("(Command system) lowBattery service called");
-    /// TODO go dock if the robot is not busy with something else
+
     return true;
 }
 
@@ -1213,12 +1213,12 @@ void asyncAccept(boost::shared_ptr<boost::asio::io_service> io_service, boost::s
     boost::thread t(boost::bind(session, sock));
 }
 
-void server(void){
+void server(const unsigned short port){
 
     boost::shared_ptr<boost::asio::io_service> io_service = boost::shared_ptr<boost::asio::io_service>(new boost::asio::io_service());
     io_service->run();
 
-    boost::shared_ptr<tcp::endpoint> m_endpoint = boost::shared_ptr<tcp::endpoint>(new tcp::endpoint(tcp::v4(), CMD_PORT));
+    boost::shared_ptr<tcp::endpoint> m_endpoint = boost::shared_ptr<tcp::endpoint>(new tcp::endpoint(tcp::v4(), port));
     boost::shared_ptr<tcp::acceptor> m_acceptor = boost::shared_ptr<tcp::acceptor>(new tcp::acceptor(*io_service, *m_endpoint));
 
     m_acceptor->set_option(tcp::acceptor::reuse_address(true));
@@ -1231,7 +1231,7 @@ void server(void){
 
             waiting = true;
         }
-        //ros::spinOnce();
+        ros::spinOnce();
         r.sleep();
     }
 }
@@ -1267,9 +1267,9 @@ int main(int argc, char* argv[]){
         n.param<bool>("simulation", simulation, false);
         ROS_INFO("(New Map) simulation : %d", simulation);
 
-        boost::thread t(boost::bind(server));
+        ros::spinOnce();
 
-        ros::spin();
+        server(CMD_PORT);
         
     } catch (std::exception& e) {
         ROS_ERROR("(Command system) Exception : %s", e.what());

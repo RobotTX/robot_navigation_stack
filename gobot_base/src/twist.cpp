@@ -2,6 +2,7 @@
 
 bool collision = false;
 bool moving_from_collision = false;
+bool moved_away_from_collision = false;
 std::chrono::system_clock::time_point collisionTime;
 
 bool setSpeed(const char directionR, const int velocityR, const char directionL, const int velocityL){
@@ -34,11 +35,13 @@ void newBumpersInfo(const gobot_base::BumperMsg::ConstPtr& bumpers){
             setSpeed('F', 0, 'F', 0);
         } else {
             /// if after 3 seconds, the obstacle is still there, we go to the opposite direction
-            if(std::chrono::duration_cast<std::chrono::seconds>(std::chrono::system_clock::now() - collisionTime).count() > 3){
+            if(std::chrono::duration_cast<std::chrono::seconds>(std::chrono::system_clock::now() - collisionTime).count() > 3 && !moved_away_from_collision){
                 moving_from_collision = true;
+                moved_away_from_collision = true;
                 /// We create a thread that will make the robot go into the opposite direction, then sleep for 2 seconds and make the robot stop
                 if(front && !back){
                     std::thread([](){
+                        ROS_INFO("Launching thread to move away from the obstacle");
                         setSpeed('B', 5, 'B', 5);
                         std::this_thread::sleep_for(std::chrono::milliseconds(2000));
                         setSpeed('F', 0, 'F', 0);
@@ -46,6 +49,7 @@ void newBumpersInfo(const gobot_base::BumperMsg::ConstPtr& bumpers){
                     }).detach();
                 } else if(back && !front){
                     std::thread([](){
+                        ROS_INFO("Launching thread to move away from the obstacle");
                         setSpeed('F', 5, 'F', 5);
                         std::this_thread::sleep_for(std::chrono::milliseconds(2000));
                         setSpeed('F', 0, 'F', 0);
@@ -53,12 +57,15 @@ void newBumpersInfo(const gobot_base::BumperMsg::ConstPtr& bumpers){
                     }).detach();
                 }
             }
+            /// TODO check if the obstacle is still there after moving away from it
+            /// probably means we got a bumper problem => send a message to the user
         }
     } else {
         /// if we had a collision and the obstacle left
         if(collision && !moving_from_collision){
             ROS_INFO("(twist::newBumpersInfo) the obstacle left after %f seconds", (double) (std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now() - collisionTime).count() / 1000));
             collision = false;
+            moved_away_from_collision = false;
         }
     }
 }

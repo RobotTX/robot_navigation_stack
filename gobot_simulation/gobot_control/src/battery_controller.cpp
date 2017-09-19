@@ -4,13 +4,12 @@
 ros::Subscriber sub_leftBattery;
 ros::Subscriber sub_rightBattery;
 
-int16_t batteryStatus = 20;
-int32_t batteryVoltage = 20;
-int32_t chargingCurrent = 20;
-int16_t temperature = 20;
-int32_t fullCapacity = 100;
-
-int32_t remainCapacity = 100;
+int16_t batteryStatus = 100;
+int32_t batteryVoltage = 23000;
+int32_t chargingCurrent = 200;
+int16_t temperature = 3000;
+int32_t fullCapacity = 120;
+int32_t remainCapacity = 120;
 bool chargingFlagLeft = false;
 bool chargingFlagRight = false;
 int nb = 20;
@@ -49,7 +48,7 @@ void newRightBattery(const gazebo_msgs::ContactsState::ConstPtr& msg){
 
 bool setBattery(gobot_control::SetBattery::Request &req, gobot_control::SetBattery::Response &res){
     std::cout << "(battery_controller) Service setBattery called" << std::endl;
-    remainCapacity = req.capacity;
+    batteryVoltage = req.voltage;
     return true;
 }
 
@@ -72,15 +71,15 @@ int main(int argc, char **argv){
 
     gobot_base::BatteryMsg msg;
     msg.BatteryStatus = batteryStatus;
-    msg.BatteryVoltage = batteryVoltage;
     msg.ChargingCurrent = chargingCurrent;
     msg.Temperature = temperature;
     msg.FullCapacity = fullCapacity;
+    msg.RemainCapacity = remainCapacity;
 
     ros::Rate loop_rate(10);
 
     while(ros::ok()){
-        msg.RemainCapacity = remainCapacity;
+        msg.BatteryVoltage = batteryVoltage;
         msg.ChargingFlag = (chargingFlagLeft & chargingFlagRight);
         batteryPublisher.publish(msg);
 

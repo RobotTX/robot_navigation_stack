@@ -176,7 +176,7 @@ bool sendMessageToPc(boost::shared_ptr<tcp::socket> sock, const std::string mess
 
 void asyncAccept(boost::shared_ptr<boost::asio::io_service> io_service, boost::shared_ptr<tcp::acceptor> m_acceptor);
 
-void server(void);
+void server(const unsigned short port);
 
 void serverDisconnected(const std_msgs::String::ConstPtr& msg);
 

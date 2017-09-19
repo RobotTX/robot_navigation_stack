@@ -101,3 +101,7 @@ add_executable(initialPosePublisher src/initialPosePublisher.cpp)
 target_link_libraries(initialPosePublisher ${catkin_LIBRARIES} ${gobot_software} )
 add_dependencies(initialPosePublisher gobot_software_generate_messages_cpp)
 
+add_executable(battery_check src/battery_check.cpp)
+target_link_libraries(battery_check ${catkin_LIBRARIES} ${gobot_software} )
+add_dependencies(battery_check gobot_software_generate_messages_cpp)
+
