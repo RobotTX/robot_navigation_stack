@@ -11,6 +11,6 @@ local_costmap:
     resolution: 0.02
     plugins:
         # Track the obstacle from the sensors and add them to the costmap
-        - {name: obstacle_layer, type: "costmap_2d::VoxelLayer"} # 3D costmap
+        - {name: obstacles, type: "costmap_2d::VoxelLayer"} # 3D costmap
         # Add inflation around the obstacle
         - {name: inflation_layer, type: "costmap_2d::InflationLayer"}

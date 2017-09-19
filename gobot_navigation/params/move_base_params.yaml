@@ -1,3 +1,5 @@
+#http://wiki.ros.org/move_base
+
 #base_local_planner: dwa_local_planner/DWAPlannerROS
 base_local_planner: teb_local_planner/TebLocalPlannerROS
 #base_local_planner: eband_local_planner/EBandPlannerROS
@@ -18,7 +20,7 @@ recovery_behaviors: [
 shutdown_costmaps: False # True
 
 # Distance at which obstacles will be cleared from the costmap when attempting to clear space in the map. 
-conservative_reset_dist: 10
+conservative_reset_dist: 1.0
 
 # Frequency of the control loop
 controller_frequency: 10
@@ -26,16 +28,27 @@ controller_frequency: 10
 # Frequency of the global planner
 planner_frequency: 2
 
+recovery_behavior_enabled: true
+
 # How long in seconds to allow for oscillation before executing recovery behaviors. 
 # A value of 0.0 corresponds to an infinite timeout.
 oscillation_timeout: 15.0
 
-# To tell the planner not to use the unknown space as free space
 NavfnROS:
-    allow_unknown: False
+    # To tell the planner not to use the unknown space as free space
+    #you must also set the track_unknown_space param for that layer to be true, 
+    #or it will convert all your unknown space to free space
+    #default:true
+    allow_unknown: false
     # attempt to create a plan that is as close to the specified goal as possible 
     # but no further than default_tolerance away
     default_tolerance: 1.0
+    #planner_window_x: 10.0 
+    #planner_window_y: 10.0
+
+#conservative_reset:
+    #The radius away from the robot in meters outside which obstacles will be removed from the costmaps when they are reverted to the static map. 
+    #reset_distance: 10.0
 
 move_slow_and_clear:
     clearing_distance: 0.5

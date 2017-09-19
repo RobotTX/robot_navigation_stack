@@ -1,8 +1,16 @@
+#http://wiki.ros.org/move_base
+
+#The name of the plugin for the local planner to use with move_base
+#default:"TrajectoryPlannerROS"
 #base_local_planner: dwa_local_planner/DWAPlannerROS
 base_local_planner: teb_local_planner/TebLocalPlannerROS
 #base_local_planner: eband_local_planner/EBandPlannerROS
+
+#The name of the plugin for the global planner to use with move_base
+#defalut:"NavfnROS"
 base_global_planner: navfn/NavfnROS
 
+#A list of recovery behavior plugins to use with move_base
 recovery_behaviors: [
     {name: conservative_reset, 
     type: clear_costmap_recovery/ClearCostmapRecovery}, 
@@ -18,20 +26,25 @@ recovery_behaviors: [
 shutdown_costmaps: False # True
 
 # Distance at which obstacles will be cleared from the costmap when attempting to clear space in the map. 
+# this parameter is only used when the default recovery behaviors are used for move_base. 
 conservative_reset_dist: 10
 
 # Frequency of the control loop
 controller_frequency: 10
 
 # Frequency of the global planner
-planner_frequency: 2
+#If the frequency is set to 0.0, the global planner will only run when a new goal is received 
+#or the local planner reports that its path is blocked.
+planner_frequency: 2.0
 
 # How long in seconds to allow for oscillation before executing recovery behaviors. 
 # A value of 0.0 corresponds to an infinite timeout.
 oscillation_timeout: 15.0
 
-# To tell the planner not to use the unknown space as free space
 NavfnROS:
+    # To tell the planner not to use the unknown space as free space
+    #you must also set the track_unknown_space param for that layer to be true, 
+    #or it will convert all your unknown space to free space
     allow_unknown: True
     # attempt to create a plan that is as close to the specified goal as possible 
     # but no further than default_tolerance away

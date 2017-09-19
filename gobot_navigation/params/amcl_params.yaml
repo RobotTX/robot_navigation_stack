@@ -1,19 +1,26 @@
+#wiki.ros.org/amcl?distro=kinetic
 # Overall filter parameters
 min_particles: 100
 max_particles: 5000
+#Translational/Rotational movement required before performing a filter update
 update_min_d: 0.2
 update_min_a: 0.523598776
+#Number of filter updates required before resampling
 resample_interval: 2
 transform_tolerance: 0.2
+#Maximum rate (Hz) at which to store the last estimated pose and covariance to the parameter server,
+#This saved pose will be used on subsequent runs to initialize the filter
 save_pose_rate: 0.5
 
 # Laser model parameters
 laser_min_range: -1.0
 laser_max_range: -1.0
+#How many evenly-spaced beams in each scan to be used when updating the filter
 laser_max_beams: 30
 
 # Odometry model parameters
 odom_model_type: diff-corrected
+#From online, depends on the odom model
 odom_alpha1: 0.005
 odom_alpha2: 0.005
 odom_alpha3: 0.010

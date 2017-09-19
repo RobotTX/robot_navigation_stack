@@ -1,3 +1,5 @@
+#http://wiki.ros.org/costmap_converter
+
 TebLocalPlannerROS:
 
     ## Costmap converter plugin   
@@ -7,15 +9,21 @@ TebLocalPlannerROS:
     #costmap_converter_plugin: "costmap_converter::CostmapToPolygonsDBSConcaveHull"
     #costmap_converter_plugin: "" # deactivate plugin
     costmap_converter_spin_thread: True
+    #the value should not be much higher than the costmap update rate
     costmap_converter_rate: 5
 
 
     ## Configure plugins (namespace move_base/TebLocalPlannerROS/PLUGINNAME)
     ## The parameters must be added for each plugin separately
+    #All single points that do not define a cluster (noise) are also treated as polygons
+    #just the local map has been converted and not the complete static map. 
+    #1.Clusters are determined using the DBSCAN Algorithm
+    #2.In the subsequent stage, clusters are converted into convex polgons.
     costmap_converter/CostmapToPolygonsDBSMCCH:
         cluster_max_distance: 0.55
         cluster_min_pts: 2
         cluster_max_pts: 60
+        #Clear keypoints/vertices of the convex polygon that are close to each other
         convex_hull_min_pt_separation: 0.1
 
     ## The parameters must be added for each plugin separately
