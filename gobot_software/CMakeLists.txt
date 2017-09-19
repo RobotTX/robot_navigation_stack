@@ -34,9 +34,18 @@ generate_messages(
     std_msgs  # and/or other packages containing depended messages
 )
 
+###################################
+## catkin specific configuration ##
+###################################
+## The catkin_package macro generates cmake config files for your package
+## Declare things to be passed to dependent projects
+## INCLUDE_DIRS: uncomment this if you package contains header files
+## LIBRARIES: libraries you create in this project that dependent projects also need
+## CATKIN_DEPENDS: catkin_packages dependent projects also need
+## DEPENDS: system dependencies of this project that dependent projects also need
 catkin_package(
     INCLUDE_DIRS include
-    CATKIN_DEPENDS roscpp rospy std_msgs tf gobot_base
+    CATKIN_DEPENDS roscpp rospy std_msgs tf gobot_base message_runtime
 )
 
 ###########
@@ -46,7 +55,11 @@ catkin_package(
 ## Specify additional locations of header files
 ## Your package locations should be listed before other locations
 # include_directories(include)
-include_directories(include ${catkin_INCLUDE_DIRS})
+include_directories(
+    include
+    ${catkin_INCLUDE_DIRS}
+)
+
 
 add_executable(map_transfer src/map_transfer.cpp)
 target_link_libraries(map_transfer ${catkin_LIBRARIES} ${gobot_software} ${Boost_FILESYSTEM_LIBRARY} ${Boost_SYSTEM_LIBRARY} )
@@ -77,6 +90,8 @@ target_link_libraries(send_laser_data ${catkin_LIBRARIES} ${gobot_software} ${Bo
 add_dependencies(send_laser_data gobot_software_generate_messages_cpp)
 
 add_library(cluster_optimized src/cluster_optimized.cpp)
+target_link_libraries(cluster_optimized ${catkin_LIBRARIES})
+
 add_executable(isLocalized_optimized src/isLocalized_optimized.cpp)
 target_link_libraries(isLocalized_optimized ${catkin_LIBRARIES} ${gobot_software} cluster_optimized)
 add_dependencies(isLocalized_optimized gobot_software_generate_messages_cpp)
