@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 # Gobot's catkin_ws sources
 
 Contain all the custom packaged to run Gobot : 
@@ -78,3 +79,6 @@ Contains classes to easily communicate through serials connections with a pyton-
 
 Package to receive the laser data
 Modified to make it works like the previous package, hokuyo_node, so that when data are received with a special status because the space in front of the robot is empty, we receive +inf values instead of NaN values.
+=======
+# robot
+>>>>>>> a48dabbed7fd3dc124c6983ffcebecdfaab42b81
