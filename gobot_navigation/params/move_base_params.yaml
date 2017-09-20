@@ -32,7 +32,12 @@ recovery_behavior_enabled: true
 
 # How long in seconds to allow for oscillation before executing recovery behaviors. 
 # A value of 0.0 corresponds to an infinite timeout.
-oscillation_timeout: 15.0
+oscillation_timeout: 15.0 #0.0
+
+oscillation_distance: 0.5 #0.5
+
+max_planning_retries: -1 #-1
+
 
 NavfnROS:
     # To tell the planner not to use the unknown space as free space
@@ -46,9 +51,9 @@ NavfnROS:
     #planner_window_x: 10.0 
     #planner_window_y: 10.0
 
-#conservative_reset:
+conservative_reset:
     #The radius away from the robot in meters outside which obstacles will be removed from the costmaps when they are reverted to the static map. 
-    #reset_distance: 10.0
+    reset_distance: 1.0
 
 move_slow_and_clear:
     clearing_distance: 0.5

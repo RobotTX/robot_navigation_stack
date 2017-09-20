@@ -1,3 +1,5 @@
+//By joan
+//Initial pose estimation - to determine whether localized
 #include "cluster_optimized.h"
 #include "ros/ros.h"
 #include <geometry_msgs/Pose.h> 
