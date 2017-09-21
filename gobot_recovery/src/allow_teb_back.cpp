@@ -1,8 +1,4 @@
-#include <ros/ros.h>
-#include <std_srvs/Empty.h>
-#include <dynamic_reconfigure/Reconfigure.h>
-#include <dynamic_reconfigure/BoolParameter.h>
-#include <move_base_msgs/MoveBaseActionResult.h>
+#include <gobot_recovery/allow_teb_back.hpp>
 
 bool allow_teb = false;
 
@@ -27,7 +23,7 @@ void goalResultCallback(const move_base_msgs::MoveBaseActionResult::ConstPtr& ms
                 ROS_INFO("Goal ABORTED.");
                 break;
             default:
-                ROS_INFO("Unknown goal status %d.",msg->status.status);
+                ROS_ERROR("Unknown goal status %d.",msg->status.status);
                 break;
         }
 
@@ -48,6 +44,7 @@ bool allowTebCallback(std_srvs::Empty::Request &req, std_srvs::Empty::Response &
         return true;
     }
     else
+        ROS_ERROR("Unable to set teb_local_planner allow_init_with_backwards_motion.");
         return false;
 }
 

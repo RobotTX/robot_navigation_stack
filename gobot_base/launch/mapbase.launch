@@ -4,7 +4,7 @@
     <param name="wheel_radius" value="0.0725" />
     <param name="ticks_per_rotation" value="819.2" />
 
-    <node pkg="tf" type="static_transform_publisher" name="base_link_to_laser" args="0.355 0 0.13275 0 0 0 /base_link /base_laser 50" required="true"/>
+    <node pkg="tf" type="static_transform_publisher" name="base_link_to_laser" args="0.355 0 0.13275 0 0 0 /base_link /base_laser 100" required="true"/>
 
     <node pkg="urg_node" type="urg_node" name="hokuyo" output="screen" required="true">
         <param name="frame_id" value="base_laser" />
