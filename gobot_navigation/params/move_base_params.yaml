@@ -10,6 +10,8 @@ recovery_behaviors: [
     type: clear_costmap_recovery/ClearCostmapRecovery}, 
     {name: rotate_recovery, 
     type: rotate_recovery/RotateRecovery}, 
+    {name: init_back_recovery, 
+    type: init_back_recovery/InitBackRecovery}, #,
     {name: aggressive_reset, 
     type: clear_costmap_recovery/ClearCostmapRecovery} #,
     #{name: move_slow_and_clear, 
@@ -47,7 +49,7 @@ NavfnROS:
     allow_unknown: false
     # attempt to create a plan that is as close to the specified goal as possible 
     # but no further than default_tolerance away
-    default_tolerance: 1.0
+    default_tolerance: 0.1
     #planner_window_x: 10.0 
     #planner_window_y: 10.0
 
