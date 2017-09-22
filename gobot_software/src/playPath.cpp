@@ -11,6 +11,7 @@ int stage = 0;
 // holds whether the robot is ready to accept a new goal or not (already moving towards one)
 bool waitingForNextGoal = false;
 bool looping = false;
+bool dockAfterPath = false;
 
 std::vector<Point> path;
 Point currentGoal;
@@ -71,8 +72,22 @@ void goalReached(){
 		if(stage >= path.size()){
 			// the robot successfully reached all its goals
 			ROS_INFO("(PlayPath::goalReached) I have completed my journey Master Joda, what will you have me do ?");
+            if(dockAfterPath){
+                ROS_INFO("(PlayPath::goalReached) Battery is low, go to charging station!!");
 
-            if(looping){
+                // resets the stage of the path to be able to play the path from the start again
+                stage = 10000;
+                // resets the current goal
+                currentGoal.x = -1;
+                setStageInFile(stage);
+
+                std_srvs::Empty arg;
+                if(!ros::service::call("goDock", arg))
+                    ROS_ERROR("(PlayPath::goalReached) Could not go charging");
+
+                dockAfterPath = false;
+
+            } else if(looping){
                 ROS_INFO("(PlayPath::goalReached) Looping!!");
                 stage = 0;
                 setStageInFile(stage);
@@ -104,6 +119,17 @@ bool stopPathService(std_srvs::Empty::Request &req, std_srvs::Empty::Response &r
 	currentGoal.x = -1;
 	stage = 0;
 	setStageInFile(stage);
+
+    if(dockAfterPath){
+        ROS_INFO("(PlayPath::goalReached) Battery is low, go to charging station!!");
+        
+        std_srvs::Empty arg;
+        if(!ros::service::call("goDock", arg))
+            ROS_ERROR("(PlayPath::goalReached) Could not go charging");
+
+        dockAfterPath = false;
+
+    }
 	return true;
 }
 
@@ -111,6 +137,19 @@ bool pausePathService(std_srvs::Empty::Request &req, std_srvs::Empty::Response &
 	ROS_INFO("(PlayPath::pausePathService) pausePathService called");
 	if(ac->isServerConnected())
 		ac->cancelAllGoals();
+
+
+    if(dockAfterPath){
+        ROS_INFO("(PlayPath::goalReached) Battery is low, go to charging station!!");
+        
+        std_srvs::Empty arg;
+        if(!ros::service::call("goDock", arg))
+            ROS_ERROR("(PlayPath::goalReached) Could not go charging");
+
+        dockAfterPath = false;
+
+    }
+    
 	return true;
 }
 
@@ -241,6 +280,13 @@ bool stopLoopPathService(std_srvs::Empty::Request &req, std_srvs::Empty::Respons
     return true;
 }
 
+bool goDockAfterPathService(std_srvs::Empty::Request &req, std_srvs::Empty::Response &res){
+    ROS_INFO("(PlayPath::goDockAfterPathService) service called");
+    looping = false;
+    dockAfterPath = true;
+    return true;
+}
+
 int main(int argc, char* argv[]){
 
 	ROS_INFO("(PlayPath) play path main running...");
@@ -270,6 +316,9 @@ int main(int argc, char* argv[]){
 
         // service to stop the path loop
         ros::ServiceServer _stopLoopPath = n.advertiseService("stopLoopPath", stopLoopPathService);
+
+        // the battery is low so we need to go dock after finishing our path
+        ros::ServiceServer _goDockAfterPath = n.advertiseService("goDockAfterPath", goDockAfterPathService);
 
 		// tell the action client that we want to spin a thread by default
 		ac = std::shared_ptr<MoveBaseClient> (new MoveBaseClient("move_base", true));

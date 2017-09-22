@@ -339,6 +339,8 @@ void finishedDocking(const int16_t status){
     ROS_INFO("(auto_docking::finishedDocking) Finished trying to dock with status %d", status);
     proximitySub.shutdown();
 
+    /// TODO if simulation set battery voltage to 25000 => "charged"
+
     /// If the battery is still charging, we succesfully docked the robot
     if(chargingFlag)
         ROS_INFO("(auto_docking::finishedDocking) Finished docking and we are still charging");
@@ -413,6 +415,9 @@ int main(int argc, char* argv[]){
     ros::NodeHandle nh;
 
     ac = std::shared_ptr<MoveBaseClient> (new MoveBaseClient("move_base", true));
+    ac->waitForServer();
+
+    ROS_INFO("(auto_docking::startDockingService) actionlib server ready!!");
 
     currentGoal.target_pose.header.frame_id = "map";
 

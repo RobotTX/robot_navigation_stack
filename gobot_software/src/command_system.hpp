@@ -34,6 +34,7 @@
 #include <gobot_software/SetDockStatus.h>
 #include <gobot_software/GetDockStatus.h>
 #include <hector_exploration_node/Exploration.h>
+#include <mutex>
 
 
 #define CMD_PORT 5600
@@ -142,12 +143,16 @@ bool sendMapAutomatically(void);
 
 bool stopSendingMapAutomatically(void);
 
+bool goDock(void);
+
 
 /*********************************** SERVICES ***********************************/
 
 bool setDockStatus(gobot_software::SetDockStatus::Request &req, gobot_software::SetDockStatus::Response &res);
 
 bool getDockStatus(gobot_software::GetDockStatus::Request &req, gobot_software::GetDockStatus::Response &res);
+
+bool goDockService(std_srvs::Empty::Request &req, std_srvs::Empty::Response &res);
 
 bool lowBattery(std_srvs::Empty::Request &req, std_srvs::Empty::Response &res);
 
@@ -168,11 +173,11 @@ bool stopLaserDataConnection(void);
 
 /*********************************** COMMUNICATION FUNCTIONS ***********************************/
 
-void getPorts(boost::shared_ptr<tcp::socket> sock);
+void getPorts(void);
 
-void session(boost::shared_ptr<tcp::socket> sock);
+void session(void);
 
-bool sendMessageToPc(boost::shared_ptr<tcp::socket> sock, const std::string message);
+bool sendMessageToPc(const std::string message);
 
 void asyncAccept(boost::shared_ptr<boost::asio::io_service> io_service, boost::shared_ptr<tcp::acceptor> m_acceptor);
 
