@@ -43,7 +43,7 @@ max_planning_retries: -1 #-1
 
 #Times of recovery will be tried before check distance to goal
 #default:4 (suggest to set the number of recovery plugins)
-recovery_count_threshold: 2
+recovery_count_threshold: 4
 
 #Goal readched when distance between robot and goal is smaller than it after trying certain times of recovery
 #default:0.5
@@ -63,7 +63,7 @@ NavfnROS:
 
 conservative_reset:
     #The radius away from the robot in meters outside which obstacles will be removed from the costmaps when they are reverted to the static map. 
-    reset_distance: 0.01
+    reset_distance: 0.5
 
 aggressive_reset:
     reset_distance: 0.001
