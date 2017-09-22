@@ -14,6 +14,7 @@ find_package(catkin REQUIRED COMPONENTS
     costmap_2d
     tf
     std_srvs
+    gobot_msg_srv
 )
 
 find_package(Eigen3 REQUIRED)
@@ -60,7 +61,7 @@ add_definitions(${EIGEN3_DEFINITIONS})
 ## DEPENDS: system dependencies of this project that dependent projects also need
 catkin_package(
     INCLUDE_DIRS include
-    LIBRARIES gobot_recovery
+ #   LIBRARIES ${PROJECT_NAME}
     CATKIN_DEPENDS
     roscpp
     dynamic_reconfigure
@@ -68,6 +69,7 @@ catkin_package(
     costmap_2d
     tf
     std_srvs
+    gobot_msg_srv
 )
 
 ###########
