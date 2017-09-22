@@ -8,16 +8,12 @@ add_compile_options(-std=c++11)
 ## if COMPONENTS list like find_package(catkin REQUIRED COMPONENTS xyz)
 ## is used, also find other catkin packages
 find_package(catkin REQUIRED COMPONENTS
-  roscpp
-  rospy
-  std_msgs
-  costmap_2d
-  nav_core
-  pluginlib
-  roscpp
-  tf
-  gobot_msg_srv
-  move_base_msgs
+    roscpp
+    dynamic_reconfigure
+    move_base_msgs
+    costmap_2d
+    tf
+    std_srvs
 )
 
 find_package(Eigen3 REQUIRED)
@@ -66,13 +62,12 @@ catkin_package(
     INCLUDE_DIRS include
     LIBRARIES gobot_recovery
     CATKIN_DEPENDS
-        costmap_2d
-        nav_core
-        pluginlib
-        roscpp
-        tf
-        gobot_msg_srv
-        move_base_msgs
+    roscpp
+    dynamic_reconfigure
+    move_base_msgs
+    costmap_2d
+    tf
+    std_srvs
 )
 
 ###########

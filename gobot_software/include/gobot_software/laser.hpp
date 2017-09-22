@@ -1,10 +1,10 @@
 #ifndef LASER_TRANSFER
 #define LASER_TRANSFER
 
-#include "ros/ros.h"
-#include "gobot_software/PortLaser.h"
-#include "sensor_msgs/LaserScan.h"
-#include "std_msgs/String.h"
+#include <ros/ros.h>
+#include <gobot_msg_srv/PortLaser.h>
+#include <sensor_msgs/LaserScan.h>
+#include <std_msgs/String.h>
 #include <iostream>
 #include <string>
 #include <unistd.h>
@@ -18,12 +18,12 @@
 #include <boost/thread.hpp>
 #include <chrono>
 #include <thread>
-#include "std_srvs/Empty.h"
-#include "std_msgs/Float32.h"
+#include <std_srvs/Empty.h>
+#include <std_msgs/Float32.h>
 
 using boost::asio::ip::tcp;
 
-bool startLaser(gobot_software::PortLaser::Request &req, gobot_software::PortLaser::Response &res);
+bool startLaser(gobot_msg_srv::PortLaser::Request &req, gobot_msg_srv::PortLaser::Response &res);
 
 void getLaserData(const sensor_msgs::LaserScan::ConstPtr& msg);
 

@@ -1,10 +1,10 @@
 #ifndef MAP_TRANSFER
 #define MAP_TRANSFER
 
-#include "ros/ros.h"
-#include "gobot_software/Port.h"
-#include "nav_msgs/OccupancyGrid.h"
-#include "std_msgs/String.h"
+#include <ros/ros.h>
+#include <gobot_msg_srv/Port.h>
+#include <nav_msgs/OccupancyGrid.h>
+#include <std_msgs/String.h>
 #include <iostream>
 #include <fstream>
 #include <string>
@@ -19,7 +19,7 @@
 #include <boost/thread.hpp>
 #include <chrono>
 #include <thread>
-#include "std_srvs/Empty.h"
+#include <std_srvs/Empty.h>
 
 using boost::asio::ip::tcp;
 
@@ -41,7 +41,7 @@ void getMap(const nav_msgs::OccupancyGrid::ConstPtr& msg);
 /**
  * Service called to start the socket connection
  */
-bool startMap(gobot_software::Port::Request &req, gobot_software::Port::Response &res);
+bool startMap(gobot_msg_srv::Port::Request &req, gobot_msg_srv::Port::Response &res);
 
 /**
  * Service called to stop everything (in particular it closes the connection)
@@ -62,7 +62,7 @@ bool stopAutoMap(std_srvs::Empty::Request &req, std_srvs::Empty::Response &res);
  * Service called to send the map once to the app 
  * (for example when the map is requested from the robot to be used inside the application, or to merge maps)
  */
-bool sendOnceMap(gobot_software::Port::Request &req, gobot_software::Port::Response &res);
+bool sendOnceMap(gobot_msg_srv::Port::Request &req, gobot_msg_srv::Port::Response &res);
 
 /**
  * Compresses the map in order to send it faster

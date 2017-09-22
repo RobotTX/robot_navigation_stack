@@ -1,4 +1,4 @@
-#include "robot_pos_transfer.hpp"
+#include "gobot_software/robot_pos_transfer.hpp"
 
 using boost::asio::ip::tcp;
 
@@ -41,7 +41,7 @@ void readAck(const std::string position_to_send){
 }
 
 // called by recover position to notify the application that the position has been recovered
-bool confirmPositionRecovered(gobot_software::RecoveredPosition::Request &req, gobot_software::RecoveredPosition::Response &res){
+bool confirmPositionRecovered(gobot_msg_srv::RecoveredPosition::Request &req, gobot_msg_srv::RecoveredPosition::Response &res){
 	tf::Matrix3x3 matrix = tf::Matrix3x3(tf::Quaternion(req.x, req.y, req.z, req.w));
  	tfScalar roll;
 	tfScalar pitch;
@@ -84,8 +84,8 @@ void getRobotPos(const geometry_msgs::Pose::ConstPtr& msg){
 	sleep(0.5);
 }
 
-bool startRobotPos(gobot_software::Port::Request &req,
-    gobot_software::Port::Response &res){
+bool startRobotPos(gobot_msg_srv::Port::Request &req,
+    gobot_msg_srv::Port::Response &res){
 	ROS_INFO("(Robot Pos) Starting robot_pos_sender");
 	ros::NodeHandle n;
 

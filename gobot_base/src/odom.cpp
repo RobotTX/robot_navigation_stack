@@ -1,8 +1,8 @@
 #include <ros/ros.h>
 #include <tf/transform_broadcaster.h>
 #include <nav_msgs/Odometry.h>
-#include <gobot_base/GetEncoders.h>
-#include <gobot_base/OdomTestMsg.h>
+#include <gobot_msg_srv/GetEncoders.h>
+#include <gobot_msg_srv/OdomTestMsg.h>
 #include <std_srvs/Empty.h>
 
 int main(int argc, char** argv){
@@ -16,7 +16,7 @@ int main(int argc, char** argv){
         ros::service::call("resetEncoders", arg);
 
         ros::Publisher odom_pub = n.advertise<nav_msgs::Odometry>("odom", 50);
-        ros::Publisher odom_test_pub = n.advertise<gobot_base::OdomTestMsg>("odom_test", 50);
+        ros::Publisher odom_test_pub = n.advertise<gobot_msg_srv::OdomTestMsg>("odom_test", 50);
         tf::TransformBroadcaster odom_broadcaster;
 
         double x = 0.0;
@@ -48,7 +48,7 @@ int main(int argc, char** argv){
             // check for incoming messages
             ros::spinOnce();
 
-            gobot_base::GetEncoders encoders;
+            gobot_msg_srv::GetEncoders encoders;
             if(ros::service::call("getEncoders", encoders)){
                 current_time = ros::Time::now();
 
@@ -121,7 +121,7 @@ int main(int argc, char** argv){
                 odom_pub.publish(odom);
 
                 /// some test
-                gobot_base::OdomTestMsg odomTest;
+                gobot_msg_srv::OdomTestMsg odomTest;
                 odomTest.x = x;
                 odomTest.y = y;
                 odomTest.yaw = th;

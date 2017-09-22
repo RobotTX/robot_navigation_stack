@@ -3,7 +3,7 @@
 
 #include "ros/ros.h"
 #include "sensor_msgs/Range.h"
-#include "gobot_base/ProximityMsg.h"
+#include "gobot_msg_srv/ProximityMsg.h"
 
 void newLeftSignal(const sensor_msgs::Range::ConstPtr& msg);
 void newRightSignal(const sensor_msgs::Range::ConstPtr& msg);

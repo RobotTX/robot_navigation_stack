@@ -1,6 +1,6 @@
 //By joan
 //Initial pose estimation - to determine whether localized
-#include "cluster_optimized.h"
+#include "gobot_software/cluster_optimized.hpp"
 #include "ros/ros.h"
 #include <geometry_msgs/Pose.h> 
 #include <geometry_msgs/PoseArray.h> 
@@ -9,7 +9,7 @@
 #include <std_msgs/Header.h> 
 #include <typeinfo>
 #include <sstream>
-#include "std_srvs/Empty.h"
+#include <std_srvs/Empty.h>
 
 ros::Publisher pub; 
 ros::Subscriber particlesCloudSub;

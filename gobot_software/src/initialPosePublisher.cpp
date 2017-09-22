@@ -1,11 +1,4 @@
-#include <iostream>
-#include <fstream>
-#include <stdio.h>
-#include "ros/ros.h"
-#include <time.h>
-#include <tf/transform_broadcaster.h>
-#include "geometry_msgs/PoseWithCovarianceStamped.h"
-#include "gobot_base/IsCharging.h"
+#include "gobot_software/initialPosePublisher.hpp"
 
 void publishInitialpose(const double position_x, const double position_y, const double angle_x, const double angle_y, const double angle_z, const double angle_w){
 
@@ -78,7 +71,7 @@ int main(int argc, char* argv[] ){
                     
             } else if(std::stoi(robotPos) == 1){
                 /// If we weren't scanning, we might have move so we if we are charging, we assume we are at our CS
-                gobot_base::IsCharging arg;
+                gobot_msg_srv::IsCharging arg;
                 if(ros::service::call("isCharging", arg)){
                     if(arg.response.isCharging){
                         if(n.hasParam("home_file")){

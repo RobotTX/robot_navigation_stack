@@ -2,9 +2,9 @@
 #define COMMAND_SYSTEM
 
 #include <ros/ros.h>
-#include <gobot_software/Port.h>
-#include <gobot_software/PortLaser.h>
-#include <gobot_software/SendMessageToPc.h>
+#include <gobot_msg_srv/Port.h>
+#include <gobot_msg_srv/PortLaser.h>
+#include <gobot_msg_srv/SendMessageToPc.h>
 #include <geometry_msgs/PoseStamped.h>
 #include <std_msgs/String.h>
 #include <iostream>
@@ -31,9 +31,10 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <nav_msgs/MapMetaData.h>
-#include <gobot_software/SetDockStatus.h>
-#include <gobot_software/GetDockStatus.h>
+#include <gobot_msg_srv/SetDockStatus.h>
+#include <gobot_msg_srv/GetDockStatus.h>
 #include <hector_exploration_node/Exploration.h>
+#include <mutex>
 
 
 #define CMD_PORT 5600
@@ -142,12 +143,16 @@ bool sendMapAutomatically(void);
 
 bool stopSendingMapAutomatically(void);
 
+bool goDock(void);
+
 
 /*********************************** SERVICES ***********************************/
 
-bool setDockStatus(gobot_software::SetDockStatus::Request &req, gobot_software::SetDockStatus::Response &res);
+bool setDockStatus(gobot_msg_srv::SetDockStatus::Request &req, gobot_msg_srv::SetDockStatus::Response &res);
 
-bool getDockStatus(gobot_software::GetDockStatus::Request &req, gobot_software::GetDockStatus::Response &res);
+bool getDockStatus(gobot_msg_srv::GetDockStatus::Request &req, gobot_msg_srv::GetDockStatus::Response &res);
+
+bool goDockService(std_srvs::Empty::Request &req, std_srvs::Empty::Response &res);
 
 bool lowBattery(std_srvs::Empty::Request &req, std_srvs::Empty::Response &res);
 
@@ -168,11 +173,11 @@ bool stopLaserDataConnection(void);
 
 /*********************************** COMMUNICATION FUNCTIONS ***********************************/
 
-void getPorts(boost::shared_ptr<tcp::socket> sock);
+void getPorts(void);
 
-void session(boost::shared_ptr<tcp::socket> sock);
+void session(void);
 
-bool sendMessageToPc(boost::shared_ptr<tcp::socket> sock, const std::string message);
+bool sendMessageToPc(const std::string message);
 
 void asyncAccept(boost::shared_ptr<boost::asio::io_service> io_service, boost::shared_ptr<tcp::acceptor> m_acceptor);
 

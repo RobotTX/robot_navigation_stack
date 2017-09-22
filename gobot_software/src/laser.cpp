@@ -1,4 +1,4 @@
-#include "laser.hpp"
+#include "gobot_software/laser.hpp"
 
 using boost::asio::ip::tcp;
 
@@ -7,7 +7,7 @@ tcp::socket socket_laser(io_service);
 ros::Subscriber sub_laser;
 tcp::acceptor l_acceptor(io_service);
 
-bool startLaser(gobot_software::PortLaser::Request &req, gobot_software::PortLaser::Response &res){
+bool startLaser(gobot_msg_srv::PortLaser::Request &req, gobot_msg_srv::PortLaser::Response &res){
     
     ROS_INFO("(Laser) Starting laser_sender");
     ros::NodeHandle n;

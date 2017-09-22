@@ -1,4 +1,4 @@
-#include "recover_position.hpp"
+#include "gobot_software/recover_position.hpp"
 
 using boost::asio::ip::tcp;
 
@@ -70,7 +70,7 @@ void checkRecoveryStatus(const std_msgs::String& msg){
 		ac->cancelAllGoals();
 		currentGoal.first = -1;
 		/// we tell the application the position was recovered
-		gobot_software::RecoveredPosition srv;
+		gobot_msg_srv::RecoveredPosition srv;
 		if(sendPositionRecoveredConfirmation.call(srv))
 			ROS_INFO("Service send position recovered confirmation called");
 		else
@@ -87,7 +87,7 @@ void checkEstimatedPosition(const geometry_msgs::PoseWithCovarianceStamped& msg)
 		if(msg.pose.covariance[i * 6 + i] > 1) return;
 	}
 	// TODO call a service
-	gobot_software::RecoveredPosition position;
+	gobot_msg_srv::RecoveredPosition position;
 	position.request.x = msg.pose.pose.position.x;
 	position.request.y = msg.pose.pose.position.y;
 	position.request.z = msg.pose.pose.orientation.z;
@@ -302,7 +302,7 @@ int main(int argc, char* argv[]){
 
 		ros::ServiceServer stop_recovering_position_service = n.advertiseService("stop_recovering_position", stopRecoveringPosition);
 
-		sendPositionRecoveredConfirmation = n.serviceClient<gobot_software::RecoveredPosition>("send_position_recovered_confirmation");
+		sendPositionRecoveredConfirmation = n.serviceClient<gobot_msg_srv::RecoveredPosition>("send_position_recovered_confirmation");
 		
 		// wait for the action server to come up
 		while(!ac->waitForServer(ros::Duration(5.0)))

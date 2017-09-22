@@ -7,9 +7,9 @@
 #include <mutex>
 #include <thread>
 #include <std_srvs/Empty.h>
-#include <gobot_base/GetEncoders.h>
-#include <gobot_base/SetSpeeds.h>
-#include "serial/serial.h"
+#include <gobot_msg_srv/GetEncoders.h>
+#include <gobot_msg_srv/SetSpeeds.h>
+#include <serial/serial.h>
 
 
 /// Write and read informations on the serial port
@@ -22,10 +22,10 @@ std::string getStdoutFromCommand(std::string cmd);
 bool initSerial(void);
 
 /// Set the speed, 0 (full reverse)  128 (stop)   255 (full forward)
-bool setSpeeds(gobot_base::SetSpeeds::Request &req, gobot_base::SetSpeeds::Response &res);
+bool setSpeeds(gobot_msg_srv::SetSpeeds::Request &req, gobot_msg_srv::SetSpeeds::Response &res);
 
 /// Get the encoders position
-bool getEncoders(gobot_base::GetEncoders::Request &req, gobot_base::GetEncoders::Response &res);
+bool getEncoders(gobot_msg_srv::GetEncoders::Request &req, gobot_msg_srv::GetEncoders::Response &res);
 
 /// Set the encoders to 0
 bool resetEncoders(std_srvs::Empty::Request &req, std_srvs::Empty::Response &res);

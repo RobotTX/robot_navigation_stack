@@ -9,12 +9,12 @@ add_compile_options(-std=c++11)
 ## is used, also find other catkin packages
 find_package(catkin REQUIRED COMPONENTS
     roscpp
-    rospy
-    std_msgs
-    message_generation
-    tf
+    geometry_msgs
     nav_msgs
+    tf
     serial
+    std_srvs
+    gobot_msg_srv
 )
 
 ## System dependencies are found with CMake's conventions
@@ -51,25 +51,14 @@ find_package(catkin REQUIRED COMPONENTS
 ##   * add every package in MSG_DEP_SET to generate_messages(DEPENDENCIES ...)
 
 ## Generate messages in the 'msg' folder
-add_message_files(
-    FILES
-    BatteryMsg.msg
-    BumperMsg.msg
-    SonarMsg.msg
-    IrMsg.msg
-    ProximityMsg.msg
-    WeightMsg.msg
-    CliffMsg.msg
-    OdomTestMsg.msg
-)
+#add_message_files(
+#    FILES
+#)
 
 ## Generate services in the 'srv' folder
-add_service_files(
-    FILES
-    GetEncoders.srv
-    SetSpeeds.srv
-    IsCharging.srv
-)
+#add_service_files(
+#    FILES
+#)
 
 ## Generate actions in the 'action' folder
 # add_action_files(
@@ -79,10 +68,10 @@ add_service_files(
 # )
 
 ## Generate added messages and services with any dependencies listed here
-generate_messages(
-    DEPENDENCIES
-    std_msgs
-)
+#generate_messages(
+#    DEPENDENCIES
+#    std_msgs
+#)
 
 ################################################
 ## Declare ROS dynamic reconfigure parameters ##
@@ -115,7 +104,7 @@ generate_messages(
 ## DEPENDS: system dependencies of this project that dependent projects also need
 catkin_package(
     INCLUDE_DIRS include
-    CATKIN_DEPENDS roscpp rospy std_msgs tf nav_msgs serial message_runtime
+    CATKIN_DEPENDS roscpp geometry_msgs nav_msgs tf serial std_srvs gobot_msg_srv
 )
 
 ###########
@@ -161,20 +150,20 @@ include_directories(
 
 
 add_executable(odom src/odom.cpp)
-target_link_libraries(odom ${catkin_LIBRARIES} ${gobot_base} )
-add_dependencies(odom gobot_base_generate_messages_cpp)
+target_link_libraries(odom ${catkin_LIBRARIES})
+add_dependencies(odom ${${gobot_msg_srv}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
 
 add_executable(wheels src/wheels.cpp)
-target_link_libraries(wheels ${catkin_LIBRARIES} ${gobot_base} )
-add_dependencies(wheels gobot_base_generate_messages_cpp)
+target_link_libraries(wheels ${catkin_LIBRARIES})
+add_dependencies(wheels ${${gobot_msg_srv}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
 
 add_executable(twist src/twist.cpp)
-target_link_libraries(twist ${catkin_LIBRARIES} ${gobot_base} )
-add_dependencies(twist gobot_base_generate_messages_cpp)
+target_link_libraries(twist ${catkin_LIBRARIES})
+add_dependencies(twist ${${gobot_msg_srv}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
 
 add_executable(sensors src/sensors.cpp)
-target_link_libraries(sensors ${catkin_LIBRARIES} ${gobot_base} )
-add_dependencies(sensors gobot_base_generate_messages_cpp)
+target_link_libraries(sensors ${catkin_LIBRARIES})
+add_dependencies(sensors ${${gobot_msg_srv}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
 
 
 #############

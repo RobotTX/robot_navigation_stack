@@ -1,4 +1,4 @@
-#include "cluster_optimized.h"
+#include "gobot_software/cluster_optimized.hpp"
 
 Cluster::Cluster(const std::vector<geometry_msgs::Pose>& posesV): poses(posesV)
 {}

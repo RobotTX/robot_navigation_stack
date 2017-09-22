@@ -12,7 +12,7 @@ double space, bumpers_height, resolution, front_offset, back_offset;
 std::string pc_frame;
 
 /// Convert the bumpers info to a pointcloud and publish it
-void newBumpersInfo(const gobot_base::BumperMsg::ConstPtr& bumpers){
+void newBumpersInfo(const gobot_msg_srv::BumperMsg::ConstPtr& bumpers){
 
     pcl::PointCloud<pcl::PointXYZ> cloud;
     cloud.header.frame_id = pc_frame;
