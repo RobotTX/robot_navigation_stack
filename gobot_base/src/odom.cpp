@@ -62,20 +62,21 @@ int main(int argc, char** argv){
                 last_right_encoder = encoders.response.rightEncoder;
 
                 // distance travelled by each wheel
-                double left_dist = (delta_left_encoder / ticks_per_rotation) * 2 * wheel_radius * pi;
-                double right_dist = (delta_right_encoder / ticks_per_rotation) * 2 * wheel_radius * pi;
+                double left_dist = (delta_left_encoder / ticks_per_rotation) * 2.0 * wheel_radius * pi;
+                double right_dist = (delta_right_encoder / ticks_per_rotation) * 2.0 * wheel_radius * pi;
 
                 // velocity of each wheel
                 double left_vel = left_dist / dt;
                 double right_vel = right_dist / dt;
 
                 //compute odometry in a typical way given the velocities of the robot
-                double vx = (right_vel + left_vel) / (double) 2;
-                double vy = 0;
+                double vel = (right_vel + left_vel) / (double) 2;
+                double vx = vel * cos(th);
+                double vy = vel * sin(th);
                 double vth = (right_vel - left_vel) / wheel_separation;
 
-                double delta_x = (vx * cos(th) - vy * sin(th)) * dt;
-                double delta_y = (vx * sin(th) + vy * cos(th)) * dt;
+                double delta_x = vx * dt;
+                double delta_y = vy * dt;
                 double delta_th = vth * dt;
 
 
