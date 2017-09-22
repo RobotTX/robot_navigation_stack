@@ -78,10 +78,6 @@ int main(int argc, char** argv){
                 double delta_y = (vx * sin(th) + vy * cos(th)) * dt;
                 double delta_th = vth * dt;
 
-/*
-                std::cout << "odom : " << delta_left_encoder << " " << delta_right_encoder << " " << left_dist << " " << right_dist 
-                << " " << left_vel << " " << right_vel << " " << vx << " " << vth << " " << delta_x << " " << delta_y << " " << delta_th << " " << std::endl;
-*/
 
                 x += delta_x;
                 y += delta_y;
@@ -135,12 +131,12 @@ int main(int argc, char** argv){
                 last_time = current_time;
             } else {
                 skipped++;
-                std::cout << "(odom) couldn't call service getEncoders, skipping this odom pub, total skipped : " << skipped << std::endl;
+                ROS_INFO("(odom) couldn't call service getEncoders, skipping this odom pub, total skipped : %d", skipped);
             }
 
             r.sleep();
         }
     } else {
-        std::cout << "(odom) waited 5 seconds for service resetEncoders" << std::endl;
+        ROS_INFO("(odom) waited 5 seconds for service resetEncoders");
     }
 }

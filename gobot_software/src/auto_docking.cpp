@@ -420,4 +420,6 @@ int main(int argc, char* argv[]){
     ros::ServiceServer stopDockingSrv = nh.advertiseService("stopDocking", stopDockingService);
 
     ros::spin();
+    
+    return 0;
 }

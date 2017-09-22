@@ -149,6 +149,8 @@ bool setDockStatus(gobot_software::SetDockStatus::Request &req, gobot_software::
 
 bool getDockStatus(gobot_software::GetDockStatus::Request &req, gobot_software::GetDockStatus::Response &res);
 
+bool lowBattery(std_srvs::Empty::Request &req, std_srvs::Empty::Response &res);
+
 
 /*********************************** STARTUP CONNECTION FUNCTIONS ***********************************/
 
@@ -174,7 +176,7 @@ bool sendMessageToPc(boost::shared_ptr<tcp::socket> sock, const std::string mess
 
 void asyncAccept(boost::shared_ptr<boost::asio::io_service> io_service, boost::shared_ptr<tcp::acceptor> m_acceptor);
 
-void server(const unsigned short port);
+void server(void);
 
 void serverDisconnected(const std_msgs::String::ConstPtr& msg);
 

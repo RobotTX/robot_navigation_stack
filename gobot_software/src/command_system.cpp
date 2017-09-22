@@ -878,6 +878,12 @@ bool getDockStatus(gobot_software::GetDockStatus::Request &req, gobot_software::
     return true;
 }
 
+bool lowBattery(std_srvs::Empty::Request &req, std_srvs::Empty::Response &res){
+    ROS_INFO("(Command system) lowBattery service called");
+    /// TODO go dock if the robot is not busy with something else
+    return true;
+}
+
 
 /*********************************** STARTUP CONNECTION FUNCTIONS ***********************************/
 
@@ -1142,7 +1148,7 @@ void asyncAccept(boost::shared_ptr<boost::asio::io_service> io_service, boost::s
         }
     }
 
-    /// we also send the path along with the time of the last modification of its file
+    /// we send the path along with the time of the last modification of its file
     std::string path("");
     std::string pathFile;
     if(n.hasParam("path_file")){
@@ -1159,7 +1165,7 @@ void asyncAccept(boost::shared_ptr<boost::asio::io_service> io_service, boost::s
         }
     }
 
-    /// we also send the map id along with the time of the last modification of the map
+    /// we send the map id along with the time of the last modification of the map
     std::string mapId("");
     std::string mapDate("");
     std::string mapIdFile;
@@ -1207,12 +1213,12 @@ void asyncAccept(boost::shared_ptr<boost::asio::io_service> io_service, boost::s
     boost::thread t(boost::bind(session, sock));
 }
 
-void server(const unsigned short port){
+void server(void){
 
     boost::shared_ptr<boost::asio::io_service> io_service = boost::shared_ptr<boost::asio::io_service>(new boost::asio::io_service());
     io_service->run();
 
-    boost::shared_ptr<tcp::endpoint> m_endpoint = boost::shared_ptr<tcp::endpoint>(new tcp::endpoint(tcp::v4(), port));
+    boost::shared_ptr<tcp::endpoint> m_endpoint = boost::shared_ptr<tcp::endpoint>(new tcp::endpoint(tcp::v4(), CMD_PORT));
     boost::shared_ptr<tcp::acceptor> m_acceptor = boost::shared_ptr<tcp::acceptor>(new tcp::acceptor(*io_service, *m_endpoint));
 
     m_acceptor->set_option(tcp::acceptor::reuse_address(true));
@@ -1225,7 +1231,7 @@ void server(const unsigned short port){
 
             waiting = true;
         }
-        ros::spinOnce();
+        //ros::spinOnce();
         r.sleep();
     }
 }
@@ -1256,13 +1262,14 @@ int main(int argc, char* argv[]){
 
         ros::ServiceServer setDockStatusSrv = n.advertiseService("setDockStatus", setDockStatus);
         ros::ServiceServer getDockStatusSrv = n.advertiseService("getDockStatus", getDockStatus);
+        ros::ServiceServer lowBatterySrv = n.advertiseService("lowBattery", lowBattery);
 
         n.param<bool>("simulation", simulation, false);
         ROS_INFO("(New Map) simulation : %d", simulation);
 
-        ros::spinOnce();
+        boost::thread t(boost::bind(server));
 
-        server(CMD_PORT);
+        ros::spin();
         
     } catch (std::exception& e) {
         ROS_ERROR("(Command system) Exception : %s", e.what());
