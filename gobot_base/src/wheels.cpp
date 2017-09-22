@@ -78,6 +78,7 @@ bool initSerial() {
 }
 
 /// Set the speed, 0 (full reverse)  128 (stop)   255 (full forward)
+//tx//('B',127)=0, ('F/B',0)=128,('F',127)=255
 bool setSpeeds(gobot_base::SetSpeeds::Request &req, gobot_base::SetSpeeds::Response &res){
     if(req.velocityL <= 127 && req.velocityL <= 127){
         uint8_t leftSpeed = req.directionL.compare("F") == 0 ? 128 - req.velocityL : 128 + req.velocityL;

@@ -263,7 +263,7 @@ int main(int argc, char* argv[]){
             pcPublisher = nh.advertise<pcl::PointCloud<pcl::PointXYZ> >("/bumpers_pc", 10);
 
             // get the bumpers information
-            nh.subscribe("/bumpers_topic", 1, newBumpersInfo);
+            ros::Subscriber pcSubscriber = nh.subscribe("/bumpers_topic", 1, newBumpersInfo);
 
             ros::spin();
         }

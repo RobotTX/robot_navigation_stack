@@ -13,11 +13,11 @@
     <node pkg="robot_pose_publisher" type="robot_pose_publisher" name ="robot_pose_publisher" required="true"/>
 
     <node pkg="move_base" type="move_base" respawn="false" name="move_base" output="screen" required="true">
-        <rosparam file="$(find gobot_navigation)/params/scan_move_base_params.yaml" command="load" />
         <rosparam file="$(find gobot_navigation)/params/costmap_common_params.yaml" command="load" ns="global_costmap" />
         <rosparam file="$(find gobot_navigation)/params/costmap_common_params.yaml" command="load" ns="local_costmap" />
         <rosparam file="$(find gobot_navigation)/params/local_costmap_params.yaml" command="load" />
         <rosparam file="$(find gobot_navigation)/params/scan_global_costmap_params.yaml" command="load" />
+        <rosparam file="$(find gobot_navigation)/params/scan_move_base_params.yaml" command="load" />
 
         <!-- to use with the dwa local planner -->
         <rosparam file="$(find gobot_navigation)/params/dwa_local_planner_params.yaml" command="load" />

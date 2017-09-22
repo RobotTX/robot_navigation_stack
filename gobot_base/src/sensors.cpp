@@ -34,6 +34,7 @@ bool isChargingService(gobot_base::IsCharging::Request &req, gobot_base::IsCharg
 }
 
 /// get the output of the given system command
+//tx//feedback string from executing command
 std::string getStdoutFromCommand(std::string cmd) {
     std::string data;
     FILE * stream;

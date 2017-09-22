@@ -91,6 +91,7 @@ void newCmdVel(const geometry_msgs::Twist::ConstPtr& twist){
             double left_vel_m_per_sec = twist->linear.x - twist->angular.z * wheel_separation / (double)2;
 
             /// based on tests, the linear regression from the velocity in m/s to the ticks/sec is approx : y=15.606962627075x-2.2598795680051
+            //tx//m/s->ticks/sec: vmd=((v*Nticks)/(2*pi*r)-b)/a
             double a = 15.606962627075;
             double b = -2.2598795680051;
 
