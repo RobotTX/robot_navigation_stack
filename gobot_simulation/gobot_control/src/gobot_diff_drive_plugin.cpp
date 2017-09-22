@@ -35,7 +35,7 @@ namespace gazebo {
     }
 
     
-    bool GobotDiffDrivePlugin::setSpeeds(gobot_base::SetSpeeds::Request &req, gobot_base::SetSpeeds::Response &res){
+    bool GobotDiffDrivePlugin::setSpeeds(gobot_msg_srv::SetSpeeds::Request &req, gobot_msg_srv::SetSpeeds::Response &res){
         int reduction_coeff = 60;
         /// Wheels on the real robot are montedbackward
         double vel_r = (double) (req.directionL.compare("B") == 0 ? -1 : 1) * req.velocityL / reduction_coeff;

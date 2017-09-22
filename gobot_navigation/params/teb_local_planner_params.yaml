@@ -20,7 +20,7 @@ TebLocalPlannerROS:
     exact_arc_length: True
     #Specify the maximum length (cumulative Euclidean distances) of the subset of the global plan taken into account for optimization
     #Constrinted by the local costmap size (rolling window)
-    max_global_plan_lookahead_dist: 5.0
+    max_global_plan_lookahead_dist: 8.0
     #Specify up to which pose on the predicted plan the feasibility should be checked each sampling interval. 
     feasibility_check_no_poses: 5
     #If positive, via-points are extrected from the global plan (path-following mode)

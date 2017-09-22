@@ -1,4 +1,4 @@
-#include "auto_docking.hpp"
+#include "gobot_software/auto_docking.hpp"
 
 /// we want the robot to be at most at 0.15 metres of its goal
 #define ROBOT_POS_TOLERANCE 0.05
@@ -188,7 +188,7 @@ void findChargingStation(void){
 
 bool setSpeed(const char directionR, const int velocityR, const char directionL, const int velocityL){
     //ROS_INFO("(auto_docking::setSpeed) %c %d %c %d", directionR, velocityR, directionL, velocityL);
-    gobot_base::SetSpeeds speed; 
+    gobot_msg_srv::SetSpeeds speed; 
     speed.request.directionR = std::string(1, directionR);
     speed.request.velocityR = velocityR;
     speed.request.directionL = std::string(1, directionL);
@@ -197,7 +197,7 @@ bool setSpeed(const char directionR, const int velocityR, const char directionL,
     return ros::service::call("setSpeeds", speed);
 }
 
-void newBatteryInfo(const gobot_base::BatteryMsg::ConstPtr& batteryInfo){
+void newBatteryInfo(const gobot_msg_srv::BatteryMsg::ConstPtr& batteryInfo){
     /// if we are charging
     if(docking && !charging && batteryInfo->ChargingFlag){
         charging = true;
@@ -206,7 +206,7 @@ void newBatteryInfo(const gobot_base::BatteryMsg::ConstPtr& batteryInfo){
     chargingFlag = batteryInfo->ChargingFlag;
 }
 
-void newBumpersInfo(const gobot_base::BumperMsg::ConstPtr& bumpers){
+void newBumpersInfo(const gobot_msg_srv::BumperMsg::ConstPtr& bumpers){
 
     /// 0 : collision; 1 : no collision
     bool back = !(bumpers->bumper5 && bumpers->bumper6 && bumpers->bumper7 && bumpers->bumper8);
@@ -236,7 +236,7 @@ void newBumpersInfo(const gobot_base::BumperMsg::ConstPtr& bumpers){
 }
 
 /// The pid control function
-void newIrSignal(const gobot_base::IrMsg::ConstPtr& irSignal){
+void newIrSignal(const gobot_msg_srv::IrMsg::ConstPtr& irSignal){
     /// if we are charging
     if(docking && !collision){
         ROS_INFO("(auto_docking::newIrSignal) new ir signal : %d %d %d", irSignal->leftSignal, irSignal->rearSignal, irSignal->rightSignal);
@@ -315,7 +315,7 @@ void alignWithCS(void){
     proximitySub = nh.subscribe("/proximity_topic", 1, newProximityInfo);
 }
 
-void newProximityInfo(const gobot_base::ProximityMsg::ConstPtr& proximitySignal){
+void newProximityInfo(const gobot_msg_srv::ProximityMsg::ConstPtr& proximitySignal){
     /// signal1 = leftSensor
     /// signal2 = rightSensor
     /// 0 : object; 1 : no object
@@ -349,7 +349,7 @@ void finishedDocking(const int16_t status){
 
     batterySub.shutdown();
 
-    gobot_software::SetDockStatus dockStatus;
+    gobot_msg_srv::SetDockStatus dockStatus;
     dockStatus.request.status = status;
 
     ros::service::call("setDockStatus", dockStatus);

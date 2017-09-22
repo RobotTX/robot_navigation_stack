@@ -1,11 +1,11 @@
-#include "ping_server.hpp"
+#include "gobot_software/ping_server.hpp"
 
 static const std::string sep = std::string(1, 31);
 
 bool chargingFlag = false;
 int batteryLevel = 50;
 
-void newBatteryInfo(const gobot_base::BatteryMsg::ConstPtr& batteryInfo){
+void newBatteryInfo(const gobot_msg_srv::BatteryMsg::ConstPtr& batteryInfo){
     chargingFlag = batteryInfo->ChargingFlag;
     if(batteryInfo->FullCapacity != 0)
         batteryLevel = batteryInfo->RemainCapacity / batteryInfo->FullCapacity * 100;
@@ -55,7 +55,7 @@ bool isServer(const std::string IP, const std::string ssid){
                 if(hostname.empty())
                     hostname = "Default Name";
 
-                gobot_software::GetDockStatus _dockStatus;
+                gobot_msg_srv::GetDockStatus _dockStatus;
                 int dockStatus = 0;
                 if(ros::service::call("getDockStatus", _dockStatus))
                     dockStatus = _dockStatus.response.status;

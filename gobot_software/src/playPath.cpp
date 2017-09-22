@@ -1,4 +1,4 @@
-#include "playPath.hpp"
+#include "gobot_software/playPath.hpp"
 
 #define PLAY_PATH_PORT 8333
 #define ROBOT_POS_TOLERANCE 0.05

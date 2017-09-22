@@ -2,9 +2,9 @@
 #define COMMAND_SYSTEM
 
 #include <ros/ros.h>
-#include <gobot_software/Port.h>
-#include <gobot_software/PortLaser.h>
-#include <gobot_software/SendMessageToPc.h>
+#include <gobot_msg_srv/Port.h>
+#include <gobot_msg_srv/PortLaser.h>
+#include <gobot_msg_srv/SendMessageToPc.h>
 #include <geometry_msgs/PoseStamped.h>
 #include <std_msgs/String.h>
 #include <iostream>
@@ -31,8 +31,8 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <nav_msgs/MapMetaData.h>
-#include <gobot_software/SetDockStatus.h>
-#include <gobot_software/GetDockStatus.h>
+#include <gobot_msg_srv/SetDockStatus.h>
+#include <gobot_msg_srv/GetDockStatus.h>
 #include <hector_exploration_node/Exploration.h>
 #include <mutex>
 
@@ -148,9 +148,9 @@ bool goDock(void);
 
 /*********************************** SERVICES ***********************************/
 
-bool setDockStatus(gobot_software::SetDockStatus::Request &req, gobot_software::SetDockStatus::Response &res);
+bool setDockStatus(gobot_msg_srv::SetDockStatus::Request &req, gobot_msg_srv::SetDockStatus::Response &res);
 
-bool getDockStatus(gobot_software::GetDockStatus::Request &req, gobot_software::GetDockStatus::Response &res);
+bool getDockStatus(gobot_msg_srv::GetDockStatus::Request &req, gobot_msg_srv::GetDockStatus::Response &res);
 
 bool goDockService(std_srvs::Empty::Request &req, std_srvs::Empty::Response &res);
 

@@ -14,7 +14,7 @@ bool chargingFlagLeft = false;
 bool chargingFlagRight = false;
 int nb = 20;
 
-bool isChargingService(gobot_base::IsCharging::Request &req, gobot_base::IsCharging::Response &res){
+bool isChargingService(gobot_msg_srv::IsCharging::Request &req, gobot_msg_srv::IsCharging::Response &res){
     res.isCharging = (chargingFlagLeft & chargingFlagRight);
 
     return true;
@@ -62,14 +62,14 @@ int main(int argc, char **argv){
     ros::ServiceServer setBatteryService = n.advertiseService("setBattery", setBattery);
     ros::ServiceServer isChargingSrv = n.advertiseService("isCharging", isChargingService);
 
-    ros::Publisher batteryPublisher = n.advertise<gobot_base::BatteryMsg>("battery_topic", 50);
+    ros::Publisher batteryPublisher = n.advertise<gobot_msg_srv::BatteryMsg>("battery_topic", 50);
 
     sub_leftBattery = n.subscribe("left_battery", 1, newLeftBattery);
     sub_rightBattery = n.subscribe("right_battery", 1, newRightBattery);
 
     std::cout << "(battery_controller) launched." << std::endl;
 
-    gobot_base::BatteryMsg msg;
+    gobot_msg_srv::BatteryMsg msg;
     msg.BatteryStatus = batteryStatus;
     msg.ChargingCurrent = chargingCurrent;
     msg.Temperature = temperature;

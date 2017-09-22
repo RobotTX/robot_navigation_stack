@@ -1,12 +1,8 @@
-#include <ros/ros.h>
-#include <std_srvs/Empty.h>
-#include <iostream>
-#include <string>
-#include <gobot_base/BatteryMsg.h>
+#include <gobot_software/battery_check.hpp>
 
 bool canGoCharge = true;
 
-void newBatteryInfo(const gobot_base::BatteryMsg::ConstPtr& batteryInfo){
+void newBatteryInfo(const gobot_msg_srv::BatteryMsg::ConstPtr& batteryInfo){
 
     ROS_INFO("(Battery check) Battery info : %d %d %d", batteryInfo->BatteryVoltage, batteryInfo->ChargingFlag, canGoCharge);
 

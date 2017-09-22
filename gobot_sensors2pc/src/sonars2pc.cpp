@@ -11,7 +11,7 @@ ros::Publisher topPublisher;
 std::string rear_frame, front_right_frame, front_left_frame, left_frame, right_frame, top_frame, mid_frame;
 
 
-void newSonarsInfo(const gobot_base::SonarMsg::ConstPtr& sonars){
+void newSonarsInfo(const gobot_msg_srv::SonarMsg::ConstPtr& sonars){
     pcl::PointCloud<pcl::PointXYZ> rearCloud;
     rearCloud.header.frame_id = rear_frame;
     rearCloud.push_back(pcl::PointXYZ(0, sonars->distance1, 0));

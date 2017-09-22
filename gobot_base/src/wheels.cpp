@@ -79,7 +79,7 @@ bool initSerial() {
 
 /// Set the speed, 0 (full reverse)  128 (stop)   255 (full forward)
 //tx//('B',127)=0, ('F/B',0)=128,('F',127)=255
-bool setSpeeds(gobot_base::SetSpeeds::Request &req, gobot_base::SetSpeeds::Response &res){
+bool setSpeeds(gobot_msg_srv::SetSpeeds::Request &req, gobot_msg_srv::SetSpeeds::Response &res){
     if(req.velocityL <= 127 && req.velocityL <= 127){
         uint8_t leftSpeed = req.directionL.compare("F") == 0 ? 128 - req.velocityL : 128 + req.velocityL;
         uint8_t rightSpeed = req.directionR.compare("F") == 0 ? 128 - req.velocityR : 128 + req.velocityR;
@@ -94,7 +94,7 @@ bool setSpeeds(gobot_base::SetSpeeds::Request &req, gobot_base::SetSpeeds::Respo
 }
 
 /// Get the encoders position
-bool getEncoders(gobot_base::GetEncoders::Request &req, gobot_base::GetEncoders::Response &res){
+bool getEncoders(gobot_msg_srv::GetEncoders::Request &req, gobot_msg_srv::GetEncoders::Response &res){
     std::vector<uint8_t> encoders = writeAndRead(std::vector<uint8_t>({0x00, 0x25}), 8);
 
     if(encoders.size() == 8){

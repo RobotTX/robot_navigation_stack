@@ -6,10 +6,10 @@
 #include <string>
 #include <vector>
 #include "pcl_ros/point_cloud.h"
-#include "gobot_base/BumperMsg.h"
+#include "gobot_msg_srv/BumperMsg.h"
 #include <XmlRpcValue.h>
 
-void newBumpersInfo(const gobot_base::BumperMsg::ConstPtr& bumpers);
+void newBumpersInfo(const gobot_msg_srv::BumperMsg::ConstPtr& bumpers);
 double xToY(const double x, const std::vector<std::vector<double>>& footprint, const bool front_bumper);
 void initBumperPC(const std::vector<std::vector<double>>& footprint, const std::vector<std::vector<double>>& bumpers_description);
 bool initParams(void);

@@ -1,4 +1,4 @@
-#include "command_system.hpp"
+#include "gobot_software/command_system.hpp"
 
 const int max_length = 1024;
 
@@ -632,7 +632,7 @@ bool sendMapOnce(const std::vector<std::string> command){
         // 3 : recovering position
         ROS_INFO("(Command system) Launching the service to get the map once");
 
-        gobot_software::Port srv;
+        gobot_msg_srv::Port srv;
         srv.request.port = std::stoi(command.at(1));
 
         if (ros::service::call("send_once_map_sender", srv)) {
@@ -889,7 +889,7 @@ bool goDock(void){
 
 /*********************************** SERVICES ***********************************/
 
-bool setDockStatus(gobot_software::SetDockStatus::Request &req, gobot_software::SetDockStatus::Response &res){
+bool setDockStatus(gobot_msg_srv::SetDockStatus::Request &req, gobot_msg_srv::SetDockStatus::Response &res){
     ROS_INFO("(Command system) setDockStatus service called %d", req.status);
     dockStatus = req.status;
     if(dockStatus == 1 || dockStatus == 2)
@@ -898,7 +898,7 @@ bool setDockStatus(gobot_software::SetDockStatus::Request &req, gobot_software::
     return true;
 }
 
-bool getDockStatus(gobot_software::GetDockStatus::Request &req, gobot_software::GetDockStatus::Response &res){
+bool getDockStatus(gobot_msg_srv::GetDockStatus::Request &req, gobot_msg_srv::GetDockStatus::Response &res){
     //ROS_INFO("(Command system) getDockStatus service called");
     res.status = dockStatus;
 
@@ -950,7 +950,7 @@ bool lowBattery(std_srvs::Empty::Request &req, std_srvs::Empty::Response &res){
 void startRobotPosConnection(void){
     ROS_INFO("(Command system) Launching the service to get the robot position");
 
-    gobot_software::Port srv;
+    gobot_msg_srv::Port srv;
     srv.request.port = robot_pos_port;
 
     if (ros::service::call("start_robot_pos_sender", srv))
@@ -972,7 +972,7 @@ void stopRobotPosConnection(void){
 bool startMapConnection(void){
     ROS_INFO("(Command system) Launching the service to open the map socket");
 
-    gobot_software::Port srv;
+    gobot_msg_srv::Port srv;
     srv.request.port = map_port;
 
     if (ros::service::call("start_map_sender", srv)) {
@@ -999,7 +999,7 @@ bool stopMapConnection(void){
 
 bool startLaserDataConnection(const bool startLaser){
     ROS_INFO("(Command system) Launching the service which will send the lasers's data using port %d", laser_port);
-    gobot_software::PortLaser srv;
+    gobot_msg_srv::PortLaser srv;
     srv.request.port = laser_port;
     srv.request.startLaser = startLaser;
 

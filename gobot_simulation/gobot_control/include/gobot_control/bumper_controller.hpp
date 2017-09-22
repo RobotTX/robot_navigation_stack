@@ -3,7 +3,7 @@
 
 #include "ros/ros.h"
 #include "gazebo_msgs/ContactsState.h"
-#include "gobot_base/BumperMsg.h"
+#include "gobot_msg_srv/BumperMsg.h"
 
 
 void newBackLeftBumper(const gazebo_msgs::ContactsState::ConstPtr& msg);

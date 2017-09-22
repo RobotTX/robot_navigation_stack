@@ -12,12 +12,12 @@
 #include <move_base_msgs/MoveBaseAction.h>
 #include <actionlib/client/simple_action_client.h>
 #include <boost/smart_ptr.hpp>
-#include <gobot_base/SetSpeeds.h>
-#include <gobot_base/BatteryMsg.h>
-#include <gobot_base/BumperMsg.h>
-#include <gobot_base/IrMsg.h>
-#include <gobot_base/ProximityMsg.h>
-#include <gobot_software/SetDockStatus.h>
+#include <gobot_msg_srv/SetSpeeds.h>
+#include <gobot_msg_srv/BatteryMsg.h>
+#include <gobot_msg_srv/BumperMsg.h>
+#include <gobot_msg_srv/IrMsg.h>
+#include <gobot_msg_srv/ProximityMsg.h>
+#include <gobot_msg_srv/SetDockStatus.h>
 #include <ctime>
 #include <chrono>
 #include <thread>
@@ -35,11 +35,11 @@ bool pidControl(void);
 void failedDocking(const int status);
 void checkBumpers(void);
 void findChargingStation(void);
-void newBatteryInfo(const gobot_base::BatteryMsg::ConstPtr& batteryInfo);
-void newBumpersInfo(const gobot_base::BumperMsg::ConstPtr& bumpers);
+void newBatteryInfo(const gobot_msg_srv::BatteryMsg::ConstPtr& batteryInfo);
+void newBumpersInfo(const gobot_msg_srv::BumperMsg::ConstPtr& bumpers);
 void alignWithCS(void);
-void newIrSignal(const gobot_base::IrMsg::ConstPtr& irSignal);
-void newProximityInfo(const gobot_base::ProximityMsg::ConstPtr& irSignal);
+void newIrSignal(const gobot_msg_srv::IrMsg::ConstPtr& irSignal);
+void newProximityInfo(const gobot_msg_srv::ProximityMsg::ConstPtr& irSignal);
 void finishedDocking(const int16_t status);
 
 #endif

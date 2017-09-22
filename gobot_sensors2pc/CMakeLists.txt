@@ -9,8 +9,7 @@ add_compile_options(-std=c++11)
 ## is used, also find other catkin packages
 find_package(catkin REQUIRED COMPONENTS
     roscpp
-    rospy REQUIRED COMPONENTS
-    gobot_base REQUIRED COMPONENTS
+    gobot_msg_srv
     pcl_ros
 )
 
@@ -69,10 +68,9 @@ find_package(catkin REQUIRED COMPONENTS
 # )
 
 ## Generate added messages and services with any dependencies listed here
-generate_messages(
-    DEPENDENCIES
-    gobot_base  # Or other packages containing msgs
-)
+#generate_messages(
+#    DEPENDENCIES
+#)
 
 ################################################
 ## Declare ROS dynamic reconfigure parameters ##
@@ -105,7 +103,7 @@ generate_messages(
 ## DEPENDS: system dependencies of this project that dependent projects also need
 catkin_package(
     INCLUDE_DIRS include
-    CATKIN_DEPENDS roscpp rospy gobot_base pcl_ros
+    CATKIN_DEPENDS roscpp gobot_msg_srv pcl_ros
 )
 
 ###########
@@ -150,12 +148,14 @@ include_directories(
 # )
 
 add_executable(bumpers2pc src/bumpers2pc.cpp)
-target_link_libraries(bumpers2pc ${catkin_LIBRARIES} ${gobot_sensors2pc} ${gobot_base})
-add_dependencies(bumpers2pc gobot_base_generate_messages_cpp)
+target_link_libraries(bumpers2pc ${catkin_LIBRARIES})
+add_dependencies(bumpers2pc ${${gobot_msg_srv}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
+
 
 add_executable(sonars2pc src/sonars2pc.cpp)
-target_link_libraries(sonars2pc ${catkin_LIBRARIES} ${gobot_sensors2pc} ${gobot_base})
-add_dependencies(sonars2pc gobot_base_generate_messages_cpp)
+target_link_libraries(sonars2pc ${catkin_LIBRARIES})
+add_dependencies(sonars2pc ${${gobot_msg_srv}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
+
 
 #############
 ## Install ##

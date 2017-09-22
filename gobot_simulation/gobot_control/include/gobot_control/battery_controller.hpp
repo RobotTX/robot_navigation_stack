@@ -3,13 +3,13 @@
 
 #include <ros/ros.h>
 #include <gazebo_msgs/ContactsState.h>
-#include <gobot_base/BatteryMsg.h>
+#include <gobot_msg_srv/BatteryMsg.h>
+#include <gobot_msg_srv/IsCharging.h>
 #include <gobot_control/SetBattery.h>
-#include <gobot_base/IsCharging.h>
 
 
 /// Service to know if the robot is charging
-bool isChargingService(gobot_base::IsCharging::Request &req, gobot_base::IsCharging::Response &res);
+bool isChargingService(gobot_msg_srv::IsCharging::Request &req, gobot_msg_srv::IsCharging::Response &res);
 
 void newLeftBattery(const gazebo_msgs::ContactsState::ConstPtr& msg);
 void newRightBattery(const gazebo_msgs::ContactsState::ConstPtr& msg);

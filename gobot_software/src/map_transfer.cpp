@@ -1,4 +1,4 @@
-#include "map_transfer.hpp"
+#include "gobot_software/map_transfer.hpp"
 
 using boost::asio::ip::tcp;
 
@@ -184,8 +184,8 @@ std::vector<uint8_t> compress(const std::vector<int8_t> map, const int map_width
 	return my_map;
 }
 
-bool startMap(gobot_software::Port::Request &req,
-    gobot_software::Port::Response &res){
+bool startMap(gobot_msg_srv::Port::Request &req,
+    gobot_msg_srv::Port::Response &res){
 	ROS_INFO("(Map::startMap) Starting map_sender");
 
 	int mapPort = req.port;	
@@ -256,8 +256,8 @@ bool stopSendingLocalMap(std_srvs::Empty::Request& req, std_srvs::Empty::Respons
 // 1 : application requesting at connection time
 // 2 : to merge
 // 3 : recovering position
-bool sendOnceMap(gobot_software::Port::Request &req,
-    gobot_software::Port::Response &res){
+bool sendOnceMap(gobot_msg_srv::Port::Request &req,
+    gobot_msg_srv::Port::Response &res){
 	ROS_INFO("(Map::sendOnceMap) SendOnceMap doing nothing for now");
 
 	int who = req.port;	

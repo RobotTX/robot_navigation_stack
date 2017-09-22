@@ -7,7 +7,7 @@ std::chrono::system_clock::time_point collisionTime;
 
 bool setSpeed(const char directionR, const int velocityR, const char directionL, const int velocityL){
     //ROS_INFO("(auto_docking::setSpeed) %c %d %c %d", directionR , velocityR, directionL, velocityL);
-    gobot_base::SetSpeeds speed; 
+    gobot_msg_srv::SetSpeeds speed; 
     speed.request.directionR = std::string(1, directionR);
     speed.request.velocityR = velocityR;
     speed.request.directionL = std::string(1, directionL);
@@ -16,7 +16,7 @@ bool setSpeed(const char directionR, const int velocityR, const char directionL,
     return ros::service::call("setSpeeds", speed);
 }
 
-void newBumpersInfo(const gobot_base::BumperMsg::ConstPtr& bumpers){
+void newBumpersInfo(const gobot_msg_srv::BumperMsg::ConstPtr& bumpers){
 
     /// 0 : collision; 1 : no collision
     bool front = !(bumpers->bumper1 && bumpers->bumper2 && bumpers->bumper3 && bumpers->bumper4);

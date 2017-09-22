@@ -3,7 +3,7 @@
 
 #include "ros/ros.h"
 #include "sensor_msgs/Image.h"
-#include "gobot_base/IrMsg.h"
+#include "gobot_msg_srv/IrMsg.h"
 
 void newRearSignal_1(const sensor_msgs::Image::ConstPtr& msg);
 void newRearSignal_2(const sensor_msgs::Image::ConstPtr& msg);
