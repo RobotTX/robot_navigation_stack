@@ -1,0 +1,5 @@
+<?xml version="1.0"?>
+<launch>     
+    <node pkg="gobot_recovery" type="allow_teb_back" name="allow_teb_back" output="screen" respawn="true"/>
+
+</launch>
