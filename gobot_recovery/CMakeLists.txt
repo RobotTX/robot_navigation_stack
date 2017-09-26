@@ -17,6 +17,7 @@ find_package(catkin REQUIRED
         tf
         nav_core
         std_srvs
+        std_msgs
         actionlib_msgs
         geometry_msgs
         gobot_msg_srv
@@ -43,6 +44,7 @@ catkin_package(
         tf
         nav_core
         std_srvs
+        std_msgs
         actionlib_msgs
         geometry_msgs
         gobot_msg_srv

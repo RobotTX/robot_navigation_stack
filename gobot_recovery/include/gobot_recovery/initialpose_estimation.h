@@ -1,4 +1,5 @@
 #include <ros/ros.h>
+#include <std_msgs/Bool.h>
 #include <std_srvs/Empty.h>
 #include <geometry_msgs/PoseWithCovarianceStamped.h>
 #include <geometry_msgs/Twist.h>
@@ -19,7 +20,7 @@ void checkGoalStatus(void);
 
 bool rotateFindPose(double rot_v,double rot_t);
 
-bool GlobalLocalization(void);
+void GlobalLocalization(void);
 
 void publishInitialpose(const double position_x, const double position_y, const double angle_x, const double angle_y, const double angle_z, const double angle_w);
 

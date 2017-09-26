@@ -195,6 +195,7 @@ bool initSerial(void) {
 
     // Set the serial port, baudrate and timeout in milliseconds
     serialConnection.setPort(port);
+    //14400 bytes per sec
     serialConnection.setBaudrate(115200);
     serial::Timeout timeout = serial::Timeout::simpleTimeout(100);
     serialConnection.setTimeout(timeout);
