@@ -15,7 +15,7 @@
 #include <thread>
 
 double cov_sum=0.0;
-double cov_threshold = 0.3, rot_vel = 0.314, rot_time = 20;
+double cov_threshold = 0.3, rot_vel = 0.318, rot_time = 23;
 bool goalActive = false,globalize_pose = false;
 ros::Publisher vel_pub,goalCancel_pub;
 std::string lastPoseFile,homeFile;
@@ -37,13 +37,13 @@ bool rotateFindPose(double rot_v,double rot_t){
     geometry_msgs::Twist vel;
     vel.linear.x = 0.0;
     vel.angular.z=rot_v;
-    vel_pub.publish(vel);
     //rotate for time rot_t until find small covariance
     ros::Rate loop_rate(5);
     ros::Time last_time = ros::Time::now();
     while(globalize_pose && cov_sum>cov_threshold && dt<rot_t){
         dt=(ros::Time::now() - last_time).toSec();
         ROS_INFO("I am finding my pose in the map...covariance:%.3f",cov_sum);
+        vel_pub.publish(vel);
         loop_rate.sleep();
         ros::spinOnce();
     }
@@ -53,7 +53,7 @@ bool rotateFindPose(double rot_v,double rot_t){
 
     if(cov_sum<cov_threshold)
     {
-        ROS_INFO("Find current robot pose in the map.");
+        ROS_INFO("Found current robot pose in the map. Spent %.3f sec.",dt);
         return true;
     }
     else
@@ -66,7 +66,6 @@ bool rotateFindPose(double rot_v,double rot_t){
 
 bool GlobalLocalization(){
     std_srvs::Empty arg;
-    ros::service::call("/request_nomotion_update",arg);
     if(ros::service::call("/global_localization",arg))
         return rotateFindPose(rot_vel,rot_time*5.0);
     else
@@ -130,6 +129,7 @@ bool checkInitPoseCallback(std_srvs::Empty::Request &req, std_srvs::Empty::Respo
     gobot_msg_srv::IsCharging arg;
     std_srvs::Empty empty_srv;
     globalize_pose = true;
+    cov_sum = 100.0;
     ros::service::call("/sensors/isCharging",arg);
     //default pose is charging station 
     if(arg.response.isCharging){
@@ -157,6 +157,7 @@ bool checkInitPoseCallback(std_srvs::Empty::Request &req, std_srvs::Empty::Respo
                 return true;
             }
             else
+                ros::service::call("/move_base/clear_costmap",empty_srv);
                 return GlobalLocalization();
         }
     }
