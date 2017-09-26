@@ -14,20 +14,18 @@ void goalResultCallback(const move_base_msgs::MoveBaseActionResult::ConstPtr& ms
         ros::service::call("/move_base/TebLocalPlannerROS/set_parameters",config);
         switch(msg->status.status){
             case 2:
-                ROS_INFO("Goal PREEMPTED.");
+                ROS_INFO("Goal PREEMPTED and disable teb_local_planner allow_init_with_backwards_motion.");
                 break;
             case 3:
-                ROS_INFO("Goal PREEMPTED.");
+                ROS_INFO("Goal PREEMPTED and disable teb_local_planner allow_init_with_backwards_motion.");
                 break;
             case 4:
-                ROS_INFO("Goal ABORTED.");
+                ROS_INFO("Goal ABORTED and disable teb_local_planner allow_init_with_backwards_motion.");
                 break;
             default:
-                ROS_ERROR("Unknown goal status %d.",msg->status.status);
+                ROS_ERROR("Unknown goal status %d and disable teb_local_planner allow_init_with_backwards_motion.",msg->status.status);
                 break;
         }
-
-        ROS_INFO("Disable teb_local_planner allow_init_with_backwards_motion.");
     }
 }
 

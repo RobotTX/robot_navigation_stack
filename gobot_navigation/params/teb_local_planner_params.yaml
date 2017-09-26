@@ -26,7 +26,7 @@ TebLocalPlannerROS:
     #If positive, via-points are extrected from the global plan (path-following mode)
     #Value determines min. separation between each two consecutive via-points along the global plan
     #-0.1 (disabled)
-    global_plan_viapoint_sep: 0.3 # -0.1
+    global_plan_viapoint_sep: 0.5 # -0.1
     #Optimization weight for minimzing the distance to via-points
     #How close robot follows the via-points
     weight_viapoint: 50.0 # 1.0
