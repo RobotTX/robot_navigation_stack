@@ -14,6 +14,8 @@ find_package(catkin REQUIRED COMPONENTS
     tf
     serial
     std_srvs
+    actionlib_msgs
+    move_base_msgs
     gobot_msg_srv
 )
 
@@ -104,7 +106,7 @@ find_package(catkin REQUIRED COMPONENTS
 ## DEPENDS: system dependencies of this project that dependent projects also need
 catkin_package(
     INCLUDE_DIRS include
-    CATKIN_DEPENDS roscpp geometry_msgs nav_msgs tf serial std_srvs gobot_msg_srv
+    CATKIN_DEPENDS roscpp geometry_msgs nav_msgs tf serial std_srvs actionlib_msgs move_base_msgs gobot_msg_srv
 )
 
 ###########
@@ -165,6 +167,9 @@ add_executable(sensors src/sensors.cpp)
 target_link_libraries(sensors ${catkin_LIBRARIES})
 add_dependencies(sensors ${${gobot_msg_srv}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
 
+add_executable(led src/led.cpp)
+target_link_libraries(led ${catkin_LIBRARIES})
+add_dependencies(led ${${gobot_msg_srv}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
 
 #############
 ## Install ##

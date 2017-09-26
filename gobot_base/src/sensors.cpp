@@ -14,6 +14,7 @@ serial::Serial serialConnection;
 int last_charging_current = -1;
 bool charging = false;
 int error_count = 0;
+bool sendingLED = false;
 
 void resetStm(void){
     if(serialConnection.isOpen()){
@@ -52,7 +53,7 @@ std::string getStdoutFromCommand(std::string cmd) {
 }
 
 void publishSensors(void){
-    if(serialConnection.isOpen()){
+    if(serialConnection.isOpen() && !sendingLED){
         bool error = false;
 
         serialConnection.write(std::vector<uint8_t>({0x10, 0x01, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0xB1}));
@@ -195,7 +196,7 @@ bool initSerial(void) {
     // Set the serial port, baudrate and timeout in milliseconds
     serialConnection.setPort(port);
     serialConnection.setBaudrate(115200);
-    serial::Timeout timeout = serial::Timeout::simpleTimeout(500);
+    serial::Timeout timeout = serial::Timeout::simpleTimeout(100);
     serialConnection.setTimeout(timeout);
     serialConnection.close();
     serialConnection.open();
@@ -206,14 +207,18 @@ bool initSerial(void) {
         return false;
 }
 
-bool setLedCallback(gobot_msg_srv::IsCharging::Request &req, gobot_msg_srv::IsCharging::Response &res){
-
+bool setLedCallback(gobot_msg_srv::LedStrip::Request &req, gobot_msg_srv::LedStrip::Response &res){
+    sendingLED = true;
     if(serialConnection.isOpen()){
-        //serialConnection.write(std::vector<uint8_t>({0xB0, 0x03, 0x03, 0x52, 0x47, 0x42, 0x00, 0x00, 0x03, 0xE8, 0xB1}));
-          serialConnection.write(std::vector<uint8_t>({0xB0, 0x04, 0x01, 0x47, 0x00, 0x00, 0x03, 0xE8, 0x00, 0x05, 0xB1}));
+        std::vector<uint8_t> cmd({req.data[0],req.data[1],req.data[2],req.data[3],req.data[4],req.data[5],req.data[6],req.data[7],req.data[8],req.data[9],req.data[10]});
+        serialConnection.write(cmd);
+        res.ack = true;
+        sendingLED = false;
         return true;
     }
     else{
+        res.ack = false;
+        sendingLED = false;
         return false;
     }
 }
@@ -232,7 +237,7 @@ int main(int argc, char **argv) {
     cliff_pub = nh.advertise<gobot_msg_srv::CliffMsg>("cliff_topic", 50);
 
     ros::ServiceServer isChargingSrv = nh.advertiseService("isCharging", isChargingService);
-    ros::ServiceServer setLedSrv = nh.advertiseService("setLed", setLedCallback);
+    ros::ServiceServer setLedSrv = nh.advertiseService("/gobot_base/setLed", setLedCallback);
 
     if(initSerial()){
         ros::Rate r(5);

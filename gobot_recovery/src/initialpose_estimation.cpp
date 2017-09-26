@@ -195,22 +195,9 @@ void getLastPose(std::string data)
     }
 }
 
-void mySigintHandler(int sig)
-{
-  
-    std::ofstream ofs(homeFile, std::ofstream::out | std::ofstream::trunc);
-    if(ofs.is_open()){
-        ofs << "I was dead";
-        ofs.close();
-    } 
-    ros::shutdown();
-}
-
-
 int main(int argc, char **argv) {
     ros::init(argc, argv, "initialpose_estimation");
     ros::NodeHandle nh;
-    signal(SIGINT, mySigintHandler);
 
     if(nh.hasParam("last_pose_file")){
         nh.getParam("last_pose_file", lastPoseFile);

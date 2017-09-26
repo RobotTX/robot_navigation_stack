@@ -13,6 +13,7 @@
 #include <gobot_msg_srv/WeightMsg.h>
 #include <gobot_msg_srv/CliffMsg.h>
 #include <gobot_msg_srv/IsCharging.h>
+#include <gobot_msg_srv/LedStrip.h>
 #include "serial/serial.h"
 
 /// Send a command to reset the stm32
@@ -29,3 +30,5 @@ void publishSensors(void);
 
 /// Initialize he serial connection
 bool initSerial(void);
+
+bool setLedCallback(gobot_msg_srv::LedStrip::Request &req, gobot_msg_srv::LedStrip::Response &res);
