@@ -1,18 +1,4 @@
-#include <ros/ros.h>
-#include <std_srvs/Empty.h>
-#include <geometry_msgs/PoseWithCovarianceStamped.h>
-#include <geometry_msgs/Twist.h>
-#include <gobot_msg_srv/IsCharging.h>
-#include <actionlib_msgs/GoalStatusArray.h>
-#include <actionlib_msgs/GoalID.h>
-#include <std_srvs/Empty.h>
-#include <stdio.h>
-#include <stdlib.h>
-#include <iostream>
-#include <fstream>
-#include <string>
-#include <mutex>
-#include <thread>
+#include <gobot_recovery/initialpose_estimation.h>
 
 double cov_sum=0.0;
 double cov_threshold = 0.3, rot_vel = 0.318, rot_time = 23;
@@ -86,6 +72,7 @@ void publishInitialpose(const double position_x, const double position_y, const 
         initialPose.pose.pose.orientation.y = angle_y;
         initialPose.pose.pose.orientation.z = angle_z;
         initialPose.pose.pose.orientation.w = angle_w;
+        initialPose.pose.covariance[0] = 0.5;
 
         ros::Publisher initial_pose_publisher = n.advertise<geometry_msgs::PoseWithCovarianceStamped>("/initialpose", 1);
         

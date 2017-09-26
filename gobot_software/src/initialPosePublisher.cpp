@@ -14,6 +14,7 @@ void publishInitialpose(const double position_x, const double position_y, const 
         initialPose.pose.pose.orientation.y = angle_y;
         initialPose.pose.pose.orientation.z = angle_z;
         initialPose.pose.pose.orientation.w = angle_w;
+        initialPose.pose.covariance[0] = 0.5;
 
         ros::Publisher initial_pose_publisher = n.advertise<geometry_msgs::PoseWithCovarianceStamped>("/initialpose", 1);
         
