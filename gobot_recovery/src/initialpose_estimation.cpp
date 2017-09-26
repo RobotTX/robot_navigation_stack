@@ -119,7 +119,8 @@ bool checkInitPoseCallback(std_srvs::Empty::Request &req, std_srvs::Empty::Respo
     cov_sum = 100.0;
     ros::service::call("/sensors/isCharging",arg);
     //default pose is charging station 
-    if(arg.response.isCharging){
+    //arg.response.isCharging
+    if(false){
         //if robot is charging, it is in CS station 
         //clear costmap after finding initial pose
         ros::service::call("/move_base/clear_costmap",empty_srv);
@@ -136,7 +137,7 @@ bool checkInitPoseCallback(std_srvs::Empty::Request &req, std_srvs::Empty::Respo
         else{
             //read last stop pose and initial robot pose
             publishInitialpose(last_pos_x,last_pos_y,last_ang_x,last_ang_y,last_ang_z,last_ang_w);
-            ros::Duration(2.5).sleep();
+            ros::Duration(2.0).sleep();
             if(rotateFindPose(rot_vel,rot_time)){
                 //robot probably in last stop pose
                 //clear costmap after finding initial pose
@@ -194,9 +195,23 @@ void getLastPose(std::string data)
     }
 }
 
+void mySigintHandler(int sig)
+{
+  
+    std::ofstream ofs(homeFile, std::ofstream::out | std::ofstream::trunc);
+    if(ofs.is_open()){
+        ofs << "I was dead";
+        ofs.close();
+    } 
+    ros::shutdown();
+}
+
+
 int main(int argc, char **argv) {
     ros::init(argc, argv, "initialpose_estimation");
     ros::NodeHandle nh;
+    signal(SIGINT, mySigintHandler);
+
     if(nh.hasParam("last_pose_file")){
         nh.getParam("last_pose_file", lastPoseFile);
         ROS_INFO("Set pose file to %s", lastPoseFile.c_str());

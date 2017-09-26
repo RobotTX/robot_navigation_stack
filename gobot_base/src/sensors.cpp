@@ -206,6 +206,18 @@ bool initSerial(void) {
         return false;
 }
 
+bool setLedCallback(gobot_msg_srv::IsCharging::Request &req, gobot_msg_srv::IsCharging::Response &res){
+
+    if(serialConnection.isOpen()){
+        //serialConnection.write(std::vector<uint8_t>({0xB0, 0x03, 0x03, 0x52, 0x47, 0x42, 0x00, 0x00, 0x03, 0xE8, 0xB1}));
+          serialConnection.write(std::vector<uint8_t>({0xB0, 0x04, 0x01, 0x47, 0x00, 0x00, 0x03, 0xE8, 0x00, 0x05, 0xB1}));
+        return true;
+    }
+    else{
+        return false;
+    }
+}
+
 int main(int argc, char **argv) {
     ros::init(argc, argv, "sensors");
 
@@ -220,6 +232,7 @@ int main(int argc, char **argv) {
     cliff_pub = nh.advertise<gobot_msg_srv::CliffMsg>("cliff_topic", 50);
 
     ros::ServiceServer isChargingSrv = nh.advertiseService("isCharging", isChargingService);
+    ros::ServiceServer setLedSrv = nh.advertiseService("setLed", setLedCallback);
 
     if(initSerial()){
         ros::Rate r(5);
