@@ -13,7 +13,11 @@
 #include <gobot_msg_srv/WeightMsg.h>
 #include <gobot_msg_srv/CliffMsg.h>
 #include <gobot_msg_srv/IsCharging.h>
+#include <gobot_msg_srv/SetBattery.h>
 #include "serial/serial.h"
+#include <mutex>
+
+bool displaySensorData(gobot_msg_srv::SetBattery::Request &req, gobot_msg_srv::SetBattery::Response &res);
 
 /// Send a command to reset the stm32
 void resetStm(void);

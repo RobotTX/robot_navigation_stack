@@ -70,6 +70,7 @@ add_service_files(
     SendMessageToPc.srv
     SetDockStatus.srv
     SetSpeeds.srv
+    SetBattery.srv
 )
 
 ## Generate actions in the 'action' folder

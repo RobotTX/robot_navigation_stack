@@ -14,15 +14,28 @@ serial::Serial serialConnection;
 int last_charging_current = -1;
 bool charging = false;
 int error_count = 0;
+std::mutex connectionMutex;
+bool display_data = false;
+
+bool displaySensorData(gobot_msg_srv::SetBattery::Request &req, gobot_msg_srv::SetBattery::Response &res){
+    ROS_INFO("(sensors::displaySensorData) Service called");
+    display_data = (req.voltage > 0);
+    return true;
+}
 
 void resetStm(void){
     if(serialConnection.isOpen()){
+        connectionMutex.lock();
         serialConnection.write(std::vector<uint8_t>({0xD0, 0x01, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x1B}));
 
         std::vector<uint8_t> buff;
-        serialConnection.read(buff, 5);
+        serialConnection.read(buff, 7);
 
-        ROS_INFO("(sensors::publishSensors) resetStm : %lu %d %d %d", buff.size(), (int) buff.at(0), (int) buff.at(1), (int) buff.at(2));
+        serialConnection.flush();
+
+        connectionMutex.unlock();
+
+        ROS_INFO("(sensors::publishSensors) resetStm");
     } else 
         ROS_ERROR("(sensors::publishSensors) Check serial connection 1");
 }
@@ -55,10 +68,15 @@ void publishSensors(void){
     if(serialConnection.isOpen()){
         bool error = false;
 
+        connectionMutex.lock();
         serialConnection.write(std::vector<uint8_t>({0x10, 0x01, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0xB1}));
 
         std::vector<uint8_t> buff;
         serialConnection.read(buff, 47);
+
+        serialConnection.flush();
+
+        connectionMutex.unlock();
 
         //ROS_INFO("(sensors::publishSensors) Info : %lu %d %d %d", buff.size(), (int) buff.at(0), (int) buff.at(1), (int) buff.at(2));
 
@@ -67,19 +85,22 @@ void publishSensors(void){
             /// First 3 bytes are the sensor address, the command and the data length so we can ignore it
             /// Then comes sonars data
             gobot_msg_srv::SonarMsg sonar_data;
-            sonar_data.distance1 = buff.at(3) * 256 + buff.at(4);
-            sonar_data.distance2 = buff.at(5) * 256 + buff.at(6);
-            sonar_data.distance3 = buff.at(7) * 256 + buff.at(8);
-            sonar_data.distance4 = buff.at(9) * 256 + buff.at(10);
-            sonar_data.distance5 = buff.at(11) * 256 + buff.at(12);
-            sonar_data.distance6 = buff.at(13) * 256 + buff.at(14);
-            sonar_data.distance7 = buff.at(15) * 256 + buff.at(16);
+            sonar_data.distance1 = (buff.at(3) << 8) | buff.at(4);
+            sonar_data.distance2 = (buff.at(5) << 8) | buff.at(6);
+            sonar_data.distance3 = (buff.at(7) << 8) | buff.at(8);
+            sonar_data.distance4 = (buff.at(9) << 8) | buff.at(10);
+            sonar_data.distance5 = (buff.at(11) << 8) | buff.at(12);
+            sonar_data.distance6 = (buff.at(13) << 8) | buff.at(14);
+            sonar_data.distance7 = (buff.at(15) << 8) | buff.at(16);
 
             if(sonar_data.distance1 + sonar_data.distance2 + sonar_data.distance3 + sonar_data.distance4 
                 + sonar_data.distance5 + sonar_data.distance6 + sonar_data.distance7 != 0)
                 sonar_pub.publish(sonar_data);
-            else 
+            else {
                 error = true;
+                ROS_ERROR("(sensors::publishSensors) Check sonars data : %d %d %d %d %d %d %d", sonar_data.distance1, sonar_data.distance2, sonar_data.distance3,
+                sonar_data.distance4, sonar_data.distance5, sonar_data.distance6, sonar_data.distance7);
+            }
 
             /// Bumpers data
             gobot_msg_srv::BumperMsg bumper_data;
@@ -108,24 +129,28 @@ void publishSensors(void){
 
             /// Cliff sensors
             gobot_msg_srv::CliffMsg cliff_data;
-            cliff_data.cliff1 = buff.at(22) * 256 + buff.at(23);
-            cliff_data.cliff2 = buff.at(24) * 256 + buff.at(25);
-            cliff_data.cliff3 = buff.at(26) * 256 + buff.at(27);
-            cliff_data.cliff4 = buff.at(28) * 256 + buff.at(29);
+            cliff_data.cliff1 = (buff.at(22) << 8) | buff.at(23);
+            cliff_data.cliff2 = (buff.at(24) << 8) | buff.at(25);
+            cliff_data.cliff3 = (buff.at(26) << 8) | buff.at(27);
+            cliff_data.cliff4 = (buff.at(28) << 8) | buff.at(29);
             cliff_pub.publish(cliff_data);
 
             /// Battery data
             gobot_msg_srv::BatteryMsg battery_data;
             battery_data.BatteryStatus  = buff.at(31);
-            battery_data.BatteryVoltage = buff.at(32) * 256 + buff.at(33);
-            battery_data.ChargingCurrent = buff.at(34) * 256 + buff.at(35);
-            battery_data.Temperature = buff.at(36) * 256 + buff.at(37);
-            battery_data.RemainCapacity = (buff.at(38) * 256 + buff.at(39))/100;
-            battery_data.FullCapacity = (buff.at(40) * 256 + buff.at(41))/100;
+            battery_data.BatteryVoltage = (buff.at(32) << 8) | buff.at(33);
+            battery_data.ChargingCurrent = (buff.at(34) << 8) | buff.at(35);
+            battery_data.Temperature = (buff.at(36) << 8) | buff.at(37);
+            battery_data.RemainCapacity = ((buff.at(38) << 8) | buff.at(39))/100;
+            battery_data.FullCapacity = ((buff.at(40) << 8) | buff.at(41))/100;
 
-            if(battery_data.BatteryVoltage == 0 || battery_data.ChargingCurrent == 0)
+            if(battery_data.BatteryVoltage == 0 || battery_data.ChargingCurrent == 0 
+                || battery_data.FullCapacity == 0
+                || battery_data.Temperature < 0){
                 error = true;
-            else {
+                ROS_ERROR("(sensors::publishSensors) Check battery data : %d %d %d %d", (int) battery_data.BatteryVoltage, battery_data.ChargingCurrent,
+                battery_data.FullCapacity, battery_data.Temperature);
+            } else {
                 if(battery_data.ChargingCurrent > 700 || (last_charging_current > 0 && battery_data.ChargingCurrent - last_charging_current > 60))
                     battery_data.ChargingFlag = true;
                 else 
@@ -140,26 +165,27 @@ void publishSensors(void){
 
             /// Weight data
             gobot_msg_srv::WeightMsg weight_data;
-            weight_data.weightInfo = buff.at(43) * 256 + buff.at(44);
+            weight_data.weightInfo = (buff.at(43) << 8) | buff.at(44);
             weight_pub.publish(weight_data);
 
             /// External button
             int32_t external_button = buff.at(45);
             /// TODO do whatever we want with it
 
-            /*
-            std::cout << "Sonars : " << sonar_data.distance1 << " " << sonar_data.distance2 << " " << sonar_data.distance3 << " " << sonar_data.distance4 
-            << " " << sonar_data.distance5 << " " << sonar_data.distance6 << " " << sonar_data.distance7 <<
-            "\nBumpers : "  << (int) bumper_data.bumper1 << " " << (int) bumper_data.bumper2 << " " << (int) bumper_data.bumper3 << " " << (int) bumper_data.bumper4 << " "
-            << (int) bumper_data.bumper5 << " " << (int) bumper_data.bumper6 << " " << (int) bumper_data.bumper7 << " " << (int) bumper_data.bumper8 <<
-            "\nIr signals : " << (int) ir_data.rearSignal << " "  << (int) ir_data.leftSignal << " "  << (int) ir_data.rightSignal <<
-            "\nProximity : " << (int) proximity_data.signal1 << " " << (int) proximity_data.signal2 <<
-            "\nCliff : " << cliff_data.cliff1 << " " << cliff_data.cliff2 << " " << cliff_data.cliff3 << " " << cliff_data.cliff4 <<
-            "\nBattery : " << battery_data.BatteryStatus << " " << battery_data.BatteryVoltage << " " << battery_data.ChargingCurrent << " " << battery_data.Temperature 
-            << " " << battery_data.RemainCapacity << " " << battery_data.FullCapacity << " " << battery_data.ChargingFlag <<
-            "\nWeight : " << weight_data.weightInfo <<
-            "\nExternal button : " << external_button << std::endl;
-*/
+            if(display_data){
+                std::cout << "Sonars : " << sonar_data.distance1 << " " << sonar_data.distance2 << " " << sonar_data.distance3 << " " << sonar_data.distance4 
+                << " " << sonar_data.distance5 << " " << sonar_data.distance6 << " " << sonar_data.distance7 <<
+                "\nBumpers : "  << (int) bumper_data.bumper1 << " " << (int) bumper_data.bumper2 << " " << (int) bumper_data.bumper3 << " " << (int) bumper_data.bumper4 << " "
+                << (int) bumper_data.bumper5 << " " << (int) bumper_data.bumper6 << " " << (int) bumper_data.bumper7 << " " << (int) bumper_data.bumper8 <<
+                "\nIr signals : " << (int) ir_data.rearSignal << " "  << (int) ir_data.leftSignal << " "  << (int) ir_data.rightSignal <<
+                "\nProximity : " << (int) proximity_data.signal1 << " " << (int) proximity_data.signal2 <<
+                "\nCliff : " << cliff_data.cliff1 << " " << cliff_data.cliff2 << " " << cliff_data.cliff3 << " " << cliff_data.cliff4 <<
+                "\nBattery : " << battery_data.BatteryStatus << " " << battery_data.BatteryVoltage << " " << battery_data.ChargingCurrent << " " << battery_data.Temperature 
+                << " " << battery_data.RemainCapacity << " " << battery_data.FullCapacity << " " << battery_data.ChargingFlag <<
+                "\nWeight : " << weight_data.weightInfo <<
+                "\nExternal button : " << external_button << std::endl;
+            }
+
 
             /// The last byte is the Frame Check Sum and is not used
 
@@ -179,7 +205,6 @@ void publishSensors(void){
             error_count = 0;
         }
             
-        serialConnection.flush();
     } else
         ROS_ERROR("(sensors::publishSensors) Check serial connection 2");
 }
@@ -220,6 +245,8 @@ int main(int argc, char **argv) {
     cliff_pub = nh.advertise<gobot_msg_srv::CliffMsg>("cliff_topic", 50);
 
     ros::ServiceServer isChargingSrv = nh.advertiseService("isCharging", isChargingService);
+
+    ros::ServiceServer displayDataService = nh.advertiseService("displaySensorData", displaySensorData);
 
     if(initSerial()){
         ros::Rate r(5);
