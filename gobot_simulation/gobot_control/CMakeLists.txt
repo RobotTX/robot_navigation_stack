@@ -3,7 +3,6 @@ project(gobot_control)
 
 find_package(catkin REQUIRED COMPONENTS
     roscpp
-    message_generation
     sensor_msgs
     gobot_msg_srv
     gazebo_msgs
@@ -11,24 +10,22 @@ find_package(catkin REQUIRED COMPONENTS
     gazebo_ros
 )
 
-add_service_files(
-  FILES
-  SetBattery.srv
-)
+#add_service_files(
+#  FILES
+#)
 
 find_package (gazebo REQUIRED)
 
-generate_messages(
+#generate_messages(
     #DEPENDENCIES
     #std_msgs
-)
+#)
 
 set(CMAKE_CXX_FLAGS "-std=c++11 ${CMAKE_CXX_FLAGS}")
 catkin_package(
     INCLUDE_DIRS include
     CATKIN_DEPENDS 
     roscpp
-    message_runtime
     sensor_msgs
     gobot_msg_srv
     gazebo_msgs

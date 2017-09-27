@@ -73,6 +73,7 @@ int main(int argc, char* argv[] ){
             } else if(std::stoi(robotPos) == 1){
                 /// If we weren't scanning, we might have move so we if we are charging, we assume we are at our CS
                 gobot_msg_srv::IsCharging arg;
+                ros::service::waitForService("isCharging", 5000);
                 if(ros::service::call("isCharging", arg)){
                     if(arg.response.isCharging){
                         if(n.hasParam("home_file")){

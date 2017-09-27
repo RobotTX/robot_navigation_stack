@@ -316,6 +316,7 @@ void alignWithCS(void){
 }
 
 void newProximityInfo(const gobot_msg_srv::ProximityMsg::ConstPtr& proximitySignal){
+    ROS_INFO("(auto_docking::newProximityInfo) new proximity signal : %d %d", proximitySignal->signal1, proximitySignal->signal2);
     /// signal1 = leftSensor
     /// signal2 = rightSensor
     /// 0 : object; 1 : no object
@@ -339,7 +340,7 @@ void finishedDocking(const int16_t status){
     ROS_INFO("(auto_docking::finishedDocking) Finished trying to dock with status %d", status);
     proximitySub.shutdown();
 
-    /// TODO if simulation set battery voltage to 25000 => "charged"
+    /// TODO if simulation set battery voltage to 25000 => charged flag ?
 
     /// If the battery is still charging, we succesfully docked the robot
     if(chargingFlag)

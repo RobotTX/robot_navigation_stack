@@ -46,7 +46,7 @@ void newRightBattery(const gazebo_msgs::ContactsState::ConstPtr& msg){
         chargingFlagRight = (msg->states.size() > 0);
 }
 
-bool setBattery(gobot_control::SetBattery::Request &req, gobot_control::SetBattery::Response &res){
+bool setBattery(gobot_msg_srv::SetBattery::Request &req, gobot_msg_srv::SetBattery::Response &res){
     std::cout << "(battery_controller) Service setBattery called" << std::endl;
     batteryVoltage = req.voltage;
     return true;

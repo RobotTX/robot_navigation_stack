@@ -71,6 +71,7 @@ add_service_files(
     SetDockStatus.srv
     SetSpeeds.srv
     LedStrip.srv
+    SetBattery.srv
 )
 
 ## Generate actions in the 'action' folder
