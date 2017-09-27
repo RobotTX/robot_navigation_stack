@@ -58,7 +58,7 @@ void goalResultCallback(const move_base_msgs::MoveBaseActionResult::ConstPtr& ms
 
 
 void goalStatusCallback(const actionlib_msgs::GoalStatusArray::ConstPtr& msg){
-    if(msg->status_list.empty()){
+    if(msg->status_list.size()==1 && msg->status_list.back().status != 1){
         //Turn off LED if no goal for 3 mins
         if((ros::Time::now() - last_time).toSec()>180){
             gobot_msg_srv::LedStrip cmd;

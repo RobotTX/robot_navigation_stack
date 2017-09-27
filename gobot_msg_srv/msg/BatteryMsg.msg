@@ -1,6 +1,6 @@
 int16 BatteryStatus 
-int32 BatteryVoltage
-int32 ChargingCurrent
+int16 BatteryVoltage
+int16 ChargingCurrent
 bool ChargingFlag
 int16 Temperature
 int16 RemainCapacity
