@@ -1,7 +1,7 @@
 <?xml version="1.0"?>
 <launch>     
-    <param name="last_pose_file" type="string" value="$(find gobot_recovery)/Robot_Infos/last_pose.txt" />
-    <param name="home_file" type="string" value="$(find gobot_recovery)/Robot_Infos/home.txt" />
+    <param name="last_pose_file" type="string" value="$(find robot_infos)/Robot_Infos/last_pose.txt" />
+    <param name="home_file" type="string" value="$(find robot_infos)/Robot_Infos/home.txt" />
     
     <node pkg="gobot_recovery" type="allow_teb_back" name="allow_teb_back" output="screen" respawn="true"/>
 

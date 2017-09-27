@@ -22,7 +22,7 @@ bool rotateFindPose(double rot_v,double rot_t);
 
 void GlobalLocalization(void);
 
-void publishInitialpose(const double position_x, const double position_y, const double angle_x, const double angle_y, const double angle_z, const double angle_w);
+void publishInitialpose(const double position_x, const double position_y, const double angle_x, const double angle_y, const double angle_z, const double angle_w,const double cov);
 
 void initialPoseCallback(const geometry_msgs::PoseWithCovarianceStamped::ConstPtr& msg);
 
@@ -34,5 +34,5 @@ bool globalizePoseCallback(std_srvs::Empty::Request &req, std_srvs::Empty::Respo
 
 bool stopGlobalizePoseCallback(std_srvs::Empty::Request &req, std_srvs::Empty::Response &res);
 
-void getLastPose(std::string data);
+void getPose(std::string file_name,int type);
 

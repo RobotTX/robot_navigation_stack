@@ -10,9 +10,9 @@
     <node pkg="tf" type="static_transform_publisher" name="top_sonar_to_base_link" args="0.413 0 0.88 0 0 0 /base_link /top_sonar 100" />
     <node pkg="tf" type="static_transform_publisher" name="mid_sonar_to_base_link" args="0.413 0 0.48 0 0 0 /base_link /mid_sonar 100" />
 
-    <node pkg="robot_pose_publisher" type="robot_pose_publisher" name ="robot_pose_publisher" required="true"/>
+    <node pkg="robot_pose_publisher" type="robot_pose_publisher" name="robot_pose_publisher" required="true"/>
 
-    <node pkg="move_base" type="move_base" respawn="false" name="move_base" output="screen" required="true">
+    <node pkg="move_base" type="move_base" respawn="false" name="move_base" output="screen" required="true" launch-prefix="xterm -e">
         <rosparam file="$(find gobot_navigation)/params/costmap_common_params.yaml" command="load" ns="global_costmap" />
         <rosparam file="$(find gobot_navigation)/params/costmap_common_params.yaml" command="load" ns="local_costmap" />
         <rosparam file="$(find gobot_navigation)/params/local_costmap_params.yaml" command="load" />
