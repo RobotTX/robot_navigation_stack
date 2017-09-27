@@ -146,6 +146,10 @@ void initialPoseCallback(const std_msgs::Int8::ConstPtr& msg){
         color.push_back(GREEN);
         setLedPermanent(color);
         break;
+    case 2:
+        color.push_back(BLUE);
+        setLedPermanent(color);
+        break;
     default:
         color.push_back(OFF);
         setLedPermanent(color);

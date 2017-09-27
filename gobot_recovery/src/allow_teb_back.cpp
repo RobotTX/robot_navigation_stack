@@ -1,4 +1,4 @@
-#include <gobot_recovery/allow_teb_back.hpp>
+#include <gobot_recovery/allow_teb_back.h>
 
 bool allow_teb = false;
 
@@ -23,13 +23,13 @@ void goalResultCallback(const move_base_msgs::MoveBaseActionResult::ConstPtr& ms
                 ROS_INFO("Goal ABORTED and disable teb_local_planner allow_init_with_backwards_motion.");
                 break;
             default:
-                ROS_ERROR("Unknown goal status %d and disable teb_local_planner allow_init_with_backwards_motion.",msg->status.status);
+                ROS_ERROR("Unknown goal status %d and disable teb_local_planner allow_init_with_backwards_motion",msg->status.status);
                 break;
         }
     }
 }
 
-bool allowTebCallback(std_srvs::Empty::Request &req, std_srvs::Empty::Response &res){
+bool allowTebSrvCallback(std_srvs::Empty::Request &req, std_srvs::Empty::Response &res){
     dynamic_reconfigure::Reconfigure config;
     dynamic_reconfigure::BoolParameter param;
     param.name = "allow_init_with_backwards_motion";
@@ -41,16 +41,17 @@ bool allowTebCallback(std_srvs::Empty::Request &req, std_srvs::Empty::Response &
         allow_teb = true;
         return true;
     }
-    else
-        ROS_ERROR("Unable to set teb_local_planner allow_init_with_backwards_motion.");
+    else{
+        ROS_ERROR("Unable to set teb_local_planner allow_init_with_backwards_motion");
         return false;
+    }
 }
 
 int main(int argc, char **argv) {
     ros::init(argc, argv, "wheels");
     ros::NodeHandle nh;
 
-    ros::ServiceServer allowTebSrv = nh.advertiseService("/gobot_recovery/Allow_Teb_InitBack",allowTebCallback);
+    ros::ServiceServer allowTebSrv = nh.advertiseService("/gobot_recovery/allow_teb_initBack",allowTebSrvCallback);
     ros::Subscriber goalResult = nh.subscribe("/move_base/result",1,goalResultCallback);
 
     ros::spin();

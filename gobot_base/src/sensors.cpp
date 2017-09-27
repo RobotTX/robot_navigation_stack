@@ -222,7 +222,7 @@ bool initSerial(void) {
     serialConnection.setPort(port);
     //14400 bytes per sec
     serialConnection.setBaudrate(115200);
-    serial::Timeout timeout = serial::Timeout::simpleTimeout(1000);
+    serial::Timeout timeout = serial::Timeout::simpleTimeout(200);
     serialConnection.setTimeout(timeout);
     serialConnection.close();
     serialConnection.open();
@@ -235,7 +235,7 @@ bool initSerial(void) {
         return false;
 }
 
-bool setLedCallback(gobot_msg_srv::LedStrip::Request &req, gobot_msg_srv::LedStrip::Response &res){
+bool setLedSrvCallback(gobot_msg_srv::LedStrip::Request &req, gobot_msg_srv::LedStrip::Response &res){
     if(serialConnection.isOpen()){
         cmd={req.data[0],req.data[1],req.data[2],req.data[3],req.data[4],req.data[5],req.data[6],req.data[7],req.data[8],req.data[9],req.data[10]};
 
@@ -267,7 +267,7 @@ int main(int argc, char **argv) {
     cliff_pub = nh.advertise<gobot_msg_srv::CliffMsg>("cliff_topic", 50);
 
     ros::ServiceServer isChargingSrv = nh.advertiseService("isCharging", isChargingService);
-    ros::ServiceServer setLedSrv = nh.advertiseService("/gobot_base/setLed", setLedCallback);
+    ros::ServiceServer setLedSrv = nh.advertiseService("/gobot_base/setLed", setLedSrvCallback);
 
     ros::ServiceServer displayDataService = nh.advertiseService("displaySensorData", displaySensorData);
 

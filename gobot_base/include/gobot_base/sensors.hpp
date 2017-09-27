@@ -37,4 +37,4 @@ void publishSensors(void);
 /// Initialize he serial connection
 bool initSerial(void);
 
-bool setLedCallback(gobot_msg_srv::LedStrip::Request &req, gobot_msg_srv::LedStrip::Response &res);
+bool setLedSrvCallback(gobot_msg_srv::LedStrip::Request &req, gobot_msg_srv::LedStrip::Response &res);

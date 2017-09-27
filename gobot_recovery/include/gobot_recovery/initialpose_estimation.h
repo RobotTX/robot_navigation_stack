@@ -16,6 +16,17 @@
 #include <thread>
 #include <signal.h>
 
+#define COV_XY_T 0.2
+#define COV_YAW_T 0.1
+
+#define START_STATE 0
+#define CHARGING_STATE 1
+#define ROSPARAM_POSE_STATE 2
+#define LAST_POSE_STATE 3
+#define CHARGING_POSE_STATE 4
+#define GLOBAL_POSE_STATE 5
+#define COMPLETE_STATE 6
+
 void checkGoalStatus(void);
 
 bool rotateFindPose(double rot_v,double rot_t);
@@ -28,11 +39,11 @@ void initialPoseCallback(const geometry_msgs::PoseWithCovarianceStamped::ConstPt
 
 void goalStatusCallback(const actionlib_msgs::GoalStatusArray::ConstPtr& msg);
 
-bool checkInitPoseCallback(std_srvs::Empty::Request &req, std_srvs::Empty::Response &res);
+bool initializePoseSrvCallback(std_srvs::Empty::Request &req, std_srvs::Empty::Response &res);
 
-bool globalizePoseCallback(std_srvs::Empty::Request &req, std_srvs::Empty::Response &res);
+bool globalizePoseSrvCallback(std_srvs::Empty::Request &req, std_srvs::Empty::Response &res);
 
-bool stopGlobalizePoseCallback(std_srvs::Empty::Request &req, std_srvs::Empty::Response &res);
+bool stopGlobalizePoseSrvCallback(std_srvs::Empty::Request &req, std_srvs::Empty::Response &res);
 
 void getPose(std::string file_name,int type);
 

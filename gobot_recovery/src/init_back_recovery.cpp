@@ -36,10 +36,10 @@ InitBackRecovery::InitBackRecovery(): global_costmap_(NULL), local_costmap_(NULL
         ROS_WARN("Init back recovery behavior started.");
 
         std_srvs::Empty arg;
-        if(ros::service::call("/gobot_recovery/Allow_Teb_InitBack",arg))
-            ROS_WARN("Allow teb init with backwards motion.");
+        if(ros::service::call("/gobot_recovery/allow_teb_initBack",arg))
+            ROS_WARN("Allow teb init with backwards motion");
         else
-            ROS_ERROR("Failed to allow teb init with backwards motion.");
+            ROS_ERROR("Failed to allow teb init with backwards motion");
 
         ros::Duration(0.1).sleep();
     }
