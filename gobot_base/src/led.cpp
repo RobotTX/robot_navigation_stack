@@ -14,6 +14,7 @@
 #define GREEN 0x42
 #define BLUE 0x52
 #define WHITE 0x57
+#define YELLOW 0x59
 #define OFF 0x00
 
 ros::Time last_time;
@@ -91,7 +92,7 @@ void goalGetCallback(const move_base_msgs::MoveBaseActionGoal::ConstPtr& msg){
     cmd.request.data[6]=0x00;
     cmd.request.data[7]=0x00;
     cmd.request.data[8]=0x00;
-    cmd.request.data[9]=0xC8;
+    cmd.request.data[9]=0x64;
     cmd.request.data[10]=0x1B;
     ros::service::call("/gobot_base/setLed",cmd);
     LedChanged = true;
@@ -112,7 +113,7 @@ void newBumpersInfo(const gobot_msg_srv::BumperMsg::ConstPtr& msg){
         cmd.request.data[6]=0x00;
         cmd.request.data[7]=0x00;
         cmd.request.data[8]=0x00;
-        cmd.request.data[9]=0xC8;
+        cmd.request.data[9]=0x64;
         cmd.request.data[10]=0x1B;
         ros::service::call("/gobot_base/setLed",cmd);
         LedChanged = false;
@@ -130,6 +131,22 @@ int main(int argc, char **argv) {
     ros::Subscriber goalResult = nh.subscribe("/move_base/result",1,goalResultCallback);
     ros::Subscriber goalGet = nh.subscribe("/move_base/goal",1,goalGetCallback);
     ros::Subscriber bumpersSub = nh.subscribe("/bumpers_topic", 1, newBumpersInfo);
+
+    ros::Duration(2.0).sleep();
+    gobot_msg_srv::LedStrip cmd;
+    cmd.request.data[0]=0xB0;
+    cmd.request.data[1]=0x01;
+    cmd.request.data[2]=0x05;
+    cmd.request.data[3]=RED;
+    cmd.request.data[4]=BLUE;
+    cmd.request.data[5]=GREEN;
+    cmd.request.data[6]=YELLOW;
+    cmd.request.data[7]=WHITE;
+    cmd.request.data[8]=0x00;
+    cmd.request.data[9]=0x64;
+    cmd.request.data[10]=0x1B;
+    ros::service::call("/gobot_base/setLed",cmd);
+    LedChanged = true;
     last_time = ros::Time::now();
 
     ros::spin();

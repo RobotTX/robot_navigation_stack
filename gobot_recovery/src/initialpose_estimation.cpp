@@ -256,7 +256,7 @@ int main(int argc, char **argv) {
 
     vel_pub = nh.advertise<geometry_msgs::Twist>("/cmd_vel",10);
     goalCancel_pub = nh.advertise<actionlib_msgs::GoalID>("/move_base/cancel",10);
-    foundPose_pub = nh.advertise<std_msgs::Bool>("/move_base/cancel",10);
+    foundPose_pub = nh.advertise<std_msgs::Bool>("/gobot_recovery/find_initial_pose",10);
     ros::Subscriber goalStatus = nh.subscribe("/move_base/status",1,goalStatusCallback);
     ros::Subscriber initialPose = nh.subscribe("/amcl_pose",1,initialPoseCallback);
     ros::ServiceServer checkInitPose = nh.advertiseService("/gobot_recovery/check_init_pose",checkInitPoseCallback);

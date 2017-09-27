@@ -22,5 +22,5 @@
     <node pkg="gobot_base" type="sensors" name="sensors_publisher" output="screen" required="true"/>
     <node pkg="gobot_base" type="odom" name="odometry_publisher" output="screen" required="true"/>
     <node pkg="gobot_base" type="twist" name="twist_to_wheels" output="screen" required="true"/>
-
+    <node pkg="gobot_base" type="led" name="led" output="screen" respawn="true"/>
 </launch>
