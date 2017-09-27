@@ -26,7 +26,6 @@ bool rotateFindPose(double rot_v,double rot_t){
     checkGoalStatus();
     double dt=0.0;
     geometry_msgs::Twist vel;
-    std_msgs::Bool result;
     vel.linear.x = 0.0;
     vel.angular.z=rot_v;
     //rotate for time rot_t until find small covariance
@@ -45,7 +44,8 @@ bool rotateFindPose(double rot_v,double rot_t){
 
     if(cov_sum<cov_threshold)
     {
-        result.data = true;
+        std_msgs::Int8 result;
+        result.data = 1;
         //robot probably in CS station
         //clear costmap after finding initial pose
         ros::service::call("/move_base/clear_costmaps",empty_srv);
@@ -70,8 +70,8 @@ void GlobalLocalization(){
             ROS_INFO("Found robot pose after global initialization.");
         }
         else if(globalize_pose){
-            std_msgs::Bool result;
-            result.data = false;
+            std_msgs::Int8 result;
+            result.data = 0;
             //Publish result
             foundPose_pub.publish(result);
             ROS_WARN("Unable to find robot pose in the map after global initialization.");
@@ -144,58 +144,64 @@ void goalStatusCallback(const actionlib_msgs::GoalStatusArray::ConstPtr& msg){
 }
 
 bool checkInitPoseCallback(std_srvs::Empty::Request &req, std_srvs::Empty::Response &res){
-    gobot_msg_srv::IsCharging arg;
-    std_msgs::Bool result;
-    globalize_pose = true;
-    ros::service::call("/sensors/isCharging",arg);
-    ROS_INFO("Start to find initial pose.");
-    //if robot is charging, it is in CS station 
-    if(arg.response.isCharging){
-    //if(false){
-        ROS_INFO("Robot is charging in the charing station");
-        publishInitialpose(home_pos_x,home_pos_y,home_ang_x,home_ang_y,home_ang_z,home_ang_w,home_cov);
-        result.data = true;
-        foundPose_pub.publish(result);
-        return true;
-    }
-    //if not charing
-    else if(!running){
+    if(!running){
         running = true;
-        std::thread([](){
-            //try the pose from rosparam server
-            ROS_INFO("Try rosparam server pose.");
-            if(rotateFindPose(rot_vel,rot_time)){
-                ROS_INFO("Robot is near the rosparam server pose.");
-            }
-            else if(globalize_pose){
-                ROS_WARN("Robot is not in the rosparam server pose.");
-                //try the pose from home pose
-                ROS_INFO("Try charging station pose.");
-                publishInitialpose(home_pos_x,home_pos_y,home_ang_x,home_ang_y,home_ang_z,home_ang_w,initial_cov);
+        gobot_msg_srv::IsCharging arg;
+        std_msgs::Int8 result;
+        globalize_pose = true;
+
+        result.data = -1;
+        foundPose_pub.publish(result);
+        ros::service::call("/sensors/isCharging",arg);
+        ROS_INFO("Start to find initial pose.");
+        //if robot is charging, it is in CS station 
+        if(arg.response.isCharging){
+        //if(false){
+            ROS_INFO("Robot is charging in the charing station");
+            publishInitialpose(home_pos_x,home_pos_y,home_ang_x,home_ang_y,home_ang_z,home_ang_w,home_cov);
+            result.data = 1;
+            foundPose_pub.publish(result);
+            running = false;
+            return true;
+        }
+        //if not charing
+        else {
+            std::thread([](){
+                //try the pose from rosparam server
+                ROS_INFO("Try rosparam server pose.");
                 if(rotateFindPose(rot_vel,rot_time)){
-                    ROS_INFO("Robot is near the charging station, but not charging");
+                    ROS_INFO("Robot is near the rosparam server pose.");
                 }
                 else if(globalize_pose){
-                    ROS_WARN("Robot is not in the charging station");
-                    //try the pose from last stop pose
-                    ROS_INFO("Try last stop pose.");
-                    publishInitialpose(last_pos_x,last_pos_y,last_ang_x,last_ang_y,last_ang_z,last_ang_w,initial_cov);
+                    ROS_WARN("Robot is not in the rosparam server pose.");
+                    //try the pose from home pose
+                    ROS_INFO("Try charging station pose.");
+                    publishInitialpose(home_pos_x,home_pos_y,home_ang_x,home_ang_y,home_ang_z,home_ang_w,initial_cov);
                     if(rotateFindPose(rot_vel,rot_time)){
-                        ROS_INFO("Robot is near the last stop pose.");
+                        ROS_INFO("Robot is near the charging station, but not charging");
                     }
                     else if(globalize_pose){
-                        ROS_WARN("Robot is not in the last stop pose");
-                        ROS_INFO("Try reset particles.");
-                        ros::Duration(3.0).sleep();
-                        //try globalize pose after all recorded pose failed
-                        GlobalLocalization();
+                        ROS_WARN("Robot is not in the charging station");
+                        //try the pose from last stop pose
+                        ROS_INFO("Try last stop pose.");
+                        publishInitialpose(last_pos_x,last_pos_y,last_ang_x,last_ang_y,last_ang_z,last_ang_w,initial_cov);
+                        if(rotateFindPose(rot_vel,rot_time)){
+                            ROS_INFO("Robot is near the last stop pose.");
+                        }
+                        else if(globalize_pose){
+                            ROS_WARN("Robot is not in the last stop pose");
+                            ROS_INFO("Try reset particles.");
+                            ros::Duration(3.0).sleep();
+                            //try globalize pose after all recorded pose failed
+                            GlobalLocalization();
+                        }
                     }
                 }
+                    running = false;
+                }).detach();
+                return true;
             }
-            running = false;
-        }).detach();
-        return true;
-    }
+        }
     else{
         ROS_ERROR("Localization is running by other request and not complete yet...");
         return false;
@@ -207,6 +213,10 @@ bool globalizePoseCallback(std_srvs::Empty::Request &req, std_srvs::Empty::Respo
     cov_sum = 100.0;
     globalize_pose = true;
     if(!running){
+        std_msgs::Int8 result;
+        result.data = -1;
+        foundPose_pub.publish(result);
+
         running = true;
         std::thread([](){
             GlobalLocalization();
@@ -225,8 +235,8 @@ bool stopGlobalizePoseCallback(std_srvs::Empty::Request &req, std_srvs::Empty::R
         globalize_pose = false;
         ROS_INFO("Stop to find initial pose.");
         //Cancelled by user
-        std_msgs::Bool result;
-        result.data = false;
+        std_msgs::Int8 result;
+        result.data = 0;
         //Publish result
         ros::service::call("/move_base/clear_costmaps",empty_srv);
         foundPose_pub.publish(result);
@@ -315,7 +325,7 @@ int main(int argc, char **argv) {
 
     vel_pub = nh.advertise<geometry_msgs::Twist>("/cmd_vel",10);
     goalCancel_pub = nh.advertise<actionlib_msgs::GoalID>("/move_base/cancel",10);
-    foundPose_pub = nh.advertise<std_msgs::Bool>("/gobot_recovery/find_initial_pose",10);
+    foundPose_pub = nh.advertise<std_msgs::Int8>("/gobot_recovery/find_initial_pose",10);
     ros::Subscriber goalStatus = nh.subscribe("/move_base/status",1,goalStatusCallback);
     ros::Subscriber initialPose = nh.subscribe("/amcl_pose",1,initialPoseCallback);
     ros::ServiceServer checkInitPose = nh.advertiseService("/gobot_recovery/check_init_pose",checkInitPoseCallback);

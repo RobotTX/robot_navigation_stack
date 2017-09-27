@@ -1,5 +1,5 @@
 #include <ros/ros.h>
-#include <std_msgs/Bool.h>
+#include <std_msgs/Int8.h>
 #include <std_srvs/Empty.h>
 #include <geometry_msgs/PoseWithCovarianceStamped.h>
 #include <geometry_msgs/Twist.h>
