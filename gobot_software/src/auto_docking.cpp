@@ -15,6 +15,7 @@ bool charging = false;
 bool chargingFlag = false;
 bool lostIrSignal = false;
 bool leftFlag = false;
+bool moving_away_from_collision = false;
 
 /// Used to wait for the new goal to be published so the status is reset and we don't use the status of the previous goal
 bool newGoal = false;
@@ -218,13 +219,26 @@ void newBumpersInfo(const gobot_msg_srv::BumperMsg::ConstPtr& bumpers){
             ROS_WARN("(auto_docking::newBumpersInfo) just got a new collision");
             collision = true;
             collisionTime = std::chrono::system_clock::now();
-            setSpeed('F', 0, 'F', 0);
-        } else {
+        } else
             /// if after 30 seconds, the obstacle is still there, we tell the user about the obstacle
-            if(std::chrono::duration_cast<std::chrono::seconds>(std::chrono::system_clock::now() - collisionTime).count() > 30){
+            if(std::chrono::duration_cast<std::chrono::seconds>(std::chrono::system_clock::now() - collisionTime).count() > 30)
                 failedDocking(-3);
-            }
-        }
+
+        /// 0 : collision; 1 : no collision
+        if(!(bumpers->bumper5 && bumpers->bumper6) && !(bumpers->bumper7 && bumpers->bumper8)){
+            ROS_WARN("(auto_docking::newBumpersInfo) Collision on more than 1 side");
+            setSpeed('F', 2, 'F', 2);
+            moving_away_from_collision = true;
+        } else if(!(bumpers->bumper5 && bumpers->bumper6) && bumpers->bumper7 && bumpers->bumper8){
+            ROS_INFO("(auto_docking::newBumpersInfo) Collision right side");
+            setSpeed('F', 2, 'B', 2);
+            moving_away_from_collision = true;
+        } else if(bumpers->bumper5 && bumpers->bumper6 && !(bumpers->bumper7 && bumpers->bumper8)){
+            ROS_INFO("(auto_docking::newBumpersInfo) Collision left side");
+            setSpeed('B', 2, 'F', 2);
+            moving_away_from_collision = true;
+        } else
+            ROS_ERROR("(auto_docking::newBumpersInfo) should never happen");
     } else {
         /// if we had a collision and the obstacle left
         if(collision){
@@ -232,7 +246,14 @@ void newBumpersInfo(const gobot_msg_srv::BumperMsg::ConstPtr& bumpers){
             setSpeed('F', 0, 'F', 0);
             collision = false;
         }
+
+        if(moving_away_from_collision){
+            ROS_INFO("(auto_docking::newBumpersInfo) stopped moving away from collision, stoping the robot");
+            setSpeed('F', 0, 'F', 0);
+            moving_away_from_collision = false;
+        }
     }
+
 }
 
 /// The pid control function
@@ -304,7 +325,6 @@ void newIrSignal(const gobot_msg_srv::IrMsg::ConstPtr& irSignal){
 void alignWithCS(void){
     ROS_INFO("(auto_docking::alignWithCS) The robot is charging, checking the alignment");
 
-    bumperSub.shutdown();
     irSub.shutdown();
 
     ros::spinOnce();
@@ -349,6 +369,7 @@ void finishedDocking(const int16_t status){
         ROS_WARN("(auto_docking::finishedDocking) Finished docking but we are not charging anymore.... oops");
 
     batterySub.shutdown();
+    bumperSub.shutdown();
 
     gobot_msg_srv::SetDockStatus dockStatus;
     dockStatus.request.status = status;

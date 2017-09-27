@@ -17,6 +17,17 @@ int error_count = 0;
 std::mutex connectionMutex;
 bool display_data = false;
 
+bool setSpeed(const char directionR, const int velocityR, const char directionL, const int velocityL){
+    //ROS_INFO("(auto_docking::setSpeed) %c %d %c %d", directionR , velocityR, directionL, velocityL);
+    gobot_msg_srv::SetSpeeds speed; 
+    speed.request.directionR = std::string(1, directionR);
+    speed.request.velocityR = velocityR;
+    speed.request.directionL = std::string(1, directionL);
+    speed.request.velocityL = velocityL;
+
+    return ros::service::call("setSpeeds", speed);
+}
+
 bool displaySensorData(gobot_msg_srv::SetBattery::Request &req, gobot_msg_srv::SetBattery::Response &res){
     ROS_INFO("(sensors::displaySensorData) Service called");
     display_data = (req.voltage > 0);
@@ -93,10 +104,8 @@ void publishSensors(void){
             sonar_data.distance6 = (buff.at(13) << 8) | buff.at(14);
             sonar_data.distance7 = (buff.at(15) << 8) | buff.at(16);
 
-            if(sonar_data.distance1 + sonar_data.distance2 + sonar_data.distance3 + sonar_data.distance4 
-                + sonar_data.distance5 + sonar_data.distance6 + sonar_data.distance7 != 0)
-                sonar_pub.publish(sonar_data);
-            else {
+            if((sonar_data.distance1 == 0 + sonar_data.distance2 == 0 + sonar_data.distance3 == 0 + sonar_data.distance4 == 0
+               + sonar_data.distance5 == 0 + sonar_data.distance6 == 0 + sonar_data.distance7 == 0) > 2){
                 error = true;
                 ROS_ERROR("(sensors::publishSensors) Check sonars data : %d %d %d %d %d %d %d", sonar_data.distance1, sonar_data.distance2, sonar_data.distance3,
                 sonar_data.distance4, sonar_data.distance5, sonar_data.distance6, sonar_data.distance7);
@@ -112,20 +121,17 @@ void publishSensors(void){
             bumper_data.bumper6 = (buff.at(17) & 0b00100000) > 0;
             bumper_data.bumper7 = (buff.at(17) & 0b01000000) > 0;
             bumper_data.bumper8 = (buff.at(17) & 0b10000000) > 0;
-            bumper_pub.publish(bumper_data);
 
             /// Ir signals
             gobot_msg_srv::IrMsg ir_data;
             ir_data.rearSignal = buff.at(18);
             ir_data.leftSignal = buff.at(19);
             ir_data.rightSignal = buff.at(20);
-            ir_pub.publish(ir_data);
 
             /// Proximity sensors
             gobot_msg_srv::ProximityMsg proximity_data;
             proximity_data.signal1 = (buff.at(21) & 0b00000001) > 0;
             proximity_data.signal2 = (buff.at(21) & 0b00000010) > 0;
-            proximity_pub.publish(proximity_data);
 
             /// Cliff sensors
             gobot_msg_srv::CliffMsg cliff_data;
@@ -133,7 +139,6 @@ void publishSensors(void){
             cliff_data.cliff2 = (buff.at(24) << 8) | buff.at(25);
             cliff_data.cliff3 = (buff.at(26) << 8) | buff.at(27);
             cliff_data.cliff4 = (buff.at(28) << 8) | buff.at(29);
-            cliff_pub.publish(cliff_data);
 
             /// Battery data
             gobot_msg_srv::BatteryMsg battery_data;
@@ -158,15 +163,12 @@ void publishSensors(void){
 
                 charging = battery_data.ChargingFlag;
                 last_charging_current = battery_data.ChargingCurrent;
-                
-                battery_pub.publish(battery_data);
             }
 
 
             /// Weight data
             gobot_msg_srv::WeightMsg weight_data;
             weight_data.weightInfo = (buff.at(43) << 8) | buff.at(44);
-            weight_pub.publish(weight_data);
 
             /// External button
             int32_t external_button = buff.at(45);
@@ -189,6 +191,16 @@ void publishSensors(void){
 
             /// The last byte is the Frame Check Sum and is not used
 
+            if(!error){
+                sonar_pub.publish(sonar_data);
+                bumper_pub.publish(bumper_data);
+                ir_pub.publish(ir_data);
+                proximity_pub.publish(proximity_data);
+                cliff_pub.publish(cliff_data);
+                battery_pub.publish(battery_data);
+                weight_pub.publish(weight_data);
+            }
+
         } else {
             ROS_INFO("(sensors::publishSensors) Check buff size : %lu", buff.size());
             error = true;
@@ -203,6 +215,7 @@ void publishSensors(void){
         if(error_count > ERROR_THRESHOLD){
             resetStm();
             error_count = 0;
+            setSpeed('F', 0, 'F', 0);
         }
             
     } else

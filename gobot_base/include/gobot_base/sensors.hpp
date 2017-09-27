@@ -14,8 +14,11 @@
 #include <gobot_msg_srv/CliffMsg.h>
 #include <gobot_msg_srv/IsCharging.h>
 #include <gobot_msg_srv/SetBattery.h>
+#include <gobot_msg_srv/SetSpeeds.h>
 #include "serial/serial.h"
 #include <mutex>
+
+bool setSpeed(const char directionR, const int velocityR, const char directionL, const int velocityL);
 
 bool displaySensorData(gobot_msg_srv::SetBattery::Request &req, gobot_msg_srv::SetBattery::Response &res);
 
