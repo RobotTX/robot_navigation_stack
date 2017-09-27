@@ -17,6 +17,7 @@
 #define OFF 0x00
 
 ros::Time last_time;
+bool LedChanged = false;
 
 void goalResultCallback(const move_base_msgs::MoveBaseActionResult::ConstPtr& msg){
     //LED permanent ON
@@ -50,6 +51,7 @@ void goalResultCallback(const move_base_msgs::MoveBaseActionResult::ConstPtr& ms
         break;
     }
     ros::service::call("/gobot_base/setLed",cmd);
+    LedChanged = true;
     last_time=ros::Time::now();
 }
 
@@ -71,6 +73,7 @@ void goalStatusCallback(const actionlib_msgs::GoalStatusArray::ConstPtr& msg){
             cmd.request.data[9]=0xE8;
             cmd.request.data[10]=0x1B;
             ros::service::call("/gobot_base/setLed",cmd);
+            LedChanged = true;
             last_time=ros::Time::now();
         }   
     } 
@@ -87,29 +90,34 @@ void goalGetCallback(const move_base_msgs::MoveBaseActionGoal::ConstPtr& msg){
     cmd.request.data[5]=0x00;
     cmd.request.data[6]=0x00;
     cmd.request.data[7]=0x00;
-    cmd.request.data[8]=0x01;
-    cmd.request.data[9]=0xF4;
+    cmd.request.data[8]=0x00;
+    cmd.request.data[9]=0xC8;
     cmd.request.data[10]=0x1B;
     ros::service::call("/gobot_base/setLed",cmd);
+    LedChanged = true;
     last_time=ros::Time::now();
 }
 
-void newBumpersInfo(const gobot_msg_srv::BumperMsg::ConstPtr& bumpers){
-    //White Red LED Running
-    gobot_msg_srv::LedStrip cmd;
-    cmd.request.data[0]=0xB0;
-    cmd.request.data[1]=0x01;
-    cmd.request.data[2]=0x02;
-    cmd.request.data[3]=RED;
-    cmd.request.data[4]=WHITE;
-    cmd.request.data[5]=0x00;
-    cmd.request.data[6]=0x00;
-    cmd.request.data[7]=0x00;
-    cmd.request.data[8]=0x01;
-    cmd.request.data[9]=0xF4;
-    cmd.request.data[10]=0x1B;
-    ros::service::call("/gobot_base/setLed",cmd);
-    last_time=ros::Time::now();
+void newBumpersInfo(const gobot_msg_srv::BumperMsg::ConstPtr& msg){
+    if((msg->bumper1+msg->bumper2+msg->bumper3+msg->bumper4+msg->bumper5+msg->bumper6+msg->bumper7+msg->bumper8)<8 && LedChanged)
+    {
+        //White Red LED Running
+        gobot_msg_srv::LedStrip cmd;
+        cmd.request.data[0]=0xB0;
+        cmd.request.data[1]=0x01;
+        cmd.request.data[2]=0x02;
+        cmd.request.data[3]=RED;
+        cmd.request.data[4]=WHITE;
+        cmd.request.data[5]=0x00;
+        cmd.request.data[6]=0x00;
+        cmd.request.data[7]=0x00;
+        cmd.request.data[8]=0x00;
+        cmd.request.data[9]=0xC8;
+        cmd.request.data[10]=0x1B;
+        ros::service::call("/gobot_base/setLed",cmd);
+        LedChanged = false;
+        last_time=ros::Time::now();
+    }
 }
 
 

@@ -15,6 +15,7 @@
 #include <gobot_msg_srv/IsCharging.h>
 #include <gobot_msg_srv/LedStrip.h>
 #include "serial/serial.h"
+#include <thread>
 
 /// Send a command to reset the stm32
 void resetStm(void);
