@@ -22,14 +22,13 @@
 #define MAGENTA 0x4D
 
 #define LOCALIZE_STATE 11
-#define GOAL_STATE 6
-#define CHARGING_STATE 8
-#define BUMPER_STATE 7
+#define BUMPER_STATE 10
+#define GOAL_STATE 8
+#define CHARGING_STATE 7
+#define NOT_CHARGING_STATE 1
 #define FREE_STATE 0
 
 ros::Time last_time;
-bool LedChanged = true;
-bool BatteryChanged = true;
 
 int current_state = FREE_STATE;
 
@@ -53,8 +52,6 @@ void setLedPermanent(std::vector<uint8_t> &color)
         cmd.request.data[3+i]=color[i];
     }
     ros::service::call("/gobot_base/setLed",cmd);
-    LedChanged = true;
-    BatteryChanged = true;
     last_time=ros::Time::now();
 }
 
@@ -78,7 +75,6 @@ void setLedRunning(std::vector<uint8_t> &color)
         cmd.request.data[3+i]=color[i];
     }
     ros::service::call("/gobot_base/setLed",cmd);
-    LedChanged = true;
     last_time=ros::Time::now();
 }
 
@@ -110,18 +106,6 @@ void goalResultCallback(const move_base_msgs::MoveBaseActionResult::ConstPtr& ms
     }
 }
 
-
-void goalStatusCallback(const actionlib_msgs::GoalStatusArray::ConstPtr& msg){
-    if(msg->status_list.size()==1 && msg->status_list.back().status != 1){
-        //Turn off LED if no goal for 3 mins
-        if((ros::Time::now() - last_time).toSec()>300){
-            std::vector<uint8_t> color;
-            color.push_back(WHITE);
-            setLedPermanent(color);
-        }   
-    } 
-}
-
 void goalGetCallback(const move_base_msgs::MoveBaseActionGoal::ConstPtr& msg){
     if(current_state<GOAL_STATE){
         current_state=GOAL_STATE;
@@ -133,8 +117,55 @@ void goalGetCallback(const move_base_msgs::MoveBaseActionGoal::ConstPtr& msg){
     }
 }
 
+void initialPoseCallback(const std_msgs::Int8::ConstPtr& msg){
+    if(current_state<LOCALIZE_STATE){
+        std::vector<uint8_t> color;
+        switch(msg->data){
+        case -1:
+            current_state=LOCALIZE_STATE;
+            color.push_back(CYAN);
+            color.push_back(WHITE);
+            setLedRunning(color);
+            break;
+        case 0:
+            current_state=FREE_STATE;
+            color.push_back(RED);
+            setLedPermanent(color);
+            break;
+        case 1:
+            current_state=FREE_STATE;
+            color.push_back(GREEN);
+            setLedPermanent(color);
+            break;
+        case 2:
+            current_state=FREE_STATE;
+            color.push_back(BLUE);
+            setLedPermanent(color);
+            break;
+        default:
+            current_state=FREE_STATE;
+            color.push_back(OFF);
+            setLedPermanent(color);
+            break;
+        }
+    }
+}
+
+void goalStatusCallback(const actionlib_msgs::GoalStatusArray::ConstPtr& msg){
+    if(msg->status_list.size()==1 && msg->status_list.back().status != 1){
+        if(current_state==FREE_STATE){
+            //Turn off LED if no goal for 3 mins
+            if((ros::Time::now() - last_time).toSec()>300){
+                std::vector<uint8_t> color;
+                color.push_back(WHITE);
+                setLedPermanent(color);
+            }   
+        } 
+    }
+}
+
 void newBumpersInfo(const gobot_msg_srv::BumperMsg::ConstPtr& msg){
-    if(current_state<BUMPER_STATE){
+    if(current_state<BUMPER_STATE && current_state!=CHARGING_STATE){
         current_state = BUMPER_STATE;
         if((msg->bumper1+msg->bumper2+msg->bumper3+msg->bumper4+msg->bumper5+msg->bumper6+msg->bumper7+msg->bumper8)<8)
         {
@@ -143,40 +174,6 @@ void newBumpersInfo(const gobot_msg_srv::BumperMsg::ConstPtr& msg){
             color.push_back(RED);
             color.push_back(WHITE);
             setLedRunning(color);
-            LedChanged = false;
-        }
-        else{
-            current_state = FREE_STATE;
-        }
-    }
-}
-
-void initialPoseCallback(const std_msgs::Int8::ConstPtr& msg){
-    if(current_state<LOCALIZE_STATE){
-        current_state=LOCALIZE_STATE;
-        std::vector<uint8_t> color;
-        switch(msg->data){
-        case -1:
-            color.push_back(CYAN);
-            color.push_back(WHITE);
-            setLedRunning(color);
-            break;
-        case 0:
-            color.push_back(RED);
-            setLedPermanent(color);
-            break;
-        case 1:
-            color.push_back(GREEN);
-            setLedPermanent(color);
-            break;
-        case 2:
-            color.push_back(BLUE);
-            setLedPermanent(color);
-            break;
-        default:
-            color.push_back(OFF);
-            setLedPermanent(color);
-            break;
         }
     }
 }
@@ -186,14 +183,8 @@ void batteryCallback(const gobot_msg_srv::BatteryMsg::ConstPtr& msg){
         current_state = CHARGING_STATE;
         std::vector<uint8_t> color;
         if(msg->ChargingFlag){
-            if(BatteryChanged){
-            BatteryChanged = false;
             color.push_back(CYAN);
             setLedPermanent(color);
-            }
-        }
-        else if(!BatteryChanged){
-            current_state = FREE_STATE;
         }
     }
 }
