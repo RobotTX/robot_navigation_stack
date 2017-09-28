@@ -6,7 +6,14 @@
 
     <!--laser to base tf frequency depends on the laser update rate-->
     <node pkg="tf" type="static_transform_publisher" name="base_link_to_laser" args="0.355 0 0.13275 0 0 0 /base_link /base_laser 50" required="true"/>
-
+    <node pkg="tf" type="static_transform_publisher" name="rear_sonar_to_base_link" args="-0.267 -0.065 0.165 3.14159 0 0 /base_link /rear_sonar 100 " />
+    <node pkg="tf" type="static_transform_publisher" name="front_right_sonar_to_base_link" args="0.413 -0.168 0.165 0 0 0 /base_link /front_right_sonar 100 "/>
+    <node pkg="tf" type="static_transform_publisher" name="front_left_sonar_to_base_link" args="0.413 0.168 0.165 0 0 0 /base_link /front_left_sonar 100 "/>
+    <node pkg="tf" type="static_transform_publisher" name="left_sonar_to_base_link" args="-0.01 0.298 0.165 1.5708 0 0 /base_link /left_sonar 100 "/>
+    <node pkg="tf" type="static_transform_publisher" name="right_sonar_to_base_link" args="-0.01 -0.298 0.165 -1.5708 0 0 /base_link /right_sonar 100 "/>
+    <node pkg="tf" type="static_transform_publisher" name="top_sonar_to_base_link" args="0.413 0 0.88 0 0 0 /base_link /top_sonar 100" />
+    <node pkg="tf" type="static_transform_publisher" name="mid_sonar_to_base_link" args="0.413 0 0.48 0 0 0 /base_link /mid_sonar 100" />
+    
     <node pkg="urg_node" type="urg_node" name="hokuyo" output="screen" required="true">
         <param name="frame_id" value="base_laser" />
         <param name="angle_min" value="-2.094395102" />

@@ -5,7 +5,7 @@
     
     <node pkg="gobot_recovery" type="allow_teb_back" name="allow_teb_back" output="screen" respawn="true"/>
 
-    <node pkg="gobot_recovery" type="initialpose_estimation" name="initialpose_estimation" output="screen" required="true"/>
+    <node pkg="gobot_recovery" type="initialpose_estimation" name="initialpose_estimation" output="screen"/>
 
 
 </launch>
