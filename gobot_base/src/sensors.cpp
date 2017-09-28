@@ -150,10 +150,9 @@ void publishSensors(void){
             battery_data.RemainCapacity = ((buff.at(38) << 8) | buff.at(39))/100;
             battery_data.FullCapacity = ((buff.at(40) << 8) | buff.at(41))/100;
 
-            std::cout << "ok " << (int) buff.at(40) << " : " << (int) buff.at(41) << std::endl;
 
             if(battery_data.BatteryVoltage == 0 || battery_data.ChargingCurrent == 0 
-                || battery_data.FullCapacity == 0
+                //|| battery_data.FullCapacity == 0
                 || battery_data.Temperature < 0){
                 error = true;
                 ROS_ERROR("(sensors::publishSensors) Check battery data : %d %d %d %d", (int) battery_data.BatteryVoltage, battery_data.ChargingCurrent,
@@ -251,13 +250,14 @@ bool initSerial(void) {
 }
 
 bool setLedSrvCallback(gobot_msg_srv::LedStrip::Request &req, gobot_msg_srv::LedStrip::Response &res){
+    ROS_INFO("Receive a LED change request.");
     if(serialConnection.isOpen()){
         cmd={req.data[0],req.data[1],req.data[2],req.data[3],req.data[4],req.data[5],req.data[6],req.data[7],req.data[8],req.data[9],req.data[10]};
 
         connectionMutex.lock();
         serialConnection.write(cmd);
         std::vector<uint8_t> buff;
-        serialConnection.read(buff, 47);
+        serialConnection.read(buff,5);
         serialConnection.flush();
         connectionMutex.unlock();
         return true;

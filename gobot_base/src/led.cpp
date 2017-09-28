@@ -11,7 +11,7 @@
 #define MAGENTA 0x4D
 
 #define BUSY_STATE 99
-#define LOCALIZING_STATE 11
+#define LOCALIZE_STATE 11
 #define BUMPER_STATE 10
 #define GOAL_STATE 8
 #define CHARGING_STATE 7
@@ -112,7 +112,7 @@ void initialPoseCallback(const std_msgs::Int8::ConstPtr& msg){
         switch(msg->data){
         case -1:
             current_state=LOCALIZE_STATE;
-            color.push_back(CYAN);
+            color.push_back(GREEN);
             color.push_back(WHITE);
             setLedRunning(color);
             break;
@@ -154,27 +154,32 @@ void goalStatusCallback(const actionlib_msgs::GoalStatusArray::ConstPtr& msg){
 }
 
 void newBumpersInfo(const gobot_msg_srv::BumperMsg::ConstPtr& msg){
-    if(current_state<BUMPER_STATE && current_state!=CHARGING_STATE){
+    int n = msg->bumper1+msg->bumper2+msg->bumper3+msg->bumper4+msg->bumper5+msg->bumper6+msg->bumper7+msg->bumper8;
+    if(n<8 && current_state<BUMPER_STATE && current_state!=CHARGING_STATE){
         current_state = BUMPER_STATE;
-        if((msg->bumper1+msg->bumper2+msg->bumper3+msg->bumper4+msg->bumper5+msg->bumper6+msg->bumper7+msg->bumper8)<8)
-        {
-            //White Red LED Running
-            std::vector<uint8_t> color;
-            color.push_back(RED);
-            color.push_back(WHITE);
-            setLedRunning(color);
-        }
+        //White Red LED Running
+        std::vector<uint8_t> color;
+        color.push_back(RED);
+        color.push_back(WHITE);
+        setLedRunning(color);
+    }
+    else if(n==8 && current_state==BUMPER_STATE){
+        current_state = FREE_STATE;
     }
 }
 
 void batteryCallback(const gobot_msg_srv::BatteryMsg::ConstPtr& msg){
-    if(current_state<CHARGING_STATE){
+    std::vector<uint8_t> color;
+    if(msg->ChargingFlag && (current_state<CHARGING_STATE || current_state==BUMPER_STATE)){
         current_state = CHARGING_STATE;
-        std::vector<uint8_t> color;
-        if(msg->ChargingFlag){
-            color.push_back(CYAN);
-            setLedPermanent(color);
-        }
+        color.push_back(CYAN);
+        color.push_back(WHITE);
+        setLedRunning(color);
+    }
+    else if(!msg->ChargingFlag && current_state==CHARGING_STATE){
+        color.push_back(CYAN);
+        setLedPermanent(color);
+        current_state = FREE_STATE;
     }
 }
 
