@@ -186,7 +186,7 @@ bool initializePoseSrvCallback(std_srvs::Empty::Request &req, std_srvs::Empty::R
                 case CHARGING_STATE:
                     //wait 3 second for batter status update
                     ros::Duration(3.0).sleep();
-                    ros::service::call("/sensors/isCharging",arg);
+                    ros::service::call("/isCharging",arg);
                     //if robot is charging, it is in CS station 
                     if(arg.response.isCharging||evaluatePose(1)){
                     //if(false){
@@ -379,6 +379,14 @@ int main(int argc, char **argv) {
     ros::init(argc, argv, "initialpose_estimation");
     ros::NodeHandle nh;
 
+    if(nh.hasParam("home_pose_file")){
+        nh.getParam("home_pose_file", homeFile);
+        //Get charging station pose
+        getPose(homeFile,0);
+    } 
+    else
+        ROS_ERROR("Could not find the param home_pose_file");
+
     if(nh.hasParam("last_pose_file")){
         nh.getParam("last_pose_file", lastPoseFile);
         //Get last stop pose
@@ -386,14 +394,6 @@ int main(int argc, char **argv) {
     } 
     else
         ROS_ERROR("Could not find the param last_pose_file");
-
-    if(nh.hasParam("home_file")){
-        nh.getParam("home_file", homeFile);
-        //Get charging station pose
-        getPose(homeFile,0);
-    } 
-    else
-        ROS_ERROR("Could not find the param home_file");
     
 
     vel_pub = nh.advertise<geometry_msgs::Twist>("/cmd_vel",10);

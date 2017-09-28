@@ -9,6 +9,7 @@
 #include <move_base_msgs/MoveBaseActionResult.h>
 #include <move_base_msgs/MoveBaseActionGoal.h>
 #include <gobot_msg_srv/BumperMsg.h>
+#include <gobot_msg_srv/BatteryMsg.h>
 
 //0x52 = Blue,0x47 = Red,0x42 = Green,0x4D = Magenta,0x43 = Cyan,0x59 = Yellow,0x57 = White, 0x00 = Off
 #define RED 0x47
@@ -22,6 +23,10 @@
 
 ros::Time last_time;
 bool LedChanged = true;
+bool BatteryChanged = true;
+
+int current_state = 0;
+
 
 void setLedPermanent(std::vector<uint8_t> &color)
 {
@@ -44,6 +49,7 @@ void setLedPermanent(std::vector<uint8_t> &color)
     }
     ros::service::call("/gobot_base/setLed",cmd);
     LedChanged = true;
+    BatteryChanged = true;
     last_time=ros::Time::now();
 }
 
@@ -119,7 +125,7 @@ void goalGetCallback(const move_base_msgs::MoveBaseActionGoal::ConstPtr& msg){
 }
 
 void newBumpersInfo(const gobot_msg_srv::BumperMsg::ConstPtr& msg){
-    if((msg->bumper1+msg->bumper2+msg->bumper3+msg->bumper4+msg->bumper5+msg->bumper6+msg->bumper7+msg->bumper8)<8 && LedChanged)
+    if((msg->bumper1+msg->bumper2+msg->bumper3+msg->bumper4+msg->bumper5+msg->bumper6+msg->bumper7+msg->bumper8)<8 && LedChanged && BatteryChanged)
     {
         //White Red LED Running
         std::vector<uint8_t> color;
@@ -157,6 +163,22 @@ void initialPoseCallback(const std_msgs::Int8::ConstPtr& msg){
     }
 }
 
+void batteryCallback(const gobot_msg_srv::BatteryMsg::ConstPtr& msg){
+    std::vector<uint8_t> color;
+    if(msg->ChargingFlag){
+        if(BatteryChanged){
+        BatteryChanged = false;
+        color.push_back(CYAN);
+        setLedPermanent(color);
+        }
+    }
+    else if(!BatteryChanged){
+        BatteryChanged = true;
+        color.push_back(WHITE);
+        setLedPermanent(color);
+    }
+}
+
 int main(int argc, char **argv) {
     ros::init(argc, argv, "led");
     ros::NodeHandle nh;
@@ -167,6 +189,7 @@ int main(int argc, char **argv) {
     ros::Subscriber goalGet = nh.subscribe("/move_base/goal",1,goalGetCallback);
     ros::Subscriber bumpersSub = nh.subscribe("/bumpers_topic", 1, newBumpersInfo);
     ros::Subscriber initialPose = nh.subscribe("/gobot_recovery/find_initial_pose",1, initialPoseCallback);
+    ros::Subscriber battery = nh.subscribe("/battery_topic",1, batteryCallback);
 
     ros::Duration(2.0).sleep();
     std::vector<uint8_t> color;
