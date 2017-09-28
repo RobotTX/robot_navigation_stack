@@ -20,7 +20,7 @@
 
 #define PI 3.1415926
 
-#define COV_XY_T 0.2
+#define COV_XY_T 0.25
 #define COV_YAW_T 0.1
 
 #define START_STATE 0
@@ -30,13 +30,19 @@
 #define GLOBAL_POSE_STATE 4
 #define COMPLETE_STATE 5
 
-bool evaluatePose(int type);
+#define START_FOUND -1
+#define NOT_FOUND 0
+#define FOUND 1
+#define CANCEL_FOUND 2
 
-void checkGoalStatus(void);
+
+bool evaluatePose(int type);
 
 bool rotateFindPose(double rot_v,double rot_t);
 
 void GlobalLocalization(void);
+
+void findPoseResult(int status);
 
 void publishInitialpose(const double position_x, const double position_y, const double angle_x, const double angle_y, const double angle_z, const double angle_w,const double cov1,const double cov2);
 
