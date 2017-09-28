@@ -1,6 +1,6 @@
 #include <gobot_base/sensors.hpp>
 
-#define ERROR_THRESHOLD 5
+#define ERROR_THRESHOLD 2
 
 ros::Publisher bumper_pub;
 ros::Publisher ir_pub;
@@ -41,13 +41,13 @@ void resetStm(void){
         serialConnection.write(std::vector<uint8_t>({0xD0, 0x01, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x1B}));
 
         std::vector<uint8_t> buff;
-        serialConnection.read(buff, 7);
+        serialConnection.read(buff, 40);
 
         serialConnection.flush();
 
         connectionMutex.unlock();
 
-        ROS_INFO("(sensors::publishSensors) resetStm");
+        ROS_WARN("(sensors::publishSensors) resetStm %lu", buff.size());
     } else 
         ROS_ERROR("(sensors::publishSensors) Check serial connection 1");
 }
@@ -214,9 +214,9 @@ void publishSensors(void){
 
         /// If we got more than <ERROR_THRESHOLD> errors in a row, we send a command to reset the stm32
         if(error_count > ERROR_THRESHOLD){
+            setSpeed('F', 0, 'F', 0);
             resetStm();
             error_count = 0;
-            setSpeed('F', 0, 'F', 0);
         }
             
     } else

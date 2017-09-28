@@ -104,7 +104,7 @@ bool startDocking(void){
 
                     /// will allow us to check that we arrived at our destination
                     goalStatusSub = nh.subscribe("/move_base/status", 1, goalStatus);
-                    robotPoseSub = nh.subscribe("/robot_pose", 1, newRobotPos);
+                    //robotPoseSub = nh.subscribe("/robot_pose", 1, newRobotPos);
 
                     ROS_INFO("(auto_docking::startDocking) service called successfully");
 
@@ -229,13 +229,45 @@ void newBumpersInfo(const gobot_msg_srv::BumperMsg::ConstPtr& bumpers){
             ROS_WARN("(auto_docking::newBumpersInfo) Collision on more than 1 side");
             setSpeed('F', 2, 'F', 2);
             moving_away_from_collision = true;
+            lostIrSignal = false;
+            
         } else if(!(bumpers->bumper5 && bumpers->bumper6) && bumpers->bumper7 && bumpers->bumper8){
-            ROS_INFO("(auto_docking::newBumpersInfo) Collision right side");
-            setSpeed('F', 2, 'B', 2);
+            ROS_WARN("(auto_docking::newBumpersInfo) Collision right side");
+            //setSpeed('F', 0, 'B', 2);
+
+            ros::NodeHandle nh;
+
+            irSub.shutdown();
+            setSpeed('F', 5, 'F', 2);
+            std::this_thread::sleep_for(std::chrono::milliseconds(2000));
+            ROS_WARN("(auto_docking::newBumpersInfo) Collision right side speed 1");
+            setSpeed('B', 2, 'B', 2);
+            std::this_thread::sleep_for(std::chrono::milliseconds(2000));
+            ROS_WARN("(auto_docking::newBumpersInfo) Collision right side speed 2");
+            setSpeed('F', 0, 'F', 0);
+            lostIrSignal = false;
+            irSub = nh.subscribe("/ir_topic", 1, newIrSignal);
+
+
             moving_away_from_collision = true;
         } else if(bumpers->bumper5 && bumpers->bumper6 && !(bumpers->bumper7 && bumpers->bumper8)){
-            ROS_INFO("(auto_docking::newBumpersInfo) Collision left side");
-            setSpeed('B', 2, 'F', 2);
+            ROS_WARN("(auto_docking::newBumpersInfo) Collision left side");
+            //setSpeed('B', 2, 'F', 0);
+
+            ros::NodeHandle nh;
+
+            irSub.shutdown();
+            setSpeed('F', 2, 'F', 5);
+            std::this_thread::sleep_for(std::chrono::milliseconds(2000));
+            ROS_WARN("(auto_docking::newBumpersInfo) Collision left side speed 1");
+            setSpeed('B', 2, 'B', 2);
+            std::this_thread::sleep_for(std::chrono::milliseconds(2000));
+            ROS_WARN("(auto_docking::newBumpersInfo) Collision left side speed 2");
+            setSpeed('F', 0, 'F', 0);
+            lostIrSignal = false;
+            irSub = nh.subscribe("/ir_topic", 1, newIrSignal);
+
+
             moving_away_from_collision = true;
         } else
             ROS_ERROR("(auto_docking::newBumpersInfo) should never happen");

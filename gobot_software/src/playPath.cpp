@@ -21,6 +21,17 @@ ros::Subscriber statusSuscriber;
 ros::Subscriber sub_robot;
 
 
+bool setSpeed(const char directionR, const int velocityR, const char directionL, const int velocityL){
+    //ROS_INFO("(auto_docking::setSpeed) %c %d %c %d", directionR, velocityR, directionL, velocityL);
+    gobot_msg_srv::SetSpeeds speed; 
+    speed.request.directionR = std::string(1, directionR);
+    speed.request.velocityR = velocityR;
+    speed.request.directionL = std::string(1, directionL);
+    speed.request.velocityL = velocityL;
+
+    return ros::service::call("setSpeeds", speed);
+}
+
 void getRobotPos(const geometry_msgs::Pose::ConstPtr& msg){
 	// if there is a currentGoal
 	if(currentGoal.x != -1){
@@ -263,7 +274,16 @@ bool playPathService(std_srvs::Empty::Request &req, std_srvs::Empty::Response &r
 		setStageInFile(stage);
 	}
 
-	goNextPoint();
+    std::thread([](){
+        gobot_msg_srv::IsCharging arg;
+        if(ros::service::call("isCharging", arg) && arg.response.isCharging){
+            ROS_WARN("(PlayPath::playPathService) we are charging so we go straight to avoid bumping into the CS when turning");
+            setSpeed('F', 10, 'F', 10);
+            std::this_thread::sleep_for(std::chrono::milliseconds(3000));
+            setSpeed('F', 0, 'F', 0);
+        }
+        goNextPoint();
+    }).detach();
 
 	return true;	
 }
@@ -334,7 +354,7 @@ int main(int argc, char* argv[]){
 			ROS_INFO("Waiting for the move_base action server to come up");
 
 		if(ac->isServerConnected())
-                        ROS_INFO("Play path:: Server is connected");
+            ROS_INFO("Play path Action lib server is connected");
 
 		ros::spin();
 
