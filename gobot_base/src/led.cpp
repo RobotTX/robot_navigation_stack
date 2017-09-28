@@ -1,15 +1,4 @@
-#include <ros/ros.h>
-#include <string>
-#include <unistd.h>
-#include <stdio.h>
-#include <stdlib.h>
-#include <std_msgs/Int8.h>
-#include <gobot_msg_srv/LedStrip.h>
-#include <actionlib_msgs/GoalStatusArray.h>
-#include <move_base_msgs/MoveBaseActionResult.h>
-#include <move_base_msgs/MoveBaseActionGoal.h>
-#include <gobot_msg_srv/BumperMsg.h>
-#include <gobot_msg_srv/BatteryMsg.h>
+#include <gobot_base/led.h>
 
 //0x52 = Blue,0x47 = Red,0x42 = Green,0x4D = Magenta,0x43 = Cyan,0x59 = Yellow,0x57 = White, 0x00 = Off
 #define RED 0x47
@@ -21,11 +10,11 @@
 #define CYAN 0x43
 #define MAGENTA 0x4D
 
-#define LOCALIZE_STATE 11
+#define BUSY_STATE 99
+#define LOCALIZING_STATE 11
 #define BUMPER_STATE 10
 #define GOAL_STATE 8
 #define CHARGING_STATE 7
-#define NOT_CHARGING_STATE 1
 #define FREE_STATE 0
 
 ros::Time last_time;
@@ -118,7 +107,7 @@ void goalGetCallback(const move_base_msgs::MoveBaseActionGoal::ConstPtr& msg){
 }
 
 void initialPoseCallback(const std_msgs::Int8::ConstPtr& msg){
-    if(current_state<LOCALIZE_STATE){
+    if(current_state<BUSY_STATE){
         std::vector<uint8_t> color;
         switch(msg->data){
         case -1:

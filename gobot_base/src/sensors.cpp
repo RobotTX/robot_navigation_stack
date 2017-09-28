@@ -150,6 +150,8 @@ void publishSensors(void){
             battery_data.RemainCapacity = ((buff.at(38) << 8) | buff.at(39))/100;
             battery_data.FullCapacity = ((buff.at(40) << 8) | buff.at(41))/100;
 
+            std::cout << "ok " << (int) buff.at(40) << " : " << (int) buff.at(41) << std::endl;
+
             if(battery_data.BatteryVoltage == 0 || battery_data.ChargingCurrent == 0 
                 || battery_data.FullCapacity == 0
                 || battery_data.Temperature < 0){
