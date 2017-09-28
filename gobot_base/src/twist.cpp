@@ -5,6 +5,7 @@ bool moving_from_collision = false;
 bool moved_away_from_collision = false;
 std::chrono::system_clock::time_point collisionTime;
 
+
 bool setSpeed(const char directionR, const int velocityR, const char directionL, const int velocityL){
     //ROS_INFO("(auto_docking::setSpeed) %c %d %c %d", directionR , velocityR, directionL, velocityL);
     gobot_msg_srv::SetSpeeds speed; 

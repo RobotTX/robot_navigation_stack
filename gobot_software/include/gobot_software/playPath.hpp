@@ -17,6 +17,9 @@
 #include <actionlib/client/simple_action_client.h>
 #include <memory>
 #include <cmath>
+#include <gobot_msg_srv/SetSpeeds.h>
+#include <gobot_msg_srv/IsCharging.h>
+#include <thread>
 
 typedef actionlib::SimpleActionClient<move_base_msgs::MoveBaseAction> MoveBaseClient;
 
@@ -29,6 +32,7 @@ struct Point {
     bool isHome;
 };
 
+bool setSpeed(const char directionR, const int velocityR, const char directionL, const int velocityL);
 void getRobotPos(const geometry_msgs::Pose::ConstPtr& msg);
 void getStatus(const actionlib_msgs::GoalStatusArray::ConstPtr& _status);
 bool stopPathService(std_srvs::Empty::Request &req, std_srvs::Empty::Response &res);
