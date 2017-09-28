@@ -2,7 +2,7 @@
 
 
 double cov_xy=0.0,cov_yaw=0.0,initial_cov_xy=0.25,initial_cov_yaw=2.0, home_cov_xy=0.15,home_cov_yaw=0.1;
-double rot_vel = 0.318, rot_time = 23;
+double rot_vel = 0.25, rot_time = 30;
 double last_pos_x=0.0,last_pos_y=0.0,last_pos_yaw=0.0,last_ang_x=0.0,last_ang_y=0.0,last_ang_z=0.0,last_ang_w=0.0;
 double home_pos_x=0.0,home_pos_y=0.0,home_pos_yaw=0.0,home_ang_x=0.0,home_ang_y=0.0,home_ang_z=0.0,home_ang_w=0.0;
 double rosparam_x=0.0,rosparam_y=0.0,rosparam_yaw=0.0,rosparam_cov_x=0.0,rosparam_cov_y=0.0,rosparam_cov_yaw=0.0;
@@ -55,8 +55,8 @@ bool rotateFindPose(double rot_v,double rot_t){
     vel.angular.z=rot_v;
     //wait 1 sec before rotating
     ros::Duration(1.0).sleep();
-    //rotate for time rot_t until find small covariance
-    ros::Rate loop_rate(4);
+    //rotate for time rot_time until find small covariance
+    ros::Rate loop_rate(3);
     ros::Time last_time = ros::Time::now();
     //clear costmap before rotating
     ros::service::call("/move_base/clear_costmaps",empty_srv);
@@ -191,14 +191,14 @@ bool initializePoseSrvCallback(std_srvs::Empty::Request &req, std_srvs::Empty::R
                     if(arg.response.isCharging||evaluatePose(1)){
                     //if(false){
                         found_pose=true;
-                        ROS_INFO("Robot is charging in the charing station");
+                        ROS_INFO("Robot is in the charing station");
                         publishInitialpose(home_pos_x,home_pos_y,home_ang_x,home_ang_y,home_ang_z,home_ang_w,home_cov_xy,home_cov_yaw);
                         result.data = 1;
                         foundPose_pub.publish(result);
                         current_state=COMPLETE_STATE;
                     }
                     else{
-                        ROS_WARN("Robot is not charging");
+                        ROS_WARN("Robot is not in the charging station");
                         current_state=ROSPARAM_POSE_STATE;
                     }
                     break;

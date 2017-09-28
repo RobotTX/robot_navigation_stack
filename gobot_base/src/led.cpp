@@ -112,7 +112,7 @@ void initialPoseCallback(const std_msgs::Int8::ConstPtr& msg){
         switch(msg->data){
         case -1:
             current_state=LOCALIZE_STATE;
-            color.push_back(GREEN);
+            color.push_back(BLUE);
             color.push_back(WHITE);
             setLedRunning(color);
             break;
@@ -194,15 +194,7 @@ int main(int argc, char **argv) {
     ros::Subscriber bumpersSub = nh.subscribe("/bumpers_topic", 1, newBumpersInfo);
     ros::Subscriber initialPose = nh.subscribe("/gobot_recovery/find_initial_pose",1, initialPoseCallback);
     ros::Subscriber battery = nh.subscribe("/battery_topic",1, batteryCallback);
-
-    ros::Duration(2.0).sleep();
-    std::vector<uint8_t> color;
-    color.push_back(RED);
-    color.push_back(BLUE);
-    color.push_back(GREEN);
-    color.push_back(YELLOW);
-    color.push_back(WHITE);
-    setLedRunning(color);
+    last_time=ros::Time::now();
 
     ros::spin();
     return 0;

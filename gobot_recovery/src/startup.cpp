@@ -23,7 +23,7 @@ int main(int argc, char **argv) {
     ros::NodeHandle nh;
     signal(SIGINT, mySigintHandler);
 
-    ros::Duration(5.0).sleep();
+    ros::Duration(3.0).sleep();
 
     std_srvs::Empty arg;
     vel_pub = nh.advertise<geometry_msgs::Twist>("/cmd_vel",10);
