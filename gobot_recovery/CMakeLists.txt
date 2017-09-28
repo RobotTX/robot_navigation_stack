@@ -74,6 +74,12 @@ add_executable(initialpose_estimation src/initialpose_estimation.cpp)
 add_dependencies(initialpose_estimation ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
 target_link_libraries(initialpose_estimation ${catkin_LIBRARIES})
 
+
+add_executable(startup src/startup.cpp)
+add_dependencies(startup ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
+target_link_libraries(startup ${catkin_LIBRARIES})
+
+
 #############
 ## Testing ##
 #############

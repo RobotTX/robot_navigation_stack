@@ -7,5 +7,6 @@
 
     <node pkg="gobot_recovery" type="initialpose_estimation" name="initialpose_estimation" output="screen"/>
 
+    <node pkg="gobot_recovery" type="startup" name="startup" output="screen"/>
 
 </launch>
