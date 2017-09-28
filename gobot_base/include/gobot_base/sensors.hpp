@@ -13,6 +13,8 @@
 #include <gobot_msg_srv/WeightMsg.h>
 #include <gobot_msg_srv/CliffMsg.h>
 #include <gobot_msg_srv/IsCharging.h>
+#include <gobot_msg_srv/LedStrip.h>
+#include <thread>
 #include <gobot_msg_srv/SetBattery.h>
 #include <gobot_msg_srv/SetSpeeds.h>
 #include "serial/serial.h"
@@ -21,6 +23,7 @@
 bool setSpeed(const char directionR, const int velocityR, const char directionL, const int velocityL);
 
 bool displaySensorData(gobot_msg_srv::SetBattery::Request &req, gobot_msg_srv::SetBattery::Response &res);
+
 
 /// Send a command to reset the stm32
 void resetStm(void);
@@ -36,3 +39,5 @@ void publishSensors(void);
 
 /// Initialize he serial connection
 bool initSerial(void);
+
+bool setLedSrvCallback(gobot_msg_srv::LedStrip::Request &req, gobot_msg_srv::LedStrip::Response &res);

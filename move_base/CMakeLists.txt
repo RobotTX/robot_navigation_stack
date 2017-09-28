@@ -20,6 +20,7 @@ find_package(catkin REQUIRED COMPONENTS
         rotate_recovery
         std_srvs
         tf
+        gobot_recovery
 )
 find_package(Eigen3 REQUIRED)
 add_definitions(${EIGEN3_DEFINITIONS})

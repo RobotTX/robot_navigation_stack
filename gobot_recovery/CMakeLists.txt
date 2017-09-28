@@ -7,67 +7,47 @@ add_compile_options(-std=c++11)
 ## Find catkin macros and libraries
 ## if COMPONENTS list like find_package(catkin REQUIRED COMPONENTS xyz)
 ## is used, also find other catkin packages
-find_package(catkin REQUIRED COMPONENTS
-    roscpp
-    dynamic_reconfigure
-    move_base_msgs
-    costmap_2d
-    tf
-    std_srvs
+find_package(catkin REQUIRED 
+    COMPONENTS
+        roscpp
+        pluginlib
+        dynamic_reconfigure
+        move_base_msgs
+        costmap_2d
+        tf
+        nav_core
+        std_srvs
+        std_msgs
+        actionlib_msgs
+        geometry_msgs
+        gobot_msg_srv
 )
 
 find_package(Eigen3 REQUIRED)
+remove_definitions(-DDISABLE_LIBUSB-1.0)
 include_directories(
     include
     ${catkin_INCLUDE_DIRS}
     ${EIGEN3_INCLUDE_DIRS}
 )
 add_definitions(${EIGEN3_DEFINITIONS})
-## Generate added messages and services with any dependencies listed here
-# generate_messages(
-#   DEPENDENCIES
-#   std_msgs
-# )
 
-################################################
-## Declare ROS dynamic reconfigure parameters ##
-################################################
-
-## To declare and build dynamic reconfigure parameters within this
-## package, follow these steps:
-## * In the file package.xml:
-##   * add a build_depend and a run_depend tag for "dynamic_reconfigure"
-## * In this file (CMakeLists.txt):
-##   * add "dynamic_reconfigure" to
-##     find_package(catkin REQUIRED COMPONENTS ...)
-##   * uncomment the "generate_dynamic_reconfigure_options" section below
-##     and list every .cfg file to be processed
-
-## Generate dynamic reconfigure parameters in the 'cfg' folder
-# generate_dynamic_reconfigure_options(
-#   cfg/DynReconf1.cfg
-#   cfg/DynReconf2.cfg
-# )
-
-###################################
-## catkin specific configuration ##
-###################################
-## The catkin_package macro generates cmake config files for your package
-## Declare things to be passed to dependent projects
-## INCLUDE_DIRS: uncomment this if you package contains header files
-## LIBRARIES: libraries you create in this project that dependent projects also need
-## CATKIN_DEPENDS: catkin_packages dependent projects also need
-## DEPENDS: system dependencies of this project that dependent projects also need
 catkin_package(
     INCLUDE_DIRS include
-    LIBRARIES gobot_recovery
+    LIBRARIES init_back_recovery
     CATKIN_DEPENDS
-    roscpp
-    dynamic_reconfigure
-    move_base_msgs
-    costmap_2d
-    tf
-    std_srvs
+        roscpp
+        pluginlib
+        dynamic_reconfigure
+        move_base_msgs
+        costmap_2d
+        tf
+        nav_core
+        std_srvs
+        std_msgs
+        actionlib_msgs
+        geometry_msgs
+        gobot_msg_srv
 )
 
 ###########
@@ -77,8 +57,9 @@ catkin_package(
 ## Specify additional locations of header files
 ## Your package locations should be listed before other locations
 include_directories(
-# include
-  ${catkin_INCLUDE_DIRS}
+    include
+    ${catkin_INCLUDE_DIRS}
+    ${EIGEN3_INCLUDE_DIRS}
 )
 
 add_library(init_back_recovery src/init_back_recovery.cpp)
@@ -88,6 +69,16 @@ target_link_libraries(init_back_recovery ${catkin_LIBRARIES})
 add_executable(allow_teb_back src/allow_teb_back.cpp)
 add_dependencies(allow_teb_back ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
 target_link_libraries(allow_teb_back ${catkin_LIBRARIES})
+
+add_executable(initialpose_estimation src/initialpose_estimation.cpp)
+add_dependencies(initialpose_estimation ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
+target_link_libraries(initialpose_estimation ${catkin_LIBRARIES})
+
+
+add_executable(startup src/startup.cpp)
+add_dependencies(startup ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
+target_link_libraries(startup ${catkin_LIBRARIES})
+
 
 #############
 ## Testing ##
@@ -111,6 +102,7 @@ install(TARGETS init_back_recovery
 install(DIRECTORY include/${PROJECT_NAME}/
   DESTINATION ${CATKIN_PACKAGE_INCLUDE_DESTINATION}
   FILES_MATCHING PATTERN "*.h"
+  PATTERN ".svn" EXCLUDE
 )
 
 install(FILES init_back_recovery.xml

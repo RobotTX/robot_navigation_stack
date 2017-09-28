@@ -48,7 +48,7 @@ std::string getStdoutFromCommand(std::string cmd) {
 
 bool initSerial() {
     /// Get the port in which our device is connected
-    std::string deviceNode("2-3.3:1.1");
+    std::string deviceNode("2-3.2:1.1");
     std::string output = getStdoutFromCommand("ls -l /sys/class/tty/ttyUSB*");
     std::string port = "/dev" + output.substr(output.find(deviceNode) + deviceNode.size(), 8);
 
@@ -56,8 +56,9 @@ bool initSerial() {
 
     // Set the serial port, baudrate and timeout in milliseconds
     serialConnection.setPort(port);
+    //Send 1200 bytes per second
     serialConnection.setBaudrate(9600);
-    serial::Timeout timeout = serial::Timeout::simpleTimeout(1000);
+    serial::Timeout timeout = serial::Timeout::simpleTimeout(100);
     serialConnection.setTimeout(timeout);
     serialConnection.close();
     serialConnection.open();
@@ -81,6 +82,8 @@ bool initSerial() {
 //tx//('B',127)=0, ('F/B',0)=128,('F',127)=255
 bool setSpeeds(gobot_msg_srv::SetSpeeds::Request &req, gobot_msg_srv::SetSpeeds::Response &res){
     if(req.velocityL <= 127 && req.velocityL <= 127){
+        //x=condition?x1:x2   
+        //condition=true,x=x1; condition=false,x=x2.
         uint8_t leftSpeed = req.directionL.compare("F") == 0 ? 128 - req.velocityL : 128 + req.velocityL;
         uint8_t rightSpeed = req.directionR.compare("F") == 0 ? 128 - req.velocityR : 128 + req.velocityR;
 

@@ -14,6 +14,7 @@ serial::Serial serialConnection;
 int last_charging_current = -1;
 bool charging = false;
 int error_count = 0;
+std::vector<uint8_t> cmd;
 std::mutex connectionMutex;
 bool display_data = false;
 
@@ -224,7 +225,7 @@ void publishSensors(void){
 
 bool initSerial(void) {
     /// Get the port in which our device is connected
-    std::string deviceNode("2-3.3:1.0");
+    std::string deviceNode("2-3.2:1.0");
     std::string output = getStdoutFromCommand("ls -l /sys/class/tty/ttyUSB*");
     std::string port = "/dev" + output.substr(output.find(deviceNode) + deviceNode.size(), 8);
 
@@ -232,16 +233,37 @@ bool initSerial(void) {
 
     // Set the serial port, baudrate and timeout in milliseconds
     serialConnection.setPort(port);
+    //14400 bytes per sec
     serialConnection.setBaudrate(115200);
-    serial::Timeout timeout = serial::Timeout::simpleTimeout(500);
+    serial::Timeout timeout = serial::Timeout::simpleTimeout(200);
     serialConnection.setTimeout(timeout);
     serialConnection.close();
     serialConnection.open();
 
-    if(serialConnection.isOpen())
+    if(serialConnection.isOpen()){
+        ROS_INFO("Connection established to STM32.");
         return true;
+    }
     else
         return false;
+}
+
+bool setLedSrvCallback(gobot_msg_srv::LedStrip::Request &req, gobot_msg_srv::LedStrip::Response &res){
+    if(serialConnection.isOpen()){
+        cmd={req.data[0],req.data[1],req.data[2],req.data[3],req.data[4],req.data[5],req.data[6],req.data[7],req.data[8],req.data[9],req.data[10]};
+
+        connectionMutex.lock();
+        serialConnection.write(cmd);
+        std::vector<uint8_t> buff;
+        serialConnection.read(buff, 47);
+        serialConnection.flush();
+        connectionMutex.unlock();
+        return true;
+    }
+    else{
+        return false;
+    }
+    
 }
 
 int main(int argc, char **argv) {
@@ -258,6 +280,7 @@ int main(int argc, char **argv) {
     cliff_pub = nh.advertise<gobot_msg_srv::CliffMsg>("cliff_topic", 50);
 
     ros::ServiceServer isChargingSrv = nh.advertiseService("isCharging", isChargingService);
+    ros::ServiceServer setLedSrv = nh.advertiseService("/gobot_base/setLed", setLedSrvCallback);
 
     ros::ServiceServer displayDataService = nh.advertiseService("displaySensorData", displaySensorData);
 
@@ -265,7 +288,6 @@ int main(int argc, char **argv) {
         ros::Rate r(5);
         while(ros::ok()){
             ros::spinOnce();
-
             publishSensors();
 
             r.sleep();

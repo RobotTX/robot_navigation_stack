@@ -6,4 +6,4 @@
 
 void goalResultCallback(const move_base_msgs::MoveBaseActionResult::ConstPtr& msg);
 
-bool allowTebCallback(std_srvs::Empty::Request &req, std_srvs::Empty::Response &res);
+bool allowTebSrvCallback(std_srvs::Empty::Request &req, std_srvs::Empty::Response &res);

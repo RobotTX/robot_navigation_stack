@@ -70,6 +70,7 @@ add_service_files(
     SendMessageToPc.srv
     SetDockStatus.srv
     SetSpeeds.srv
+    LedStrip.srv
     SetBattery.srv
 )
 

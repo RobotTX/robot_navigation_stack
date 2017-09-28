@@ -1039,7 +1039,7 @@ namespace move_base {
     double to_goal_dis = sqrt(pow(current_pos.pose.position.x-goal_pos.pose.position.x,2)+pow(current_pos.pose.position.y-goal_pos.pose.position.y,2));
     if(to_goal_dis < dis_to_goal_threshold_)
     {
-      ROS_INFO("Current position is close enough (%f) to Goal positon.",to_goal_dis);
+      ROS_INFO("Current position is close enough (%.2f) to Goal positon.",to_goal_dis);
       return true;
     }
     else

@@ -1,8 +1,8 @@
 <?xml version="1.0"?>
 <launch>
-    <node pkg="map_server" type="map_server" name="map_server" args="$(find gobot_navigation)/maps/used_map.yaml" required="true"/>
+    <node pkg="map_server" type="map_server" name="map_server" args="$(find gobot_navigation)/maps/new_map_full.yaml" required="true"/>
 
-    <node pkg="amcl" type="amcl" name="amcl" required="true">
+    <node pkg="amcl" type="amcl" name="amcl" output="screen" respawn="true"> #launch-prefix="xterm -e">
         <rosparam file="$(find gobot_navigation)/params/amcl_params.yaml" command="load" />
     </node>
 </launch>

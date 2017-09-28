@@ -29,9 +29,9 @@ planner_frequency: 2
 
 recovery_behavior_enabled: true
 
-planner_patience: 3
+planner_patience: 5
 
-controller_patience: 3
+controller_patience: 5
 
 # How long in seconds to allow for oscillation before executing recovery behaviors. 
 # A value of 0.0 corresponds to an infinite timeout.
@@ -63,7 +63,7 @@ NavfnROS:
 
 conservative_reset:
     #The radius away from the robot in meters outside which obstacles will be removed from the costmaps when they are reverted to the static map. 
-    reset_distance: 0.5
+    reset_distance: 0.1
 
 aggressive_reset:
     reset_distance: 0.001
