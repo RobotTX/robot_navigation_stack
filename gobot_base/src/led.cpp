@@ -21,12 +21,17 @@
 #define CYAN 0x43
 #define MAGENTA 0x4D
 
+#define LOCALIZE_STATE 11
+#define GOAL_STATE 6
+#define CHARGING_STATE 8
+#define BUMPER_STATE 7
+#define FREE_STATE 0
+
 ros::Time last_time;
 bool LedChanged = true;
 bool BatteryChanged = true;
 
-int current_state = 0;
-
+int current_state = FREE_STATE;
 
 void setLedPermanent(std::vector<uint8_t> &color)
 {
@@ -79,6 +84,7 @@ void setLedRunning(std::vector<uint8_t> &color)
 
 void goalResultCallback(const move_base_msgs::MoveBaseActionResult::ConstPtr& msg){
     //LED permanent ON
+    current_state=FREE_STATE;
     std::vector<uint8_t> color;
     switch(msg->status.status){
     case 2:
@@ -117,65 +123,78 @@ void goalStatusCallback(const actionlib_msgs::GoalStatusArray::ConstPtr& msg){
 }
 
 void goalGetCallback(const move_base_msgs::MoveBaseActionGoal::ConstPtr& msg){
-    //White Green LED Running
-    std::vector<uint8_t> color;
-    color.push_back(GREEN);
-    color.push_back(WHITE);
-    setLedRunning(color);
+    if(current_state<GOAL_STATE){
+        current_state=GOAL_STATE;
+        //White Green LED Running
+        std::vector<uint8_t> color;
+        color.push_back(GREEN);
+        color.push_back(WHITE);
+        setLedRunning(color);
+    }
 }
 
 void newBumpersInfo(const gobot_msg_srv::BumperMsg::ConstPtr& msg){
-    if((msg->bumper1+msg->bumper2+msg->bumper3+msg->bumper4+msg->bumper5+msg->bumper6+msg->bumper7+msg->bumper8)<8 && LedChanged && BatteryChanged)
-    {
-        //White Red LED Running
-        std::vector<uint8_t> color;
-        color.push_back(RED);
-        color.push_back(WHITE);
-        setLedRunning(color);
-        LedChanged = false;
+    if(current_state<BUMPER_STATE){
+        current_state = BUMPER_STATE;
+        if((msg->bumper1+msg->bumper2+msg->bumper3+msg->bumper4+msg->bumper5+msg->bumper6+msg->bumper7+msg->bumper8)<8)
+        {
+            //White Red LED Running
+            std::vector<uint8_t> color;
+            color.push_back(RED);
+            color.push_back(WHITE);
+            setLedRunning(color);
+            LedChanged = false;
+        }
+        else{
+            current_state = FREE_STATE;
+        }
     }
 }
 
 void initialPoseCallback(const std_msgs::Int8::ConstPtr& msg){
-    std::vector<uint8_t> color;
-    switch(msg->data){
-    case -1:
-        color.push_back(CYAN);
-        color.push_back(WHITE);
-        setLedRunning(color);
-        break;
-    case 0:
-        color.push_back(RED);
-        setLedPermanent(color);
-        break;
-    case 1:
-        color.push_back(GREEN);
-        setLedPermanent(color);
-        break;
-    case 2:
-        color.push_back(BLUE);
-        setLedPermanent(color);
-        break;
-    default:
-        color.push_back(OFF);
-        setLedPermanent(color);
-        break;
+    if(current_state<LOCALIZE_STATE){
+        current_state=LOCALIZE_STATE;
+        std::vector<uint8_t> color;
+        switch(msg->data){
+        case -1:
+            color.push_back(CYAN);
+            color.push_back(WHITE);
+            setLedRunning(color);
+            break;
+        case 0:
+            color.push_back(RED);
+            setLedPermanent(color);
+            break;
+        case 1:
+            color.push_back(GREEN);
+            setLedPermanent(color);
+            break;
+        case 2:
+            color.push_back(BLUE);
+            setLedPermanent(color);
+            break;
+        default:
+            color.push_back(OFF);
+            setLedPermanent(color);
+            break;
+        }
     }
 }
 
 void batteryCallback(const gobot_msg_srv::BatteryMsg::ConstPtr& msg){
-    std::vector<uint8_t> color;
-    if(msg->ChargingFlag){
-        if(BatteryChanged){
-        BatteryChanged = false;
-        color.push_back(CYAN);
-        setLedPermanent(color);
+    if(current_state<CHARGING_STATE){
+        current_state = CHARGING_STATE;
+        std::vector<uint8_t> color;
+        if(msg->ChargingFlag){
+            if(BatteryChanged){
+            BatteryChanged = false;
+            color.push_back(CYAN);
+            setLedPermanent(color);
+            }
         }
-    }
-    else if(!BatteryChanged){
-        BatteryChanged = true;
-        color.push_back(WHITE);
-        setLedPermanent(color);
+        else if(!BatteryChanged){
+            current_state = FREE_STATE;
+        }
     }
 }
 
