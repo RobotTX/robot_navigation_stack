@@ -107,7 +107,7 @@ void goalGetCallback(const move_base_msgs::MoveBaseActionGoal::ConstPtr& msg){
 }
 
 void initialPoseCallback(const std_msgs::Int8::ConstPtr& msg){
-    if(current_state<BUSY_STATE){
+    if(current_state<BUSY_STATE && current_state!=CHARGING_STATE){
         std::vector<uint8_t> color;
         switch(msg->data){
         case -1:
