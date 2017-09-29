@@ -10,16 +10,17 @@
 #define CYAN 0x43
 #define MAGENTA 0x4D
 
-#define BUSY_STATE 99
-#define LOCALIZE_STATE 11
-#define BUMPER_STATE 10
-#define GOAL_STATE 8
-#define CHARGING_STATE 7
-#define FREE_STATE 0
+
+#define COMPLETE_STAGE 11
+#define BUMPER_STAGE 10
+#define GOAL_STAGE 9
+#define CHARGING_STAGE 8
+#define LOCALIZE_STAGE 7
+#define FREE_STAGE 0
 
 ros::Time last_time;
 
-int current_state = FREE_STATE;
+int current_stage = FREE_STAGE;
 
 void setLedPermanent(std::vector<uint8_t> &color)
 {
@@ -69,35 +70,37 @@ void setLedRunning(std::vector<uint8_t> &color)
 
 void goalResultCallback(const move_base_msgs::MoveBaseActionResult::ConstPtr& msg){
     //LED permanent ON
-    current_state=FREE_STATE;
-    std::vector<uint8_t> color;
-    switch(msg->status.status){
-    case 2:
-        //ROS_INFO("Goal PREEMPTED and disable teb_local_planner allow_init_with_backwards_motion.");
-        color.push_back(BLUE);
-        setLedPermanent(color);
-        break;
-    case 3:
-        //ROS_INFO("Goal SUCCEED and disable teb_local_planner allow_init_with_backwards_motion.");
-        color.push_back(GREEN);
-        setLedPermanent(color);
-        break;
-    case 4:
-        //ROS_INFO("Goal ABORTED and disable teb_local_planner allow_init_with_backwards_motion.");
-        color.push_back(RED);
-        setLedPermanent(color);
-        break;
-    default:
-        //ROS_ERROR("Unknown goal status %d and disable teb_local_planner allow_init_with_backwards_motion.",msg->status.status);
-        color.push_back(OFF);
-        setLedPermanent(color);
-        break;
+    if(current_stage<COMPLETE_STAGE){
+        current_stage=FREE_STAGE;
+        std::vector<uint8_t> color;
+        switch(msg->status.status){
+            case 2:
+                //ROS_INFO("Goal PREEMPTED and disable teb_local_planner allow_init_with_backwards_motion.");
+                color.push_back(BLUE);
+                setLedPermanent(color);
+                break;
+            case 3:
+                //ROS_INFO("Goal SUCCEED and disable teb_local_planner allow_init_with_backwards_motion.");
+                color.push_back(GREEN);
+                setLedPermanent(color);
+                break;
+            case 4:
+                //ROS_INFO("Goal ABORTED and disable teb_local_planner allow_init_with_backwards_motion.");
+                color.push_back(RED);
+                setLedPermanent(color);
+                break;
+            default:
+                //ROS_ERROR("Unknown goal status %d and disable teb_local_planner allow_init_with_backwards_motion.",msg->status.status);
+                color.push_back(OFF);
+                setLedPermanent(color);
+                break;
+        }
     }
 }
 
 void goalGetCallback(const move_base_msgs::MoveBaseActionGoal::ConstPtr& msg){
-    if(current_state<GOAL_STATE){
-        current_state=GOAL_STATE;
+    if(current_stage<GOAL_STAGE){
+        current_stage=GOAL_STAGE;
         //White Green LED Running
         std::vector<uint8_t> color;
         color.push_back(GREEN);
@@ -107,43 +110,43 @@ void goalGetCallback(const move_base_msgs::MoveBaseActionGoal::ConstPtr& msg){
 }
 
 void initialPoseCallback(const std_msgs::Int8::ConstPtr& msg){
-    if(current_state<BUSY_STATE && current_state!=CHARGING_STATE){
-        std::vector<uint8_t> color;
+    std::vector<uint8_t> color;
+    if(current_stage<LOCALIZE_STAGE){
         switch(msg->data){
-        case -1:
-            current_state=LOCALIZE_STATE;
-            color.push_back(BLUE);
-            color.push_back(WHITE);
-            setLedRunning(color);
-            break;
-        case 0:
-            current_state=FREE_STATE;
-            color.push_back(RED);
-            setLedPermanent(color);
-            break;
-        case 1:
-            current_state=FREE_STATE;
-            color.push_back(GREEN);
-            setLedPermanent(color);
-            break;
-        case 2:
-            current_state=FREE_STATE;
-            color.push_back(BLUE);
-            setLedPermanent(color);
-            break;
-        default:
-            current_state=FREE_STATE;
-            color.push_back(OFF);
-            setLedPermanent(color);
-            break;
+            case -1:
+                current_stage=FREE_STAGE;
+                color.push_back(BLUE);
+                color.push_back(WHITE);
+                setLedRunning(color);
+                break;
+            case 0:
+                current_stage=FREE_STAGE;
+                color.push_back(RED);
+                setLedPermanent(color);
+                break;
+            case 1:
+                current_stage=FREE_STAGE;
+                color.push_back(GREEN);
+                setLedPermanent(color);
+                break;
+            case 2:
+                current_stage=FREE_STAGE;
+                color.push_back(BLUE);
+                setLedPermanent(color);
+                break;
+            default:
+                current_stage=FREE_STAGE;
+                color.push_back(OFF);
+                setLedPermanent(color);
+                break;
         }
     }
 }
 
 void goalStatusCallback(const actionlib_msgs::GoalStatusArray::ConstPtr& msg){
     if(msg->status_list.size()==1 && msg->status_list.back().status != 1){
-        if(current_state==FREE_STATE){
-            //Turn off LED if no goal for 3 mins
+        if(current_stage==FREE_STAGE){
+            //Turn off LED if no goal for 5 mins
             if((ros::Time::now() - last_time).toSec()>300){
                 std::vector<uint8_t> color;
                 color.push_back(WHITE);
@@ -155,31 +158,32 @@ void goalStatusCallback(const actionlib_msgs::GoalStatusArray::ConstPtr& msg){
 
 void newBumpersInfo(const gobot_msg_srv::BumperMsg::ConstPtr& msg){
     int n = msg->bumper1+msg->bumper2+msg->bumper3+msg->bumper4+msg->bumper5+msg->bumper6+msg->bumper7+msg->bumper8;
-    if(n<8 && current_state<BUMPER_STATE && current_state!=CHARGING_STATE){
-        current_state = BUMPER_STATE;
+    //if(n<8 && current_stage<BUMPER_STAGE && current_stage!=CHARGING_STAGE){
+    if(n<8 && current_stage<BUMPER_STAGE){
+        current_stage = BUMPER_STAGE;
         //White Red LED Running
         std::vector<uint8_t> color;
         color.push_back(RED);
         color.push_back(WHITE);
         setLedRunning(color);
     }
-    else if(n==8 && current_state==BUMPER_STATE){
-        current_state = FREE_STATE;
+    else if(n==8 && current_stage==BUMPER_STAGE){
+        current_stage = FREE_STAGE;
     }
 }
 
 void batteryCallback(const gobot_msg_srv::BatteryMsg::ConstPtr& msg){
     std::vector<uint8_t> color;
-    if(msg->ChargingFlag && (current_state<CHARGING_STATE || current_state==BUMPER_STATE)){
-        current_state = CHARGING_STATE;
+    if(msg->ChargingFlag && current_stage<CHARGING_STAGE){
+        current_stage = CHARGING_STAGE;
         color.push_back(CYAN);
         color.push_back(WHITE);
         setLedRunning(color);
     }
-    else if(!msg->ChargingFlag && current_state==CHARGING_STATE){
+    else if(!msg->ChargingFlag && current_stage==CHARGING_STAGE){
         color.push_back(CYAN);
         setLedPermanent(color);
-        current_state = FREE_STATE;
+        current_stage = FREE_STAGE;
     }
 }
 

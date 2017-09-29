@@ -63,10 +63,10 @@ NavfnROS:
 
 conservative_reset:
     #The radius away from the robot in meters outside which obstacles will be removed from the costmaps when they are reverted to the static map. 
-    reset_distance: 0.1
+    reset_distance: 1.0
 
 aggressive_reset:
-    reset_distance: 0.001
+    reset_distance: 1.0
 
 move_slow_and_clear:
     clearing_distance: 0.5

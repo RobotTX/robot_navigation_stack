@@ -23,20 +23,26 @@
 #define COV_XY_T 0.2
 #define COV_YAW_T 0.1
 
-#define START_STATE 0
-#define CHARGING_STATE 1
-#define ROSPARAM_POSE_STATE 2
-#define LAST_POSE_STATE 3
-#define GLOBAL_POSE_STATE 4
-#define COMPLETE_STATE 5
+#define START_STAGE 0
+#define CHARGING_STAGE 1
+#define ROSPARAM_POSE_STAGE 2
+#define LAST_POSE_STAGE 3
+#define GLOBAL_POSE_STAGE 4
+#define COMPLETE_STAGE 5
+
+#define START_FOUND -1
+#define NOT_FOUND 0
+#define FOUND 1
+#define CANCEL_FOUND 2
+
 
 bool evaluatePose(int type);
-
-void checkGoalStatus(void);
 
 bool rotateFindPose(double rot_v,double rot_t);
 
 void GlobalLocalization(void);
+
+void findPoseResult(int status);
 
 void publishInitialpose(const double position_x, const double position_y, const double angle_x, const double angle_y, const double angle_z, const double angle_w,const double cov1,const double cov2);
 
