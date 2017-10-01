@@ -976,7 +976,7 @@ namespace move_base {
           if(recovery_count_>=recovery_count_threshold_)
           {
             //Check whether goal is close enough
-            if(!controller_plan_->empty() && closeToGoal(current_position,controller_plan_->back()))
+            if(!planner_plan_->empty() && closeToGoal(current_position,planner_plan_->back()))
             {
               //Set goal state to be succeed
               ROS_INFO("GOAL Reached!!");
