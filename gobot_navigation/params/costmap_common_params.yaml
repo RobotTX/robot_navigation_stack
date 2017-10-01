@@ -41,7 +41,7 @@ obstacles:
         sensor_frame: base_laser, 
         data_type: LaserScan, 
         topic: /scan, 
-        marking: true, 
+        marking: false, 
         clearing: true,
         expected_update_rate: 10,
         inf_is_valid: true,

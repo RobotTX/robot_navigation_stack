@@ -57,17 +57,18 @@ void sonarToCloud2(double sonarR,double sonarL,pcl::PointCloud<pcl::PointXYZ> &c
 
 void newSonarsInfo(const gobot_msg_srv::SonarMsg::ConstPtr& sonars){
     pcl::PointCloud<pcl::PointXYZ> rearCloud,frontRight,frontLeft,leftCloud,rightCloud,topCloud,midCloud;
+    
     rearCloud.header.frame_id = rear_frame;
     sonarToCloud(sonars->distance1/100.0,rearCloud);
     rearPublisher.publish(rearCloud);
 
-    sonarToCloud2(sonars->distance2/100.0,sonars->distance3/100.0,frontRight,frontLeft);
+    //sonarToCloud2(sonars->distance2/100.0,sonars->distance3/100.0,frontRight,frontLeft);
     frontRight.header.frame_id = front_right_frame;
-    //sonarToCloud(sonars->distance2/100.0,frontRight);
+    sonarToCloud(sonars->distance2/100.0,frontRight);
     frontRightPublisher.publish(frontRight);
     
     frontLeft.header.frame_id = front_left_frame;
-    //sonarToCloud(sonars->distance3/100.0,frontLeft);
+    sonarToCloud(sonars->distance3/100.0,frontLeft);
     frontLeftPublisher.publish(frontLeft);
     
     leftCloud.header.frame_id = left_frame;
