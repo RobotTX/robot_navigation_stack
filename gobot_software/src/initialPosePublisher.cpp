@@ -35,6 +35,8 @@ int main(int argc, char* argv[] ){
         ros::init(argc, argv, "initial_pose_publisher");
         ros::NodeHandle n; 
 
+        sleep(2);
+
         double position_x(0.0), position_y(0.0), angle_x(0.0), angle_y(0.0), angle_z(0.0), angle_w(0.0);
 
         std::string robotPos;

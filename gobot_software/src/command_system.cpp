@@ -542,7 +542,7 @@ bool newChargingStation(const std::vector<std::string> command){
 bool goToChargingStation(const std::vector<std::string> command){
     if(command.size() == 1) {
         ROS_INFO("(Command system) Sending the robot home");
-        goDock();
+        return goDock();
     }
 
     return false;
