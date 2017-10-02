@@ -25,7 +25,8 @@ static_map:
     unknown_cost_value: -1
 
 obstacles:
-    observation_sources: laser_scan_sensor bumpers rear_sonar frontRight_sonar frontLeft_sonar left_sonar right_sonar top_sonar mid_sonar
+    observation_sources: laser_scan_sensor bumpers rear_sonar 
+    #frontRight_sonar frontLeft_sonar left_sonar right_sonar top_sonar mid_sonar
     #If false, each pixel has one of 2 states: lethal obstacle or free. 
     #If true, each pixel has one of 3 states: lethal obstacle, free, or unknown.
     #default:false 
@@ -67,8 +68,8 @@ obstacles:
         topic: /rear_sonar_pc,
         marking: true,
         clearing: true,
-        min_obstacle_height: 0.2,
-        max_obstacle_height: 0.3
+        min_obstacle_height: 0.1,
+        max_obstacle_height: 0.2
     }
 
     frontRight_sonar: {
