@@ -62,8 +62,8 @@ obstacles:
     }
 
     rear_sonar: {
-        obstacle_range: 1.5,
-        raytrace_range: 2.0,
+        obstacle_range: 1.7,
+        raytrace_range: 1.9,
         data_type: PointCloud2,
         topic: /rear_sonar_pc,
         marking: true,
@@ -73,8 +73,8 @@ obstacles:
     }
 
     frontRight_sonar: {
-        obstacle_range: 1.5,
-        raytrace_range: 2.0,
+        obstacle_range: 1.7,
+        raytrace_range: 1.9,
         data_type: PointCloud2,
         topic:  /frontRight_sonar_pc,
         marking: true,
@@ -84,8 +84,8 @@ obstacles:
     }
 
     frontLeft_sonar: {
-        obstacle_range: 1.5,
-        raytrace_range: 2.0,
+        obstacle_range: 1.7,
+        raytrace_range: 1.9,
         data_type: PointCloud2,
         topic:  /frontLeft_sonar_pc,
         marking: true,
@@ -95,8 +95,8 @@ obstacles:
     }
 
     left_sonar: {
-        obstacle_range: 1.5,
-        raytrace_range: 2.0,
+        obstacle_range: 1.7,
+        raytrace_range: 1.9,
         data_type: PointCloud2,
         topic:  /left_sonar_pc,
         marking: true,
@@ -106,8 +106,8 @@ obstacles:
     }
 
     right_sonar: {
-        obstacle_range: 1.5,
-        raytrace_range: 2.0,
+        obstacle_range: 1.7,
+        raytrace_range: 1.9,
         data_type: PointCloud2,
         topic:  /right_sonar_pc,
         marking: true,
@@ -117,22 +117,22 @@ obstacles:
     }
 
     top_sonar: {
-        obstacle_range: 1.5,
-        raytrace_range: 2.0,
+        obstacle_range: 1.7,
+        raytrace_range: 1.9,
         data_type: PointCloud2,
         topic:  /top_sonar_pc,
-        marking: true,
+        marking: false,
         clearing: true,
         min_obstacle_height: 0.8,
         max_obstacle_height: 0.9,
     }
 
     mid_sonar: {
-        obstacle_range: 1.5,
-        raytrace_range: 2.0,
+        obstacle_range: 1.7,
+        raytrace_range: 1.9,
         data_type: PointCloud2,
         topic:  /mid_sonar_pc,
-        marking: true,
+        marking: false,
         clearing: true,
         min_obstacle_height: 0.4,
         max_obstacle_height: 0.5,

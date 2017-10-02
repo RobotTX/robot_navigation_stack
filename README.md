@@ -13,6 +13,7 @@ Packages you'll need to install in order to make everything works :
 * hector_nav_msgs
 * teb_local_planner
 * hector_sensors_description (gazebo)
+* hector_gazebo-plugins (gazebo)
 * telop_twist_keyboard (if you want to make the robot with your keyboard)
 
 To install this packages : 
@@ -28,12 +29,6 @@ sudo apt install ros-kinetic-telop-twist-keyboard
 ```
 
 ### Installing
-
-To install all the packages, you need to remove these packages from the src first :
-* gobot_navigation
-* gobot_sensors2pc
-* gobot_simulation
-* gobot_software
 
 Then catkin_make, then add the packages above to the src, then catkin_make again.
 

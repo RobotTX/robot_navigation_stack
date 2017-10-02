@@ -1,6 +1,9 @@
 #include <gobot_sensors2pc/sonars2pc.hpp>
 
-#define SONAR_MAX 150
+#define SONAR_THRESHOLD 1.7
+#define SONAR_MAX 1.92
+#define SONAR_VIEW 0.35 //20 degree 
+#define SONAR_RESOLUTION 0.0087 //0.5 degree
 
 ros::Publisher rearPublisher;
 ros::Publisher frontLeftPublisher;
@@ -11,42 +14,77 @@ ros::Publisher midPublisher;
 ros::Publisher topPublisher;
 
 std::string rear_frame, front_right_frame, front_left_frame, left_frame, right_frame, top_frame, mid_frame;
+double clear_radius = 0.0;
 
+void sonarToCloud(double sonarData,pcl::PointCloud<pcl::PointXYZ> &cloudData){
+    sonarData = sonarData>SONAR_THRESHOLD?SONAR_MAX:sonarData;
+    for(double i=-tan(SONAR_VIEW)*sonarData;i<=tan(SONAR_VIEW)*sonarData;i=i+SONAR_RESOLUTION){
+        if(i!=0)
+            cloudData.push_back(pcl::PointXYZ(SONAR_MAX, i, 0));
+    }  
+
+    cloudData.push_back(pcl::PointXYZ(sonarData, 0, 0));
+}
+
+void sonarToCloud2(double sonarR,double sonarL,pcl::PointCloud<pcl::PointXYZ> &cloudR,pcl::PointCloud<pcl::PointXYZ> &cloudL){
+    sonarR = sonarR>SONAR_THRESHOLD?SONAR_MAX:sonarR;
+    sonarL = sonarL>SONAR_THRESHOLD?SONAR_MAX:sonarL;
+    if(std::abs(sonarR-sonarL)<0.1){
+        for(double i=-tan(SONAR_VIEW)*sonarR;i<=tan(SONAR_VIEW)*sonarR;i=i+SONAR_RESOLUTION){
+        if(i!=0)
+            cloudR.push_back(pcl::PointXYZ(SONAR_MAX, i, 0));
+        }  
+        cloudR.push_back(pcl::PointXYZ(sonarR, 0, 0));
+
+        for(double i=-tan(SONAR_VIEW)*sonarL;i<=tan(SONAR_VIEW)*sonarL;i=i+SONAR_RESOLUTION){
+        if(i!=0)
+            cloudL.push_back(pcl::PointXYZ(SONAR_MAX, i, 0));
+        }  
+        cloudL.push_back(pcl::PointXYZ(sonarL, 0, 0));
+    }
+    else{
+        for(double i=tan(SONAR_VIEW)*sonarR;i>-tan(SONAR_VIEW)*sonarR;i=i-SONAR_RESOLUTION){
+            cloudR.push_back(pcl::PointXYZ(SONAR_MAX, i, 0));
+        }  
+        cloudR.push_back(pcl::PointXYZ(sonarR,-tan(SONAR_VIEW)*sonarR, 0));
+
+        for(double i=-tan(SONAR_VIEW)*sonarL;i<tan(SONAR_VIEW)*sonarL;i=i+SONAR_RESOLUTION){
+            cloudL.push_back(pcl::PointXYZ(SONAR_MAX, i, 0));
+        }  
+        cloudL.push_back(pcl::PointXYZ(sonarL,tan(SONAR_VIEW)*sonarL, 0));
+    }
+}
 
 void newSonarsInfo(const gobot_msg_srv::SonarMsg::ConstPtr& sonars){
-    pcl::PointCloud<pcl::PointXYZ> rearCloud;
+    pcl::PointCloud<pcl::PointXYZ> rearCloud,frontRight,frontLeft,leftCloud,rightCloud,topCloud,midCloud;
+    
     rearCloud.header.frame_id = rear_frame;
-    rearCloud.push_back(pcl::PointXYZ(sonars->distance1 > SONAR_MAX ? 2.5 : sonars->distance1/100.0, 0, 0));
+    sonarToCloud(sonars->distance1/100.0,rearCloud);
     rearPublisher.publish(rearCloud);
 
-    pcl::PointCloud<pcl::PointXYZ> frontRight;
+    //sonarToCloud2(sonars->distance2/100.0,sonars->distance3/100.0,frontRight,frontLeft);
     frontRight.header.frame_id = front_right_frame;
-    frontRight.push_back(pcl::PointXYZ(sonars->distance2 > SONAR_MAX ? 2.5 : sonars->distance2/100.0, 0, 0));
+    sonarToCloud(sonars->distance2/100.0,frontRight);
     frontRightPublisher.publish(frontRight);
     
-    pcl::PointCloud<pcl::PointXYZ> frontLeft;
     frontLeft.header.frame_id = front_left_frame;
-    frontLeft.push_back(pcl::PointXYZ(sonars->distance3 > SONAR_MAX ? 2.5 : sonars->distance3/100.0, 0,0 ));
+    sonarToCloud(sonars->distance3/100.0,frontLeft);
     frontLeftPublisher.publish(frontLeft);
     
-    pcl::PointCloud<pcl::PointXYZ> leftCloud;
     leftCloud.header.frame_id = left_frame;
-    leftCloud.push_back(pcl::PointXYZ(sonars->distance4 > SONAR_MAX ? 2.5 : sonars->distance4/100.0, 0, 0));
+    sonarToCloud(sonars->distance4/100.0,leftCloud);
     leftPublisher.publish(leftCloud);
     
-    pcl::PointCloud<pcl::PointXYZ> rightCloud;
     rightCloud.header.frame_id = right_frame;
-    rightCloud.push_back(pcl::PointXYZ(sonars->distance5 > SONAR_MAX ? 2.5 : sonars->distance5/100.0, 0, 0));
+    sonarToCloud(sonars->distance5/100.0,rightCloud);
     rightPublisher.publish(rightCloud);
     
-    pcl::PointCloud<pcl::PointXYZ> topCloud;
     topCloud.header.frame_id = top_frame;
-    topCloud.push_back(pcl::PointXYZ(sonars->distance6 > SONAR_MAX ? 2.5 : sonars->distance6/100.0, 0, 0));
+    sonarToCloud(sonars->distance6/100.0,topCloud);
     topPublisher.publish(topCloud);
     
-    pcl::PointCloud<pcl::PointXYZ> midCloud;
     midCloud.header.frame_id = mid_frame;
-    midCloud.push_back(pcl::PointXYZ(sonars->distance7 > SONAR_MAX ? 2.5 : sonars->distance7/100.0, 0, 0));
+    sonarToCloud(sonars->distance7/100.0,midCloud);
     midPublisher.publish(midCloud);
 }
 

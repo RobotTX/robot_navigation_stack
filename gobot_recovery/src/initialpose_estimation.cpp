@@ -134,9 +134,7 @@ void publishInitialpose(const double position_x, const double position_y, const 
 }
 
 void goalStatusCallback(const actionlib_msgs::GoalStatusArray::ConstPtr& msg){
-    if(msg->status_list.empty()) //no goal
-        goalActive = false;
-    else if (msg->status_list.back().status == 1) //has active goal
+    if (!msg->status_list.empty() && msg->status_list.back().status == 1) //has active goal
         //cancel goal
         goalActive = true;
     else
@@ -161,7 +159,6 @@ bool initializePoseSrvCallback(std_srvs::Empty::Request &req, std_srvs::Empty::R
                         break;
 
                     case CHARGING_STAGE:
-                        //wait 3 second for batter status update
                         ros::service::call("/isCharging",arg);
                         //if robot is charging, it is in CS station 
                         if(arg.response.isCharging||evaluatePose(1)){
