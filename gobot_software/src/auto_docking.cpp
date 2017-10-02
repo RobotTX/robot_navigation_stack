@@ -235,14 +235,14 @@ void newBumpersInfo(const gobot_msg_srv::BumperMsg::ConstPtr& bumpers){
                 
             } else if(!(bumpers->bumper5 && bumpers->bumper6) && bumpers->bumper7 && bumpers->bumper8){
                 ROS_WARN("(auto_docking::newBumpersInfo) Collision right side");
-                //setSpeed('F', 0, 'B', 2);
-
 
                 std::thread([](){
                     ros::NodeHandle nh;
                     irSub.shutdown();
                     proximitySub.shutdown();
                     moving_away_from_collision = true;
+                    // TODO try to stop the robot and sleep 1 sec to wait for twist to catch the bumber signal
+                    // or twist might stop the robot after we set the speed here
                     setSpeed('F', 10, 'F', 4);
                     std::this_thread::sleep_for(std::chrono::milliseconds(7000));
                     ROS_WARN("(auto_docking::newBumpersInfo) Collision right side speed 1");
@@ -257,14 +257,14 @@ void newBumpersInfo(const gobot_msg_srv::BumperMsg::ConstPtr& bumpers){
 
             } else if(bumpers->bumper5 && bumpers->bumper6 && !(bumpers->bumper7 && bumpers->bumper8)){
                 ROS_WARN("(auto_docking::newBumpersInfo) Collision left side");
-                //setSpeed('B', 2, 'F', 0);
-
 
                 std::thread([](){
                     ros::NodeHandle nh;
                     irSub.shutdown();
                     proximitySub.shutdown();
                     moving_away_from_collision = true;
+                    // TODO try to stop the robot and sleep 1 sec to wait for twist to catch the bumber signal
+                    // or twist might stop the robot after we set the speed here
                     setSpeed('F', 4, 'F', 10);
                     std::this_thread::sleep_for(std::chrono::milliseconds(7000));
                     ROS_WARN("(auto_docking::newBumpersInfo) Collision left side speed 1");
@@ -293,14 +293,7 @@ void newBumpersInfo(const gobot_msg_srv::BumperMsg::ConstPtr& bumpers){
             setSpeed('F', 0, 'F', 0);
             collision = false;
         }
-/*
-        if(moving_away_from_collision){
-            ROS_INFO("(auto_docking::newBumpersInfo) stopped moving away from collision, stoping the robot");
-            setSpeed('F', 0, 'F', 0);
-            moving_away_from_collision = false;
-        }*/
     }
-
 }
 
 /// The pid control function
