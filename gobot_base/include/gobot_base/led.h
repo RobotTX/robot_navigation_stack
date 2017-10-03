@@ -6,6 +6,7 @@
 #include <std_msgs/Int8.h>
 #include <gobot_msg_srv/LedStrip.h>
 #include <actionlib_msgs/GoalStatusArray.h>
+#include <actionlib_msgs/GoalID.h>
 #include <move_base_msgs/MoveBaseActionResult.h>
 #include <move_base_msgs/MoveBaseActionGoal.h>
 #include <gobot_msg_srv/BumperMsg.h>
@@ -20,10 +21,12 @@ void goalResultCallback(const move_base_msgs::MoveBaseActionResult::ConstPtr& ms
 
 void goalGetCallback(const move_base_msgs::MoveBaseActionGoal::ConstPtr& msg);
 
-void initialPoseCallback(const std_msgs::Int8::ConstPtr& msg);
+void goalCancelCallback(const actionlib_msgs::GoalID::ConstPtr& msg);
 
-void goalStatusCallback(const actionlib_msgs::GoalStatusArray::ConstPtr& msg);
+void initialPoseCallback(const std_msgs::Int8::ConstPtr& msg);
 
 void newBumpersInfo(const gobot_msg_srv::BumperMsg::ConstPtr& msg);
 
 void batteryCallback(const gobot_msg_srv::BatteryMsg::ConstPtr& msg);
+
+void timerCallback(const ros::TimerEvent&);

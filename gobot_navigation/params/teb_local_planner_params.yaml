@@ -40,7 +40,7 @@ TebLocalPlannerROS:
     max_vel_x: 0.4
     max_vel_x_backwards: 0.1
     #2*vel/wheel_sep(=0.45)
-    max_vel_theta: 1.5
+    max_vel_theta: 1.0
     acc_lim_x: 0.35
     acc_lim_theta: 1.2
     #Minimum turning radius of a carlike robot (set to zero for a diff-drive robot). 

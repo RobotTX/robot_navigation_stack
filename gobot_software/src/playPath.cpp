@@ -347,7 +347,7 @@ int main(int argc, char* argv[]){
 		statusSuscriber = n.subscribe("/move_base/status", 1, getStatus);
 
 		// get the position of the robot to compare with the goal
-		sub_robot = n.subscribe("/robot_pose", 1, getRobotPos);
+		//sub_robot = n.subscribe("/robot_pose", 1, getRobotPos);
 
 		// wait for the action server to come up
 		while(!ac->waitForServer(ros::Duration(5.0)))

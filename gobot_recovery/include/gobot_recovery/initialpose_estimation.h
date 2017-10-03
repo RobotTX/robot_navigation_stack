@@ -3,6 +3,7 @@
 #include <std_srvs/Empty.h>
 #include <geometry_msgs/PoseWithCovarianceStamped.h>
 #include <geometry_msgs/Twist.h>
+#include <geometry_msgs/PoseStamped.h>
 #include <gobot_msg_srv/IsCharging.h>
 #include <actionlib_msgs/GoalStatusArray.h>
 #include <actionlib_msgs/GoalID.h>
@@ -55,6 +56,8 @@ bool initializePoseSrvCallback(std_srvs::Empty::Request &req, std_srvs::Empty::R
 bool globalizePoseSrvCallback(std_srvs::Empty::Request &req, std_srvs::Empty::Response &res);
 
 bool stopGlobalizePoseSrvCallback(std_srvs::Empty::Request &req, std_srvs::Empty::Response &res);
+
+bool goHomeSrvCallback(std_srvs::Empty::Request &req, std_srvs::Empty::Response &res);
 
 void getPose(std::string file_name,int type);
 

@@ -953,42 +953,44 @@ namespace move_base {
       //we'll try to clear out space with any user-provided recovery behaviors
       case CLEARING:
         ROS_DEBUG_NAMED("move_base","In clearing/recovery state");
+
         //we'll invoke whatever recovery behavior we're currently on if they're enabled
         if(recovery_behavior_enabled_ && recovery_index_ < recovery_behaviors_.size()){
-          ROS_DEBUG_NAMED("move_base_recovery","Executing behavior %u of %zu", recovery_index_, recovery_behaviors_.size());
-          recovery_behaviors_[recovery_index_]->runBehavior();
+          //tx//begin
+          if(recovery_count_>=recovery_count_threshold_){
+            //Check whether goal is close enough
+            if(!planner_plan_->empty() && closeToGoal(current_position,planner_plan_->back())){
+              //Set goal state to be succeed
+              ROS_INFO("GOAL Reached!!");
+              close_to_goal_=true;
+            }
+            else{
+              close_to_goal_=false;
+            }
+            recovery_count_=0;
+          }
 
-          //we at least want to give the robot some time to stop oscillating after executing the behavior
-          last_oscillation_reset_ = ros::Time::now();
+          if(!close_to_goal_){
+            //tx//end
+            ROS_DEBUG_NAMED("move_base_recovery","Executing behavior %u of %zu", recovery_index_, recovery_behaviors_.size());
+            recovery_behaviors_[recovery_index_]->runBehavior();
+
+            //we at least want to give the robot some time to stop oscillating after executing the behavior
+            last_oscillation_reset_ = ros::Time::now();
+
+            //update the index of the next recovery behavior that we'll try
+            recovery_index_++;
+
+            //tx//begin
+            //Check whether robot is close enough to the goal but robot still try to get closer
+            recovery_count_++;
+          }
 
           //we'll check if the recovery behavior actually worked
           ROS_DEBUG_NAMED("move_base_recovery","Going back to planning state");
           last_valid_plan_ = ros::Time::now();
           planning_retries_ = 0;
           state_ = PLANNING;
-
-          //update the index of the next recovery behavior that we'll try
-          recovery_index_++;
-
-          //tx//begin
-          //Check whether robot is close enough to the goal but robot still try to get closer
-          recovery_count_++;
-          if(recovery_count_>=recovery_count_threshold_)
-          {
-            //Check whether goal is close enough
-            if(!planner_plan_->empty() && closeToGoal(current_position,planner_plan_->back()))
-            {
-              //Set goal state to be succeed
-              ROS_INFO("GOAL Reached!!");
-              close_to_goal_=true;
-            }
-            else
-            {
-              close_to_goal_=false;
-            }
-            recovery_count_=0;
-          }
-          //tx//end
         }
         else{
           ROS_DEBUG_NAMED("move_base_recovery","All recovery behaviors have failed, locking the planner and disabling it.");

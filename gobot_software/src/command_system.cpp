@@ -775,7 +775,7 @@ bool restartEverything(const std::vector<std::string> command){
         ROS_INFO("(Command system) Gobot restarts its packages");
         recovering = false;
         scanning = false;
-        system(("sh ~/computer_software/restart_packages.sh"));
+        system(("sh myfile/start_gobot_navigation.sh &"));
         sleep(10);
         system(("sh ~/computer_software/roslaunch.sh"));
 

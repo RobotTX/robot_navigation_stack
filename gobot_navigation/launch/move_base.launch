@@ -3,7 +3,7 @@
     <include file="$(find gobot_sensors2pc)/launch/gobot_bumpers2pc.launch"/>
 
     <!--laser to base tf frequency depends on the laser update rate-->
-    <node pkg="tf" type="static_transform_publisher" name="rear_sonar_to_base_link" args="-0.267 -0.065 0.165 3.14159 0 0 /base_link /rear_sonar 50 " />
+    <node pkg="tf" type="static_transform_publisher" name="rear_sonar_to_base_link" args="-0.267 -0.065 0.2165 3.14159 0 0 /base_link /rear_sonar 50 " />
     <node pkg="tf" type="static_transform_publisher" name="front_right_sonar_to_base_link" args="0.413 -0.168 0.2165 0 0 0 /base_link /front_right_sonar 50 "/>
     <node pkg="tf" type="static_transform_publisher" name="front_left_sonar_to_base_link" args="0.413 0.168 0.2165 0 0 0 /base_link /front_left_sonar 50 "/>
     <node pkg="tf" type="static_transform_publisher" name="left_sonar_to_base_link" args="-0.01 0.298 0.2165 1.5708 0 0 /base_link /left_sonar 50 "/>

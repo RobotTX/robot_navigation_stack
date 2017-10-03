@@ -172,9 +172,15 @@ void publishSensors(void){
             gobot_msg_srv::WeightMsg weight_data;
             weight_data.weightInfo = (buff.at(43) << 8) | buff.at(44);
 
-            /// External button
+            /// External button 1-No press; 0-press
             int32_t external_button = buff.at(45);
             /// TODO do whatever we want with it
+            //ROS_INFO("External button:%d",external_button);
+            if(external_button==0){
+                std_srvs::Empty emtry_srv;
+                ros::service::call("/gobot_recovery/go_home",emtry_srv);
+            }
+
 
             if(display_data){
                 std::cout << "Sonars : " << sonar_data.distance1 << " " << sonar_data.distance2 << " " << sonar_data.distance3 << " " << sonar_data.distance4 

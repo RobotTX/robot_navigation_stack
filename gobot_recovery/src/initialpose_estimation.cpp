@@ -13,7 +13,7 @@ bool running = false,found_pose=false;;
 
 std_srvs::Empty empty_srv;
 
-ros::Publisher vel_pub,goalCancel_pub,foundPose_pub,initial_pose_publisher;
+ros::Publisher vel_pub,goalCancel_pub,foundPose_pub,initial_pose_publisher,goal_pub;
 std::string lastPoseFile,homeFile;
 
 bool evaluatePose(int type){
@@ -39,7 +39,7 @@ bool rotateFindPose(double rot_v,double rot_t){
         goalCancel_pub.publish(arg);
         ROS_INFO("Cancelled active goal to proceed gobalo localization. Wait 3 sec to start global localization...");
         //wait 3 sec to cancel move_base goal
-        ros::Duration(3.0).sleep();
+        ros::Duration(1.0).sleep();
     }
     
     double dt=0.0;
@@ -303,6 +303,24 @@ void initialPoseCallback(const geometry_msgs::PoseWithCovarianceStamped::ConstPt
     }
 }
 
+bool goHomeSrvCallback(std_srvs::Empty::Request &req, std_srvs::Empty::Response &res){
+    geometry_msgs::PoseStamped home;
+    home.header.frame_id = "map";
+    home.header.stamp = ros::Time::now();
+    home.pose.position.x=home_pos_x;
+    home.pose.position.y=home_pos_y;
+    home.pose.position.z=0.0;
+    home.pose.orientation.x=home_ang_x;
+    home.pose.orientation.y=home_ang_y;
+    home.pose.orientation.z=home_ang_z;
+    home.pose.orientation.w=home_ang_w;
+
+    goal_pub.publish(home);
+
+    return true;
+
+}
+
 //type=0=home_pose,type=1=last_pose
 void getPose(std::string file_name,int type)
 {
@@ -388,11 +406,16 @@ int main(int argc, char **argv) {
     goalCancel_pub = nh.advertise<actionlib_msgs::GoalID>("/move_base/cancel",10);
     foundPose_pub = nh.advertise<std_msgs::Int8>("/gobot_recovery/find_initial_pose",10);
     initial_pose_publisher = nh.advertise<geometry_msgs::PoseWithCovarianceStamped>("/initialpose", 1);
+    goal_pub = nh.advertise<geometry_msgs::PoseStamped>("/move_base_simple/goal",1);
+
     ros::Subscriber goalStatus = nh.subscribe("/move_base/status",1,goalStatusCallback);
     ros::Subscriber initialPose = nh.subscribe("/amcl_pose",1,initialPoseCallback);
+
     ros::ServiceServer initializePose = nh.advertiseService("/gobot_recovery/initialize_pose",initializePoseSrvCallback);
     ros::ServiceServer globalizePose = nh.advertiseService("/gobot_recovery/globalize_pose",globalizePoseSrvCallback);
     ros::ServiceServer stopGlobalizePose = nh.advertiseService("/gobot_recovery/stop_globalize_pose",stopGlobalizePoseSrvCallback);
+
+    ros::ServiceServer goHome = nh.advertiseService("/gobot_recovery/go_home",goHomeSrvCallback);
 
     //Get ros server pose
     while(ros::ok()){

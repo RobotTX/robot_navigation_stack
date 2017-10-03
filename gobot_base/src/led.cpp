@@ -71,28 +71,22 @@ void setLedRunning(std::vector<uint8_t> &color)
 void goalResultCallback(const move_base_msgs::MoveBaseActionResult::ConstPtr& msg){
     //LED permanent ON
     if(current_stage<COMPLETE_STAGE){
-        current_stage=FREE_STAGE;
         std::vector<uint8_t> color;
         switch(msg->status.status){
-            case 2:
-                //ROS_INFO("Goal PREEMPTED and disable teb_local_planner allow_init_with_backwards_motion.");
-                color.push_back(BLUE);
-                setLedPermanent(color);
-                break;
             case 3:
                 //ROS_INFO("Goal SUCCEED and disable teb_local_planner allow_init_with_backwards_motion.");
                 color.push_back(GREEN);
                 setLedPermanent(color);
+                current_stage=FREE_STAGE;
                 break;
             case 4:
                 //ROS_INFO("Goal ABORTED and disable teb_local_planner allow_init_with_backwards_motion.");
                 color.push_back(RED);
                 setLedPermanent(color);
+                current_stage=FREE_STAGE;
                 break;
             default:
                 //ROS_ERROR("Unknown goal status %d and disable teb_local_planner allow_init_with_backwards_motion.",msg->status.status);
-                color.push_back(OFF);
-                setLedPermanent(color);
                 break;
         }
     }
@@ -106,6 +100,16 @@ void goalGetCallback(const move_base_msgs::MoveBaseActionGoal::ConstPtr& msg){
         color.push_back(GREEN);
         color.push_back(WHITE);
         setLedRunning(color);
+    }
+}
+
+void goalCancelCallback(const actionlib_msgs::GoalID::ConstPtr& msg){
+    if(current_stage==GOAL_STAGE){
+        std::vector<uint8_t> color;
+        //ROS_INFO("Goal Cancelled and disable teb_local_planner allow_init_with_backwards_motion.");
+        color.push_back(BLUE);
+        setLedPermanent(color);
+        current_stage=FREE_STAGE;
     }
 }
 
@@ -143,17 +147,13 @@ void initialPoseCallback(const std_msgs::Int8::ConstPtr& msg){
     }
 }
 
-void goalStatusCallback(const actionlib_msgs::GoalStatusArray::ConstPtr& msg){
-    if(msg->status_list.size()==1 && msg->status_list.back().status != 1){
-        if(current_stage==FREE_STAGE){
-            //Turn off LED if no goal for 5 mins
-            if((ros::Time::now() - last_time).toSec()>300){
-                std::vector<uint8_t> color;
-                color.push_back(WHITE);
-                setLedPermanent(color);
-            }   
-        } 
-    }
+void timerCallback(const ros::TimerEvent&){
+    //Turn off LED if no goal for 5 mins
+    if((ros::Time::now() - last_time).toSec()>300 && current_stage==FREE_STAGE){
+        std::vector<uint8_t> color;
+        color.push_back(WHITE);
+        setLedPermanent(color);
+    }   
 }
 
 void newBumpersInfo(const gobot_msg_srv::BumperMsg::ConstPtr& msg){
@@ -191,10 +191,11 @@ int main(int argc, char **argv) {
     ros::init(argc, argv, "led");
     ros::NodeHandle nh;
 
-    
-    ros::Subscriber goalStatus = nh.subscribe("/move_base/status",1,goalStatusCallback);
+    ros::Timer timer = nh.createTimer(ros::Duration(120), timerCallback);
+
     ros::Subscriber goalResult = nh.subscribe("/move_base/result",1,goalResultCallback);
     ros::Subscriber goalGet = nh.subscribe("/move_base/goal",1,goalGetCallback);
+    ros::Subscriber goalCancel = nh.subscribe("/move_base/cancel",1,goalCancelCallback);
     ros::Subscriber bumpersSub = nh.subscribe("/bumpers_topic", 1, newBumpersInfo);
     ros::Subscriber initialPose = nh.subscribe("/gobot_recovery/find_initial_pose",1, initialPoseCallback);
     ros::Subscriber battery = nh.subscribe("/battery_topic",1, batteryCallback);

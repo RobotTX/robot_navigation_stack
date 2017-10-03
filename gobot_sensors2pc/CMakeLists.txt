@@ -11,6 +11,8 @@ find_package(catkin REQUIRED COMPONENTS
     roscpp
     gobot_msg_srv
     pcl_ros
+    tf
+    sensor_msgs
 )
 
 ## System dependencies are found with CMake's conventions
@@ -103,7 +105,7 @@ find_package(catkin REQUIRED COMPONENTS
 ## DEPENDS: system dependencies of this project that dependent projects also need
 catkin_package(
     INCLUDE_DIRS include
-    CATKIN_DEPENDS roscpp gobot_msg_srv pcl_ros
+    CATKIN_DEPENDS roscpp gobot_msg_srv pcl_ros tf sensor_msgs
 )
 
 ###########
