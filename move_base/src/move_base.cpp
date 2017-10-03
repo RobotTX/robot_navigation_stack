@@ -712,6 +712,7 @@ namespace move_base {
           last_oscillation_reset_ = ros::Time::now();
           planning_retries_ = 0;
 
+          close_to_goal_ = false;
           recovery_count_=0;
         }
         else {
@@ -721,7 +722,6 @@ namespace move_base {
           //notify the ActionServer that we've successfully preempted
           ROS_DEBUG_NAMED("move_base","Move base preempting the current goal");
           as_->setPreempted();
-
           //we'll actually return from execute after preempting
           return;
         }
@@ -895,8 +895,6 @@ namespace move_base {
           lock.unlock();
 
           as_->setSucceeded(move_base_msgs::MoveBaseResult(), "Goal reached.");
-          close_to_goal_ = false;
-          recovery_count_=0;
           return true;
         }
 
@@ -955,9 +953,9 @@ namespace move_base {
         ROS_DEBUG_NAMED("move_base","In clearing/recovery state");
 
         //we'll invoke whatever recovery behavior we're currently on if they're enabled
-        if(recovery_behavior_enabled_ && recovery_index_ < recovery_behaviors_.size()){
+        if(recovery_behavior_enabled_ && recovery_index_ < recovery_behaviors_.size() && recovery_count_ < recovery_count_threshold_){
           //tx//begin
-          if(recovery_count_>=recovery_count_threshold_){
+          if(recovery_count_>0){
             //Check whether goal is close enough
             if(!planner_plan_->empty() && closeToGoal(current_position,planner_plan_->back())){
               //Set goal state to be succeed
@@ -967,7 +965,6 @@ namespace move_base {
             else{
               close_to_goal_=false;
             }
-            recovery_count_=0;
           }
 
           if(!close_to_goal_){
@@ -984,6 +981,7 @@ namespace move_base {
             //tx//begin
             //Check whether robot is close enough to the goal but robot still try to get closer
             recovery_count_++;
+            ROS_INFO("tried %d recovery behaviors,max try:%d",recovery_count_,recovery_count_threshold_);
           }
 
           //we'll check if the recovery behavior actually worked
@@ -1001,7 +999,11 @@ namespace move_base {
 
           ROS_DEBUG_NAMED("move_base_recovery","Something should abort after this.");
 
-          if(recovery_trigger_ == CONTROLLING_R){
+          if(recovery_count_>=recovery_count_threshold_){
+            ROS_ERROR("Aborting because the robot could not find a valid path. Even after executing %d recovery behaviors",recovery_count_threshold_);
+            as_->setAborted(move_base_msgs::MoveBaseResult(), "Failed to reach the goal. Even after executing recovery behaviors.");
+          }
+          else if(recovery_trigger_ == CONTROLLING_R){
             ROS_ERROR("Aborting because a valid control could not be found. Even after executing all recovery behaviors");
             as_->setAborted(move_base_msgs::MoveBaseResult(), "Failed to find a valid control. Even after executing recovery behaviors.");
           }
@@ -1013,6 +1015,7 @@ namespace move_base {
             ROS_ERROR("Aborting because the robot appears to be oscillating over and over. Even after executing all recovery behaviors");
             as_->setAborted(move_base_msgs::MoveBaseResult(), "Robot is oscillating. Even after executing recovery behaviors.");
           }
+      
           resetState();
           return true;
         }
@@ -1180,6 +1183,8 @@ namespace move_base {
     state_ = PLANNING;
     recovery_index_ = 0;
     recovery_trigger_ = PLANNING_R;
+    close_to_goal_ = false;
+    recovery_count_=0;
     publishZeroVelocity();
 
     //if we shutdown our costmaps when we're deactivated... we'll do that now

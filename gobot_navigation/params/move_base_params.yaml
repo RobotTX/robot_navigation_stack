@@ -41,12 +41,12 @@ oscillation_distance: 0.5 #0.5
 
 max_planning_retries: -1 #-1
 
-#Times of recovery will be tried before check distance to goal
-recovery_count_threshold: 1
+#Times of recovery will be tried before give up
+recovery_count_threshold: 6
 
 #Goal readched when distance between robot and goal is smaller than it after trying certain times of recovery
 #default:0.5
-dis_to_goal_threshold_: 0.5
+dis_to_goal_threshold_: 0.4
 
 NavfnROS:
     # To tell the planner not to use the unknown space as free space
@@ -66,7 +66,7 @@ conservative_reset:
     reset_distance: 2.0
 
 aggressive_reset:
-    reset_distance: 2.0
+    reset_distance: 1.5
 
 move_slow_and_clear:
     clearing_distance: 0.5

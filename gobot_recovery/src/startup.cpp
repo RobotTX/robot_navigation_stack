@@ -4,7 +4,7 @@ ros::Publisher vel_pub;
 std_srvs::Empty empty_srv;
 
 int count = 1;
-
+ros::Publisher goalCancel_pub;
 void initialPoseCallback(const std_msgs::Int8::ConstPtr& msg){
   if(msg->data==0){
     ROS_ERROR("Can not find robot pose when start up. Retry after 10 sec.");
@@ -29,6 +29,9 @@ void mySigintHandler(int sig)
 {
   ros::Time last_time = ros::Time::now();
   geometry_msgs::Twist vel;
+  actionlib_msgs::GoalID arg;
+  goalCancel_pub.publish(arg);
+
   vel.linear.x=0.0;
   vel.angular.z=0.0;
   ROS_INFO("Wait 3 seconds to stop robot...");
@@ -58,6 +61,7 @@ int main(int argc, char **argv) {
     }
 
     ROS_INFO("Started Robot.");
+    goalCancel_pub = nh.advertise<actionlib_msgs::GoalID>("/move_base/cancel",10);
     ros::Subscriber initialPose = nh.subscribe("/gobot_recovery/find_initial_pose",1, initialPoseCallback);
 
     ros::spin();

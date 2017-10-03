@@ -3,6 +3,7 @@
 #include <std_srvs/Empty.h>
 #include <geometry_msgs/Twist.h>
 #include <std_msgs/Int8.h>
+#include <actionlib_msgs/GoalID.h>
 
 void initialPoseCallback(const std_msgs::Int8::ConstPtr& msg);
 
