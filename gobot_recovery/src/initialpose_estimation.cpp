@@ -304,18 +304,22 @@ void initialPoseCallback(const geometry_msgs::PoseWithCovarianceStamped::ConstPt
 }
 
 bool goHomeSrvCallback(std_srvs::Empty::Request &req, std_srvs::Empty::Response &res){
-    geometry_msgs::PoseStamped home;
-    home.header.frame_id = "map";
-    home.header.stamp = ros::Time::now();
-    home.pose.position.x=home_pos_x;
-    home.pose.position.y=home_pos_y;
-    home.pose.position.z=0.0;
-    home.pose.orientation.x=home_ang_x;
-    home.pose.orientation.y=home_ang_y;
-    home.pose.orientation.z=home_ang_z;
-    home.pose.orientation.w=home_ang_w;
+    ros::Duration(1.5).sleep();
+    if(ros::service::call("/stop_path",empty_srv)){
+        ROS_INFO("Go Home, sweet home.");
+        geometry_msgs::PoseStamped home;
+        home.header.frame_id = "map";
+        home.header.stamp = ros::Time::now();
+        home.pose.position.x=home_pos_x;
+        home.pose.position.y=home_pos_y;
+        home.pose.position.z=0.0;
+        home.pose.orientation.x=home_ang_x;
+        home.pose.orientation.y=home_ang_y;
+        home.pose.orientation.z=home_ang_z;
+        home.pose.orientation.w=home_ang_w;
 
-    goal_pub.publish(home);
+        goal_pub.publish(home);
+    }
 
     return true;
 

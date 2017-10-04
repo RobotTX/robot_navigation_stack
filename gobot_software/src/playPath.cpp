@@ -12,6 +12,7 @@ int stage = 0;
 bool waitingForNextGoal = false;
 bool looping = false;
 bool dockAfterPath = false;
+bool waitingForAction = false, readAction=true,stop_flag=false;
 
 std::vector<Point> path;
 Point currentGoal;
@@ -19,18 +20,10 @@ Point currentGoal;
 
 ros::Subscriber statusSuscriber;
 ros::Subscriber sub_robot;
+ros::Subscriber button_sub;
 
+ros::Time action_time;
 
-bool setSpeed(const char directionR, const int velocityR, const char directionL, const int velocityL){
-    //ROS_INFO("(auto_docking::setSpeed) %c %d %c %d", directionR, velocityR, directionL, velocityL);
-    gobot_msg_srv::SetSpeeds speed; 
-    speed.request.directionR = std::string(1, directionR);
-    speed.request.velocityR = velocityR;
-    speed.request.directionL = std::string(1, directionL);
-    speed.request.velocityL = velocityL;
-
-    return ros::service::call("setSpeeds", speed);
-}
 
 void getRobotPos(const geometry_msgs::Pose::ConstPtr& msg){
 	// if there is a currentGoal
@@ -49,17 +42,53 @@ void getRobotPos(const geometry_msgs::Pose::ConstPtr& msg){
 	}
 }
 
+bool setSpeed(const char directionR, const int velocityR, const char directionL, const int velocityL){
+    //ROS_INFO("(auto_docking::setSpeed) %c %d %c %d", directionR, velocityR, directionL, velocityL);
+    gobot_msg_srv::SetSpeeds speed; 
+    speed.request.directionR = std::string(1, directionR);
+    speed.request.velocityR = velocityR;
+    speed.request.directionL = std::string(1, directionL);
+    speed.request.velocityL = velocityL;
+
+    return ros::service::call("setSpeeds", speed);
+}
+
+void getButtonCallback(const std_msgs::Int8::ConstPtr& msg){
+	/// External button 1-No press; 0-press
+	if(msg->data==0 && waitingForAction && readAction){
+		action_time = ros::Time::now();
+		readAction=false;
+	}
+	else if(msg->data==1 && !readAction){
+		readAction = true;
+		if((ros::Time::now() - action_time).toSec()<5.0){
+			//Go to next point
+			waitingForAction=false;
+		}
+		else if((ros::Time::now() - action_time).toSec()<=10.0)
+		{
+			std::thread([](){
+				std_srvs::Empty arg;
+				ros::service::call("/gobot_recovery/go_home",arg);
+			}).detach();
+			waitingForAction=false;
+		}
+		ROS_INFO("Human Action lasted for %.2f seconds.",(ros::Time::now() - action_time).toSec());
+	}
+}
+
 // to get the status of the robot (completion of the path towards its next goal, SUCCEEDED = reached its goal, ACTIVE = currently moving towards its goal)
 void getStatus(const actionlib_msgs::GoalStatusArray::ConstPtr& goalStatusArray){
 	if(currentGoal.x != -1){
-		if(goalStatusArray->status_list[0].status == 3){
+		if(goalStatusArray->status_list.back().status == 3){
 			// if we reached the goal
 			if(!waitingForNextGoal){
                 ROS_INFO("(PlayPath::getStatus) robot close enough to the goal");
                 waitingForNextGoal = true;
 				goalReached();
 			}
-		} else if(goalStatusArray->status_list[0].status == 4 || goalStatusArray->status_list[0].status == 5){
+		} 
+		else if(goalStatusArray->status_list.back().status == 4 || goalStatusArray->status_list.back().status == 5){
 			// if the goal could not be reached
 			if(!waitingForNextGoal){
 				waitingForNextGoal = true;
@@ -67,7 +96,8 @@ void getStatus(const actionlib_msgs::GoalStatusArray::ConstPtr& goalStatusArray)
 				// - 1 because if we get stuck going to the first stage, it's going to be 0
 				setStageInFile(-stage - 1);
 			}
-		} else {
+		} 
+		else {
 			waitingForNextGoal = false;
 		}
 	}
@@ -77,7 +107,8 @@ void getStatus(const actionlib_msgs::GoalStatusArray::ConstPtr& goalStatusArray)
 void goalReached(){
 	if(currentGoal.isHome){
 		ROS_INFO("(PlayPath::goalReached) home reached");
-	} else {
+	} 
+	else {
 		ROS_INFO("(PlayPath::goalReached) path point reached");
 		stage++;
 		if(stage >= path.size()){
@@ -88,9 +119,9 @@ void goalReached(){
 
                 // resets the stage of the path to be able to play the path from the start again
                 stage = 10000;
+				setStageInFile(stage);
                 // resets the current goal
                 currentGoal.x = -1;
-                setStageInFile(stage);
 
                 std_srvs::Empty arg;
                 if(!ros::service::call("goDock", arg))
@@ -98,37 +129,66 @@ void goalReached(){
 
                 dockAfterPath = false;
 
-            } else if(looping){
+            } 
+			else if(looping){
                 ROS_INFO("(PlayPath::goalReached) Looping!!");
                 stage = 0;
-                setStageInFile(stage);
-                goNextPoint();
-            } else {
+				setStageInFile(stage);
+				checkGoalDelay();
+            } 
+			else {
                 // resets the stage of the path to be able to play the path from the start again
                 stage = 10000;
+				setStageInFile(stage);
                 // resets the current goal
                 currentGoal.x = -1;
-                setStageInFile(stage);
             }
-		} else {
+		} 
+		else {
 			// reached a normal/path goal so we sleep the given time
-			if(currentGoal.waitingTime > 0){
-				ROS_INFO("(PlayPath::goalReached) goalReached going to sleep for %f seconds", currentGoal.waitingTime);
-                setStageInFile(stage);
-				sleep(currentGoal.waitingTime);
-			}
-			goNextPoint();
+			setStageInFile(stage);
+			checkGoalDelay();
 		}
+	}
+}
+
+void checkGoalDelay(){
+	if(currentGoal.waitingTime > 0){
+		ROS_INFO("(PlayPath::goalReached) goalReached going to sleep for %f seconds", currentGoal.waitingTime);
+		double dt=0.0;
+		ros::Time last_time=ros::Time::now();
+		while(dt<currentGoal.waitingTime && !stop_flag){
+			dt=(ros::Time::now()-last_time).toSec();
+			ros::Duration(0.2).sleep();
+			ros::spinOnce();
+		}
+	}
+	else if(currentGoal.waitingTime == -1){
+		ros::NodeHandle n;
+		ROS_INFO("Goal reached. Waiting for human action.");
+		waitingForAction=true;
+		button_sub = n.subscribe("button_topic",1,getButtonCallback);
+		while(waitingForAction && !stop_flag){
+			ros::Duration(0.2).sleep();
+			ros::spinOnce();
+		}
+		button_sub.shutdown();
+	}
+
+	if(!stop_flag){				
+		goNextPoint();
 	}
 }
 
 bool stopPathService(std_srvs::Empty::Request &req, std_srvs::Empty::Response &res){
 	ROS_INFO("(PlayPath::stopPathService) stopPathService called");
+	stop_flag = true;
 	/// if action server is up -> cancel
 	if(ac->isServerConnected())
 		ac->cancelAllGoals();
 	currentGoal.x = -1;
 	stage = 0;
+
 	setStageInFile(stage);
 
     if(dockAfterPath){
@@ -139,17 +199,17 @@ bool stopPathService(std_srvs::Empty::Request &req, std_srvs::Empty::Response &r
             ROS_ERROR("(PlayPath::goalReached) Could not go charging");
 
         dockAfterPath = false;
-
     }
 	return true;
 }
 
 bool pausePathService(std_srvs::Empty::Request &req, std_srvs::Empty::Response &res){
 	ROS_INFO("(PlayPath::pausePathService) pausePathService called");
+	stop_flag = true;
 	if(ac->isServerConnected())
 		ac->cancelAllGoals();
 
-
+ 
     if(dockAfterPath){
         ROS_INFO("(PlayPath::goalReached) Battery is low, go to charging station!!");
         
@@ -223,6 +283,7 @@ bool playPathService(std_srvs::Empty::Request &req, std_srvs::Empty::Response &r
 	ROS_INFO("(PlayPath::playPathService) called while at stage : %d", stage);
 
 	path = std::vector<Point>();
+	stop_flag=false;
 
 	ros::NodeHandle n;
 	std::string pathFile;

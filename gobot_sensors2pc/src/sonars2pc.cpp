@@ -19,12 +19,6 @@ ros::Publisher topPublisher;
 std::string rear_frame, front_right_frame, front_left_frame, left_frame, right_frame, top_frame, mid_frame;
 double clear_radius = 0.0;
 
-void laserCallback(const sensor_msgs::LaserScan::ConstPtr& msg)
-{
-    tf::TransformListener tf_listener;
-
-}
-
 
 void sonarToCloud(double sonarData,pcl::PointCloud<pcl::PointXYZ> &cloudData){
     sonarData = sonarData>SONAR_THRESHOLD?SONAR_MAX:sonarData;
@@ -130,34 +124,23 @@ bool initParams(void){
 
 
 int main(int argc, char* argv[]){
+    ros::init(argc, argv, "sonars2pc");
+    ros::NodeHandle nh("sonars2pc");
 
-    std::cout << "(sonars2pc) running..." << std::endl;
+    if(initParams()){
 
-    try {
+        rearPublisher = nh.advertise<pcl::PointCloud<pcl::PointXYZ> >("/rear_sonar_pc", 10);
+        frontLeftPublisher = nh.advertise<pcl::PointCloud<pcl::PointXYZ> >("/frontLeft_sonar_pc", 10);
+        frontRightPublisher = nh.advertise<pcl::PointCloud<pcl::PointXYZ> >("/frontRight_sonar_pc", 10);
+        leftPublisher = nh.advertise<pcl::PointCloud<pcl::PointXYZ> >("/left_sonar_pc", 10);
+        rightPublisher = nh.advertise<pcl::PointCloud<pcl::PointXYZ> >("/right_sonar_pc", 10);
+        midPublisher = nh.advertise<pcl::PointCloud<pcl::PointXYZ> >("/mid_sonar_pc", 10);
+        topPublisher = nh.advertise<pcl::PointCloud<pcl::PointXYZ> >("/top_sonar_pc", 10);
 
-        ros::init(argc, argv, "sonars2pc");
+        // get the sonars information
+        ros::Subscriber sonarSub = nh.subscribe("/sonar_topic", 1, newSonarsInfo);
 
-        ros::NodeHandle nh("sonars2pc");
-
-        if(initParams()){
-
-            rearPublisher = nh.advertise<pcl::PointCloud<pcl::PointXYZ> >("/rear_sonar_pc", 10);
-            frontLeftPublisher = nh.advertise<pcl::PointCloud<pcl::PointXYZ> >("/frontLeft_sonar_pc", 10);
-            frontRightPublisher = nh.advertise<pcl::PointCloud<pcl::PointXYZ> >("/frontRight_sonar_pc", 10);
-            leftPublisher = nh.advertise<pcl::PointCloud<pcl::PointXYZ> >("/left_sonar_pc", 10);
-            rightPublisher = nh.advertise<pcl::PointCloud<pcl::PointXYZ> >("/right_sonar_pc", 10);
-            midPublisher = nh.advertise<pcl::PointCloud<pcl::PointXYZ> >("/mid_sonar_pc", 10);
-            topPublisher = nh.advertise<pcl::PointCloud<pcl::PointXYZ> >("/top_sonar_pc", 10);
-
-            // get the sonars information
-            ros::Subscriber sonarSub = nh.subscribe("/sonar_topic", 1, newSonarsInfo);
-            ros::Subscriber laserSub = nh.subscribe("/scan", 1, laserCallback);
-
-            ros::spin();
-        }
-
-    } catch (std::exception& e) {
-        std::cerr << "(sonars2pc) Exception: " << e.what() << std::endl;
+        ros::spin();
     }
 
     return 0;

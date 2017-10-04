@@ -4,6 +4,10 @@ ros::Publisher vel_pub;
 std_srvs::Empty empty_srv;
 
 int count = 1;
+bool buttonOn=true;
+ros::Time action_time;
+std::string restartRobotFile;
+
 ros::Publisher goalCancel_pub;
 void initialPoseCallback(const std_msgs::Int8::ConstPtr& msg){
   if(msg->data==0){
@@ -23,6 +27,23 @@ void initialPoseCallback(const std_msgs::Int8::ConstPtr& msg){
       ROS_ERROR("Give up! Move robot to charging station and restart.");
     }
   }
+}
+
+
+void getButtonCallback(const std_msgs::Int8::ConstPtr& msg){
+  if(msg->data==0 && buttonOn){
+		action_time = ros::Time::now();
+		buttonOn=false;
+	}
+	else if(msg->data==1 && !buttonOn){
+		buttonOn = true;
+		if((ros::Time::now() - action_time).toSec()>10.0){
+			//restart
+      ROS_INFO("Restart robot. Please wait for 10 seconds...");
+			const std::string restart_script = "sh " + restartRobotFile;
+      system(restart_script.c_str());
+		}
+	}
 }
 
 void mySigintHandler(int sig)
@@ -52,6 +73,8 @@ int main(int argc, char **argv) {
     ROS_INFO("Starting Robot...");
     ros::Duration(5.0).sleep();
 
+    nh.getParam("restart_robot_file", restartRobotFile);
+
     vel_pub = nh.advertise<geometry_msgs::Twist>("/cmd_vel",10);
 
     while(!ros::service::call("/gobot_recovery/initialize_pose",empty_srv)){
@@ -63,6 +86,7 @@ int main(int argc, char **argv) {
     ROS_INFO("Started Robot.");
     goalCancel_pub = nh.advertise<actionlib_msgs::GoalID>("/move_base/cancel",10);
     ros::Subscriber initialPose = nh.subscribe("/gobot_recovery/find_initial_pose",1, initialPoseCallback);
+    ros::Subscriber button_sub = nh.subscribe("button_topic",1,getButtonCallback);
 
     ros::spin();
     return 0;

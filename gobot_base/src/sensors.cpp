@@ -9,6 +9,7 @@ ros::Publisher sonar_pub;
 ros::Publisher weight_pub;
 ros::Publisher battery_pub;
 ros::Publisher cliff_pub;
+ros::Publisher button_pub;
 serial::Serial serialConnection;
 
 int last_charging_current = -1;
@@ -176,10 +177,9 @@ void publishSensors(void){
             int32_t external_button = buff.at(45);
             /// TODO do whatever we want with it
             //ROS_INFO("External button:%d",external_button);
-            if(external_button==0){
-                std_srvs::Empty emtry_srv;
-                ros::service::call("/gobot_recovery/go_home",emtry_srv);
-            }
+            std_msgs::Int8 button;
+            button.data=external_button;
+            button_pub.publish(button);
 
 
             if(display_data){
@@ -210,7 +210,7 @@ void publishSensors(void){
             }
 
         } else {
-            ROS_INFO("(sensors::publishSensors) Check buff size : %lu", buff.size());
+            //ROS_INFO("(sensors::publishSensors) Check buff size : %lu", buff.size());
             error = true;
         }
 
@@ -274,10 +274,28 @@ bool setLedSrvCallback(gobot_msg_srv::LedStrip::Request &req, gobot_msg_srv::Led
     
 }
 
+
+void mySigintHandler(int sig)
+{
+    if(serialConnection.isOpen()){
+        //Turn off LED when shut down node
+        connectionMutex.lock();
+        serialConnection.write(std::vector<uint8_t>({0xB0,0x03,0x01,0x00,0x00,0x00,0x00,0x00,0x03,0xE8,0x1B}));
+        std::vector<uint8_t> buff;
+        serialConnection.read(buff,5);
+        serialConnection.flush();
+        serialConnection.close();
+        connectionMutex.unlock();
+    }
+
+    ros::shutdown();
+}
+
 int main(int argc, char **argv) {
     ros::init(argc, argv, "sensors");
 
     ros::NodeHandle nh;
+    signal(SIGINT, mySigintHandler);
 
     bumper_pub = nh.advertise<gobot_msg_srv::BumperMsg>("bumpers_topic", 50);
     ir_pub = nh.advertise<gobot_msg_srv::IrMsg>("ir_topic", 50);
@@ -286,6 +304,7 @@ int main(int argc, char **argv) {
     weight_pub = nh.advertise<gobot_msg_srv::WeightMsg>("weight_topic", 50);
     battery_pub = nh.advertise<gobot_msg_srv::BatteryMsg>("battery_topic", 50);
     cliff_pub = nh.advertise<gobot_msg_srv::CliffMsg>("cliff_topic", 50);
+    button_pub = nh.advertise<std_msgs::Int8>("button_topic",50);
 
     ros::ServiceServer isChargingSrv = nh.advertiseService("isCharging", isChargingService);
     ros::ServiceServer setLedSrv = nh.advertiseService("/gobot_base/setLed", setLedSrvCallback);

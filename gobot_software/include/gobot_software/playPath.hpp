@@ -12,6 +12,7 @@
 #include <move_base_msgs/MoveBaseAction.h>
 #include <std_srvs/Empty.h>
 #include <std_msgs/String.h>
+#include <std_msgs/Int8.h>
 #include <boost/bind.hpp>
 #include <string>
 #include <actionlib/client/simple_action_client.h>
@@ -39,10 +40,11 @@ bool stopPathService(std_srvs::Empty::Request &req, std_srvs::Empty::Response &r
 bool pausePathService(std_srvs::Empty::Request &req, std_srvs::Empty::Response &res);
 bool startLoopPathService(std_srvs::Empty::Request &req, std_srvs::Empty::Response &res);
 bool stopLoopPathService(std_srvs::Empty::Request &req, std_srvs::Empty::Response &res);
-void goNextPoint();
+void goNextPoint(void);
 bool playPathService(std_srvs::Empty::Request &req, std_srvs::Empty::Response &res);
 void goToPoint(const Point& point);
-void goalReached();
+void goalReached(void);
 void setStageInFile(const int _stage);
-
+void getButtonCallback(const std_msgs::Int8::ConstPtr& msg);
+void checkGoalDelay(void);
 #endif
