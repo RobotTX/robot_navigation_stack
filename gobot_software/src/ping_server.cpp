@@ -4,6 +4,7 @@ static const std::string sep = std::string(1, 31);
 
 bool chargingFlag = false;
 int batteryLevel = 50;
+std::string ipsFile;
 
 void newBatteryInfo(const gobot_msg_srv::BatteryMsg::ConstPtr& batteryInfo){
     chargingFlag = batteryInfo->ChargingFlag;
@@ -77,16 +78,16 @@ bool isServer(const std::string IP, const std::string ssid){
                 } else
                     ROS_INFO("(ping_server) could not open file to retrieve path stage");
 
-                // Sends everything to the application, '\' is used to as a delimiter, spaces cannot be used because of the ssid
+                // Sends everything to the application
                 std::string info_to_send(hostname + sep + ssid + sep + std::to_string(stage) + sep + std::to_string(batteryLevel) + sep + std::to_string(chargingFlag) + sep + std::to_string(dockStatus));
                 //ROS_INFO("(ping_server) sending %s", info_to_send.c_str());
 
                 boost::system::error_code ignored_error;
                 boost::asio::write(socket, boost::asio::buffer(info_to_send, info_to_send.length()), boost::asio::transfer_all(), ignored_error);
                 return true;
-            }
-        } else
-            ROS_INFO("(ping_server):: parameter <robot_name_file> does not exist");
+            } else
+                ROS_ERROR("(ping_server):: parameter <robot_name_file> does not exist");
+        }
 
             
         
@@ -150,7 +151,7 @@ void client(ros::Publisher& publisher, const bool checkOldServer, const std::str
                 std_msgs::String msg;
                 msg.data = "disconnected";
                 publisher.publish(msg);
-                const std::string ping_script = "sudo sh " + pingFile;
+                const std::string ping_script = "sudo sh " + pingFile + " " + ipsFile;
                 system(ping_script.c_str());
                 client(publisher, false, ssid, serverFile, pingFile);
             }
@@ -183,6 +184,11 @@ int main(int argc, char* argv[]){
         n.getParam("ping_file", pingFile);
     else
         ROS_INFO("(ping_server):: The parameter <ping_file> does not exist");
+
+    if(n.hasParam("ips_file"))
+        n.getParam("ips_file", ipsFile);
+    else 
+        ROS_INFO("(ping_server) The parameter <ips_file> does not exist");
 
     ros::Publisher publisher = n.advertise<std_msgs::String>("server_disconnected", 10);
 

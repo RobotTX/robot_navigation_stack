@@ -24,22 +24,20 @@
 
 typedef actionlib::SimpleActionClient<move_base_msgs::MoveBaseAction> MoveBaseClient;
 
-bool startDockingService(std_srvs::Empty::Request &req, std_srvs::Empty::Response &res);
 bool startDocking(void);
-bool stopDockingService(std_srvs::Empty::Request &req, std_srvs::Empty::Response &res);
-void stopDocking(void);
-void newRobotPos(const geometry_msgs::Pose::ConstPtr& currentGoal);
+void newRobotPos(const geometry_msgs::Pose::ConstPtr& robotPos);
 void goalStatus(const actionlib_msgs::GoalStatusArray::ConstPtr& goalStatusArray);
-bool setSpeed(const char directionR, const int velocityR, const char directionL, const int velocityL);
-bool pidControl(void);
-void failedDocking(const int status);
-void checkBumpers(void);
 void findChargingStation(void);
-void newBatteryInfo(const gobot_msg_srv::BatteryMsg::ConstPtr& batteryInfo);
+bool setSpeed(const char directionR, const int velocityR, const char directionL, const int velocityL);
 void newBumpersInfo(const gobot_msg_srv::BumperMsg::ConstPtr& bumpers);
-void alignWithCS(void);
+void newBatteryInfo(const gobot_msg_srv::BatteryMsg::ConstPtr& batteryInfo);
 void newIrSignal(const gobot_msg_srv::IrMsg::ConstPtr& irSignal);
-void newProximityInfo(const gobot_msg_srv::ProximityMsg::ConstPtr& irSignal);
+void alignWithCS(void);
+void newProximityInfo(const gobot_msg_srv::ProximityMsg::ConstPtr& proximitySignal);
 void finishedDocking(const int16_t status);
+void failedDocking(const int status);
+void stopDocking(void);
+bool stopDockingService(std_srvs::Empty::Request &req, std_srvs::Empty::Response &res);
+bool startDockingService(std_srvs::Empty::Request &req, std_srvs::Empty::Response &res);
 
 #endif

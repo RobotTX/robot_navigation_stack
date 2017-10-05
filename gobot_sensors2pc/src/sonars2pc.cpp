@@ -32,6 +32,17 @@ void sonarFrontToCloud(double sonarR,double sonarL,pcl::PointCloud<pcl::PointXYZ
     sonarR = sonarR>SONAR_THRESHOLD?SONAR_MAX:sonarR;
     sonarL = sonarL>SONAR_THRESHOLD?SONAR_MAX:sonarL;
 
+    if(sonarL==SONAR_MAX){
+        for(double i=tan(SONAR_VIEW*2)*SONAR_MAX;i>tan(SONAR_VIEW)*SONAR_MAX;i=i-SONAR_RESOLUTION)
+            cloudL.push_back(pcl::PointXYZ(SONAR_MAX, i, 0));
+    }
+
+    if(sonarR==SONAR_MAX){
+        for(double i=-tan(SONAR_VIEW*2)*SONAR_MAX;i<-tan(SONAR_VIEW)*SONAR_MAX;i=i+SONAR_RESOLUTION)
+            cloudR.push_back(pcl::PointXYZ(SONAR_MAX, i, 0));
+    }
+
+
     if(std::abs(sonarR-sonarL)<0.04){
         //Mark obstacle in the inner side
         for(double i=-tan(SONAR_VIEW)*sonarR;i<tan(SONAR_VIEW)*sonarR;i=i+SONAR_RESOLUTION)

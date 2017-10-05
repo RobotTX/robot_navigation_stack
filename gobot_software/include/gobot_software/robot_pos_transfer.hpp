@@ -7,18 +7,12 @@
 #include <std_msgs/String.h>
 #include <iostream>
 #include <string>
-#include <unistd.h>
-#include <cstdint>
 #include <vector>
-#include <cstdlib>
-#include <signal.h>
-#include <boost/bind.hpp>
-#include <boost/smart_ptr.hpp>
-#include <boost/asio.hpp>
-#include <boost/thread.hpp>
 #include <std_srvs/Empty.h>
 #include <tf/transform_broadcaster.h>
-#include <gobot_msg_srv/RecoveredPosition.h>
+#include <mutex>
+#include <thread>
+#include <boost/asio.hpp>
 
 using boost::asio::ip::tcp;
 
@@ -32,18 +26,14 @@ void sendRobotPos(const std::string& robot_string);
  */
 void getRobotPos(const geometry_msgs::Pose::ConstPtr& msg);
 
-/**
- * Service called to start the listening to the robot pos topic and transfer to the application
- */
-bool startRobotPos(gobot_msg_srv::Port::Request &req, gobot_msg_srv::Port::Response &res);
 
-/**
- * Service called to stop the listening to the robot pos topic and transfer to the application
- */
-bool stopRobotPos(std_srvs::Empty::Request &req, std_srvs::Empty::Response &res);
+/*********************************** CONNECTION FUNCTIONS ***********************************/
 
-bool confirmPositionRecovered(gobot_msg_srv::RecoveredPosition::Request &req, gobot_msg_srv::RecoveredPosition::Response &res);
+void server(void);
 
-void readAck(const std::string position_to_send);
+/*********************************** DISCONNECTION FUNCTIONS ***********************************/
+
+void serverDisconnected(const std_msgs::String::ConstPtr& msg);
+
 
 #endif

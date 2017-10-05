@@ -104,7 +104,7 @@ bool startDocking(void){
 
                     /// will allow us to check that we arrived at our destination
                     goalStatusSub = nh.subscribe("/move_base/status", 1, goalStatus);
-                    //robotPoseSub = nh.subscribe("/robot_pose", 1, newRobotPos);
+                    robotPoseSub = nh.subscribe("/robot_pose", 1, newRobotPos);
 
                     ROS_INFO("(auto_docking::startDocking) service called successfully");
 
@@ -156,7 +156,7 @@ void goalStatus(const actionlib_msgs::GoalStatusArray::ConstPtr& goalStatusArray
             
         } else if(goalStatusArray->status_list[0].status == actionlib_msgs::GoalStatus::PENDING 
             || goalStatusArray->status_list[0].status == actionlib_msgs::GoalStatus::ACTIVE)
-        	/// Wait for the new goal to be published so the status is reset and we don't use the status of the previous goal
+            /// Wait for the new goal to be published so the status is reset and we don't use the status of the previous goal
             newGoal = true;
     }
 }
@@ -200,7 +200,7 @@ bool setSpeed(const char directionR, const int velocityR, const char directionL,
 
 void newBatteryInfo(const gobot_msg_srv::BatteryMsg::ConstPtr& batteryInfo){
     /// if we are charging
-    if(docking && !charging && batteryInfo->ChargingFlag){
+    if(docking && !charging && batteryInfo->ChargingFlag && !moving_away_from_collision){
         charging = true;
         alignWithCS();
     }
@@ -219,73 +219,81 @@ void newBumpersInfo(const gobot_msg_srv::BumperMsg::ConstPtr& bumpers){
             ROS_WARN("(auto_docking::newBumpersInfo) just got a new collision");
             collision = true;
             collisionTime = std::chrono::system_clock::now();
+            setSpeed('F', 0, 'F', 0);
         } else
             /// if after 30 seconds, the obstacle is still there, we tell the user about the obstacle
             if(std::chrono::duration_cast<std::chrono::seconds>(std::chrono::system_clock::now() - collisionTime).count() > 30)
                 failedDocking(-3);
 
-        /// 0 : collision; 1 : no collision
-        if(!(bumpers->bumper5 && bumpers->bumper6) && !(bumpers->bumper7 && bumpers->bumper8)){
-            ROS_WARN("(auto_docking::newBumpersInfo) Collision on more than 1 side");
-            setSpeed('F', 2, 'F', 2);
-            moving_away_from_collision = true;
-            lostIrSignal = false;
-            
-        } else if(!(bumpers->bumper5 && bumpers->bumper6) && bumpers->bumper7 && bumpers->bumper8){
-            ROS_WARN("(auto_docking::newBumpersInfo) Collision right side");
-            //setSpeed('F', 0, 'B', 2);
+        if(!moving_away_from_collision){
+            /// 0 : collision; 1 : no collision
+            if(!(bumpers->bumper5 && bumpers->bumper6) && !(bumpers->bumper7 && bumpers->bumper8)){
+                ROS_WARN("(auto_docking::newBumpersInfo) Collision on more than 1 side");
+                setSpeed('F', 2, 'F', 2);
+                moving_away_from_collision = true;
+                lostIrSignal = false;
+                
+            } else if(!(bumpers->bumper5 && bumpers->bumper6) && bumpers->bumper7 && bumpers->bumper8){
+                ROS_WARN("(auto_docking::newBumpersInfo) Collision right side");
 
-            ros::NodeHandle nh;
+                std::thread([](){
+                    ros::NodeHandle nh;
+                    irSub.shutdown();
+                    proximitySub.shutdown();
+                    moving_away_from_collision = true;
+                    // TODO try to stop the robot and sleep 1 sec to wait for twist to catch the bumber signal
+                    // or twist might stop the robot after we set the speed here
+                    setSpeed('F', 10, 'F', 4);
+                    std::this_thread::sleep_for(std::chrono::milliseconds(7000));
+                    ROS_WARN("(auto_docking::newBumpersInfo) Collision right side speed 1");
+                    setSpeed('B', 5, 'F', 5);
+                    std::this_thread::sleep_for(std::chrono::milliseconds(3200));
+                    ROS_WARN("(auto_docking::newBumpersInfo) Collision right side speed 2");
+                    setSpeed('F', 0, 'F', 0);
+                    moving_away_from_collision = false;
+                    lostIrSignal = false;
+                    irSub = nh.subscribe("/ir_topic", 1, newIrSignal);
+                }).detach();
 
-            irSub.shutdown();
-            setSpeed('F', 5, 'F', 2);
-            std::this_thread::sleep_for(std::chrono::milliseconds(2000));
-            ROS_WARN("(auto_docking::newBumpersInfo) Collision right side speed 1");
-            setSpeed('B', 2, 'B', 2);
-            std::this_thread::sleep_for(std::chrono::milliseconds(2000));
-            ROS_WARN("(auto_docking::newBumpersInfo) Collision right side speed 2");
-            setSpeed('F', 0, 'F', 0);
-            lostIrSignal = false;
-            irSub = nh.subscribe("/ir_topic", 1, newIrSignal);
+            } else if(bumpers->bumper5 && bumpers->bumper6 && !(bumpers->bumper7 && bumpers->bumper8)){
+                ROS_WARN("(auto_docking::newBumpersInfo) Collision left side");
+
+                std::thread([](){
+                    ros::NodeHandle nh;
+                    irSub.shutdown();
+                    proximitySub.shutdown();
+                    moving_away_from_collision = true;
+                    // TODO try to stop the robot and sleep 1 sec to wait for twist to catch the bumber signal
+                    // or twist might stop the robot after we set the speed here
+                    setSpeed('F', 4, 'F', 10);
+                    std::this_thread::sleep_for(std::chrono::milliseconds(7000));
+                    ROS_WARN("(auto_docking::newBumpersInfo) Collision left side speed 1");
+                    setSpeed('F', 5, 'B', 5);
+                    std::this_thread::sleep_for(std::chrono::milliseconds(3200));
+                    ROS_WARN("(auto_docking::newBumpersInfo) Collision left side speed 2");
+                    setSpeed('F', 0, 'F', 0);
+                    moving_away_from_collision = false;
+                    lostIrSignal = false;
+                    irSub = nh.subscribe("/ir_topic", 1, newIrSignal);
+                }).detach();
+
+            } else
+                ROS_ERROR("(auto_docking::newBumpersInfo) should never happen");
+        }
 
 
-            moving_away_from_collision = true;
-        } else if(bumpers->bumper5 && bumpers->bumper6 && !(bumpers->bumper7 && bumpers->bumper8)){
-            ROS_WARN("(auto_docking::newBumpersInfo) Collision left side");
-            //setSpeed('B', 2, 'F', 0);
+        ROS_WARN("(auto_docking::newBumpersInfo) Collision : %d %d %d %d || %d %d %d %d", 
+            bumpers->bumper1, bumpers->bumper2, bumpers->bumper3, bumpers->bumper4,
+            bumpers->bumper5, bumpers->bumper6, bumpers->bumper7, bumpers->bumper8);
 
-            ros::NodeHandle nh;
-
-            irSub.shutdown();
-            setSpeed('F', 2, 'F', 5);
-            std::this_thread::sleep_for(std::chrono::milliseconds(2000));
-            ROS_WARN("(auto_docking::newBumpersInfo) Collision left side speed 1");
-            setSpeed('B', 2, 'B', 2);
-            std::this_thread::sleep_for(std::chrono::milliseconds(2000));
-            ROS_WARN("(auto_docking::newBumpersInfo) Collision left side speed 2");
-            setSpeed('F', 0, 'F', 0);
-            lostIrSignal = false;
-            irSub = nh.subscribe("/ir_topic", 1, newIrSignal);
-
-
-            moving_away_from_collision = true;
-        } else
-            ROS_ERROR("(auto_docking::newBumpersInfo) should never happen");
     } else {
         /// if we had a collision and the obstacle left
-        if(collision){
+        if(collision && !moving_away_from_collision){
             ROS_INFO("(auto_docking::newBumpersInfo) the obstacle left after %f seconds", (double) (std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now() - collisionTime).count() / 1000));
             setSpeed('F', 0, 'F', 0);
             collision = false;
         }
-
-        if(moving_away_from_collision){
-            ROS_INFO("(auto_docking::newBumpersInfo) stopped moving away from collision, stoping the robot");
-            setSpeed('F', 0, 'F', 0);
-            moving_away_from_collision = false;
-        }
     }
-
 }
 
 /// The pid control function
@@ -293,7 +301,7 @@ void newIrSignal(const gobot_msg_srv::IrMsg::ConstPtr& irSignal){
     /// if we are charging
     if(docking && !collision){
         ROS_INFO("(auto_docking::newIrSignal) new ir signal : %d %d %d", irSignal->leftSignal, irSignal->rearSignal, irSignal->rightSignal);
-		/// if we got no signal
+        /// if we got no signal
         if(irSignal->rearSignal == 0 && irSignal->leftSignal == 0 && irSignal->rightSignal == 0){
             /// if we just lost the ir signal, we start the timer
             if(!lostIrSignal){
@@ -358,6 +366,7 @@ void alignWithCS(void){
     ROS_INFO("(auto_docking::alignWithCS) The robot is charging, checking the alignment");
 
     irSub.shutdown();
+    bumperSub.shutdown();
 
     ros::spinOnce();
 
@@ -368,24 +377,31 @@ void alignWithCS(void){
 }
 
 void newProximityInfo(const gobot_msg_srv::ProximityMsg::ConstPtr& proximitySignal){
-    ROS_INFO("(auto_docking::newProximityInfo) new proximity signal : %d %d", proximitySignal->signal1, proximitySignal->signal2);
-    /// signal1 = leftSensor
-    /// signal2 = rightSensor
-    /// 0 : object; 1 : no object
-    if(proximitySignal->signal1 && proximitySignal->signal2){
-        /// we are charging but can't find the charging station on either of the signal (should not happen, tell the user to check)
-        setSpeed('F', 0, 'F', 0);
-        finishedDocking(2);
-    } else if(!proximitySignal->signal1 && !proximitySignal->signal2){
-        /// we are charging and should be aligned
-        setSpeed('F', 0, 'F', 0);
-        finishedDocking(1);
-    } else if(!proximitySignal->signal1 && proximitySignal->signal2)
-        /// left sensor ok, right sensor not ok
-        setSpeed('F', 2, 'B', 2);
-    else if(proximitySignal->signal1 && !proximitySignal->signal2)
-        /// left sensor not ok, right sensor ok
-        setSpeed('B', 2, 'F', 2);
+    if(!moving_away_from_collision){
+        ROS_INFO("(auto_docking::newProximityInfo) new proximity signal : %d %d", proximitySignal->signal1, proximitySignal->signal2);
+        /// signal1 = leftSensor
+        /// signal2 = rightSensor
+        /// 0 : object; 1 : no object
+        if(proximitySignal->signal1 && proximitySignal->signal2){
+            /// we are charging but can't find the charging station on either of the signal (should not happen, tell the user to check)
+            setSpeed('F', 0, 'F', 0);
+            finishedDocking(2);
+        } else if(!proximitySignal->signal1 && !proximitySignal->signal2){
+            /// we are charging and should be aligned
+            setSpeed('F', 0, 'F', 0);
+            finishedDocking(1);
+        } else if(!proximitySignal->signal1 && proximitySignal->signal2){
+            /// left sensor ok, right sensor not ok
+            //setSpeed('F', 2, 'B', 2);
+            setSpeed('F', 0, 'F', 0);
+            finishedDocking(2);
+        } else if(proximitySignal->signal1 && !proximitySignal->signal2){
+            /// left sensor not ok, right sensor ok
+            //setSpeed('B', 2, 'F', 2);
+            setSpeed('F', 0, 'F', 0);
+            finishedDocking(2);
+        }
+    }
 }
 
 void finishedDocking(const int16_t status){

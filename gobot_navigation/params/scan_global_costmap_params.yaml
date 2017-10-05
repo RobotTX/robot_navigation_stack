@@ -1,10 +1,18 @@
 #http://wiki.ros.org/costmap_2d
-
 global_costmap:
+    obstacle_range: 4.5
+    raytrace_range: 5.0
+    # This is the real footprint but we want the footprint to be slightly larger than the robot's real contour
+    #footprint: [[-0.267, 0.3], [0.413, 0.3], [0.413, -0.3], [-0.267, -0.3]]
+    # New more complex footprint
+    footprint: [[0.332, -0.3], [0.358, -0.29], [0.4, -0.234], [0.413, -0.164], [0.413, 0.164], [0.4, 0.234], [0.358, 0.29], [0.332, 0.3], [-0.1425, 0.3], [-0.199, 0.283], [-0.24, 0.2375], [-0.267, 0.161], [-0.267, -0.161], [-0.24, -0.2375], [-0.199, -0.283], [-0.1425, -0.3]]
+    footprint_padding: 0.0001
+
+
     map_type: costmap
-    global_frame: map
-    robot_base_frame: base_link
-    update_frequency: 2.0 # 5.0
+    global_frame: /map
+    robot_base_frame: /base_link
+    update_frequency: 5.0 # 2.0
     publish_frequency: 2.0
     static_map: false
     rolling_window: false
@@ -16,3 +24,39 @@ global_costmap:
         - {name: obstacles, type: "costmap_2d::VoxelLayer"} # 3D costmap
         # Add inflation around the obstacles
         - {name: inflation_layer, type: "costmap_2d::InflationLayer"}
+
+    static_map:
+        map_topic: /map
+
+    obstacle_layer:
+        observation_sources: laser_scan_sensor bumpers
+        track_unknown_space: true
+        origin_z: 0.0
+        z_resolution: 0.1
+        z_voxels: 2
+        publish_voxel_map: True
+
+        laser_scan_sensor: {
+            sensor_frame: base_laser, 
+            data_type: LaserScan, 
+            topic: /scan, 
+            marking: true, 
+            clearing: true,
+            expected_update_rate: 10,
+            inf_is_valid: true,
+            min_obstacle_height: 0.1,
+            max_obstacle_height: 0.2
+        }
+
+        bumpers: {
+            data_type: PointCloud2,
+            topic: /bumpers_pc,
+            marking: true,
+            clearing: true,
+            min_obstacle_height: 0.0,
+            max_obstacle_height: 0.1
+        }
+
+    inflation_layer:
+        inflation_radius: 0.7
+        cost_scaling_factor: 2.58s

@@ -1,26 +1,32 @@
 #include "gobot_software/map_transfer.hpp"
 
-using boost::asio::ip::tcp;
-
-boost::asio::io_service io_service;
-tcp::socket socket_map(io_service);
-ros::Subscriber sub_map;
-tcp::acceptor m_acceptor(io_service);
-
+#define MAP_PORT 4002
 #define HIGH_THRESHOLD 0.65*100
 #define LOW_THRESHOLD 0.196*100
 
-// this allows us to resub to the /map topic in case the connection would have been lost
-bool sendingMapWhileScanning = false;
+using boost::asio::ip::tcp;
+
 double map_resolution = 0.02;
 double map_origin_x = -1;
 double map_origin_y = -1;
 
-void sendMap(const std::vector<uint8_t>& my_map){
+struct session_object {
+    bool sendingMapWhileScanning = false;
+    bool sendAutoMap = false;
+};
+
+std::mutex socketsMutex;
+std::map<std::string, boost::shared_ptr<tcp::socket>> sockets;
+std::map<std::string, session_object> session_map;
+
+ros::Subscriber sub_map;
+
+void sendMap(const std::string ip, const std::vector<uint8_t>& my_map){
 	try {
 		boost::system::error_code ignored_error;
 		ROS_INFO("(Map::sendMap) Map size to send in uint8_t : %lu", my_map.size());
-		boost::asio::write(socket_map, boost::asio::buffer(my_map), boost::asio::transfer_all(), ignored_error);
+        if(sockets.count(ip))
+		  boost::asio::write(*(sockets.at(ip)), boost::asio::buffer(my_map), boost::asio::transfer_all(), ignored_error);
 	} catch (std::exception& e) {
 		e.what();
 	}
@@ -33,16 +39,14 @@ void getMetaData(const nav_msgs::MapMetaData::ConstPtr& msg){
 }
 
 void getMap(const nav_msgs::OccupancyGrid::ConstPtr& msg){
-	int map_size = msg->info.width * msg->info.height;
-	ROS_INFO("(Map::getMap) Just received a new map [%d, %d] => %d", msg->info.width, msg->info.height, map_size);
-	sendMap(compress(msg->data, msg->info.width, msg->info.height, msg->info.resolution, msg->info.origin.position.x, msg->info.origin.position.y, 0));
-}
-
-/// TODO can we remove that ? and all that is related to particle cloud
-void getLocalMap(const nav_msgs::OccupancyGrid::ConstPtr& msg){
-	int map_size = msg->info.width * msg->info.height;
-	ROS_INFO("(Map::getLocalMap) Just received a new map [%d, %d] => %d", msg->info.width, msg->info.height, map_size);
-	sendMap(compress(msg->data, msg->info.width, msg->info.height, msg->info.resolution, msg->info.origin.position.x, msg->info.origin.position.y, 3));
+    socketsMutex.lock();
+    for(auto const &elem : sockets){
+        if(session_map.count(elem.first) && session_map.at(elem.first).sendAutoMap){
+            ROS_INFO("(Map::getMap) Just received a new map o send to the QT app [%d, %d] => %d", msg->info.width, msg->info.height, msg->info.width * msg->info.height);
+            sendMap(elem.first, compress(msg->data, msg->info.width, msg->info.height, msg->info.resolution, msg->info.origin.position.x, msg->info.origin.position.y, 0));
+        }
+    }
+    socketsMutex.unlock();
 }
 
 // algorithm to compress the map before sending it
@@ -112,18 +116,6 @@ std::vector<uint8_t> compress(const std::vector<int8_t> map, const int map_width
 		my_map.push_back(252);
 		my_map.push_back(252);
 		
-	} else if(who == 3) {
-		/// when we are recovering the position, we need to send the size of the local map too
-		/// we send it in a byte array so we cut our int into 4 bytes
-		my_map.push_back((map_width & 0xff000000) >> 24);
-		my_map.push_back((map_width & 0x00ff0000) >> 16);
-		my_map.push_back((map_width & 0x0000ff00) >> 8);
-		my_map.push_back((map_width & 0x000000ff));
-
-		my_map.push_back((map_height & 0xff000000) >> 24);
-		my_map.push_back((map_height & 0x00ff0000) >> 16);
-		my_map.push_back((map_height & 0x0000ff00) >> 8);
-		my_map.push_back((map_height & 0x000000ff));
 	}
 
 
@@ -136,7 +128,7 @@ std::vector<uint8_t> compress(const std::vector<int8_t> map, const int map_width
         else
             curr = map.at(i);
 
-		if(who == 0 || who == 3){
+		if(who == 0){
 		    if(curr < 0)
 	            curr = 205;
 	        else if(curr < LOW_THRESHOLD)
@@ -176,77 +168,40 @@ std::vector<uint8_t> compress(const std::vector<int8_t> map, const int map_width
 		my_map.push_back(254);
 	else if(who == 2)
 		my_map.push_back(252);
-	else if(who == 3)
-		my_map.push_back(251);
 	else
 		my_map.push_back(253);
 
 	return my_map;
 }
 
-bool startMap(gobot_msg_srv::Port::Request &req,
-    gobot_msg_srv::Port::Response &res){
-	ROS_INFO("(Map::startMap) Starting map_sender");
-
-	int mapPort = req.port;	
-
-	if(socket_map.is_open())
-		socket_map.close();
-
-	if(m_acceptor.is_open())
-		m_acceptor.close();
-
-	socket_map = tcp::socket(io_service);
-	m_acceptor = tcp::acceptor(io_service, tcp::endpoint(tcp::v4(), mapPort));
-	m_acceptor.set_option(tcp::acceptor::reuse_address(true));
-
-	ROS_INFO("(Map::startMap) Connecting to ports : %d", mapPort);
-	m_acceptor.accept(socket_map);
-	ROS_INFO("(Map::startMap) We are connected");
-
-	// if the robot disconnects while scanning it unsuscribes to /map
-	// startMap is called when the robot reconnects and we need to resub
-	if(sendingMapWhileScanning){
-		ros::NodeHandle n;
-		sub_map = n.subscribe("/map", 1, getMap);
-	}
-
-	return true;
-}
-
-bool sendAutoMap(std_srvs::Empty::Request &req, std_srvs::Empty::Response &res){
+bool sendAutoMap(gobot_msg_srv::String::Request &req, gobot_msg_srv::String::Response &res){
 	ROS_INFO("(Map::sendAutoMap) SendAutoMap");
 	ros::NodeHandle n;
-	sub_map.shutdown();
-	sub_map = n.subscribe("/map", 1, getMap);
-	sendingMapWhileScanning = true;
+
+    int count = 0;
+    for(auto const &elem : session_map)
+        count += elem.second.sendAutoMap;
+    
+    if(!count)
+        sub_map = n.subscribe("/map", 1, getMap);
+
+    session_map.at(req.data).sendAutoMap = true;
+
 	return true;
 }
 
-bool sendLocalMap(std_srvs::Empty::Request &req, std_srvs::Empty::Response &res){
 
-	ROS_INFO("(Map::sendLocalMap) sendLocalMap");
-
-	ros::NodeHandle n;
-	/// in case sub map would have subscribed to another topic before we unsubscribe first
-	sub_map.shutdown();
-	sub_map = n.subscribe("/move_base/local_costmap/costmap", 1, getLocalMap);
-	return true;
-}
-
-bool stopAutoMap(std_srvs::Empty::Request &req, std_srvs::Empty::Response &res){
+bool stopAutoMap(gobot_msg_srv::String::Request &req, gobot_msg_srv::String::Response &res){
 	ROS_INFO("(Map::stopAutoMap) StopAutoMap");
 
-	sub_map.shutdown();
-	sendingMapWhileScanning = false;
+    session_map.at(req.data).sendAutoMap = false;
 
-	return true;
-}
-
-bool stopSendingLocalMap(std_srvs::Empty::Request& req, std_srvs::Empty::Response &res){
-	ROS_INFO("(Map::stopSendingLocalMap) StopSendingLocalMap");
-
-	sub_map.shutdown();
+    int count = 0;
+    for(auto const &elem : session_map)
+        count += elem.second.sendAutoMap;
+    
+    if(!count)
+        sub_map.shutdown();
 
 	return true;
 }
@@ -255,12 +210,11 @@ bool stopSendingLocalMap(std_srvs::Empty::Request& req, std_srvs::Empty::Respons
 // 0 : scan 
 // 1 : application requesting at connection time
 // 2 : to merge
-// 3 : recovering position
-bool sendOnceMap(gobot_msg_srv::Port::Request &req,
-    gobot_msg_srv::Port::Response &res){
+bool sendOnceMap(gobot_msg_srv::SendMap::Request &req,
+    gobot_msg_srv::SendMap::Response &res){
 	ROS_INFO("(Map::sendOnceMap) SendOnceMap doing nothing for now");
 
-	int who = req.port;	
+	int who = req.who;	
 
 	std::vector<int8_t> my_map;
     std::string mapFileStr;
@@ -300,7 +254,7 @@ bool sendOnceMap(gobot_msg_srv::Port::Request &req,
 
 		mapFile.close();
 		ROS_INFO("(Map::sendOnceMap) Got the whole map from file, about to compress and send it %lu", my_map.size());
-		sendMap(compress(my_map, width, height, map_resolution, map_origin_x, map_origin_y, who));
+		sendMap(req.ip, compress(my_map, width, height, map_resolution, map_origin_x, map_origin_y, who));
 
 		return true;
 		
@@ -308,13 +262,47 @@ bool sendOnceMap(gobot_msg_srv::Port::Request &req,
 		return false;
 }
 
-bool stopMap(std_srvs::Empty::Request &req, std_srvs::Empty::Response &res){
-	ROS_INFO("(Map::stopMap) Stopping map_sender");
-	sub_map.shutdown();
-	socket_map.close();
-	m_acceptor.close();
-	return true;
+/*********************************** CONNECTION FUNCTIONS ***********************************/
+
+void server(void){
+    boost::asio::io_service io_service;
+    tcp::acceptor a(io_service, tcp::endpoint(tcp::v4(), MAP_PORT));
+    while(ros::ok()) {
+
+        boost::shared_ptr<tcp::socket> sock = boost::shared_ptr<tcp::socket>(new tcp::socket(io_service));
+
+        /// We wait for someone to connect
+        a.accept(*sock);
+
+        /// Got a new connection so we had it to our array of sockets
+        std::string ip = sock->remote_endpoint().address().to_string();
+        ROS_INFO("(Map::server) Command socket connected to %s", ip.c_str());
+        socketsMutex.lock();
+        if(!sockets.count(ip)){
+            session_object session;
+            sockets.insert(std::pair<std::string, boost::shared_ptr<tcp::socket>>(ip, sock));
+            session_map.insert(std::pair<std::string, session_object>(ip, session));
+        } else
+            ROS_ERROR("(Map::server) the ip %s is already connected, this should not happen", ip.c_str());
+        socketsMutex.unlock();
+    }
 }
+
+/*********************************** DISCONNECTION FUNCTIONS ***********************************/
+
+void serverDisconnected(const std_msgs::String::ConstPtr& msg){
+    ROS_WARN("(Map::serverDisconnected) The ip %s just disconnected", msg->data.c_str());
+
+    /// Close and remove the socket
+    socketsMutex.lock();
+    if(sockets.count(msg->data)){
+        sockets.at(msg->data)->close();
+        sockets.erase(msg->data);
+    }
+    socketsMutex.unlock();
+}
+
+/*********************************** MAIN ***********************************/
 
 int main(int argc, char **argv){
 
@@ -323,22 +311,17 @@ int main(int argc, char **argv){
 
 	ros::NodeHandle n;
 
-	ros::ServiceServer start_service = n.advertiseService("start_map_sender", startMap);
 	ros::ServiceServer send_once_service = n.advertiseService("send_once_map_sender", sendOnceMap);
 	ros::ServiceServer send_auto_service = n.advertiseService("send_auto_map_sender", sendAutoMap);
 	ros::ServiceServer stop_auto_service = n.advertiseService("stop_auto_map_sender", stopAutoMap);
-	ros::ServiceServer stop_service = n.advertiseService("stop_map_sender", stopMap);
 
-	// to recover a robot's position
-	ros::ServiceServer send_local_map_service = n.advertiseService("send_local_map", sendLocalMap);
-	ros::ServiceServer stop_sending_local_map_service = n.advertiseService("stop_sending_local_map", stopSendingLocalMap);
-	ros::Subscriber sub_meta = n.subscribe("/map_metadata", 1, getMetaData);
+    ros::Subscriber sub = n.subscribe("server_disconnected", 1000, serverDisconnected);
 
-	ros::Rate loop_rate(20);
-	while(ros::ok()){
-		ros::spinOnce();
-		loop_rate.sleep();
-	}
+    ros::Subscriber sub_meta = n.subscribe("/map_metadata", 1, getMetaData);
+
+    std::thread t(server);
+
+	ros::spin();
 
 	return 0;
 }

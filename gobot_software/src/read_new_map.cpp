@@ -1,21 +1,25 @@
 #include "gobot_software/read_new_map.hpp"
 
+#define NEW_MAP_PORT 5601
+
 using boost::asio::ip::tcp;
 
 const int max_length = 1024;
-bool waiting = false;
-bool connected = false;
 bool simulation = false;
 
-boost::asio::io_service io_service;
-tcp::socket socket_robot(io_service);
-tcp::acceptor m_acceptor(io_service);
+std::mutex socketsMutex;
+std::mutex mapMutex;
+std::map<std::string, boost::shared_ptr<tcp::socket>> sockets;
 
 ros::Publisher map_pub;
 
-void session(ros::NodeHandle n){
-    
-    ROS_INFO("(New Map) session launched");
+
+void session(boost::shared_ptr<tcp::socket> sock){
+
+    std::string ip = sock->remote_endpoint().address().to_string();
+    ROS_INFO("(New Map) session launched %s", ip.c_str());
+
+    ros::NodeHandle n;
     int gotMapData(0);
     std::string mapId("");
     std::string mapMetadata("");
@@ -23,16 +27,15 @@ void session(ros::NodeHandle n){
     std::vector<uint8_t> map;
     std::string message("done 0");
 
-    while(ros::ok() && connected){
+    while(ros::ok() && sockets.count(ip)){
         
         // buffer in which we store the bytes we read on the socket
         char data[max_length];
 
         boost::system::error_code error;
-        size_t length = socket_robot.read_some(boost::asio::buffer(data), error);
+        size_t length = sock->read_some(boost::asio::buffer(data), error);
         if ((error == boost::asio::error::eof) || (error == boost::asio::error::connection_reset)){
             ROS_INFO("(New Map) Connection closed");
-            connected = false;
             return;
         } else if (error) {
             throw boost::system::system_error(error); // Some other error.
@@ -82,11 +85,13 @@ void session(ros::NodeHandle n){
             if(mapIdFromFile.compare(mapId) == 0)
                 ROS_INFO("(New Map) SAME IDS ");
 
+            mapMutex.lock();
             /// If we have a different map, we replace it
             if(mapIdFromFile.compare(mapId) != 0){
                 /// Save the id of the new map
                 ROS_INFO("(New Map) Id of the new map : %s", mapId.c_str());
                 ROS_INFO("(New Map) Date of the new map : %s", mapDate.c_str());
+
                 std::string mapIdFile;
                 if(n.hasParam("map_id_file")){
                     n.getParam("map_id_file", mapIdFile);
@@ -235,42 +240,61 @@ void session(ros::NodeHandle n){
             map.clear();
 
             /// Send a message to the application to tell we finished
-            boost::asio::write(socket_robot, boost::asio::buffer(message, message.length()), boost::asio::transfer_all(), error);
+            boost::asio::write(*sock, boost::asio::buffer(message, message.length()), boost::asio::transfer_all(), error);
 
             if(error) 
                 ROS_INFO("(New Map) Error : %s", error.message().c_str());
             else 
                 ROS_INFO("(New Map) Message sent succesfully : %lu bytes sent", message.length());
+
+
+            mapMutex.unlock();
         }
     }
 }
 
-void asyncAccept(ros::NodeHandle n){
-    ROS_INFO("(New Map) Waiting for connection");
+/*********************************** CONNECTION FUNCTIONS ***********************************/
 
-    if(socket_robot.is_open())
-        socket_robot.close();
+void server(void){
+    boost::asio::io_service io_service;
+    tcp::acceptor a(io_service, tcp::endpoint(tcp::v4(), NEW_MAP_PORT));
+    while(ros::ok()) {
 
-    if(m_acceptor.is_open())
-        m_acceptor.close();
+        boost::shared_ptr<tcp::socket> sock = boost::shared_ptr<tcp::socket>(new tcp::socket(io_service));
 
-    socket_robot = tcp::socket(io_service);
-    m_acceptor = tcp::acceptor(io_service, tcp::endpoint(tcp::v4(), PORT));
-    m_acceptor.set_option(tcp::acceptor::reuse_address(true));
+        /// We wait for someone to connect
+        a.accept(*sock);
 
-    m_acceptor.accept(socket_robot);
-    ROS_INFO("(New Map) Command socket connected to %s", socket_robot.remote_endpoint().address().to_string().c_str());
-    connected = true;
-    waiting = false;
-    boost::thread t(boost::bind(session, n));
-}
+        /// Got a new connection so we had it to our array of sockets
+        std::string ip = sock->remote_endpoint().address().to_string();
+        ROS_INFO("(New Map) Command socket connected to %s", ip.c_str());
+        socketsMutex.lock();
+        if(!sockets.count(ip))
+            sockets.insert(std::pair<std::string, boost::shared_ptr<tcp::socket>>(ip, sock));
+        else
+            ROS_ERROR("(New Map) the ip %s is already connected, this should not happen", ip.c_str());
+        socketsMutex.unlock();
 
-void serverDisconnected(const std_msgs::String::ConstPtr& msg){
-    if(connected){
-        ROS_INFO("(New Map) serverDisconnected");
-        connected = false;
+        /// Launch the session thread which wait for a new map
+        std::thread(session, sock).detach();
     }
 }
+
+/*********************************** DISCONNECTION FUNCTIONS ***********************************/
+
+void serverDisconnected(const std_msgs::String::ConstPtr& msg){
+    ROS_WARN("(New Map) The ip %s just disconnected", msg->data.c_str());
+
+    /// Close and remove the socket
+    socketsMutex.lock();
+    if(sockets.count(msg->data)){
+        sockets.at(msg->data)->close();
+        sockets.erase(msg->data);
+    }
+    socketsMutex.unlock();
+}
+
+/*********************************** MAIN ***********************************/
 
 int main(int argc, char **argv){
 
@@ -288,17 +312,9 @@ int main(int argc, char **argv){
     n.param<bool>("simulation", simulation, false);
     ROS_INFO("(New Map) simulation : %d", simulation);
 
-    ros::Rate r(10);
+    std::thread t(server);
 
-    while(ros::ok()){
-        if(!connected && !waiting){
-            ROS_INFO("(New Map) Ready to connect");
-            boost::thread t(boost::bind(asyncAccept, n));
-            waiting = true;
-        }
-        ros::spinOnce();
-        r.sleep();
-    }
+    ros::spin();
 
     return 0;
 }

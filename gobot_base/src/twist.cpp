@@ -23,27 +23,26 @@ void newBumpersInfo(const gobot_msg_srv::BumperMsg::ConstPtr& bumpers){
     bool front = !(bumpers->bumper1 && bumpers->bumper2 && bumpers->bumper3 && bumpers->bumper4);
     bool back = !(bumpers->bumper5 && bumpers->bumper6 && bumpers->bumper7 && bumpers->bumper8);
 
-    //ROS_INFO("(twist::newBumpersInfo) Bumpers: %d %d %d %d || %d %d %d %d ", bumpers->bumper1, bumpers->bumper2, bumpers->bumper3, bumpers->bumper4,
-    // bumpers->bumper5, bumpers->bumper6, bumpers->bumper7, bumpers->bumper8);
+    //ROS_INFO("(twist::newBumpersInfo) Bumpers: %d %d %d %d || %d %d %d %d ", bumpers->bumper1, bumpers->bumper2, bumpers->bumper3, bumpers->bumper4, bumpers->bumper5, bumpers->bumper6, bumpers->bumper7, bumpers->bumper8);
 
     /// check if we have a collision
     if(front || back){
         /// if it's a new collision, we stop the robot
         if(!collision){
-            ROS_INFO("(twist::newBumpersInfo) just got a new collision");
+            ROS_WARN("(twist::newBumpersInfo) just got a new collision");
             collision = true;
             collisionTime = std::chrono::system_clock::now();
             setSpeed('F', 0, 'F', 0);
         } else {
-            /// if after 3 seconds, the obstacle is still there, we go to the opposite direction
-            if(std::chrono::duration_cast<std::chrono::seconds>(std::chrono::system_clock::now() - collisionTime).count() > 3 
+            /// if after 6 seconds, the obstacle is still there, we go to the opposite direction
+            if(std::chrono::duration_cast<std::chrono::seconds>(std::chrono::system_clock::now() - collisionTime).count() > 6 
                 && !moved_away_from_collision){
                 moving_from_collision = true;
                 moved_away_from_collision = true;
                 /// We create a thread that will make the robot go into the opposite direction, then sleep for 2 seconds and make the robot stop
                 if(front && !back){
                     std::thread([](){
-                        ROS_INFO("(twist::newBumpersInfo) Launching thread to move away from the obstacle");
+                        ROS_WARN("(twist::newBumpersInfo) Launching thread to move away from the obstacle");
                         setSpeed('B', 5, 'B', 5);
                         std::this_thread::sleep_for(std::chrono::milliseconds(2000));
                         setSpeed('F', 0, 'F', 0);
@@ -51,7 +50,7 @@ void newBumpersInfo(const gobot_msg_srv::BumperMsg::ConstPtr& bumpers){
                     }).detach();
                 } else if(back && !front){
                     std::thread([](){
-                        ROS_INFO("(twist::newBumpersInfo) Launching thread to move away from the obstacle");
+                        ROS_WARN("(twist::newBumpersInfo) Launching thread to move away from the obstacle");
                         setSpeed('F', 5, 'F', 5);
                         std::this_thread::sleep_for(std::chrono::milliseconds(2000));
                         setSpeed('F', 0, 'F', 0);

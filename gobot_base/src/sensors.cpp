@@ -1,6 +1,6 @@
 #include <gobot_base/sensors.hpp>
 
-#define ERROR_THRESHOLD 2
+#define ERROR_THRESHOLD 1
 
 ros::Publisher bumper_pub;
 ros::Publisher ir_pub;
@@ -49,6 +49,7 @@ void resetStm(void){
         connectionMutex.unlock();
 
         ROS_WARN("(sensors::publishSensors) resetStm %lu", buff.size());
+
     } else 
         ROS_ERROR("(sensors::publishSensors) Check serial connection 1");
 }
@@ -80,6 +81,7 @@ std::string getStdoutFromCommand(std::string cmd) {
 void publishSensors(void){
     if(serialConnection.isOpen()){
         bool error = false;
+        bool error_bumpers = false;
 
         connectionMutex.lock();
         serialConnection.write(std::vector<uint8_t>({0x10, 0x01, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0xB1}));
@@ -115,14 +117,21 @@ void publishSensors(void){
 
             /// Bumpers data
             gobot_msg_srv::BumperMsg bumper_data;
-            bumper_data.bumper1 = (buff.at(17) & 0b00000001) > 0;
-            bumper_data.bumper2 = (buff.at(17) & 0b00000010) > 0;
-            bumper_data.bumper3 = (buff.at(17) & 0b00000100) > 0;
-            bumper_data.bumper4 = (buff.at(17) & 0b00001000) > 0;
-            bumper_data.bumper5 = (buff.at(17) & 0b00010000) > 0;
-            bumper_data.bumper6 = (buff.at(17) & 0b00100000) > 0;
-            bumper_data.bumper7 = (buff.at(17) & 0b01000000) > 0;
-            bumper_data.bumper8 = (buff.at(17) & 0b10000000) > 0;
+
+            if(buff.at(17)){
+                bumper_data.bumper1 = (buff.at(17) & 0b00000001) > 0;
+                bumper_data.bumper2 = (buff.at(17) & 0b00000010) > 0;
+                bumper_data.bumper3 = (buff.at(17) & 0b00000100) > 0;
+                bumper_data.bumper4 = (buff.at(17) & 0b00001000) > 0;
+                bumper_data.bumper5 = (buff.at(17) & 0b00010000) > 0;
+                bumper_data.bumper6 = (buff.at(17) & 0b00100000) > 0;
+                bumper_data.bumper7 = (buff.at(17) & 0b01000000) > 0;
+                bumper_data.bumper8 = (buff.at(17) & 0b10000000) > 0;
+            } else {
+                ROS_ERROR("(sensors::publishSensors) All bumpers got a collision");
+                error_bumpers = true;
+            }
+
 
             /// Ir signals
             gobot_msg_srv::IrMsg ir_data;
@@ -152,17 +161,20 @@ void publishSensors(void){
             battery_data.FullCapacity = ((buff.at(40) << 8) | buff.at(41))/100;
 
 
-            if(battery_data.BatteryVoltage == 0 || battery_data.ChargingCurrent == 0 
-                //|| battery_data.FullCapacity == 0
-                || battery_data.Temperature < 0){
+            if(battery_data.BatteryVoltage == 0 || battery_data.ChargingCurrent == 0 || battery_data.Temperature < 0){
                 error = true;
                 ROS_ERROR("(sensors::publishSensors) Check battery data : %d %d %d %d", (int) battery_data.BatteryVoltage, battery_data.ChargingCurrent,
                 battery_data.FullCapacity, battery_data.Temperature);
+                setSpeed('F', 0, 'F', 0);
             } else {
-                if(battery_data.ChargingCurrent > 700 || (last_charging_current > 0 && battery_data.ChargingCurrent - last_charging_current > 60))
-                    battery_data.ChargingFlag = true;
-                else 
-                    battery_data.ChargingFlag = false;
+                if(battery_data.ChargingCurrent != last_charging_current){
+                    if(battery_data.ChargingCurrent > 1200 || (last_charging_current > 0 && battery_data.ChargingCurrent - last_charging_current > 60))
+                        battery_data.ChargingFlag = true;
+                    else 
+                        battery_data.ChargingFlag = false;
+                } else {
+                    battery_data.ChargingFlag = charging;
+                }
 
                 charging = battery_data.ChargingFlag;
                 last_charging_current = battery_data.ChargingCurrent;
@@ -196,17 +208,17 @@ void publishSensors(void){
                 "\nExternal button : " << external_button << std::endl;
             }
 
-
             /// The last byte is the Frame Check Sum and is not used
 
             if(!error){
                 sonar_pub.publish(sonar_data);
-                bumper_pub.publish(bumper_data);
                 ir_pub.publish(ir_data);
                 proximity_pub.publish(proximity_data);
                 cliff_pub.publish(cliff_data);
                 battery_pub.publish(battery_data);
                 weight_pub.publish(weight_data);
+                if(!error_bumpers)
+                    bumper_pub.publish(bumper_data);
             }
 
         } else {
