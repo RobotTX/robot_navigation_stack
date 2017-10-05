@@ -28,7 +28,7 @@ void newBatteryInfo(const gobot_msg_srv::BatteryMsg::ConstPtr& batteryInfo){
         canGoCharge = true;
     }
 
-    //sleep(2);
+    sleep(2);
 }
 
 int main(int argc, char* argv[]){

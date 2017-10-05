@@ -7,32 +7,30 @@
 #include <std_msgs/String.h>
 #include <iostream>
 #include <string>
-#include <unistd.h>
-#include <cstdint>
 #include <vector>
-#include <cstdlib>
-#include <signal.h>
-#include <boost/bind.hpp>
-#include <boost/smart_ptr.hpp>
-#include <boost/asio.hpp>
-#include <boost/thread.hpp>
-#include <chrono>
-#include <thread>
 #include <std_srvs/Empty.h>
 #include <std_msgs/Float32.h>
+#include <mutex>
+#include <thread>
+#include <boost/asio.hpp>
 
 using boost::asio::ip::tcp;
 
-bool startLaser(gobot_msg_srv::PortLaser::Request &req, gobot_msg_srv::PortLaser::Response &res);
 
 void getLaserData(const sensor_msgs::LaserScan::ConstPtr& msg);
 
 void sendLaserData(const std::vector<float>& scan);
 
-bool stopSendingLaserData(std_srvs::Empty::Request &req, std_srvs::Empty::Response &res);
+bool sendLaserService(std_srvs::Empty::Request &req, std_srvs::Empty::Response &res);
 
-bool sendLaser(std_srvs::Empty::Request &req, std_srvs::Empty::Response &res);
+bool stopSendLaserService(std_srvs::Empty::Request &req, std_srvs::Empty::Response &res);
 
-bool stopSendLaser(std_srvs::Empty::Request &req, std_srvs::Empty::Response &res);
+/*********************************** CONNECTION FUNCTIONS ***********************************/
+
+void server(void);
+
+/*********************************** DISCONNECTION FUNCTIONS ***********************************/
+
+void serverDisconnected(const std_msgs::String::ConstPtr& msg);
 
 #endif

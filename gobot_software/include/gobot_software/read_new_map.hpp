@@ -5,36 +5,24 @@
 #include <iostream>
 #include <cstdint>
 #include <string>
-#include <boost/bind.hpp>
-#include <boost/smart_ptr.hpp>
-#include <boost/asio.hpp>
-#include <boost/thread.hpp>
 #include <std_msgs/String.h>
 #include <fstream>
 #include <tf/transform_broadcaster.h>
 #include <nav_msgs/OccupancyGrid.h>
-
-#define PORT 5601
+#include <mutex>
+#include <thread>
+#include <boost/asio.hpp>
 
 using boost::asio::ip::tcp;
 
-/**
-    Connects to the desktop application to receive maps
-*/
+void session(boost::shared_ptr<tcp::socket> sock);
 
-/**
- * Main function that reads the new map with its id and metadata, and saves it
- */
-void session(ros::NodeHandle n);
+/*********************************** CONNECTION FUNCTIONS ***********************************/
 
-/**
- * Accepts the connection asynchronously
- */
-void asyncAccept(ros::NodeHandle n);
+void server(void);
 
-/**
- * Called when we have been disconnected from the server
- */
+/*********************************** DISCONNECTION FUNCTIONS ***********************************/
+
 void serverDisconnected(const std_msgs::String::ConstPtr& msg);
 
 #endif

@@ -1,56 +1,43 @@
 #include "gobot_software/laser.hpp"
 
+#define LASER_PORT 5605
+
 using boost::asio::ip::tcp;
 
-boost::asio::io_service io_service;
-tcp::socket socket_laser(io_service);
+const int max_length = 1024;
+
+std::mutex socketsMutex;
+std::map<std::string, boost::shared_ptr<tcp::socket>> sockets;
+
 ros::Subscriber sub_laser;
-tcp::acceptor l_acceptor(io_service);
-
-bool startLaser(gobot_msg_srv::PortLaser::Request &req, gobot_msg_srv::PortLaser::Response &res){
-    
-    ROS_INFO("(Laser) Starting laser_sender");
-    ros::NodeHandle n;
-
-    int laserPort = req.port; 
-    bool startLaser = req.startLaser;
-
-    socket_laser = tcp::socket(io_service);
-    l_acceptor = tcp::acceptor(io_service, tcp::endpoint(tcp::v4(), laserPort));
-    l_acceptor.set_option(tcp::acceptor::reuse_address(true));
-
-    ROS_INFO("(Laser) Connecting to ports : %d", laserPort);
-    l_acceptor.accept(socket_laser);
-    ROS_INFO("(Laser) We are connected ");
-
-    if(startLaser)
-        sub_laser = n.subscribe("/scan", 1, getLaserData);
-    
-    return true;
-}
 
 void getLaserData(const sensor_msgs::LaserScan::ConstPtr& msg){
-    std::vector<float> scan;
-    scan.push_back(msg->angle_min);
-    scan.push_back(msg->angle_max);
-    scan.push_back(msg->angle_increment);
-    for(int i = 0; i < (msg->angle_max - msg->angle_min) / msg->angle_increment; i++)
-        scan.push_back(msg->ranges[i]);
-    scan.push_back(-1.0f);
+    if(sockets.size() > 0){
+        std::vector<float> scan;
+        scan.push_back(msg->angle_min);
+        scan.push_back(msg->angle_max);
+        scan.push_back(msg->angle_increment);
+        for(int i = 0; i < (msg->angle_max - msg->angle_min) / msg->angle_increment; i++)
+            scan.push_back(msg->ranges[i]);
+        scan.push_back(-1.0f);
 
-    sendLaserData(scan);
+        sendLaserData(scan);
+    }
 }
 
 void sendLaserData(const std::vector<float>& scan){
-    try { 
-        boost::system::error_code ignored_error;
-        boost::asio::write(socket_laser, boost::asio::buffer(scan), boost::asio::transfer_all(), ignored_error);
+    try {
+        socketsMutex.lock();
+        /// We send the position of the robot to every Qt app
+        for(auto const &elem : sockets)
+            boost::asio::write(*(elem.second), boost::asio::buffer(scan, scan.size()));
+        socketsMutex.unlock();
     } catch (std::exception& e) {
         e.what();
     }
 }
 
-bool sendLaser(std_srvs::Empty::Request &req, std_srvs::Empty::Response &res){
+bool sendLaserService(std_srvs::Empty::Request &req, std_srvs::Empty::Response &res){
     ROS_INFO("(Laser) send_laser_data_sender");
     ros::NodeHandle n;
     sub_laser.shutdown();
@@ -58,19 +45,49 @@ bool sendLaser(std_srvs::Empty::Request &req, std_srvs::Empty::Response &res){
     return true;
 }
 
-bool stopSendLaser(std_srvs::Empty::Request &req, std_srvs::Empty::Response &res){
+bool stopSendLaserService(std_srvs::Empty::Request &req, std_srvs::Empty::Response &res){
     ROS_INFO("(Laser) stop_send_laser_data_sender");
     sub_laser.shutdown();
     return true;
 }
 
-bool stopSendingLaserData(std_srvs::Empty::Request &req, std_srvs::Empty::Response &res){
-    ROS_INFO("(Laser) Stopping laser_sender");
-    sub_laser.shutdown();
-    socket_laser.close();
-    l_acceptor.close();
-    return true;
+/*********************************** CONNECTION FUNCTIONS ***********************************/
+
+void server(void){
+    boost::asio::io_service io_service;
+    tcp::acceptor a(io_service, tcp::endpoint(tcp::v4(), LASER_PORT));
+    while(ros::ok()) {
+
+        boost::shared_ptr<tcp::socket> sock = boost::shared_ptr<tcp::socket>(new tcp::socket(io_service));
+
+        /// We wait for someone to connect
+        a.accept(*sock);
+
+        /// Got a new connection so we had it to our array of sockets
+        std::string ip = sock->remote_endpoint().address().to_string();
+        ROS_INFO("(Laser) Command socket connected to %s", ip.c_str());
+        socketsMutex.lock();
+        if(!sockets.count(ip))
+            sockets.insert(std::pair<std::string, boost::shared_ptr<tcp::socket>>(ip, sock));
+        else
+            ROS_ERROR("(Laser) the ip %s is already connected, this should not happen", ip.c_str());
+        socketsMutex.unlock();
+    }
 }
+
+/*********************************** DISCONNECTION FUNCTIONS ***********************************/
+
+void serverDisconnected(const std_msgs::String::ConstPtr& msg){
+    ROS_WARN("(Laser) The ip %s just disconnected", msg->data.c_str());
+
+    /// Close and remove the socket
+    socketsMutex.lock();
+    sockets.at(msg->data)->close();
+    sockets.erase(msg->data);
+    socketsMutex.unlock();
+}
+
+/*********************************** MAIN ***********************************/
 
 int main(int argc, char **argv){
 
@@ -79,16 +96,14 @@ int main(int argc, char **argv){
 
     ros::NodeHandle n;
 
-    ros::ServiceServer start_service = n.advertiseService("start_laser_data_sender", startLaser);
-    ros::ServiceServer send_service = n.advertiseService("send_laser_data_sender", sendLaser);
-    ros::ServiceServer stop_send_service = n.advertiseService("stop_send_laser_data_sender", stopSendLaser);
-    ros::ServiceServer stop_service = n.advertiseService("stop_laser_data_sender", stopSendingLaserData);
+    ros::Subscriber sub = n.subscribe("server_disconnected", 1000, serverDisconnected);
 
-    ros::Rate r(0.5);
-    while(ros::ok()){
-        ros::spinOnce();
-        r.sleep();
-    }
+    ros::ServiceServer send_service = n.advertiseService("send_laser_data_sender", sendLaserService);
+    ros::ServiceServer stop_send_service = n.advertiseService("stop_send_laser_data_sender", stopSendLaserService);
+
+    std::thread t(server);
+
+    ros::spin();
 
     return 0;
 }

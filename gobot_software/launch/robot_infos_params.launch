@@ -10,8 +10,8 @@
     <param name="laser_file" type="string" value="$(find gobot_software)/Robot_Infos/laser.txt" />
     <param name="battery_file" type="string" value="$(find gobot_software)/Robot_Infos/battery.txt" />
     <param name="server_file" type="string" value="$(find gobot_software)/Robot_Infos/IP/serverIP.txt" />
-    <!--param name="ips_file" type="string" value="$(find gobot_software)/Robot_Infos/IP/isAlive.txt" /-->
-    <param name="ips_file" type="string" value="$(find gobot_software)/Robot_Infos/IP/serverIP.txt" />
+    <param name="ips_file" type="string" value="$(find gobot_software)/Robot_Infos/IP/isAlive.txt" />
+    <!--param name="ips_file" type="string" value="$(find gobot_software)/Robot_Infos/IP/serverIP.txt" /-->
     <param name="ping_file" type="string" value="$(find gobot_software)/Robot_Infos/IP/ping.sh" />
     <param name="robot_position_file" type="string" value="$(find gobot_software)/Robot_Infos/robot_position.txt" />
 </launch>
