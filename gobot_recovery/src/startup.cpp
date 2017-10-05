@@ -37,10 +37,10 @@ void getButtonCallback(const std_msgs::Int8::ConstPtr& msg){
 	}
 	else if(msg->data==1 && !buttonOn){
 		buttonOn = true;
-		if((ros::Time::now() - action_time).toSec()>10.0){
+		if((ros::Time::now() - action_time).toSec()>30.0){
 			//restart
       ROS_INFO("Restart robot. Please wait for 10 seconds...");
-			const std::string restart_script = "sh " + restartRobotFile;
+			const std::string restart_script = "sh " + restartRobotFile + " &";
       system(restart_script.c_str());
 		}
 	}

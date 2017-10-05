@@ -65,7 +65,7 @@ void getButtonCallback(const std_msgs::Int8::ConstPtr& msg){
 			//Go to next point
 			waitingForAction=false;
 		}
-		else if((ros::Time::now() - action_time).toSec()<=10.0)
+		else if((ros::Time::now() - action_time).toSec()<=30.0)
 		{
 			std::thread([](){
 				std_srvs::Empty arg;
@@ -167,7 +167,7 @@ void checkGoalDelay(){
 		ros::NodeHandle n;
 		ROS_INFO("Goal reached. Waiting for human action.");
 		waitingForAction=true;
-		button_sub = n.subscribe("button_topic",1,getButtonCallback);
+		button_sub = n.subscribe("/keyboard/keyup",1,getButtonCallback);
 		while(waitingForAction && !stop_flag){
 			ros::Duration(0.2).sleep();
 			ros::spinOnce();

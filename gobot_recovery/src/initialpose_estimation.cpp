@@ -306,6 +306,7 @@ void initialPoseCallback(const geometry_msgs::PoseWithCovarianceStamped::ConstPt
 bool goHomeSrvCallback(std_srvs::Empty::Request &req, std_srvs::Empty::Response &res){
     ros::Duration(1.5).sleep();
     if(ros::service::call("/stop_path",empty_srv)){
+        ros::service::call("/move_base/clear_costmap",empty_srv);
         ROS_INFO("Go Home, sweet home.");
         geometry_msgs::PoseStamped home;
         home.header.frame_id = "map";
