@@ -287,8 +287,10 @@ void serverDisconnected(const std_msgs::String::ConstPtr& msg){
 
     /// Close and remove the socket
     socketsMutex.lock();
-    sockets.at(msg->data)->close();
-    sockets.erase(msg->data);
+    if(sockets.count(msg->data)){
+        sockets.at(msg->data)->close();
+        sockets.erase(msg->data);
+    }
     socketsMutex.unlock();
 }
 

@@ -1268,8 +1268,10 @@ void disconnect(const std::string ip){
 
     /// Close and remove the socket
     socketsMutex.lock();
-    sockets.at(ip)->close();
-    sockets.erase(ip);
+    if(sockets.count(ip)){
+        sockets.at(ip)->close();
+        sockets.erase(ip);
+    }
     socketsMutex.unlock();
 }
 
