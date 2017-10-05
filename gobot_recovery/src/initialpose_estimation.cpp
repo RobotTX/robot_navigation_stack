@@ -34,9 +34,11 @@ bool evaluatePose(int type){
 }
 
 bool rotateFindPose(double rot_v,double rot_t){
-    ros::service::waitForService("/pause_path", ros::Duration(30.0));
-    ros::service::call("/pause_path",empty_srv);
-    ROS_INFO("Cancelled active goal to proceed gobalo localization.");
+    if(goalActive){
+        ros::service::waitForService("/pause_path", ros::Duration(30.0));
+        ros::service::call("/pause_path",empty_srv);
+        ROS_INFO("Cancelled active goal to proceed gobalo localization.");
+    }
     
     double dt=0.0;
     geometry_msgs::Twist vel;
@@ -124,7 +126,7 @@ void publishInitialpose(const double position_x, const double position_y, const 
 }
 
 void goalStatusCallback(const actionlib_msgs::GoalStatusArray::ConstPtr& msg){
-    if (!msg->status_list.empty() && msg->status_list.back().status == 1) //has active goal
+    if (!msg->status_list.empty()) //has active goal
         //cancel goal
         goalActive = true;
     else

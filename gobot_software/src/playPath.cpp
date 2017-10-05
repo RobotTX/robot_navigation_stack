@@ -44,7 +44,7 @@ void getButtonCallback(const std_msgs::Int8::ConstPtr& msg){
 		if(dt<10.0 && dt>1.0){
 			//Go to next point
 			waitingForAction=false;
-			ROS_INFO("Human Action lasted for %.2f seconds.",dt);
+			ROS_INFO("Received Human Action %.2f seconds.",dt);
 		}
 	}
 }

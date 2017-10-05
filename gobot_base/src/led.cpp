@@ -6,9 +6,9 @@
 #define BLUE 0x52
 #define WHITE 0x57
 #define YELLOW 0x59
-#define OFF 0x00
 #define CYAN 0x43
 #define MAGENTA 0x4D
+#define OFF 0x00
 
 
 #define COMPLETE_STAGE 11
@@ -87,6 +87,9 @@ void goalResultCallback(const move_base_msgs::MoveBaseActionResult::ConstPtr& ms
                 break;
             default:
                 //ROS_ERROR("Unknown goal status %d and disable teb_local_planner allow_init_with_backwards_motion.",msg->status.status);
+                color.push_back(MAGENTA);
+                setLedPermanent(color);
+                current_stage=FREE_STAGE;
                 break;
         }
     }
@@ -113,7 +116,7 @@ void goalCancelCallback(const actionlib_msgs::GoalID::ConstPtr& msg){
     }
 }
 
-void initialPoseCallback(const std_msgs::Int8::ConstPtr& msg){
+void initialPoseResultCallback(const std_msgs::Int8::ConstPtr& msg){
     std::vector<uint8_t> color;
     if(current_stage<LOCALIZE_STAGE){
         switch(msg->data){
@@ -176,12 +179,12 @@ void batteryCallback(const gobot_msg_srv::BatteryMsg::ConstPtr& msg){
     std::vector<uint8_t> color;
     if(msg->ChargingFlag && current_stage<CHARGING_STAGE){
         current_stage = CHARGING_STAGE;
-        color.push_back(CYAN);
+        color.push_back(YELLOW);
         color.push_back(WHITE);
         setLedRunning(color);
     }
     else if(!msg->ChargingFlag && current_stage==CHARGING_STAGE){
-        color.push_back(CYAN);
+        color.push_back(YELLOW);
         setLedPermanent(color);
         current_stage = FREE_STAGE;
     }
@@ -197,7 +200,7 @@ int main(int argc, char **argv) {
     ros::Subscriber goalGet = nh.subscribe("/move_base/goal",1,goalGetCallback);
     ros::Subscriber goalCancel = nh.subscribe("/move_base/cancel",1,goalCancelCallback);
     ros::Subscriber bumpersSub = nh.subscribe("/bumpers_topic", 1, newBumpersInfo);
-    ros::Subscriber initialPose = nh.subscribe("/gobot_recovery/find_initial_pose",1, initialPoseCallback);
+    ros::Subscriber initialPoseResult = nh.subscribe("/gobot_recovery/find_initial_pose",1, initialPoseResultCallback);
     ros::Subscriber battery = nh.subscribe("/battery_topic",1, batteryCallback);
     last_time=ros::Time::now();
 
