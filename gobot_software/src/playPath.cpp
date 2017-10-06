@@ -61,11 +61,12 @@ void getButtonCallback(const std_msgs::Int8::ConstPtr& msg){
 	}
 	else if(msg->data==1 && !readAction){
 		readAction = true;
-		if((ros::Time::now() - action_time).toSec()<5.0){
+		double dt = (ros::Time::now() - action_time).toSec();
+		if(dt>1.0 && dt<10.0){
 			//Go to next point
 			waitingForAction=false;
 		}
-		else if((ros::Time::now() - action_time).toSec()<=30.0)
+		else if((ros::Time::now() - action_time).toSec()<=20.0)
 		{
 			std::thread([](){
 				std_srvs::Empty arg;

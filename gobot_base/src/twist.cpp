@@ -34,6 +34,12 @@ void newBumpersInfo(const gobot_msg_srv::BumperMsg::ConstPtr& bumpers){
             collisionTime = std::chrono::system_clock::now();
             setSpeed('F', 0, 'F', 0);
         } else {
+            if(moving_from_collision){
+                ROS_WARN("(twist::newBumpersInfo) just got a new collision");
+                collisionTime = std::chrono::system_clock::now();
+                setSpeed('F', 0, 'F', 0);
+                moved_away_from_collision = false;
+            }
             /// if after 6 seconds, the obstacle is still there, we go to the opposite direction
             if(std::chrono::duration_cast<std::chrono::seconds>(std::chrono::system_clock::now() - collisionTime).count() > 6 
                 && !moved_away_from_collision){
