@@ -148,8 +148,6 @@ bool lowBattery(std_srvs::Empty::Request &req, std_srvs::Empty::Response &res);
 
 /*********************************** COMMUNICATION FUNCTIONS ***********************************/
 
-void getPorts(boost::shared_ptr<tcp::socket> sock);
-
 void sendConnectionData(boost::shared_ptr<tcp::socket> sock);
 
 bool sendMessageToSock(boost::shared_ptr<tcp::socket> sock, const std::string message);

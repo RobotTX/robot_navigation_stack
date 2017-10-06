@@ -4,7 +4,6 @@ const int max_length = 1024;
 
 bool scanning = false;
 std::string scanningIp;
-bool recovering = false;
 bool laserActivated = false;
 bool simulation = false;
 bool following_path = false;
@@ -774,7 +773,6 @@ bool restartEverything(const std::vector<std::string> command){
     /// TODO finish/check if working
     if(command.size() == 1){
         ROS_INFO("(Command system) Gobot restarts its packages");
-        recovering = false;
         scanning = false;
         scanningIp = "";
         system(("sh ~/computer_software/restart_packages.sh"));
@@ -950,60 +948,6 @@ bool lowBattery(std_srvs::Empty::Request &req, std_srvs::Empty::Response &res){
 
 /*********************************** COMMUNICATION FUNCTIONS ***********************************/
 
-void getPorts(boost::shared_ptr<tcp::socket> sock){
-    std::string ip = sock->remote_endpoint().address().to_string();
-
-    ROS_INFO("(Command system) getPorts launched for %s", ip.c_str());
-    std::vector<std::string> command;
-    std::string commandStr = "";
-    char data[max_length];
-    bool gotPorts = 0;
-
-    boost::system::error_code error;
-    size_t length = sock->read_some(boost::asio::buffer(data), error);
-    ROS_INFO("%lu byte(s) received", length);
-
-    if ((error == boost::asio::error::eof) || (error == boost::asio::error::connection_reset)){
-        ROS_WARN("(Command system) Connection closed %s", ip.c_str());
-        disconnect(ip);
-        return;
-    } else if (error) {
-        disconnect(ip);
-        throw boost::system::system_error(error); // Some other error.
-    }
-
-
-    for(int i = 0; i < length; i++){
-        if(static_cast<int>(data[i]) != 0){
-            if(static_cast<int>(data[i]) == 23){
-                ROS_INFO("(Command system) Command complete %s", ip.c_str());
-                gotPorts = 1;
-                i = length;
-            } else
-                commandStr += data[i];
-        }
-    }
-    ROS_INFO("(Command system) Received cmd for %s : %s", ip.c_str(), commandStr.c_str());
-
-    /// Split the command from a str to a vector of str
-    split(commandStr, sep_c, std::back_inserter(command));
-
-    if(gotPorts){
-        ROS_INFO("(Command system) Executing command for %s : ", ip.c_str());
-        if(command.size() < 10){
-            for(int i = 0; i < command.size(); i++)
-                ROS_INFO("'%s'", command.at(i).c_str());
-        } else 
-            ROS_WARN("(Command system) Too many arguments to display (%lu)", command.size());
-
-        commandMutex.lock();
-        execCommand(ip, command);
-        commandMutex.unlock();
-        ROS_INFO("(Command system) GetPorts for %s done", ip.c_str());
-    } else
-        ROS_ERROR("(Command system) Error while receiving ports for %s", ip.c_str());
-}
-
 void sendConnectionData(boost::shared_ptr<tcp::socket> sock){
     ros::NodeHandle n;
     /// Send a message to the app to tell we are connected
@@ -1095,10 +1039,10 @@ void sendConnectionData(boost::shared_ptr<tcp::socket> sock){
         homeY = "-150";
 
     std::string scan = (scanning) ? "1" : "0";
-    std::string recover = (recovering) ? "1" : "0";
     std::string looping_str = (looping) ? "1" : "0";
+    std::string following_path_str = (following_path) ? "1" : "0";
 
-    sendMessageToSock(sock, std::string("Connected" + sep + mapId + sep + mapDate + sep + homeX + sep + homeY + sep + std::to_string(homeOri) + sep + scan + sep + recover + sep + laserStr + sep + looping_str + sep + path));
+    sendMessageToSock(sock, std::string("Connected" + sep + mapId + sep + mapDate + sep + homeX + sep + homeY + sep + std::to_string(homeOri) + sep + scan + sep + laserStr + sep + following_path_str + sep + looping_str + sep + path));
 }
 
 bool sendMessageToSock(boost::shared_ptr<tcp::socket> sock, const std::string message){
@@ -1147,9 +1091,6 @@ void session(boost::shared_ptr<tcp::socket> sock){
         /// Send some connection information to the server
         sendConnectionData(sock);
 
-        /// Get the ports to use for the other connections (robot_pose, map_transfer, read_new_map, laser)
-        getPorts(sock);
-
         /// Finally process any incoming command
         while(ros::ok() && sockets.count(ip)) {
             char data[max_length];
@@ -1193,8 +1134,8 @@ void session(boost::shared_ptr<tcp::socket> sock){
                     std::string msg;
                     if(commandMutex.try_lock()){
                         msg = (execCommand(ip, command) ? "done" : "failed") + sep + commandStr;
-                        commandMutex.unlock();
                         sendMessageToAll(msg);
+                        commandMutex.unlock();
                     } else {
                         msg = "busy" + sep + commandStr;
                         ROS_ERROR("(Command system) Already processing a command %s", ip.c_str());
@@ -1226,7 +1167,6 @@ void session(boost::shared_ptr<tcp::socket> sock){
         ROS_ERROR("(Command system) Exception in thread, ip : %s => %s ", ip.c_str(), e.what());
     }
     ROS_WARN("(Command system) Done with this session %s", ip.c_str());
-    disconnect(ip);
 }
 
 void server(void){

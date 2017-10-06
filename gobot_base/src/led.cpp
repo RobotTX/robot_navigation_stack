@@ -73,25 +73,25 @@ void goalResultCallback(const move_base_msgs::MoveBaseActionResult::ConstPtr& ms
     if(current_stage<COMPLETE_STAGE){
         std::vector<uint8_t> color;
         switch(msg->status.status){
+            case 2:
+                break;
             case 3:
                 //ROS_INFO("Goal SUCCEED and disable teb_local_planner allow_init_with_backwards_motion.");
                 color.push_back(GREEN);
                 setLedPermanent(color);
-                current_stage=FREE_STAGE;
                 break;
             case 4:
                 //ROS_INFO("Goal ABORTED and disable teb_local_planner allow_init_with_backwards_motion.");
                 color.push_back(RED);
                 setLedPermanent(color);
-                current_stage=FREE_STAGE;
                 break;
             default:
                 //ROS_ERROR("Unknown goal status %d and disable teb_local_planner allow_init_with_backwards_motion.",msg->status.status);
                 color.push_back(MAGENTA);
                 setLedPermanent(color);
-                current_stage=FREE_STAGE;
                 break;
         }
+        current_stage=FREE_STAGE;
     }
 }
 

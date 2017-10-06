@@ -42,7 +42,7 @@ void getButtonCallback(const std_msgs::Int8::ConstPtr& msg){
 	else if(msg->data==1 && !buttonOn){
 		buttonOn = true;
     double dt = (ros::Time::now() - action_time).toSec();
-    if(dt>1.0 && dt<5.0 && goal_state==1){
+    if(dt>0.3 && dt<5.0 && goal_state==1){
       if(robot_pause){
         ROS_INFO("Continue robot.");
         ros::service::call("/gobot_base/continue_robot",empty_srv);
@@ -53,9 +53,12 @@ void getButtonCallback(const std_msgs::Int8::ConstPtr& msg){
       }
       robot_pause = !robot_pause;
     }
-    else if(dt>15.0){
+    else if(dt<10.0 && dt>5.0){
       ros::service::call("/gobot_recovery/go_home",empty_srv);
 		}
+    else if(dt<20.0 && dt>10.0){
+      ros::service::call("/gobot_recovery/globalize_pose",empty_srv);
+    }
 		else if(dt>999.0){
 			//restart
       ROS_INFO("Restart robot. Please wait for xx seconds...");

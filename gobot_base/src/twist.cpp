@@ -26,6 +26,7 @@ bool continueRobotSrvCallback(std_srvs::Empty::Request &req, std_srvs::Empty::Re
 
 bool pauseRobotSrvCallback(std_srvs::Empty::Request &req, std_srvs::Empty::Response &res){
     pause_robot=true;
+    setSpeed('F', 0, 'F', 0);
     return true;
 }
 

@@ -73,6 +73,7 @@ bool rotateFindPose(double rot_v,double rot_t){
 
 void GlobalLocalization(){
     if(ros::service::call("/global_localization",empty_srv)){
+        ros::Duration(3.0).sleep();
         if (rotateFindPose(rot_vel,rot_time*5.0)){
             ROS_INFO("Found robot pose after global initialization.");
         }
