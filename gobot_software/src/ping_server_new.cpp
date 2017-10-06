@@ -1,6 +1,9 @@
 #include "gobot_software/ping_server_new.hpp"
 
+#define PING_THRESHOLD 3
+
 static const std::string sep = std::string(1, 31);
+
 
 std::string pingFile;
 std::string ipsFile;
@@ -11,8 +14,8 @@ bool chargingFlag = false;
 int batteryLevel = 50;
 
 std::vector<std::string> availableIPs;
-std::vector<std::string> oldIPs;
 std::vector<std::string> connectedIPs;
+std::vector<std::pair<std::string, int>> oldIPs;
 std::mutex serverMutex;
 std::mutex connectedMutex;
 
@@ -90,21 +93,41 @@ void pingAllIPs(void){
 
         /// We check the oldIPs vs the new connected IP so we now which one disconnected
         ROS_INFO("(ping_server) Connected IPs : %lu", connectedIPs.size());
+        std::vector<int> toRemove;
         for(int i = 0; i < oldIPs.size(); ++i){
             bool still_connected = false;
             for(int j = 0; j < connectedIPs.size(); ++j)
-                if(oldIPs.at(i).compare(connectedIPs.at(j)) == 0)
+                if(oldIPs.at(i).first.compare(connectedIPs.at(j)) == 0)
                     still_connected = true;
-            if(!still_connected){
-                /// Publish a message to the topic /server_disconnected with the IP address of the server which disconnected
-                ROS_WARN("The ip %s disconnected", oldIPs.at(i).c_str());
-                std_msgs::String msg;
-                msg.data = oldIPs.at(i);
-                disco_pub.publish(msg);
+            if(still_connected)
+                oldIPs.at(i).second = 0;
+            else {
+                oldIPs.at(i).second++;
+                if(oldIPs.at(i).second >= PING_THRESHOLD){
+                    /// Publish a message to the topic /server_disconnected with the IP address of the server which disconnected
+                    ROS_WARN("The ip %s disconnected", oldIPs.at(i).first.c_str());
+                    std_msgs::String msg;
+                    msg.data = oldIPs.at(i).first;
+                    disco_pub.publish(msg);
+                    toRemove.push_back(i);
+                }
             }
         }
 
-        oldIPs = connectedIPs;
+        /// We remove all the disconnected IPs from the oldIPs vector
+        for(int i = 0; i < toRemove.size(); ++i)
+            oldIPs.erase(oldIPs.begin() + toRemove.at(i));
+
+        /// We had the newly connectedIPs to the oldIPs vector
+        for(int i = 0; i < connectedIPs.size(); ++i){
+            bool hasIP = false;
+            for(int j = 0; j < oldIPs.size(); ++j)
+                if(connectedIPs.at(i).compare(oldIPs.at(j).first) == 0)
+                    hasIP = true;
+            if(!hasIP)
+                oldIPs.push_back(std::pair<std::string, int>(connectedIPs.at(i), 0));
+        }
+
 
         loop_rate.sleep();        
     }
