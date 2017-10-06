@@ -23,7 +23,7 @@ void goalGetCallback(const move_base_msgs::MoveBaseActionGoal::ConstPtr& msg);
 
 void goalCancelCallback(const actionlib_msgs::GoalID::ConstPtr& msg);
 
-void initialPoseCallback(const std_msgs::Int8::ConstPtr& msg);
+void initialPoseResultCallback(const std_msgs::Int8::ConstPtr& msg);
 
 void newBumpersInfo(const gobot_msg_srv::BumperMsg::ConstPtr& msg);
 

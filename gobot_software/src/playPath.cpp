@@ -9,38 +9,17 @@ std::shared_ptr<MoveBaseClient> ac(0);
 int stage = 0;
 
 // holds whether the robot is ready to accept a new goal or not (already moving towards one)
-bool waitingForNextGoal = false;
 bool looping = false;
 bool dockAfterPath = false;
 bool waitingForAction = false, readAction=true,stop_flag=false;
 
+std_srvs::Empty empty_srv;
 std::vector<Point> path;
 Point currentGoal;
 
-
-ros::Subscriber statusSuscriber;
-ros::Subscriber sub_robot;
 ros::Subscriber button_sub;
 
 ros::Time action_time;
-
-
-void getRobotPos(const geometry_msgs::Pose::ConstPtr& msg){
-	// if there is a currentGoal
-	if(currentGoal.x != -1){
-		/// we check if the robot is close enough to its goal
-		if(std::abs(msg->position.x - currentGoal.x) < ROBOT_POS_TOLERANCE && std::abs(msg->position.y - currentGoal.y) < ROBOT_POS_TOLERANCE){
-			/// if the robot has already arrived, we want to wait for the next goal instead of repeating the same "success" functions
-			if(!waitingForNextGoal){
-				ROS_INFO("(PlayPath::getRobotPos) robot close enough to the goal");
-				ROS_INFO("(PlayPath::getRobotPos) robot position [%f, %f]", msg->position.x, msg->position.y);
-				ROS_INFO("(PlayPath::getRobotPos) robot goal [%f, %f]", currentGoal.x, currentGoal.y);
-				waitingForNextGoal = true;
-				goalReached();
-			}
-		}
-	}
-}
 
 bool setSpeed(const char directionR, const int velocityR, const char directionL, const int velocityL){
     //ROS_INFO("(auto_docking::setSpeed) %c %d %c %d", directionR, velocityR, directionL, velocityL);
@@ -65,42 +44,29 @@ void getButtonCallback(const std_msgs::Int8::ConstPtr& msg){
 		if(dt>1.0 && dt<10.0){
 			//Go to next point
 			waitingForAction=false;
+			ROS_INFO("Received Human Action %.2f seconds.",dt);
 		}
-		else if((ros::Time::now() - action_time).toSec()<=20.0)
-		{
-			std::thread([](){
-				std_srvs::Empty arg;
-				ros::service::call("/gobot_recovery/go_home",arg);
-			}).detach();
-			waitingForAction=false;
-		}
-		ROS_INFO("Human Action lasted for %.2f seconds.",(ros::Time::now() - action_time).toSec());
 	}
 }
 
-// to get the status of the robot (completion of the path towards its next goal, SUCCEEDED = reached its goal, ACTIVE = currently moving towards its goal)
-void getStatus(const actionlib_msgs::GoalStatusArray::ConstPtr& goalStatusArray){
-	if(currentGoal.x != -1){
-		if(goalStatusArray->status_list.back().status == 3){
-			// if we reached the goal
-			if(!waitingForNextGoal){
-                ROS_INFO("(PlayPath::getStatus) robot close enough to the goal");
-                waitingForNextGoal = true;
-				goalReached();
-			}
-		} 
-		else if(goalStatusArray->status_list.back().status == 4 || goalStatusArray->status_list.back().status == 5){
-			// if the goal could not be reached
-			if(!waitingForNextGoal){
-				waitingForNextGoal = true;
-				// we use -stage to tell where on the path we blocked
-				// - 1 because if we get stuck going to the first stage, it's going to be 0
-				setStageInFile(-stage - 1);
-			}
-		} 
-		else {
-			waitingForNextGoal = false;
-		}
+void goalResultCallback(const move_base_msgs::MoveBaseActionResult::ConstPtr& msg){
+	switch(msg->status.status){
+		//SUCCEED
+		case 3:
+			goalReached();
+			break;
+		//ABORTED
+		case 4:
+			setStageInFile(-stage - 1);
+			break;
+		//REJECTED
+		case 5:
+			setStageInFile(-stage - 1);
+			break;
+		//OTHER CASE
+		default:
+			ROS_ERROR("Unknown goal status %d",msg->status.status);
+			break;
 	}
 }
 
@@ -124,12 +90,10 @@ void goalReached(){
                 // resets the current goal
                 currentGoal.x = -1;
 
-                std_srvs::Empty arg;
-                if(!ros::service::call("goDock", arg))
+                if(!ros::service::call("goDock", empty_srv))
                     ROS_ERROR("(PlayPath::goalReached) Could not go charging");
 
                 dockAfterPath = false;
-
             } 
 			else if(looping){
                 ROS_INFO("(PlayPath::goalReached) Looping!!");
@@ -158,7 +122,7 @@ void checkGoalDelay(){
 		ROS_INFO("(PlayPath::goalReached) goalReached going to sleep for %f seconds", currentGoal.waitingTime);
 		double dt=0.0;
 		ros::Time last_time=ros::Time::now();
-		while(dt<currentGoal.waitingTime && !stop_flag){
+		while(dt<currentGoal.waitingTime && !stop_flag && ros::ok()){
 			dt=(ros::Time::now()-last_time).toSec();
 			ros::Duration(0.2).sleep();
 			ros::spinOnce();
@@ -169,7 +133,7 @@ void checkGoalDelay(){
 		ROS_INFO("Goal reached. Waiting for human action.");
 		waitingForAction=true;
 		button_sub = n.subscribe("/button_topic",1,getButtonCallback);
-		while(waitingForAction && !stop_flag){
+		while(waitingForAction && !stop_flag && ros::ok()){
 			ros::Duration(0.2).sleep();
 			ros::spinOnce();
 		}
@@ -179,50 +143,6 @@ void checkGoalDelay(){
 	if(!stop_flag){				
 		goNextPoint();
 	}
-}
-
-bool stopPathService(std_srvs::Empty::Request &req, std_srvs::Empty::Response &res){
-	ROS_INFO("(PlayPath::stopPathService) stopPathService called");
-	stop_flag = true;
-	/// if action server is up -> cancel
-	if(ac->isServerConnected())
-		ac->cancelAllGoals();
-	currentGoal.x = -1;
-	stage = 0;
-
-	setStageInFile(stage);
-
-    if(dockAfterPath){
-        ROS_INFO("(PlayPath::goalReached) Battery is low, go to charging station!!");
-        
-        std_srvs::Empty arg;
-        if(!ros::service::call("goDock", arg))
-            ROS_ERROR("(PlayPath::goalReached) Could not go charging");
-
-        dockAfterPath = false;
-    }
-	return true;
-}
-
-bool pausePathService(std_srvs::Empty::Request &req, std_srvs::Empty::Response &res){
-	ROS_INFO("(PlayPath::pausePathService) pausePathService called");
-	stop_flag = true;
-	if(ac->isServerConnected())
-		ac->cancelAllGoals();
-
- 
-    if(dockAfterPath){
-        ROS_INFO("(PlayPath::goalReached) Battery is low, go to charging station!!");
-        
-        std_srvs::Empty arg;
-        if(!ros::service::call("goDock", arg))
-            ROS_ERROR("(PlayPath::goalReached) Could not go charging");
-
-        dockAfterPath = false;
-
-    }
-    
-	return true;
 }
 
 void goNextPoint(){
@@ -285,6 +205,7 @@ bool playPathService(std_srvs::Empty::Request &req, std_srvs::Empty::Response &r
 
 	path = std::vector<Point>();
 	stop_flag=false;
+	ros::service::call("/move_base/clear_costmaps",empty_srv);
 
 	ros::NodeHandle n;
 	std::string pathFile;
@@ -350,6 +271,48 @@ bool playPathService(std_srvs::Empty::Request &req, std_srvs::Empty::Response &r
 	return true;	
 }
 
+
+bool stopPathService(std_srvs::Empty::Request &req, std_srvs::Empty::Response &res){
+	ROS_INFO("(PlayPath::stopPathService) stopPathService called");
+	stop_flag = true;
+	/// if action server is up -> cancel
+	if(ac->isServerConnected())
+		ac->cancelAllGoals();
+	currentGoal.x = -1;
+	stage = 0;
+
+	setStageInFile(stage);
+	
+    if(dockAfterPath){
+        ROS_INFO("(PlayPath::goalReached) Battery is low, go to charging station!!");
+        
+        if(!ros::service::call("goDock", empty_srv))
+            ROS_ERROR("(PlayPath::goalReached) Could not go charging");
+
+        dockAfterPath = false;
+    }
+	return true;
+}
+
+bool pausePathService(std_srvs::Empty::Request &req, std_srvs::Empty::Response &res){
+	ROS_INFO("(PlayPath::pausePathService) pausePathService called");
+	stop_flag = true;
+	if(ac->isServerConnected())
+		ac->cancelAllGoals();
+
+    if(dockAfterPath){
+        ROS_INFO("(PlayPath::goalReached) Battery is low, go to charging station!!");
+
+        if(!ros::service::call("goDock", empty_srv))
+            ROS_ERROR("(PlayPath::goalReached) Could not go charging");
+
+        dockAfterPath = false;
+
+    }
+    
+	return true;
+}
+
 bool startLoopPathService(std_srvs::Empty::Request &req, std_srvs::Empty::Response &res){
     ROS_INFO("(PlayPath::startLoopPathService) service called");
     looping = true;
@@ -365,7 +328,8 @@ bool stopLoopPathService(std_srvs::Empty::Request &req, std_srvs::Empty::Respons
 bool goDockAfterPathService(std_srvs::Empty::Request &req, std_srvs::Empty::Response &res){
     ROS_INFO("(PlayPath::goDockAfterPathService) service called");
     looping = false;
-    dockAfterPath = true;
+    //dockAfterPath = true;  //I don't have docking station for my robot now.
+	dockAfterPath = false;
     return true;
 }
 
@@ -404,12 +368,9 @@ int main(int argc, char* argv[]){
 
 		// tell the action client that we want to spin a thread by default
 		ac = std::shared_ptr<MoveBaseClient> (new MoveBaseClient("move_base", true));
-
+		
 		// get the current status of the goal 
-		statusSuscriber = n.subscribe("/move_base/status", 1, getStatus);
-
-		// get the position of the robot to compare with the goal
-		//sub_robot = n.subscribe("/robot_pose", 1, getRobotPos);
+		ros::Subscriber goalResult = n.subscribe("/move_base/result",1,goalResultCallback);
 
 		// wait for the action server to come up
 		while(!ac->waitForServer(ros::Duration(5.0)))

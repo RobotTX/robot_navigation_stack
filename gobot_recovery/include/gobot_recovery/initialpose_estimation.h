@@ -47,7 +47,7 @@ void findPoseResult(int status);
 
 void publishInitialpose(const double position_x, const double position_y, const double angle_x, const double angle_y, const double angle_z, const double angle_w,const double cov1,const double cov2);
 
-void initialPoseCallback(const geometry_msgs::PoseWithCovarianceStamped::ConstPtr& msg);
+void getAmclPoseCallback(const geometry_msgs::PoseWithCovarianceStamped::ConstPtr& msg);
 
 void goalStatusCallback(const actionlib_msgs::GoalStatusArray::ConstPtr& msg);
 

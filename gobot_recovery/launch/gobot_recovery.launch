@@ -3,6 +3,7 @@
 
     <param name="home_pose_file" type="string" value="$(find robot_infos)/Robot_Infos/home_pose.txt"/>
     <param name="last_pose_file" type="string" value="$(find robot_infos)/Robot_Infos/last_pose.txt"/>
+    <param name="restart_robot_file" type="string" value="$(find robot_infos)/Robot_Infos/restart_robot.sh"/>
 
     <node pkg="gobot_recovery" type="allow_teb_back" name="allow_teb_back" output="screen" respawn="true"/>
 

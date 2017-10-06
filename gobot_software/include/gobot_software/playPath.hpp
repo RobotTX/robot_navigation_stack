@@ -10,6 +10,7 @@
 #include <boost/thread.hpp>
 #include <actionlib_msgs/GoalStatusArray.h>
 #include <move_base_msgs/MoveBaseAction.h>
+#include <move_base_msgs/MoveBaseActionResult.h>
 #include <std_srvs/Empty.h>
 #include <std_msgs/String.h>
 #include <std_msgs/Int8.h>
@@ -34,8 +35,7 @@ struct Point {
 };
 
 bool setSpeed(const char directionR, const int velocityR, const char directionL, const int velocityL);
-void getRobotPos(const geometry_msgs::Pose::ConstPtr& msg);
-void getStatus(const actionlib_msgs::GoalStatusArray::ConstPtr& _status);
+void goalResultCallback(const move_base_msgs::MoveBaseActionResult::ConstPtr& msg);
 bool stopPathService(std_srvs::Empty::Request &req, std_srvs::Empty::Response &res);
 bool pausePathService(std_srvs::Empty::Request &req, std_srvs::Empty::Response &res);
 bool startLoopPathService(std_srvs::Empty::Request &req, std_srvs::Empty::Response &res);

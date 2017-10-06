@@ -3,6 +3,8 @@
 bool collision = false;
 bool moving_from_collision = false;
 bool moved_away_from_collision = false;
+bool pause_robot = false;
+
 std::chrono::system_clock::time_point collisionTime;
 
 
@@ -15,6 +17,16 @@ bool setSpeed(const char directionR, const int velocityR, const char directionL,
     speed.request.velocityL = velocityL;
 
     return ros::service::call("setSpeeds", speed);
+}
+
+bool continueRobotSrvCallback(std_srvs::Empty::Request &req, std_srvs::Empty::Response &res){
+    pause_robot=false;
+    return true;
+}
+
+bool pauseRobotSrvCallback(std_srvs::Empty::Request &req, std_srvs::Empty::Response &res){
+    pause_robot=true;
+    return true;
 }
 
 void newBumpersInfo(const gobot_msg_srv::BumperMsg::ConstPtr& bumpers){
@@ -79,7 +91,7 @@ void newBumpersInfo(const gobot_msg_srv::BumperMsg::ConstPtr& bumpers){
 
 void newCmdVel(const geometry_msgs::Twist::ConstPtr& twist){
     /// Received a new velocity cmd
-    if(!collision){
+    if(!collision && !pause_robot){
         ros::NodeHandle nh;
         double wheel_separation;
         nh.getParam("wheel_separation", wheel_separation);
@@ -124,6 +136,8 @@ int main(int argc, char **argv) {
 
     ros::Subscriber bumpersSub = nh.subscribe("bumpers_topic", 1, newBumpersInfo);
     ros::Subscriber cmdVelSub = nh.subscribe("cmd_vel", 1, newCmdVel);
+    ros::ServiceServer continueRobot = nh.advertiseService("/gobot_base/continue_robot",continueRobotSrvCallback);
+    ros::ServiceServer pauseRobot = nh.advertiseService("/gobot_base/pause_robot",pauseRobotSrvCallback);
 
     ros::spin();
 

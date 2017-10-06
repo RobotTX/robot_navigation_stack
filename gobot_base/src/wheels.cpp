@@ -173,12 +173,21 @@ bool stopTests(std_srvs::Empty::Request &req, std_srvs::Empty::Response &res){
     return true;
 }
 
+
+void mySigintHandler(int sig)
+{
+    //set speed to 0 when shutdown
+    writeAndRead(std::vector<uint8_t>({0x00, 0x31, 0x80, 0x00, 0x32, 0x80}));
+    serialConnection.close();
+    ros::shutdown();
+}
+
 int main(int argc, char **argv) {
     ros::init(argc, argv, "wheels");
+    ros::NodeHandle nh;
+    signal(SIGINT, mySigintHandler);
 
     if(initSerial()){
-        ros::NodeHandle nh;
-
         ros::ServiceServer setSpeedsSrv = nh.advertiseService("setSpeeds", setSpeeds);
         ros::ServiceServer getEncodersSrv = nh.advertiseService("getEncoders", getEncoders);
         ros::ServiceServer resetEncodersSrv = nh.advertiseService("resetEncoders", resetEncoders);

@@ -6,6 +6,7 @@
 #include <stdlib.h>
 #include <mutex>
 #include <thread>
+#include <signal.h>
 #include <std_srvs/Empty.h>
 #include <gobot_msg_srv/GetEncoders.h>
 #include <gobot_msg_srv/SetSpeeds.h>
@@ -35,3 +36,5 @@ bool testEncoders(std_srvs::Empty::Request &req, std_srvs::Empty::Response &res)
 
 /// Get the encoders and print the difference between the new and previous encoder every 1 sec
 bool testEncoders2(std_srvs::Empty::Request &req, std_srvs::Empty::Response &res);
+
+void mySigintHandler(int sig);

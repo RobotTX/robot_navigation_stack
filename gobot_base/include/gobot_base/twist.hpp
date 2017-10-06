@@ -3,6 +3,7 @@
 #include <unistd.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <std_srvs/Empty.h>
 #include <geometry_msgs/Twist.h>
 #include <gobot_msg_srv/BumperMsg.h>
 #include <gobot_msg_srv/SetSpeeds.h>
@@ -10,6 +11,9 @@
 #include <chrono>
 #include <thread>
 
+bool continueRobotSrvCallback(std_srvs::Empty::Request &req, std_srvs::Empty::Response &res);
+
+bool pauseRobotSrvCallback(std_srvs::Empty::Request &req, std_srvs::Empty::Response &res);
 
 /// Call the service to set the speed of the wheels
 bool setSpeed(const char directionR, const int velocityR, const char directionL, const int velocityL);

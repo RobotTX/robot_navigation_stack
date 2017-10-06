@@ -3,8 +3,7 @@
 	<include file="$(find gobot_base)/launch/mapbase.launch"/>
     <include file="$(find gobot_navigation)/launch/amcl.launch"/>
     <include file="$(find gobot_navigation)/launch/move_base.launch"/>
-
+    <include file="$(find gobot_software)/launch/gobot_software.launch"/>
+    
     <include file="$(find gobot_recovery)/launch/gobot_recovery.launch"/>
-
-	<include file="$(find gobot_software)/launch/gobot_software.launch"/>
 </launch>
