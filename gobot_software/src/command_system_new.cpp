@@ -1132,7 +1132,11 @@ void session(boost::shared_ptr<tcp::socket> sock){
                     } else 
                         ROS_WARN("(Command system) Too many arguments to display (%lu)", command.size());
                     std::string msg;
-                    if(commandMutex.try_lock()){
+                    commandMutex.lock();
+                    msg = (execCommand(ip, command) ? "done" : "failed") + sep + commandStr;
+                    sendMessageToAll(msg);
+                    commandMutex.unlock();
+                    /*if(commandMutex.try_lock()){
                         msg = (execCommand(ip, command) ? "done" : "failed") + sep + commandStr;
                         sendMessageToAll(msg);
                         commandMutex.unlock();
@@ -1140,7 +1144,7 @@ void session(boost::shared_ptr<tcp::socket> sock){
                         msg = "busy" + sep + commandStr;
                         ROS_ERROR("(Command system) Already processing a command %s", ip.c_str());
                         sendMessageToSock(sock, msg);
-                    }
+                    }*/
                     command.clear();
                     finishedCmd = 0;
                     commandStr = "";
