@@ -41,7 +41,7 @@ void getButtonCallback(const std_msgs::Int8::ConstPtr& msg){
 	else if(msg->data==1 && !readAction){
 		readAction = true;
 		double dt = (ros::Time::now() - action_time).toSec();
-		if(dt>0.5 && dt<5.0){
+		if(dt>0.2 && dt<5.0){
 			//Go to next point
 			waitingForAction=false;
 			ROS_INFO("Received Human Action %.2f seconds.",dt);
@@ -51,6 +51,9 @@ void getButtonCallback(const std_msgs::Int8::ConstPtr& msg){
 
 void goalResultCallback(const move_base_msgs::MoveBaseActionResult::ConstPtr& msg){
 	switch(msg->status.status){
+		//PREEMTED
+		case 2:
+			break;
 		//SUCCEED
 		case 3:
 			goalReached();

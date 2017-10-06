@@ -34,12 +34,6 @@ bool evaluatePose(int type){
 }
 
 bool rotateFindPose(double rot_v,double rot_t){
-    if(goalActive){
-        ros::service::waitForService("/pause_path", ros::Duration(30.0));
-        ros::service::call("/pause_path",empty_srv);
-        ROS_INFO("Cancelled active goal to proceed gobalo localization.");
-    }
-    
     double dt=0.0;
     geometry_msgs::Twist vel;
     vel.linear.x = 0.0;
@@ -127,7 +121,7 @@ void publishInitialpose(const double position_x, const double position_y, const 
 }
 
 void goalStatusCallback(const actionlib_msgs::GoalStatusArray::ConstPtr& msg){
-    if (!msg->status_list.empty()) //has active goal
+    if (!msg->status_list.empty() && msg->status_list.back().status!=2) //has active goal
         //cancel goal
         goalActive = true;
     else
@@ -141,6 +135,11 @@ bool initializePoseSrvCallback(std_srvs::Empty::Request &req, std_srvs::Empty::R
             gobot_msg_srv::IsCharging arg;
             running = true;
             found_pose=false;
+            if(goalActive){
+                ros::service::waitForService("/pause_path", ros::Duration(30.0));
+                ros::service::call("/pause_path",empty_srv);
+                ROS_INFO("Cancelled active goal to proceed gobalo localization.");
+            }
 
             while(current_stage!=COMPLETE_STAGE && running && ros::ok()){
                 switch(current_stage){
@@ -155,7 +154,7 @@ bool initializePoseSrvCallback(std_srvs::Empty::Request &req, std_srvs::Empty::R
                         ros::service::waitForService("/isCharging", ros::Duration(30.0));
                         ros::service::call("/isCharging",arg);
                         //if robot is charging, it is in CS station 
-                        if(arg.response.isCharging||evaluatePose(1)){
+                        if(arg.response.isCharging || evaluatePose(1)){
                         //if(false){
                             found_pose=true;
                             ROS_INFO("Robot is in the charing station");
@@ -230,7 +229,12 @@ bool globalizePoseSrvCallback(std_srvs::Empty::Request &req, std_srvs::Empty::Re
             int current_stage=START_STAGE;
             running = true;
             found_pose=false;
-
+            if(goalActive){
+                ros::service::waitForService("/pause_path", ros::Duration(30.0));
+                ros::service::call("/pause_path",empty_srv);
+                ROS_INFO("Cancelled active goal to proceed gobalo localization.");
+            }
+            
             while(current_stage!=COMPLETE_STAGE && running && ros::ok()){
                 switch(current_stage){
                     case START_STAGE:

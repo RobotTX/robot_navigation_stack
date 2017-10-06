@@ -204,6 +204,7 @@ int main(int argc, char* argv[]){
     ac = std::shared_ptr<actionlib::SimpleActionClient<move_base_msgs::MoveBaseAction>>(new actionlib::SimpleActionClient<move_base_msgs::MoveBaseAction>("move_base", true));
 
     /// Launch service's servers
+    //0-don't go back to starting point; 1-go back to charging station; 2-go back to normal staring point
     ros::ServiceServer startExploration = nh.advertiseService("startExploration", startExplorationSrv);
     ros::ServiceServer stopExploration = nh.advertiseService("stopExploration", stopExplorationSrv);
 

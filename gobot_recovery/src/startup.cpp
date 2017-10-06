@@ -9,7 +9,7 @@ ros::Time action_time;
 std::string restartRobotFile;
 
 //-1=no goal, 0=complete goal, 1=active goal
-int goal_state = -1;
+int goal_state = 99;
 bool robot_pause = false;
 
 ros::Publisher goalCancel_pub;
@@ -42,21 +42,27 @@ void getButtonCallback(const std_msgs::Int8::ConstPtr& msg){
 	else if(msg->data==1 && !buttonOn){
 		buttonOn = true;
     double dt = (ros::Time::now() - action_time).toSec();
-    if(dt>0.3 && dt<5.0 && goal_state==1){
-      if(robot_pause){
+    if(dt>0.1 && dt<5.0){
+      if(robot_pause && goal_state==-1){
         ROS_INFO("Continue robot.");
-        ros::service::call("/gobot_base/continue_robot",empty_srv);
+        ros::service::call("/play_path",empty_srv);
       }
-      else{
+      else if(!robot_pause && goal_state==1){
         ROS_INFO("Pause robot.");
-        ros::service::call("/gobot_base/pause_robot",empty_srv);
+        ros::service::call("/pause_path",empty_srv);
       }
-      robot_pause = !robot_pause;
     }
-    else if(dt<10.0 && dt>5.0){
+    else if(dt>5.0 && dt<10.0 && (goal_state==-2 || goal_state==-1)){
+      //play path when robot stop due to aborted goal
+      ROS_INFO("resume robot.");
+      ros::service::call("/play_path",empty_srv);
+    }
+    else if(dt>10.0 && dt<20.0){
+      ROS_INFO("home robot.");
       ros::service::call("/gobot_recovery/go_home",empty_srv);
 		}
-    else if(dt<20.0 && dt>10.0){
+    else if(dt>20.0 && dt<99.0){
+      ROS_INFO("globalize robot.");
       ros::service::call("/gobot_recovery/globalize_pose",empty_srv);
     }
 		else if(dt>999.0){
@@ -70,10 +76,33 @@ void getButtonCallback(const std_msgs::Int8::ConstPtr& msg){
 
 void goalGetCallback(const move_base_msgs::MoveBaseActionGoal::ConstPtr& msg){
   goal_state=1;
+  robot_pause=false;
 }
 
 void goalResultCallback(const move_base_msgs::MoveBaseActionResult::ConstPtr& msg){
-  goal_state=0;
+  switch(msg->status.status){
+    //PREEMTED
+    case 2:
+      robot_pause=true;
+      goal_state=-1;
+      break;
+		//SUCCEED
+		case 3:
+			goal_state=0;
+			break;
+		//ABORTED
+		case 4:
+			goal_state=-2;
+			break;
+		//REJECTED
+		case 5:
+			goal_state=-2;
+			break;
+		//OTHER CASE
+		default:
+			ROS_ERROR("Unknown goal status %d",msg->status.status);
+			break;
+	}
 }
 
 void mySigintHandler(int sig)

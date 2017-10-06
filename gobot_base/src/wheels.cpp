@@ -68,7 +68,7 @@ bool initSerial() {
     if(serialConnection.isOpen()){
         /// First 3 bytes : set the mode (see MD49 documentation)
         /// then 2 bytes to disable the 2 sec timeout
-        /// then 3 bytes to set the acceleration steps
+        /// then 3 bytes to set the acceleration steps (1-10)
         writeAndRead(std::vector<uint8_t>({0x00, 0x34, 0x00, 
             0x00, 0x38, 
             0x00, 0x33, 0x01}));
