@@ -110,7 +110,8 @@ void pingAllIPs(void){
                     msg.data = oldIPs.at(i).first;
                     disco_pub.publish(msg);
                     toRemove.push_back(i);
-                }
+                } else
+                    ROS_WARN("Could not ping IP %s for %d time(s)", oldIPs.at(i).first.c_str(), oldIPs.at(i).second);
             }
         }
 
