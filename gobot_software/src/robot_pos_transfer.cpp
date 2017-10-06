@@ -14,11 +14,11 @@ void sendRobotPos(const std::string& robot_string){
         /// We send the position of the robot to every Qt app
         for(auto const &elem : sockets)
             boost::asio::write(*(elem.second), boost::asio::buffer(robot_string, robot_string.length()));
-        socketsMutex.unlock();
 
 	} catch (std::exception& e) {
 		ROS_ERROR("(Robot Pos) Exception : %s", e.what());
 	}
+    socketsMutex.unlock();
 }
 
 void getRobotPos(const geometry_msgs::Pose::ConstPtr& msg){

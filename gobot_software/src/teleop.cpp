@@ -133,9 +133,6 @@ void server(void){
 void serverDisconnected(const std_msgs::String::ConstPtr& msg){
     ROS_WARN("(Teleop) The ip %s just disconnected", msg->data.c_str());
 
-    /// Stop the robot
-    teleop(4);
-
     /// Close and remove the socket
     socketsMutex.lock();
     if(sockets.count(msg->data)){
