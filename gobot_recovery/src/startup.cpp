@@ -12,7 +12,6 @@ std::string restartRobotFile;
 int goal_state = 99;
 bool robot_pause = false;
 
-ros::Publisher goalCancel_pub;
 void initialPoseResultCallback(const std_msgs::Int8::ConstPtr& msg){
   if(msg->data==0){
     ROS_ERROR("Can not find robot pose when start up. Retry after 10 sec.");
@@ -54,15 +53,15 @@ void getButtonCallback(const std_msgs::Int8::ConstPtr& msg){
     }
     else if(dt>5.0 && dt<10.0 && (goal_state==-2 || goal_state==-1)){
       //play path when robot stop due to aborted goal
-      ROS_INFO("resume robot.");
+      ROS_INFO("Resume robot.");
       ros::service::call("/play_path",empty_srv);
     }
     else if(dt>10.0 && dt<20.0){
-      ROS_INFO("home robot.");
+      ROS_INFO("Home robot.");
       ros::service::call("/gobot_recovery/go_home",empty_srv);
 		}
     else if(dt>20.0 && dt<99.0){
-      ROS_INFO("globalize robot.");
+      ROS_INFO("Globalize robot.");
       ros::service::call("/gobot_recovery/globalize_pose",empty_srv);
     }
 		else if(dt>999.0){
@@ -123,8 +122,6 @@ int main(int argc, char **argv) {
     nh.getParam("restart_robot_file", restartRobotFile);
 
     vel_pub = nh.advertise<geometry_msgs::Twist>("/cmd_vel",10);
-
-    goalCancel_pub = nh.advertise<actionlib_msgs::GoalID>("/move_base/cancel",10);
 
     ros::Subscriber goalResult = nh.subscribe("/move_base/result",1,goalResultCallback);
     ros::Subscriber goalGet = nh.subscribe("/move_base/goal",1,goalGetCallback);

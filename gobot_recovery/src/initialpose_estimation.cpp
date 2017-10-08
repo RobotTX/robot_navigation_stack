@@ -1,9 +1,9 @@
 #include <gobot_recovery/initialpose_estimation.h>
 
 
-double cov_x=0.0,cov_y=0.0,cov_yaw=0.0,initial_cov_xy=0.4,initial_cov_yaw=2.0, home_cov_xy=0.15,home_cov_yaw=0.1;
+double cov_x=0.0,cov_y=0.0,cov_yaw=0.0,initial_cov_xy=0.15,initial_cov_yaw=0.1;
 //Make robot rotate 360 degrees
-double rot_vel = 0.25, rot_time = 30;
+double rot_vel = 0.4, rot_time = 150;
 double last_pos_x=0.0,last_pos_y=0.0,last_pos_yaw=0.0,last_ang_x=0.0,last_ang_y=0.0,last_ang_z=0.0,last_ang_w=0.0;
 double home_pos_x=0.0,home_pos_y=0.0,home_pos_yaw=0.0,home_ang_x=0.0,home_ang_y=0.0,home_ang_z=0.0,home_ang_w=0.0;
 double rosparam_x=0.0,rosparam_y=0.0,rosparam_yaw=0.0,rosparam_cov_x=0.0,rosparam_cov_y=0.0,rosparam_cov_yaw=0.0;
@@ -48,9 +48,8 @@ bool rotateFindPose(double rot_v,double rot_t){
         //ROS_INFO("I am finding my pose in the map...covariance:xy=%.3f,yaw=%.3f",cov_xy,cov_yaw);
         vel_pub.publish(vel);
         if(cov_x<COV_XY_T && cov_y<COV_XY_T && cov_yaw<COV_YAW_T){
-            found_pose=true;
             ROS_INFO("Spent %.3f seconds to localize robot pose in the map.",dt);
-            break;
+            return true;
         }
         loop_rate.sleep();
     }
@@ -58,31 +57,8 @@ bool rotateFindPose(double rot_v,double rot_t){
     vel.angular.z=0.0;
     vel_pub.publish(vel);
 
-    //clear costmap after rotating
-    ros::service::call("/move_base/clear_costmaps",empty_srv);
-
-    return found_pose;
+    return false;
 }
-
-
-void GlobalLocalization(){
-    if(ros::service::call("/global_localization",empty_srv)){
-        ros::Duration(3.0).sleep();
-        if (rotateFindPose(rot_vel,rot_time*5.0)){
-            ROS_INFO("Found robot pose after global initialization.");
-        }
-        else if(running){
-            ROS_WARN("Unable to find robot pose in the map after global initialization");
-            ROS_WARN("Suggest to move robot to charging station and restart");
-            //failed to localize
-            found_pose = false;
-            findPoseResult(NOT_FOUND);
-        }
-    }
-    else
-        ROS_ERROR("Failed to reset particles");
-}
-
 
 void findPoseResult(int status){
     //Give stm32 some time before changing LED
@@ -158,7 +134,7 @@ bool initializePoseSrvCallback(std_srvs::Empty::Request &req, std_srvs::Empty::R
                         //if(false){
                             found_pose=true;
                             ROS_INFO("Robot is in the charing station");
-                            publishInitialpose(home_pos_x,home_pos_y,home_ang_x,home_ang_y,home_ang_z,home_ang_w,home_cov_xy,home_cov_yaw);
+                            publishInitialpose(home_pos_x,home_pos_y,home_ang_x,home_ang_y,home_ang_z,home_ang_w,initial_cov_xy,initial_cov_yaw);
                             current_stage=COMPLETE_STAGE;
                         }
                         else{
@@ -182,23 +158,9 @@ bool initializePoseSrvCallback(std_srvs::Empty::Request &req, std_srvs::Empty::R
 
                     case LAST_POSE_STAGE:
                         //try the pose from last stop pose
-                        ROS_INFO("Try last stop pose...");
+                        found_pose=true;
                         publishInitialpose(last_pos_x,last_pos_y,last_ang_x,last_ang_y,last_ang_z,last_ang_w,initial_cov_xy,initial_cov_yaw);
-                        if(rotateFindPose(rot_vel,rot_time)){
-                            ROS_INFO("Robot is near the last stop pose.");
-                            current_stage=COMPLETE_STAGE;
-                        }
-                        else {
-                            ROS_WARN("Robot is not in the last stop pose");
-                            //try the pose from home pose
-                            current_stage=GLOBAL_POSE_STAGE;
-                        }
-                        break;
-
-                    case GLOBAL_POSE_STAGE:
-                        //try globalize pose after all recorded pose failed
-                        ROS_INFO("Try reset particles...");
-                        GlobalLocalization();
+                        ROS_INFO("Robot is near the last stop pose.");
                         current_stage=COMPLETE_STAGE;
                         break;
 
@@ -245,7 +207,24 @@ bool globalizePoseSrvCallback(std_srvs::Empty::Request &req, std_srvs::Empty::Re
                         break;
 
                     case GLOBAL_POSE_STAGE:
-                        GlobalLocalization();
+                        if(ros::service::call("/global_localization",empty_srv)){
+                            ros::Duration(3.0).sleep();
+                            found_pose=rotateFindPose(rot_vel,rot_time);
+                            if (found_pose){
+                                ROS_INFO("Found robot pose after global initialization.");
+                            }
+                            else if(running){
+                                ROS_WARN("Unable to find robot pose in the map after global initialization");
+                                ROS_WARN("Suggest to move robot to charging station and restart");
+                                //failed to localize
+                                findPoseResult(NOT_FOUND);
+                            }
+                            //clear costmap after rotating
+                            ros::service::call("/move_base/clear_costmaps",empty_srv);
+                        }
+                        else{
+                            ROS_ERROR("Failed to reset particles");
+                        }
                         current_stage=COMPLETE_STAGE;
                         break;
 
@@ -375,7 +354,7 @@ void getPose(std::string file_name,int type)
             home_ang_w=pose[5];
             double roll,pitch;
             tf::Matrix3x3(tf::Quaternion(pose[2],pose[3],pose[4],pose[5])).getRPY(roll,pitch,home_pos_yaw);
-            ROS_INFO("Home: pos(%.2f,%.2f,%.2f),cov(%.2f,%.2f,%.2f).",home_pos_x,home_pos_y,home_pos_yaw,home_cov_xy,home_cov_xy,home_cov_yaw);
+            ROS_INFO("Home: pos(%.2f,%.2f,%.2f),cov(%.2f,%.2f,%.2f).",home_pos_x,home_pos_y,home_pos_yaw,initial_cov_xy,initial_cov_xy,initial_cov_yaw);
         }
     }
     else{

@@ -29,5 +29,7 @@ void newBumpersInfo(const gobot_msg_srv::BumperMsg::ConstPtr& msg);
 
 void batteryCallback(const gobot_msg_srv::BatteryMsg::ConstPtr& msg);
 
+void explorationCallback(const std_msgs::Int8::ConstPtr& msg);
+
 void timerCallback(const ros::TimerEvent&);
 

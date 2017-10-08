@@ -3,8 +3,6 @@
 #define PING_THRESHOLD 3
 
 static const std::string sep = std::string(1, 31);
-
-
 std::string pingFile;
 std::string ipsFile;
 std::string nameFile;
@@ -64,6 +62,7 @@ std::string getDataToSend(void){
  */
 void pingAllIPs(void){
     /// Ping all servers every 3 secs
+    //tx??//detect disconnection after 6 seconds->too long?
     ros::Rate loop_rate(1/3.0);
 
     std::vector<std::thread> threads;
@@ -91,45 +90,51 @@ void pingAllIPs(void){
 
         ROS_INFO("(ping_server) Done pinging everyone");
 
-        /// We check the oldIPs vs the new connected IP so we now which one disconnected
-        ROS_INFO("(ping_server) Connected IPs : %lu", connectedIPs.size());
-        std::vector<int> toRemove;
-        for(int i = 0; i < oldIPs.size(); ++i){
-            bool still_connected = false;
-            for(int j = 0; j < connectedIPs.size(); ++j)
-                if(oldIPs.at(i).first.compare(connectedIPs.at(j)) == 0)
-                    still_connected = true;
-            if(still_connected)
-                oldIPs.at(i).second = 0;
-            else {
-                oldIPs.at(i).second++;
-                if(oldIPs.at(i).second >= PING_THRESHOLD){
-                    /// Publish a message to the topic /server_disconnected with the IP address of the server which disconnected
-                    ROS_WARN("The ip %s disconnected", oldIPs.at(i).first.c_str());
-                    std_msgs::String msg;
-                    msg.data = oldIPs.at(i).first;
-                    disco_pub.publish(msg);
-                    toRemove.push_back(i);
-                }
-            }
-        }
-
-        /// We remove all the disconnected IPs from the oldIPs vector
-        for(int i = 0; i < toRemove.size(); ++i)
-            oldIPs.erase(oldIPs.begin() + toRemove.at(i));
-
-        /// We had the newly connectedIPs to the oldIPs vector
-        for(int i = 0; i < connectedIPs.size(); ++i){
-            bool hasIP = false;
-            for(int j = 0; j < oldIPs.size(); ++j)
-                if(connectedIPs.at(i).compare(oldIPs.at(j).first) == 0)
-                    hasIP = true;
-            if(!hasIP)
-                oldIPs.push_back(std::pair<std::string, int>(connectedIPs.at(i), 0));
-        }
-
+        updateIP();
 
         loop_rate.sleep();        
+    }
+}
+
+//update old IP list with the now-connected IPs
+void updateIP(){
+    /// We check the oldIPs vs the new connected IP so we now which one disconnected
+    ROS_INFO("(ping_server) Connected IPs : %lu", connectedIPs.size());
+    std::vector<int> toRemove;
+    for(int i = 0; i < oldIPs.size(); ++i){
+        bool still_connected = false;
+        for(int j = 0; j < connectedIPs.size(); ++j)
+            if(oldIPs.at(i).first.compare(connectedIPs.at(j)) == 0)
+                still_connected = true;
+
+        if(still_connected)
+            oldIPs.at(i).second = 0;
+        else {
+            oldIPs.at(i).second++;
+            if(oldIPs.at(i).second >= PING_THRESHOLD){
+                /// Publish a message to the topic /server_disconnected with the IP address of the server which disconnected
+                ROS_WARN("The ip %s disconnected", oldIPs.at(i).first.c_str());
+                std_msgs::String msg;
+                msg.data = oldIPs.at(i).first;
+                disco_pub.publish(msg);
+                toRemove.push_back(i);
+            }
+        }
+    }
+
+    /// We remove all the disconnected IPs from the oldIPs vector
+    //tx??//sth wrong here. should erase from end to begin
+    for(int i = 0; i < toRemove.size(); ++i)
+        oldIPs.erase(oldIPs.begin() + toRemove.at(i));
+
+    /// We had the newly connectedIPs to the oldIPs vector
+    for(int i = 0; i < connectedIPs.size(); ++i){
+        bool hasIP = false;
+        for(int j = 0; j < oldIPs.size(); ++j)
+            if(connectedIPs.at(i).compare(oldIPs.at(j).first) == 0)
+                hasIP = true;
+        if(!hasIP)
+            oldIPs.push_back(std::pair<std::string, int>(connectedIPs.at(i), 0));
     }
 }
 
@@ -139,9 +144,10 @@ void pingAllIPs(void){
 void pingIP(std::string ip, std::string dataToSend){
     //ROS_INFO("(ping_server) Called pingIP : %s", ip.c_str());
 
+    timeout::tcp::Client client;
     try {
-        timeout::tcp::Client client;
         /// Try to connect to the remote Qt app
+        //tx??//close client connection after timeout
         client.connect(ip, "6000", boost::posix_time::seconds(2));
         /// If we succesfully connect to the server, then the server is supposed to send us "OK"
         std::string read = client.read_some();
@@ -155,6 +161,7 @@ void pingIP(std::string ip, std::string dataToSend){
             ROS_INFO("(ping_server) Connected to %s", ip.c_str());
         } else
             ROS_ERROR("(ping_server) read %lu bytes : %s", read.size(), read.c_str());
+        
     } catch(std::exception& e) {
         //ROS_ERROR("(ping_server) error %s : %s", ip.c_str(), e.what());
     }
@@ -191,15 +198,12 @@ void checkNewServers(void){
             std::string currentIP;
 
             serverMutex.lock();
-
             /// Save all the IP addresses in an array
             availableIPs.clear();
             while(std::getline(ifs, currentIP))
                 availableIPs.push_back(currentIP);
-
             serverMutex.unlock();
         }
-
 
         ROS_INFO("(ping_server) Done refreshing the list of potential servers : %lu servers found", availableIPs.size());
 
@@ -214,7 +218,6 @@ int main(int argc, char* argv[]){
     ros::NodeHandle n;
 
     ros::Subscriber batterySub = n.subscribe("/battery_topic", 1, newBatteryInfo);
-
     disco_pub = n.advertise<std_msgs::String>("server_disconnected", 10);
 
     /// We get the path to the file with all the ips

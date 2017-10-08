@@ -27,4 +27,6 @@ void newBatteryInfo(const gobot_msg_srv::BatteryMsg::ConstPtr& batteryInfo);
 
 void checkNewServers(void);
 
+void updateIP(void);
+
 #endif

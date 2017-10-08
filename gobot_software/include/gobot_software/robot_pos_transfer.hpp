@@ -19,7 +19,7 @@ using boost::asio::ip::tcp;
 /**
  * Send the robot position to the application
  */
-void sendRobotPos(const std::string& robot_string);
+void sendRobotPos(const ros::TimerEvent&);
 
 /**
  * Called when robot position is published

@@ -6,33 +6,33 @@ using boost::asio::ip::tcp;
 
 std::mutex socketsMutex;
 std::map<std::string, boost::shared_ptr<tcp::socket>> sockets;
+double pos_x,pos_y,pos_yaw;
 
-
-void sendRobotPos(const std::string& robot_string){
-	try {
-        socketsMutex.lock();
-        /// We send the position of the robot to every Qt app
-        for(auto const &elem : sockets)
-            boost::asio::write(*(elem.second), boost::asio::buffer(robot_string, robot_string.length()));
-
-	} catch (std::exception& e) {
-		ROS_ERROR("(Robot Pos) Exception : %s", e.what());
-	}
-    socketsMutex.unlock();
+void sendRobotPos(const ros::TimerEvent&){
+    if(sockets.size() > 0){
+        try {
+            std::string robot_string = std::to_string(pos_x) + " " + std::to_string(pos_y) + " " + std::to_string(pos_yaw) + " ";
+            socketsMutex.lock();
+            /// We send the position of the robot to every Qt app
+            for(auto const &elem : sockets)
+                boost::asio::write(*(elem.second), boost::asio::buffer(robot_string, robot_string.length()));
+        } catch (std::exception& e) {
+            ROS_ERROR("(Robot Pos) Exception : %s", e.what());
+        }
+        socketsMutex.unlock();
+    }
 }
 
 void getRobotPos(const geometry_msgs::Pose::ConstPtr& msg){
-    if(sockets.size() > 0){
-    	/// to recover the orientation of the robot :)
-    	tf::Matrix3x3 matrix = tf::Matrix3x3(tf::Quaternion(msg->orientation.x, msg->orientation.y, msg->orientation.z, msg->orientation.w));
-     	tfScalar roll;
-    	tfScalar pitch;
-    	tfScalar yaw;
-    	matrix.getRPY(roll, pitch, yaw);
-    	std::string robot_string = std::to_string(msg->position.x) + " " + std::to_string(msg->position.y) + " " + std::to_string(yaw) + " ";
-    	sendRobotPos(robot_string);
-    }
-	sleep(0.5);
+    /// to recover the orientation of the robot :)
+    tf::Matrix3x3 matrix = tf::Matrix3x3(tf::Quaternion(msg->orientation.x, msg->orientation.y, msg->orientation.z, msg->orientation.w));
+    tfScalar roll;
+    tfScalar pitch;
+    tfScalar yaw;
+    matrix.getRPY(roll, pitch, yaw);
+    pos_x=msg->position.x;
+    pos_y=msg->position.y;
+    pos_yaw=yaw;
 }
 
 /*********************************** CONNECTION FUNCTIONS ***********************************/
@@ -43,7 +43,6 @@ void server(void){
     while(ros::ok()) {
 
         boost::shared_ptr<tcp::socket> sock = boost::shared_ptr<tcp::socket>(new tcp::socket(io_service));
-
         /// We wait for someone to connect
         a.accept(*sock);
 
@@ -82,6 +81,9 @@ int main(int argc, char **argv){
 
 	ros::NodeHandle n;
 	
+    //Periodically send robot pose to connected clients
+    ros::Timer timer = n.createTimer(ros::Duration(1), sendRobotPos);
+
     ros::Subscriber sub = n.subscribe("server_disconnected", 1000, serverDisconnected);
 
     ros::Subscriber sub_robot = n.subscribe("/robot_pose", 1, getRobotPos);

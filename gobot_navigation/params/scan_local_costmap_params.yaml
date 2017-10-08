@@ -1,35 +1,22 @@
-#http://wiki.ros.org/costmap_2d
-global_costmap:
+local_costmap:
     map_type: costmap
-    global_frame: map
+    global_frame: odom
     robot_base_frame: base_link
-    update_frequency: 5.0 # 2.0
-    publish_frequency: 2.0
+    update_frequency: 5.0
+    publish_frequency: 5.0
     static_map: false
-    rolling_window: false
+    rolling_window: true
+    width: 4.0
+    height: 4.0
     resolution: 0.02
     plugins:
-        # Add the data from the map to the costmap
-        - {name: static_map, type: "costmap_2d::StaticLayer"}
         # Track the obstacle from the sensors and add them to the costmap
         - {name: obstacles, type: "costmap_2d::VoxelLayer"} # 3D costmap
-        # Add inflation around the obstacles
+        # Add inflation around the obstacle
         - {name: inflation_layer, type: "costmap_2d::InflationLayer"}
 
-    # This is the real footprint but we want the footprint to be slightly larger than the robot's real contour
-    #footprint: [[-0.267, 0.3], [0.413, 0.3], [0.413, -0.3], [-0.267, -0.3]]
-    # New more complex footprint
     footprint: [[0.332, -0.3], [0.358, -0.29], [0.4, -0.234], [0.413, -0.164], [0.413, 0.164], [0.4, 0.234], [0.358, 0.29], [0.332, 0.3], [-0.1425, 0.3], [-0.199, 0.283], [-0.24, 0.2375], [-0.267, 0.161], [-0.267, -0.161], [-0.24, -0.2375], [-0.199, -0.283], [-0.1425, -0.3]]
     footprint_padding: 0.0001
-
-    static_map:
-        map_topic: /map
-        #If true, unknown values in the map messages are translated directly to the layer. 
-        #Otherwise, unknown values in the map message are translated as FREE_SPACE in the layer. 
-        #default:true
-        track_unknown_space: true
-        #default:-1
-        unknown_cost_value: -1
 
     obstacles:
         observation_sources: laser_scan_sensor bumpers frontRight_sonar frontLeft_sonar 

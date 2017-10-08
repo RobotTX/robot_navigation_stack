@@ -7,6 +7,7 @@
 #include <actionlib/client/simple_action_client.h>
 #include <hector_nav_msgs/GetRobotTrajectory.h>
 #include <move_base_msgs/MoveBaseAction.h>
+#include <std_msgs/Int8.h>
 #include <std_srvs/Empty.h>
 #include <thread>
 #include <hector_exploration_node/Exploration.h>

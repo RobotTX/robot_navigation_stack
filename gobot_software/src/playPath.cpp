@@ -149,7 +149,6 @@ void checkGoalDelay(){
 }
 
 void goNextPoint(){
-
 	// get the next point in the path list and tell the robot to go there
 	if(path.size()-1 == stage)
 		ROS_INFO("(PlayPath::goNextPoint) This is my final destination");
@@ -220,9 +219,7 @@ bool playPathService(std_srvs::Empty::Request &req, std_srvs::Empty::Response &r
 
 	// we recreate the path to follow from the file
 	if(file){
-
         std::string line;
-
         int i = 0;
         Point pathPoint;
         while(getline(file, line)){
@@ -241,7 +238,7 @@ bool playPathService(std_srvs::Empty::Request &req, std_srvs::Empty::Response &r
             i++;
         }
 
-	} else {
+	} else{
 		ROS_ERROR("(PlayPath::playPathService) sorry could not find the path file on the robot, returning false to the cmd system");
 		return false;
 	}
@@ -253,7 +250,6 @@ bool playPathService(std_srvs::Empty::Request &req, std_srvs::Empty::Response &r
 
 	for(size_t i = 0; i < path.size(); i++)
 		ROS_INFO("(PlayPath::playPathService) Stage %lu [%f, %f], wait %f sec", i, path.at(i).x, path.at(i).y, path.at(i).waitingTime);
-
 
 	if(currentGoal.x == -1){
 		stage = 0;
@@ -302,16 +298,6 @@ bool pausePathService(std_srvs::Empty::Request &req, std_srvs::Empty::Response &
 	stop_flag = true;
 	if(ac->isServerConnected())
 		ac->cancelAllGoals();
-
-    if(dockAfterPath){
-        ROS_INFO("(PlayPath::goalReached) Battery is low, go to charging station!!");
-
-        if(!ros::service::call("goDock", empty_srv))
-            ROS_ERROR("(PlayPath::goalReached) Could not go charging");
-
-        dockAfterPath = false;
-
-    }
     
 	return true;
 }
@@ -343,38 +329,30 @@ int main(int argc, char* argv[]){
 	try {
 
 		ros::init(argc, argv, "play_path");
-
+		ros::NodeHandle n;
+		
 		currentGoal.x = -1;
 		currentGoal.y = -1;
 		currentGoal.waitingTime = -1;
 		currentGoal.isHome = false;
-		
-		ros::NodeHandle n;
 
 		// service to play the robot's path
 		ros::ServiceServer _playPathService = n.advertiseService("play_path", playPathService);
-
 		// service to pause the robot's path
 		ros::ServiceServer _pausePathService = n.advertiseService("pause_path", pausePathService);
-
 		// service to stop the robot's path
 		ros::ServiceServer _stopPathService = n.advertiseService("stop_path", stopPathService);
-
         // service to make the path loop
         ros::ServiceServer _startLoopPath = n.advertiseService("startLoopPath", startLoopPathService);
-
         // service to stop the path loop
         ros::ServiceServer _stopLoopPath = n.advertiseService("stopLoopPath", stopLoopPathService);
-
         // the battery is low so we need to go dock after finishing our path
         ros::ServiceServer _goDockAfterPath = n.advertiseService("goDockAfterPath", goDockAfterPathService);
-
 		// tell the action client that we want to spin a thread by default
-		ac = std::shared_ptr<MoveBaseClient> (new MoveBaseClient("move_base", true));
 		
+		ac = std::shared_ptr<MoveBaseClient> (new MoveBaseClient("move_base", true));	
 		// get the current status of the goal 
 		ros::Subscriber goalResult = n.subscribe("/move_base/result",1,goalResultCallback);
-
 		// wait for the action server to come up
 		while(!ac->waitForServer(ros::Duration(5.0)))
 			ROS_INFO("Waiting for the move_base action server to come up");

@@ -190,6 +190,25 @@ void batteryCallback(const gobot_msg_srv::BatteryMsg::ConstPtr& msg){
     }
 }
 
+void explorationCallback(const std_msgs::Int8::ConstPtr& msg){
+    std::vector<uint8_t> color;
+    if(current_stage<COMPLETE_STAGE){
+        switch(msg->data){
+            //hector exploration completed
+            case 1:
+                current_stage=FREE_STAGE;
+                color.push_back(RED);
+                color.push_back(BLUE);
+                color.push_back(GREEN);
+                setLedRunning(color);
+                break;
+            default:
+                current_stage=FREE_STAGE;
+                break;
+        }
+    }
+}
+
 int main(int argc, char **argv) {
     ros::init(argc, argv, "led");
     ros::NodeHandle nh;
@@ -202,6 +221,7 @@ int main(int argc, char **argv) {
     ros::Subscriber bumpersSub = nh.subscribe("/bumpers_topic", 1, newBumpersInfo);
     ros::Subscriber initialPoseResult = nh.subscribe("/gobot_recovery/find_initial_pose",1, initialPoseResultCallback);
     ros::Subscriber battery = nh.subscribe("/battery_topic",1, batteryCallback);
+    ros::Subscriber exploration = nh.subscribe("/move_base_controller/exploration_result",1,explorationCallback);
     last_time=ros::Time::now();
 
     ros::spin();

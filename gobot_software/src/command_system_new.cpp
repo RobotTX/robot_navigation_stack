@@ -29,6 +29,7 @@ std::map<std::string, boost::shared_ptr<tcp::socket>> sockets;
 static const std::string sep = std::string(1, 31);
 static const char sep_c = 31;
 
+
 template<typename Out>
 void split(const std::string &s, const char delim, Out result) {
     std::stringstream ss;
@@ -1053,12 +1054,13 @@ bool sendMessageToSock(boost::shared_ptr<tcp::socket> sock, const std::string me
         socketsMutex.lock();
         /// We send the result of the command to the given socket
         boost::asio::write(*sock, boost::asio::buffer(message, message.length()));
-        socketsMutex.unlock();
-        
+
         ROS_INFO("(Command system) Message sent succesfully");
+        socketsMutex.unlock();
         return true;
     } catch (std::exception& e) {
         ROS_ERROR("(Command system) Message not sent : %s", e.what());
+        socketsMutex.unlock();
         return false;
     }
 }
@@ -1071,12 +1073,13 @@ bool sendMessageToAll(const std::string message){
         /// We send the result of the command to every Qt app
         for(auto const &elem : sockets)
             boost::asio::write(*(elem.second), boost::asio::buffer(message, message.length()));
-        socketsMutex.unlock();
-        
+
         ROS_INFO("(Command system) Message sent succesfully");
+        socketsMutex.unlock();
         return true;
     } catch (std::exception& e) {
         ROS_ERROR("(Command system) Message not sent : %s", e.what());
+        socketsMutex.unlock();
         return false;
     }
 }
@@ -1109,7 +1112,9 @@ void session(boost::shared_ptr<tcp::socket> sock){
 
 
             for(int i = 0; i < length; i++){
+                //Null
                 if(static_cast<int>(data[i]) != 0){
+                    //ETB
                     if(static_cast<int>(data[i]) == 23){
                         ROS_INFO("(Command system) Command complete %s", ip.c_str());
                         finishedCmd = 1;
@@ -1122,6 +1127,7 @@ void session(boost::shared_ptr<tcp::socket> sock){
             if(commandStr.length() > 0){
 
                 /// Split the command from a str to a vector of str
+                ///cmd+sep+param1+sep+param2+sep+ETB+sep
                 split(commandStr, sep_c, std::back_inserter(command));
 
                 if(finishedCmd){
@@ -1195,6 +1201,7 @@ void server(void){
             socketsMutex.unlock();
 
             /// Launch the session thread which will communicate with the server
+            //tx??//one thread for one command (even from the same IP?)
             std::thread(session, sock).detach();
         } else 
             ROS_WARN("(Command system) The ip %s tried to connect to the robot while already scanning with ip %s", ip.c_str(), scanningIp.c_str());

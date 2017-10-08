@@ -4,15 +4,16 @@ int count(0);
 int noFrontiersLeft(0);
 bool exploring(false);
 
-double new_goal_frequency(0.25);
-int no_frontier_threshold(8);
+double new_goal_frequency(0.1);
+int no_frontier_threshold(10);
 int back_to_start_when_finished(0);
 geometry_msgs::Pose startingPose;
 std::string map_frame;
 std::string base_frame;
-
 /// Simple Action client
 std::shared_ptr<actionlib::SimpleActionClient<move_base_msgs::MoveBaseAction>> ac;
+
+ros::Publisher exploration_pub;
 
 /// To get the starting position
 bool getRobotPos(void){
@@ -49,7 +50,7 @@ bool getRobotPos(void){
 }
 
 /// To make the robot go back to its starting position
-void backToStart(void){
+void backToStart(){
     ROS_INFO("(move_base_controller) Back to start launched...");
     switch(back_to_start_when_finished){
         case 1:
@@ -93,11 +94,9 @@ void doExploration(void){
         /// We want to refresh the goal after a certain time or when we reached it
         if(count >= (5 / new_goal_frequency) || ac->getState() == actionlib::SimpleClientGoalState::SUCCEEDED){
             hector_nav_msgs::GetRobotTrajectory arg;
-
             /// Get an array of goals to follow
             if(ros::service::call("get_exploration_path", arg)){
                 std::vector<geometry_msgs::PoseStamped> poses = arg.response.trajectory.poses;
-
                 if(!poses.empty()){
                     ROS_INFO("(move_base_controller) Moving to frontier...");
                     noFrontiersLeft = 0;
@@ -134,10 +133,12 @@ void doExploration(void){
                 ROS_WARN("(move_base_controller) get_exploration_path service call failed");
         } else
             count++;
-
         ros::spinOnce();
         loop_rate.sleep();
     }
+    std_msgs::Int8 result;
+    result.data=1;
+    exploration_pub.publish(result);
     ROS_WARN("(move_base_controller) Exploration finished");
 }
 
@@ -194,11 +195,14 @@ int main(int argc, char* argv[]){
     nh.param<std::string>("base_frame", base_frame, "base_link");
     ROS_INFO("(move_base_controller) base_frame : %s", base_frame.c_str());
 
-    nh.param<double>("new_goal_frequency", new_goal_frequency, 0.25);
+    nh.param<double>("new_goal_frequency", new_goal_frequency, 0.1);
     ROS_INFO("(move_base_controller) new_goal_frequency : %f", new_goal_frequency);
 
     nh.param<int>("no_frontier_threshold", no_frontier_threshold, 5);
     ROS_INFO("(move_base_controller) no_frontier_threshold : %d", no_frontier_threshold);
+
+    //Publish when exploration is complete
+    exploration_pub = nh.advertise<std_msgs::Int8>("exploration_result",10);
 
     /// Create an actionlibClient to be able to send and monitor goals
     ac = std::shared_ptr<actionlib::SimpleActionClient<move_base_msgs::MoveBaseAction>>(new actionlib::SimpleActionClient<move_base_msgs::MoveBaseAction>("move_base", true));
