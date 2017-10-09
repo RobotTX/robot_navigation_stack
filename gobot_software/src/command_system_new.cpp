@@ -381,10 +381,10 @@ bool robotStartup(const std::vector<std::string> command){
     return false;
 }
 
-/// First param = i, then the path name, then quadriplets of parameters to represent path points (path point name, posX, posY, waiting time) 
+/// First param = i, then the path name, then quadriplets of parameters to represent path points (path point name, posX, posY, waiting time,yaw) 
 bool newPath(const std::vector<std::string> command){
     ros::NodeHandle n;
-    if(command.size() >= 5 && command.size()%4 == 2){
+    if(command.size() >= 6 && command.size()%5 == 2){
 
         ROS_INFO("(Command system) Path received :");
 
@@ -891,6 +891,24 @@ bool goDock(void){
 
 
 /*********************************** SERVICES ***********************************/
+bool pausePathSrvCallback(std_srvs::Empty::Request &req, std_srvs::Empty::Response &res){
+    std::vector<std::string> str;
+    str.push_back("pause");
+    return pausePath(str);
+}
+
+bool playPathSrvCallback(std_srvs::Empty::Request &req, std_srvs::Empty::Response &res){
+    std::vector<std::string> str;
+    str.push_back("pause");
+    return playPath(str);
+}
+
+bool stopPathSrvCallback(std_srvs::Empty::Request &req, std_srvs::Empty::Response &res){
+    std::vector<std::string> str;
+    str.push_back("pause");
+    return stopPath(str);
+}
+
 
 bool setDockStatus(gobot_msg_srv::SetDockStatus::Request &req, gobot_msg_srv::SetDockStatus::Response &res){
     ROS_INFO("(Command system) setDockStatus service called %d", req.status);
@@ -1242,6 +1260,10 @@ int main(int argc, char* argv[]){
         ros::ServiceServer getDockStatusSrv = n.advertiseService("getDockStatus", getDockStatus);
         ros::ServiceServer lowBatterySrv = n.advertiseService("lowBattery", lowBattery);
         ros::ServiceServer goDockSrv = n.advertiseService("goDock", goDockService);
+
+        ros::ServiceServer pausePathSrv = n.advertiseService("/command_system/pause_path", pausePathSrvCallback);
+        ros::ServiceServer playPathSrc = n.advertiseService("/command_system/play_path", playPathSrvCallback);
+        ros::ServiceServer stopPathSrc = n.advertiseService("/command_system/stop_path", stopPathSrvCallback);
 
         n.param<bool>("simulation", simulation, false);
         ROS_INFO("(Command system) simulation : %d", simulation);

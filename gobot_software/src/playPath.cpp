@@ -153,13 +153,14 @@ void goNextPoint(){
 	if(path.size()-1 == stage)
 		ROS_INFO("(PlayPath::goNextPoint) This is my final destination");
 
-	ROS_INFO("(PlayPath::goNextPoint) goNextPoint called %d [%f, %f]", stage, path.at(stage).x, path.at(stage).y);
+	ROS_INFO("(PlayPath::goNextPoint) goNextPoint called %d [%f, %f, %f]", stage, path.at(stage).x, path.at(stage).y,path.at(stage).yaw);
 
     Point point;
     point.x = path.at(stage).x;
     point.y = path.at(stage).y;
     point.waitingTime = path.at(stage).waitingTime;
     point.isHome = false;
+	point.yaw = path.at(stage).yaw;
 
     goToPoint(point);
 }
@@ -169,14 +170,17 @@ void goToPoint(const Point& point){
 	ROS_INFO("(PlayPath::goToPoint) goToPoint [%f, %f]", point.x, point.y);
 	move_base_msgs::MoveBaseGoal goal;
 
+	tf::Quaternion quaternion;
+	quaternion.setEuler(0, 0, -(point.yaw-90)*3.14159/180);
+
 	goal.target_pose.header.frame_id = "map";
     goal.target_pose.header.stamp = ros::Time::now();
     goal.target_pose.pose.position.x = point.x;
     goal.target_pose.pose.position.y = point.y;
-    goal.target_pose.pose.orientation.x = 0;
-    goal.target_pose.pose.orientation.y = 0;
-    goal.target_pose.pose.orientation.z = 0;
-    goal.target_pose.pose.orientation.w = 1;
+    goal.target_pose.pose.orientation.x = quaternion.x();
+    goal.target_pose.pose.orientation.y = quaternion.y();
+    goal.target_pose.pose.orientation.z = quaternion.z();
+    goal.target_pose.pose.orientation.w = quaternion.w();
 
 	currentGoal = point;
 	if(ac->isServerConnected()) ac->sendGoal(goal);
@@ -223,17 +227,19 @@ bool playPathService(std_srvs::Empty::Request &req, std_srvs::Empty::Response &r
         int i = 0;
         Point pathPoint;
         while(getline(file, line)){
-        	if(i!= 0 && (i-1)%4 != 0){
+        	if(i!= 0 && (i-1)%5 != 0){
 	        	std::istringstream iss(line);
-        		if((i-1)%4 == 1){
+        		if((i-1)%5 == 1){
         			iss >> pathPoint.x;
-        		} else if((i-1)%4 == 2){
+        		} else if((i-1)%5 == 2){
         			iss >> pathPoint.y;
-        		} else if((i-1)%4 == 3){
+        		} else if((i-1)%5 == 3){
         			iss >> pathPoint.waitingTime;
 		            pathPoint.isHome = false;
-		            path.push_back(pathPoint);
-        		}
+        		} else if((i-1)%5 == 4){
+					iss >> pathPoint.yaw;
+					path.push_back(pathPoint);
+				}
         	}
             i++;
         }
@@ -249,7 +255,7 @@ bool playPathService(std_srvs::Empty::Request &req, std_srvs::Empty::Response &r
 	}
 
 	for(size_t i = 0; i < path.size(); i++)
-		ROS_INFO("(PlayPath::playPathService) Stage %lu [%f, %f], wait %f sec", i, path.at(i).x, path.at(i).y, path.at(i).waitingTime);
+		ROS_INFO("(PlayPath::playPathService) Stage %lu [%f, %f, %f], wait %f sec", i, path.at(i).x, path.at(i).y, path.at(stage).yaw, path.at(i).waitingTime);
 
 	if(currentGoal.x == -1){
 		stage = 0;

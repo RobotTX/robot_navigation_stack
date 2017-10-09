@@ -112,8 +112,8 @@ bool initializePoseSrvCallback(std_srvs::Empty::Request &req, std_srvs::Empty::R
             running = true;
             found_pose=false;
             if(goalActive){
-                ros::service::waitForService("/pause_path", ros::Duration(30.0));
-                ros::service::call("/pause_path",empty_srv);
+                ros::service::waitForService("/command_system/pause_path", ros::Duration(30.0));
+                ros::service::call("/command_system/pause_path",empty_srv);
                 ROS_INFO("Cancelled active goal to proceed gobalo localization.");
             }
 
@@ -192,8 +192,8 @@ bool globalizePoseSrvCallback(std_srvs::Empty::Request &req, std_srvs::Empty::Re
             running = true;
             found_pose=false;
             if(goalActive){
-                ros::service::waitForService("/pause_path", ros::Duration(30.0));
-                ros::service::call("/pause_path",empty_srv);
+                ros::service::waitForService("/command_system/pause_path", ros::Duration(30.0));
+                ros::service::call("/command_system/pause_path",empty_srv);
                 ROS_INFO("Cancelled active goal to proceed gobalo localization.");
             }
             
@@ -286,7 +286,7 @@ void getAmclPoseCallback(const geometry_msgs::PoseWithCovarianceStamped::ConstPt
 }
 
 bool goHomeSrvCallback(std_srvs::Empty::Request &req, std_srvs::Empty::Response &res){
-    ros::service::call("/stop_path",empty_srv);
+    ros::service::call("/command_system/stop_path",empty_srv);
     ROS_INFO("Cancelled active goal to go home.");
 
     ros::service::call("/move_base/clear_costmap",empty_srv);

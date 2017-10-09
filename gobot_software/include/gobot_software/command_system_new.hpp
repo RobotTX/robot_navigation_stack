@@ -136,6 +136,11 @@ bool goDock(void);
 
 
 /*********************************** SERVICES ***********************************/
+bool pausePathSrvCallback(std_srvs::Empty::Request &req, std_srvs::Empty::Response &res);
+
+bool playPathSrvCallback(std_srvs::Empty::Request &req, std_srvs::Empty::Response &res);
+
+bool stopPathSrvCallback(std_srvs::Empty::Request &req, std_srvs::Empty::Response &res);
 
 bool setDockStatus(gobot_msg_srv::SetDockStatus::Request &req, gobot_msg_srv::SetDockStatus::Response &res);
 

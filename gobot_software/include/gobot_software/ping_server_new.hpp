@@ -3,6 +3,7 @@
 
 #include <iostream>
 #include <string>
+#include <signal.h>
 #include <ros/ros.h>
 #include <std_msgs/String.h>
 #include <boost/asio.hpp>

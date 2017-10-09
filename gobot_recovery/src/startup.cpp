@@ -44,17 +44,17 @@ void getButtonCallback(const std_msgs::Int8::ConstPtr& msg){
     if(dt<=5.0){
       if(robot_pause && goal_state==-1){
         ROS_INFO("Continue robot.");
-        ros::service::call("/play_path",empty_srv);
+        ros::service::call("/command_system/play_path",empty_srv);
       }
       else if(!robot_pause && goal_state==1){
         ROS_INFO("Pause robot.");
-        ros::service::call("/pause_path",empty_srv);
+        ros::service::call("/command_system/pause_path",empty_srv);
       }
     }
     else if(dt>5.0 && dt<=10.0 && (goal_state==-2 || goal_state==-1)){
       //play path when robot stop due to aborted goal
       ROS_INFO("Resume robot.");
-      ros::service::call("/play_path",empty_srv);
+      ros::service::call("/command_system/play_path",empty_srv);
     }
     else if(dt>10.0 && dt<=20.0){
       ROS_INFO("Home robot.");

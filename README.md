@@ -16,8 +16,7 @@ Packages you'll need to install in order to make everything works :
 * hector_gazebo-plugins (gazebo)
 * telop_twist_keyboard (if you want to make the robot with your keyboard)
 
-To install this packages : 
-
+To install this driver packages : 
 ```
 sudo apt install ros-kinetic-navigation
 sudo apt install ros-kinetic-robot-pose-publisher
@@ -29,22 +28,11 @@ sudo apt install ros-kinetic-telop-twist-keyboard
 sudo apt install ros-kinetic-urg-node
 sudo apt install ros-kinetic-hector-sensors-description (gazebo)
 ```
-To be installed:
-
+To configure the system files:
 '''
 sudo visudo (avoid password for sudo cmd)
 
-*Log in without password
-
 sudo apt install fping
-
-bashrc:
-alias ls='ls -l --color'
-alias cat_make='cd ~/catkin_ws/ && catkin_make && source devel/setup.bash && . ~/catkin_ws/devel/setup.bash'
-alias shut='sudo shutdown -h now'
-source /opt/ros/kinetic/setup.bash
-source /home/username/catkin_ws/devel/setup.bash
-export ROS_PACKAGE_PATH=$ROS_PACKAGE_PATH:/home/username/catkin_ws/src
 
 udev rules (avoid sudo chmod for /dev/tty)
 sudo cp <rule file> /etc/udev/rules.d/>
@@ -54,13 +42,23 @@ sudo apt-get install openssh-server openssh-client
 
 settings >> appearance >> behavior
 sudo apt install unity-tweak-tool
+
+*Log in without password
+
+bashrc:
+alias ls='ls -l --color'
+alias cat_make='cd ~/catkin_ws/ && catkin_make && source devel/setup.bash && . ~/catkin_ws/devel/setup.bash'
+alias shut='sudo shutdown -h now'
+source /opt/ros/kinetic/setup.bash
+source /home/username/catkin_ws/devel/setup.bash
+export ROS_PACKAGE_PATH=$ROS_PACKAGE_PATH:/home/username/catkin_ws/src
 '''
 
 ### Installing
 
-Then catkin_make, then add the packages above to the src, then catkin_make again.
+gobot_navigation_stack
 
-The packages above needs gobot_base to be compiled first and the dependencies in package.xml and CMakeLists.txt are not working correctly yet (need investigation).
+Then catkin_make, then add the packages above to the src, then catkin_make again.
 
 # Description of the packages :
 

@@ -11,6 +11,7 @@
 #include <actionlib_msgs/GoalStatusArray.h>
 #include <move_base_msgs/MoveBaseAction.h>
 #include <move_base_msgs/MoveBaseActionResult.h>
+#include <tf/transform_broadcaster.h>
 #include <std_srvs/Empty.h>
 #include <std_msgs/String.h>
 #include <std_msgs/Int8.h>
@@ -32,6 +33,8 @@ struct Point {
 	double waitingTime;
     // whether or not this point is the charging point of the robot
     bool isHome;
+
+    double yaw;
 };
 
 bool setSpeed(const char directionR, const int velocityR, const char directionL, const int velocityL);

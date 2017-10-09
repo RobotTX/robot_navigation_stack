@@ -106,7 +106,6 @@ void updateIP(){
         for(int j = 0; j < connectedIPs.size(); ++j)
             if(oldIPs.at(i).first.compare(connectedIPs.at(j)) == 0)
                 still_connected = true;
-
         if(still_connected)
             oldIPs.at(i).second = 0;
         else {
@@ -118,12 +117,12 @@ void updateIP(){
                 msg.data = oldIPs.at(i).first;
                 disco_pub.publish(msg);
                 toRemove.push_back(i);
-            }
+            } else
+                ROS_WARN("Could not ping IP %s for %d time(s)", oldIPs.at(i).first.c_str(), oldIPs.at(i).second);
         }
     }
 
     /// We remove all the disconnected IPs from the oldIPs vector
-
     for(int i = toRemove.size()-1; i >= 0; i--)
         oldIPs.erase(oldIPs.begin() + toRemove.at(i));
 
