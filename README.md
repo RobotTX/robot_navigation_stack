@@ -48,6 +48,12 @@ export ROS_PACKAGE_PATH=$ROS_PACKAGE_PATH:/home/username/catkin_ws/src
 
 udev rules (avoid sudo chmod for /dev/tty)
 sudo cp <rule file> /etc/udev/rules.d/>
+sudo udevadm control --reload-rules && sudo service udev restart && sudo udevadm trigger
+
+sudo apt-get install openssh-server openssh-client
+
+settings >> appearance >> behavior
+sudo apt install unity-tweak-tool
 '''
 
 ### Installing
