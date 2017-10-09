@@ -1,5 +1,6 @@
 int16 BatteryStatus 
 int16 BatteryVoltage
+float64 Percentage
 int16 ChargingCurrent
 bool ChargingFlag
 int16 Temperature

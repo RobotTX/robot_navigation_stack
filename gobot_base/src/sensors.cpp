@@ -2,6 +2,9 @@
 
 #define ERROR_THRESHOLD 1
 
+#define BATTERY_MAX 23000
+#define BATTERY_MIN 21500
+
 ros::Publisher bumper_pub;
 ros::Publisher ir_pub;
 ros::Publisher proximity_pub;
@@ -159,7 +162,15 @@ void publishSensors(void){
             battery_data.Temperature = (buff.at(36) << 8) | buff.at(37);
             battery_data.RemainCapacity = ((buff.at(38) << 8) | buff.at(39))/100;
             battery_data.FullCapacity = ((buff.at(40) << 8) | buff.at(41))/100;
-
+            double percentage = battery_data.BatteryVoltage;
+            percentage=(percentage-BATTERY_MIN)/(BATTERY_MAX-BATTERY_MIN);
+            
+            if(percentage>1.0)
+                battery_data.Percentage=1.0;
+            else if(percentage<0.0)
+                battery_data.Percentage=0.0;
+            else
+                battery_data.Percentage=percentage;
 
             if(battery_data.BatteryVoltage == 0 || battery_data.ChargingCurrent == 0 || battery_data.Temperature < 0){
                 error = true;
@@ -168,7 +179,7 @@ void publishSensors(void){
                 setSpeed('F', 0, 'F', 0);
             } else {
                 if(battery_data.ChargingCurrent != last_charging_current){
-                    if(battery_data.ChargingCurrent > 1200 || (last_charging_current > 0 && battery_data.ChargingCurrent - last_charging_current > 60))
+                    if((battery_data.BatteryVoltage>BATTERY_MAX && battery_data.ChargingCurrent>500) || battery_data.ChargingCurrent > 1000 || (last_charging_current > 0 && battery_data.ChargingCurrent - last_charging_current > 60))
                         battery_data.ChargingFlag = true;
                     else 
                         battery_data.ChargingFlag = false;
@@ -288,17 +299,21 @@ bool setLedSrvCallback(gobot_msg_srv::LedStrip::Request &req, gobot_msg_srv::Led
 
 
 void mySigintHandler(int sig)
-{
-    if(serialConnection.isOpen()){
-        //Turn off LED when shut down node
-        connectionMutex.lock();
-        serialConnection.write(std::vector<uint8_t>({0xB0,0x03,0x01,0x00,0x00,0x00,0x00,0x00,0x03,0xE8,0x1B}));
-        std::vector<uint8_t> buff;
-        serialConnection.read(buff,5);
-        serialConnection.flush();
-        serialConnection.close();
-        connectionMutex.unlock();
-    }
+{   
+    try{
+        if(serialConnection.isOpen()){
+            //Turn off LED when shut down node
+            connectionMutex.lock();
+            serialConnection.write(std::vector<uint8_t>({0xB0,0x03,0x01,0x00,0x00,0x00,0x00,0x00,0x03,0xE8,0x1B}));
+            std::vector<uint8_t> buff;
+            serialConnection.read(buff,5);
+            serialConnection.flush();
+            serialConnection.close();
+            connectionMutex.unlock();
+        }
+    } catch (std::exception& e) {
+		ROS_ERROR("(Sensors) exception : %s", e.what());
+	}
 
     ros::shutdown();
 }

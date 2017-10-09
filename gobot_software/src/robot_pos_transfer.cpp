@@ -6,18 +6,23 @@ using boost::asio::ip::tcp;
 
 std::mutex socketsMutex;
 std::map<std::string, boost::shared_ptr<tcp::socket>> sockets;
-double pos_x,pos_y,pos_yaw;
+std::string robot_string;
+
+ros::Publisher disco_pub;
 
 void sendRobotPos(const ros::TimerEvent&){
     if(sockets.size() > 0){
-        try {
-            std::string robot_string = std::to_string(pos_x) + " " + std::to_string(pos_y) + " " + std::to_string(pos_yaw) + " ";
-            socketsMutex.lock();
-            /// We send the position of the robot to every Qt app
-            for(auto const &elem : sockets)
+        socketsMutex.lock();
+        /// We send the position of the robot to every Qt app
+        for(auto const &elem : sockets){
+            try {
                 boost::asio::write(*(elem.second), boost::asio::buffer(robot_string, robot_string.length()));
-        } catch (std::exception& e) {
-            ROS_ERROR("(Robot Pos) Exception : %s", e.what());
+            } catch (std::exception& e) {
+                ROS_ERROR("(Robot Pos) Exception %s : %s", elem.first.c_str(), e.what());
+                std_msgs::String msg;
+                msg.data = elem.first;
+                disco_pub.publish(msg);
+            }
         }
         socketsMutex.unlock();
     }
@@ -30,9 +35,7 @@ void getRobotPos(const geometry_msgs::Pose::ConstPtr& msg){
     tfScalar pitch;
     tfScalar yaw;
     matrix.getRPY(roll, pitch, yaw);
-    pos_x=msg->position.x;
-    pos_y=msg->position.y;
-    pos_yaw=yaw;
+    robot_string = std::to_string(msg->position.x) + " " + std::to_string(msg->position.y) + " " + std::to_string(yaw) + " ";
 }
 
 /*********************************** CONNECTION FUNCTIONS ***********************************/
@@ -62,7 +65,6 @@ void server(void){
 
 void serverDisconnected(const std_msgs::String::ConstPtr& msg){
     ROS_WARN("(Robot Pos) The ip %s just disconnected", msg->data.c_str());
-
     /// Close and remove the socket
     socketsMutex.lock();
     if(sockets.count(msg->data)){
@@ -72,6 +74,7 @@ void serverDisconnected(const std_msgs::String::ConstPtr& msg){
     socketsMutex.unlock();
 }
 
+
 /*********************************** MAIN ***********************************/
 
 int main(int argc, char **argv){
@@ -80,6 +83,8 @@ int main(int argc, char **argv){
 	ROS_INFO("(Robot Pos) Ready to be launched.");
 
 	ros::NodeHandle n;
+
+    disco_pub = n.advertise<std_msgs::String>("server_disconnected", 10);
 	
     //Periodically send robot pose to connected clients
     ros::Timer timer = n.createTimer(ros::Duration(1), sendRobotPos);

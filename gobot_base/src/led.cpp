@@ -21,6 +21,7 @@
 ros::Time last_time;
 
 int current_stage = FREE_STAGE;
+int charging_state = 0, pre_charing_state=-1;
 
 void setLedPermanent(std::vector<uint8_t> &color)
 {
@@ -120,6 +121,7 @@ void initialPoseResultCallback(const std_msgs::Int8::ConstPtr& msg){
     std::vector<uint8_t> color;
     if(current_stage<LOCALIZE_STAGE){
         switch(msg->data){
+            //START
             case -1:
                 current_stage=FREE_STAGE;
                 color.push_back(BLUE);
@@ -127,16 +129,19 @@ void initialPoseResultCallback(const std_msgs::Int8::ConstPtr& msg){
                 setLedRunning(color);
                 break;
             case 0:
+            //NOT FOUND
                 current_stage=FREE_STAGE;
                 color.push_back(RED);
                 setLedPermanent(color);
                 break;
             case 1:
+            //FOUND
                 current_stage=FREE_STAGE;
                 color.push_back(GREEN);
                 setLedPermanent(color);
                 break;
             case 2:
+            //CANCEL
                 current_stage=FREE_STAGE;
                 color.push_back(BLUE);
                 setLedPermanent(color);
@@ -148,15 +153,6 @@ void initialPoseResultCallback(const std_msgs::Int8::ConstPtr& msg){
                 break;
         }
     }
-}
-
-void timerCallback(const ros::TimerEvent&){
-    //Turn off LED if no goal for 5 mins
-    if((ros::Time::now() - last_time).toSec()>300 && current_stage==FREE_STAGE){
-        std::vector<uint8_t> color;
-        color.push_back(WHITE);
-        setLedPermanent(color);
-    }   
 }
 
 void newBumpersInfo(const gobot_msg_srv::BumperMsg::ConstPtr& msg){
@@ -176,16 +172,66 @@ void newBumpersInfo(const gobot_msg_srv::BumperMsg::ConstPtr& msg){
 }
 
 void batteryCallback(const gobot_msg_srv::BatteryMsg::ConstPtr& msg){
+    if(msg->Percentage<=0.25)
+        charging_state=0;
+    else if(msg->Percentage<=0.75)
+        charging_state=1;
+    else if(msg->Percentage<1.0)
+        charging_state=2;
+    else if(msg->Percentage==1.0)
+        charging_state=3;
+
     std::vector<uint8_t> color;
-    if(msg->ChargingFlag && current_stage<CHARGING_STAGE){
+    if(msg->ChargingFlag && (current_stage<CHARGING_STAGE || charging_state!=pre_charing_state)){
         current_stage = CHARGING_STAGE;
-        color.push_back(YELLOW);
-        color.push_back(WHITE);
-        setLedRunning(color);
+        pre_charing_state=charging_state;
+        switch (charging_state){
+            case 0:
+            color.push_back(MAGENTA);
+            color.push_back(WHITE);
+            setLedRunning(color);
+            break;
+
+            case 1:
+            color.push_back(YELLOW);
+            color.push_back(WHITE);
+            setLedRunning(color);
+            break;
+
+            case 2:
+            color.push_back(CYAN);
+            color.push_back(WHITE);
+            setLedRunning(color);
+            break;
+
+            case 3:
+            color.push_back(CYAN);
+            setLedPermanent(color);
+            break;
+        }
     }
     else if(!msg->ChargingFlag && current_stage==CHARGING_STAGE){
-        color.push_back(YELLOW);
-        setLedPermanent(color);
+        switch (charging_state){
+            case 0:
+            color.push_back(MAGENTA);
+            setLedPermanent(color);
+            break;
+
+            case 1:
+            color.push_back(YELLOW);
+            setLedPermanent(color);
+            break;
+
+            case 2:
+            color.push_back(CYAN);
+            setLedPermanent(color);
+            break;
+
+            case 3:
+            color.push_back(CYAN);
+            setLedPermanent(color);
+            break;
+        }
         current_stage = FREE_STAGE;
     }
 }
@@ -208,6 +254,16 @@ void explorationCallback(const std_msgs::Int8::ConstPtr& msg){
         }
     }
 }
+
+void timerCallback(const ros::TimerEvent&){
+    //Turn off LED if no goal for 5 mins
+    if((ros::Time::now() - last_time).toSec()>300 && current_stage==FREE_STAGE){
+        std::vector<uint8_t> color;
+        color.push_back(WHITE);
+        setLedPermanent(color);
+    }   
+}
+
 
 int main(int argc, char **argv) {
     ros::init(argc, argv, "led");

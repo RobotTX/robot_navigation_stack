@@ -22,11 +22,33 @@ To install this packages :
 sudo apt install ros-kinetic-navigation
 sudo apt install ros-kinetic-robot-pose-publisher
 sudo apt install ros-kinetic-gmapping
+sudo apt install ros-kinetic-openslam-gmapping
 sudo apt install ros-kinetic-hector-nav-msgs
 sudo apt install ros-kinetic-teb-local-planner
-sudo apt install ros-kinetic-hector-sensors-description
 sudo apt install ros-kinetic-telop-twist-keyboard
+sudo apt install ros-kinetic-urg-node
+sudo apt install ros-kinetic-hector-sensors-description (gazebo)
 ```
+To be installed:
+
+'''
+sudo visudo (avoid password for sudo cmd)
+
+*Log in without password
+
+sudo apt install fping
+
+bashrc:
+alias ls='ls -l --color'
+alias cat_make='cd ~/catkin_ws/ && catkin_make && source devel/setup.bash && . ~/catkin_ws/devel/setup.bash'
+alias shut='sudo shutdown -h now'
+source /opt/ros/kinetic/setup.bash
+source /home/username/catkin_ws/devel/setup.bash
+export ROS_PACKAGE_PATH=$ROS_PACKAGE_PATH:/home/username/catkin_ws/src
+
+udev rules (avoid sudo chmod for /dev/tty)
+sudo cp <rule file> /etc/udev/rules.d/>
+'''
 
 ### Installing
 

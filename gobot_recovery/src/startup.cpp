@@ -41,7 +41,7 @@ void getButtonCallback(const std_msgs::Int8::ConstPtr& msg){
 	else if(msg->data==1 && !buttonOn){
 		buttonOn = true;
     double dt = (ros::Time::now() - action_time).toSec();
-    if(dt>0.1 && dt<5.0){
+    if(dt<=5.0){
       if(robot_pause && goal_state==-1){
         ROS_INFO("Continue robot.");
         ros::service::call("/play_path",empty_srv);
@@ -51,16 +51,16 @@ void getButtonCallback(const std_msgs::Int8::ConstPtr& msg){
         ros::service::call("/pause_path",empty_srv);
       }
     }
-    else if(dt>5.0 && dt<10.0 && (goal_state==-2 || goal_state==-1)){
+    else if(dt>5.0 && dt<=10.0 && (goal_state==-2 || goal_state==-1)){
       //play path when robot stop due to aborted goal
       ROS_INFO("Resume robot.");
       ros::service::call("/play_path",empty_srv);
     }
-    else if(dt>10.0 && dt<20.0){
+    else if(dt>10.0 && dt<=20.0){
       ROS_INFO("Home robot.");
       ros::service::call("/gobot_recovery/go_home",empty_srv);
 		}
-    else if(dt>20.0 && dt<99.0){
+    else if(dt>99.0){
       ROS_INFO("Globalize robot.");
       ros::service::call("/gobot_recovery/globalize_pose",empty_srv);
     }

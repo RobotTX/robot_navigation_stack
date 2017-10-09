@@ -123,8 +123,8 @@ void updateIP(){
     }
 
     /// We remove all the disconnected IPs from the oldIPs vector
-    //tx??//sth wrong here. should erase from end to begin
-    for(int i = 0; i < toRemove.size(); ++i)
+
+    for(int i = toRemove.size()-1; i >= 0; i--)
         oldIPs.erase(oldIPs.begin() + toRemove.at(i));
 
     /// We had the newly connectedIPs to the oldIPs vector
@@ -250,8 +250,6 @@ int main(int argc, char* argv[]){
     else
         ROS_INFO("(ping_server) parameter <path_stage_file> does not exist");
 
-
-    ros::Publisher publisher = n.advertise<std_msgs::String>("server_disconnected", 10);
 
     /// Thread which will get an array of potential servers
     std::thread t1(checkNewServers);
