@@ -1,7 +1,0 @@
-<library path="lib/libinit_back_recovery">
-  <class name="init_back_recovery/InitBackRecovery" type="init_back_recovery::InitBackRecovery" base_class_type="nav_core::RecoveryBehavior">
-    <description>
-      empty
-    </description>
-  </class>
-</library>

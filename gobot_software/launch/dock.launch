@@ -1,8 +1,0 @@
-<?xml version="1.0"?>
-<launch>
-	
-	<include file="$(find gobot_software)/launch/robot_infos_params.launch"/>
-
-	<node pkg="robot_pose_publisher" type="robot_pose_publisher" name ="robot_pose_publisher" required="true"/>
-    <node pkg="gobot_software" type="auto_docking" name="auto_docking" output="screen" required="true" />
-</launch>

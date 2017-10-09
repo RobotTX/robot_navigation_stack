@@ -1,9 +1,0 @@
-<?xml version="1.0"?>
-<launch>
-    <include file="$(find gobot_software)/launch/robot_infos_params.launch"/>
-    <include file="$(find gobot_navigation)/launch/amcl.launch"/>
-    <include file="$(find gobot_navigation)/launch/move_base.launch"/>
-    <include file="$(find gobot_recovery)/launch/gobot_recovery.launch"/>
-
-    <!--node pkg="gobot_software" type="initialPosePublisher" name="initialPosePublisher" output="screen" respawn="false"/-->
-</launch>

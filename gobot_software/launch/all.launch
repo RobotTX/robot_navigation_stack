@@ -1,5 +1,0 @@
-<?xml version="1.0"?>
-<launch>
-    <include file="$(find gobot_software)/launch/slam.launch"/>
-    <include file="$(find gobot_navigation)/launch/slam.launch"/>
-</launch>

@@ -1,8 +1,0 @@
-<launch>
-  <param name="robot_description"
-    command="$(find xacro)/xacro --inorder '$(find gobot_description)/urdf/gobot.urdf.xacro'" />
-
-  <!-- Show in Rviz   -->
-  <node name="rviz" pkg="rviz" type="rviz"/>
-
-</launch>

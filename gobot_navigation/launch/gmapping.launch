@@ -1,7 +1,0 @@
-<?xml version="1.0"?>
-<launch>
-    
-    <node pkg="gmapping" type="slam_gmapping" name="slam_gmapping" output="screen" required="true">
-        <rosparam file="$(find gobot_navigation)/params/gmapping_params.yaml" command="load" />
-    </node>
-</launch>
