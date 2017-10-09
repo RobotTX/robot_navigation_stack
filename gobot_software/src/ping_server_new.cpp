@@ -116,7 +116,7 @@ void pingAllIPs(void){
         }
 
         /// We remove all the disconnected IPs from the oldIPs vector
-        for(int i = 0; i < toRemove.size(); ++i)
+        for(int i = toRemove.size() - 1; i > 0; --i)
             oldIPs.erase(oldIPs.begin() + toRemove.at(i));
 
         /// We had the newly connectedIPs to the oldIPs vector
