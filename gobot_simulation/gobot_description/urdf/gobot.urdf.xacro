@@ -1,0 +1,137 @@
+<?xml version="1.0"?>
+<robot name="gobot" xmlns:xacro="http://ros.org/wiki/xacro">
+
+    <!-- general xacro's file -->
+    <xacro:include filename="$(find gobot_description)/urdf/utilities/materials.xacro" />
+    <xacro:include filename="$(find gobot_description)/urdf/utilities/macros.xacro" />
+    <!-- xacro for base link -->
+    <xacro:include filename="$(find gobot_description)/urdf/base/base_link.urdf.xacro" /> 
+    <!-- xacro for the driving wheels -->
+    <xacro:include filename="$(find gobot_description)/urdf/wheels/wheel.urdf.xacro" /> 
+    <xacro:include filename="$(find gobot_description)/urdf/wheels/caster.urdf.xacro" /> 
+    <!-- xacro for the laser -->
+    <xacro:include filename="$(find gobot_description)/urdf/laser/hokuyo_04lx_laser.urdf.xacro" /> 
+    <!-- xacro for the odometry -->
+    <xacro:include filename="$(find gobot_description)/urdf/wheels/wheel_controller.gazebo.xacro" />
+    <!-- xacro for the bumpers -->
+    <xacro:include filename="$(find gobot_description)/urdf/bumper/bumper.urdf.xacro" />
+    <xacro:include filename="$(find gobot_description)/urdf/bumper/cyl_bumper.urdf.xacro" />
+    <!-- xacro for sonars -->
+    <xacro:include filename="$(find gobot_description)/urdf/sonar/sonar.urdf.xacro" />
+    <!-- xacro for cliff sensors -->
+    <xacro:include filename="$(find gobot_description)/urdf/cliff/cliff.urdf.xacro" />
+    <!-- xacro for camera (IR) sensors -->
+    <xacro:include filename="$(find gobot_description)/urdf/camera/camera.urdf.xacro" /> 
+    <!-- xacro for the battery -->
+    <xacro:include filename="$(find gobot_description)/urdf/battery/battery.urdf.xacro" />
+
+    <!-- Base -->
+    <xacro:property name="base_width" value="0.648" />
+    <xacro:property name="base_length" value="0.599" />
+    <xacro:property name="base_height" value="0.185" />
+    <xacro:property name="lower_base_height" value="0.04" />
+    <xacro:property name="base_space_height" value="0.05" />
+    <xacro:property name="base_space_width" value="0.25" />
+
+    <!-- Laser -->
+    <xacro:property name="laser_width" value="0.01" />
+    <xacro:property name="laser_length" value="0.05" />
+    <xacro:property name="laser_height" value="0.06" />
+
+    <!-- Wheels -->
+    <xacro:property name="driving_wheel_radius" value="0.0725" /> 
+    <xacro:property name="driving_wheel_length" value="0.042" />
+    <xacro:property name="driving_wheel_mass" value="0.6" /> <!-- in kg-->
+
+    <!-- Bumper -->
+    <xacro:property name="bumper_width" value="0.016" />
+    <xacro:property name="bumper_length" value="0.24" />
+    <xacro:property name="bumper_height" value="0.041" />
+    <xacro:property name="bumper_radius" value="0.05" />
+
+    <!-- Battery -->
+    <xacro:property name="battery_height" value="0.015" />
+    <xacro:property name="battery_radius" value="0.0165" />
+
+    <xacro:property name="originZ" value="0.05"/>
+
+    <xacro:property name="visualize" value="false"/>
+
+
+    <!-- robot base -->
+    <base_link base_width="${base_width}" base_length="${base_length}" base_height="${base_height}" lower_base_height="${lower_base_height}" base_space_height="${base_space_height}" base_space_width="${base_space_width}" originZ="${originZ}"/>
+
+
+    <!-- bumpers -->
+    <cyl_bumper name="front_right_cyl_bumper" parent="base_link" height="${bumper_height}" radius="${bumper_radius}" translateX="${base_width/2 - 0.0345}" translateY="${-(base_length/2 - 0.035)}" translateZ="${originZ}" jointLowerLimit="-0.005" jointUpperLimit="0" jointVelocity="0.5"
+        collision="base_link_fixed_joint_lump__front_right_cyl_bumper_collision_12"/>
+    <cyl_bumper name="front_left_cyl_bumper" parent="base_link" height="${bumper_height}" radius="${bumper_radius}" translateX="${base_width/2 - 0.0345}" translateY="${base_length/2 - 0.035}" translateZ="${originZ}" jointLowerLimit="-0.005" jointUpperLimit="0" jointVelocity="0.5"
+        collision="base_link_fixed_joint_lump__front_left_cyl_bumper_collision_10"/>
+    <cyl_bumper name="back_right_cyl_bumper" parent="base_link" height="${bumper_height}" radius="${bumper_radius}" translateX="${-(base_width/2 - 0.0345)}" translateY="${-(base_length/2 - 0.035)}" translateZ="${originZ}" jointLowerLimit="0" jointUpperLimit="0.005" jointVelocity="-0.5"
+        collision="base_link_fixed_joint_lump__back_right_cyl_bumper_collision_4"/>
+    <cyl_bumper name="back_left_cyl_bumper" parent="base_link" height="${bumper_height}" radius="${bumper_radius}" translateX="${-(base_width/2 - 0.0345)}" translateY="${base_length/2 - 0.035}" translateZ="${originZ}" jointLowerLimit="0" jointUpperLimit="0.005" jointVelocity="-0.5"
+        collision="base_link_fixed_joint_lump__back_left_cyl_bumper_collision_2"/>
+
+    <bumper name="front_right_bumper" parent="base_link" width="${bumper_width}" length="${bumper_length}" height="${bumper_height}" translateX="${base_width/2 + bumper_width/2}" translateY="${-bumper_length/2}" translateZ="${originZ}" jointLowerLimit="-0.005" jointUpperLimit="0" jointVelocity="0.5"
+        collision="base_link_fixed_joint_lump__front_right_bumper_collision_11"/>
+    <bumper name="front_left_bumper" parent="base_link" width="${bumper_width}" length="${bumper_length}" height="${bumper_height}" translateX="${base_width/2 + bumper_width/2}" translateY="${bumper_length/2}" translateZ="${originZ}" jointLowerLimit="-0.005" jointUpperLimit="0" jointVelocity="0.5"
+        collision="base_link_fixed_joint_lump__front_left_bumper_collision_9"/>
+    <bumper name="back_right_bumper" parent="base_link" width="${bumper_width}" length="${bumper_length}" height="${bumper_height}" translateX="${-(base_width/2 + bumper_width/2)}" translateY="${-bumper_length/2}" translateZ="${originZ}" jointLowerLimit="0" jointUpperLimit="0.005" jointVelocity="-0.5"
+        collision="base_link_fixed_joint_lump__back_right_bumper_collision_3"/>
+    <bumper name="back_left_bumper" parent="base_link" width="${bumper_width}" length="${bumper_length}" height="${bumper_height}" translateX="${-(base_width/2 + bumper_width/2)}" translateY="${bumper_length/2}" translateZ="${originZ}" jointLowerLimit="0" jointUpperLimit="0.005" jointVelocity="-0.5"
+        collision="base_link_fixed_joint_lump__back_left_bumper_collision_1"/>
+
+
+    <!-- driving wheels -->
+    <wheel fb="front" lr="right" parent="base_link" translateX="${-(base_width/2 - 0.267)}" translateY="-0.220" translateZ="${-(lower_base_height / 2 - driving_wheel_radius)}" flipY="1" radius="${driving_wheel_radius}" length="${driving_wheel_length}" mass="${driving_wheel_mass}" />
+    <wheel fb="front" lr="left" parent="base_link" translateX="${-(base_width/2 - 0.267)}" translateY="0.220" translateZ="${-(lower_base_height / 2 - driving_wheel_radius)}" flipY="1" radius="${driving_wheel_radius}" length="${driving_wheel_length}" mass="${driving_wheel_mass}" />
+
+
+    <!-- Odometry/Wheel controller -->
+    <wheel_controller base_link="base_link" odom_topic="odom" command_topic="cmd_vel" left_wheel_joint="front_left_wheel_joint" right_wheel_joint="front_right_wheel_joint" 
+    update_rate="40" wheel_separation="0.440" wheel_diameter="${driving_wheel_radius*2}" torque="5" />
+
+
+    <!-- caster wheels -->
+    <caster_wheel fb="front" lr="right" parent="base_link" translateX="${base_width/2 - 0.140}" translateY="${-(base_length/2 - 0.090)}" translateZ="${-(lower_base_height / 2 - 0.037)}" flipY="1"  />
+    <caster_wheel fb="front" lr="left" parent="base_link" translateX="${base_width/2 - 0.140}" translateY="${base_length/2 - 0.090}" translateZ="${-(lower_base_height / 2 - 0.037)}" flipY="1"/>
+    <caster_wheel fb="back" lr="right" parent="base_link" translateX="${-(base_width/2 - 0.080)}" translateY="${-(base_length/2 - 0.110)}" translateZ="${-(lower_base_height / 2 - 0.037) + 0.008}" flipY="1"/>
+    <caster_wheel fb="back" lr="left" parent="base_link" translateX="${-(base_width/2 - 0.080)}" translateY="${base_length/2 - 0.110}" translateZ="${-(lower_base_height / 2 - 0.037) + 0.008}" flipY="1"/>
+
+
+    <!-- Hokuyo Laser -->
+    <hokuyo_04lx_laser name="hokuyo" parent="base_link" ros_topic="/scan" update_rate="20" min_angle="${-2.094395102}" max_angle="${2.094395102}" translateX="${base_width/2 - 0.04266}" translateY="0" translateZ="${-0.01 + originZ}" visualize="1"/>
+
+
+    <!-- Cliff sensor, IR technology on real robot but we use a sonar here to simulate -->
+    <!-- In order; front left, back left, front right, back right -->
+    <cliff_sensor name="cliff_sensor" parent="base_link" ros_topic="cliff_sensor_topic" update_rate="10" min_range="0.03" max_range="2.0" field_of_view="0.05" ray_count="1" pos_x="${base_width/2-0.02}" pos_y="${-(base_width/2 - 0.10)}" pos_z="${originZ - lower_base_height/2}" rotation_y="${pi/2}" gaussian_noise="0.03" resolution="0.01" /> 
+    <cliff_sensor name="cliff_sensor_2" parent="base_link" ros_topic="cliff_sensor_2_topic" update_rate="10" min_range="0.01" max_range="2.0" field_of_view="0.05" ray_count="1" pos_x="${-base_width/2+0.02}" pos_y="${-(base_width/2 - 0.10)}" pos_z="${originZ - lower_base_height/2}" rotation_y="${pi/2}" gaussian_noise="0.03" resolution="0.01" />
+    <cliff_sensor name="cliff_sensor_3" parent="base_link" ros_topic="cliff_sensor_3_topic" update_rate="10" min_range="0.01" max_range="2.0" field_of_view="0.05" ray_count="1" pos_x="${base_width/2-0.02}" pos_y="${(base_width/2 - 0.10)}" pos_z="${originZ - lower_base_height/2}" rotation_y="${pi/2}" gaussian_noise="0.03" resolution="0.01" />
+    <cliff_sensor name="cliff_sensor_4" parent="base_link" ros_topic="cliff_sensor_4_topic" update_rate="10" min_range="0.01" max_range="2.0" field_of_view="0.05" ray_count="1" pos_x="${-base_width/2+0.02}" pos_y="${(base_width/2 - 0.10)}" pos_z="${originZ - lower_base_height/2}" rotation_y="${pi/2}" gaussian_noise="0.03" resolution="0.01" />
+
+
+    <!-- Sonar sensors, in order: rear, left side, right side, front right and front left -->
+    <sonar_sensor name="sonar_rear" parent="base_link" ros_topic="/sensors/sonar_sensor/sonar_rear" update_rate="20" min_range="0.15" max_range="2.5" field_of_view="${pi/18}" ray_count="10" pos_x="${-base_width/2}" pos_y="-0.065"  pos_z="0.08" rotation_z="${pi}" gaussian_noise="0.01" resolution="0.0174" visualize="${visualize}"/>
+    <sonar_sensor name="sonar_left" parent="base_link" ros_topic="/sensors/sonar_sensor/sonar_left" update_rate="20" min_range="0.15" max_range="2.5" field_of_view="${pi/18}" ray_count="10" pos_x="-0.009" pos_y="${base_length/2}" pos_z="0.088" rotation_z="${pi/2}" gaussian_noise="0.01" resolution="0.0174" visualize="${visualize}"/>
+    <sonar_sensor name="sonar_right" parent="base_link" ros_topic="/sensors/sonar_sensor/sonar_right" update_rate="20" min_range="0.15" max_range="2.5" field_of_view="${pi/18}" ray_count="10" pos_x="-0.009" pos_y="${-base_length/2}" pos_z="0.088" rotation_z="${3*pi/2}" gaussian_noise="0.01" resolution="0.0174" visualize="${visualize}"/>
+    <sonar_sensor name="sonar_front_right" parent="base_link" ros_topic="/sensors/sonar_sensor/sonar_front_right" update_rate="20" min_range="0.15" max_range="2.5" field_of_view="${pi/18}" ray_count="10" pos_x="${base_width/2}" pos_y="-0.070" pos_z="0.128" rotation_z="0.0" gaussian_noise="0.01" resolution="0.0174" visualize="${visualize}"/>
+    <sonar_sensor name="sonar_front_left" parent="base_link" ros_topic="/sensors/sonar_sensor/sonar_front_left" update_rate="20" min_range="0.15" max_range="2.5" field_of_view="${pi/18}" ray_count="10" pos_x="${base_width/2}" pos_y="0.070" pos_z="0.128" rotation_z="0.0" gaussian_noise="0.01" resolution="0.0174" visualize="${visualize}"/>
+
+
+    <!-- IR sensors -->
+    <camera_sensor name="rear" parent="base_link" pos_x="${-base_width/2}" pos_y="0" pos_z="0.126" rotation_z="0" angle="${pi * 15 / 180}"/>
+    <camera_sensor name="right" parent="base_link" pos_x="0" pos_y="${-base_length/2}" pos_z="0.126" rotation_z="${pi/2}" angle="${pi/4}"/>
+    <camera_sensor name="left" parent="base_link" pos_x="0" pos_y="${base_length/2}" pos_z="0.126" rotation_z="${pi*3/2}" angle="${pi/4}"/>
+
+
+    <!-- Proximity sensors -->
+    <sonar_sensor name="prox_left" parent="base_link" ros_topic="/sensors/sonar_sensor/proximity_left" update_rate="20" min_range="0.05" max_range="0.15" field_of_view="0.05" ray_count="1" pos_x="${-base_width/2}" pos_y="0.085" pos_z="0.15" rotation_z="${pi}" gaussian_noise="0.0" resolution="0.01" visualize="1"/>
+    <sonar_sensor name="prox_right" parent="base_link" ros_topic="/sensors/sonar_sensor/proximity_right" update_rate="20" min_range="0.05" max_range="0.15" field_of_view="0.05" ray_count="1" pos_x="${-base_width/2}" pos_y="-0.085" pos_z="0.15" rotation_z="${pi}" gaussian_noise="0.0" resolution="0.01" visualize="1"/>
+
+
+    <!-- Battery sensors -->
+    <battery name="left_battery" parent="base_link" height="${battery_height}" radius="${battery_radius}" translateX="${-base_width/2 + 0.08}" translateY="0.049" translateZ="0.040" rotationX="${pi/2}" collision="left_battery_collision" update_rate="20"/>
+    <battery name="right_battery" parent="base_link" height="${battery_height}" radius="${battery_radius}" translateX="${-base_width/2 + 0.08}" translateY="-0.049" translateZ="0.040" rotationX="${pi/2}" collision="right_battery_collision" update_rate="20"/>
+
+</robot>

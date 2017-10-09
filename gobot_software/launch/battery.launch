@@ -1,0 +1,4 @@
+<?xml version="1.0"?>
+<launch>
+	<node pkg="gobot_software" type="battery.py" name="battery" output="screen" required="true"/>
+</launch>

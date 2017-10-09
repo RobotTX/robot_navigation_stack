@@ -1,0 +1,20 @@
+<?xml version="1.0"?>
+<root xmlns:xacro="http://ros.org/wiki/xacro">
+    <xacro:macro name="bumper_gazebo" params="name collision">
+        <gazebo reference="${name}">
+            <material>Gazebo/Black</material>
+
+            <sensor name="${name}_sensor" type="contact">
+                <contact>
+                    <collision>${name}_collision</collision>
+                </contact>
+                <plugin name="${name}_gazebo_ros_bumper_controller" filename="libgazebo_ros_bumper.so">
+                    <alwaysOn>true</alwaysOn>
+                    <updateRate>20</updateRate>
+                    <bumperTopicName>${name}</bumperTopicName>
+                    <frameName>world</frameName>
+                </plugin>
+            </sensor>
+        </gazebo>
+    </xacro:macro>
+</root>
