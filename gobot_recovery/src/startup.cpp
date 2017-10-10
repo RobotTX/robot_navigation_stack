@@ -58,7 +58,7 @@ void getButtonCallback(const std_msgs::Int8::ConstPtr& msg){
     }
     else if(dt>10.0 && dt<=20.0){
       ROS_INFO("Charge robot.");
-      ros::service::call("/goDock",empty_srv);
+      ros::service::call("/gobot_function/goDock",empty_srv);
 		}
     else if(dt>99.0){
       ROS_INFO("Globalize robot.");

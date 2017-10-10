@@ -3,6 +3,8 @@
     <param name="wheel_separation" value="0.45" />
     <param name="wheel_radius" value="0.0725" />
     <param name="ticks_per_rotation" value="819.2" />
+    <param name="STMdevice" type="string" value="2-3.3:1.0" />
+    <param name="MD49device" type="string" value="2-3.3:1.1" />
 
     <!--laser to base tf frequency depends on the laser update rate-->
     <node pkg="tf" type="static_transform_publisher" name="base_link_to_laser" args="0.355 0 0.13275 0 0 0 /base_link /base_laser 50" required="true"/>
@@ -18,10 +20,9 @@
         -->
     </node>
 
-    <node pkg="gobot_base" type="wheels" name="wheels_controller" output="screen" required="true"/>
-    <node pkg="gobot_base" type="sensors" name="sensors_publisher" output="screen" required="true"/>
-    <node pkg="gobot_base" type="odom" name="odometry_publisher" output="screen" required="true"/>
-    <node pkg="gobot_base" type="twist" name="twist_to_wheels" output="screen" required="true"/>
-    <node pkg="gobot_base" type="led" name="led" output="screen" required="true"/>
-
+    <node pkg="gobot_base" type="sensors" name="base_sensors" output="screen" required="true"/>
+    <node pkg="gobot_base" type="wheels" name="motor_wheels" output="screen" required="true"/>
+    <node pkg="gobot_base" type="odom" name="motor_odometry" output="screen" required="true"/>
+    <node pkg="gobot_base" type="twist" name="motor_twist" output="screen" required="true"/>
+    <node pkg="gobot_base" type="led" name="base_led" output="screen" required="true"/>
 </launch>

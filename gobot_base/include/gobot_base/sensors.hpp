@@ -5,6 +5,7 @@
 #include <stdlib.h>
 #include <signal.h>
 #include <std_msgs/Int8.h>
+#include <std_srvs/Empty.h>
 #include <gobot_msg_srv/SetSpeeds.h>
 #include <gobot_msg_srv/SetSpeeds.h>
 #include <gobot_msg_srv/BatteryMsg.h>
@@ -43,5 +44,7 @@ void publishSensors(void);
 bool initSerial(void);
 
 bool setLedSrvCallback(gobot_msg_srv::LedStrip::Request &req, gobot_msg_srv::LedStrip::Response &res);
+
+bool resetMotorSrvCallback(std_srvs::Empty::Request &req, std_srvs::Empty::Response &res);
 
 void mySigintHandler(int sig);

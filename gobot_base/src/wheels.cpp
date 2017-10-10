@@ -1,6 +1,7 @@
 #include <gobot_base/wheels.hpp>
 
 std::mutex serialMutex;
+std::string MD49device;
 serial::Serial serialConnection;
 bool test = false;
 
@@ -44,38 +45,6 @@ std::string getStdoutFromCommand(std::string cmd) {
         pclose(stream);
     }
     return data;
-}
-
-bool initSerial() {
-    /// Get the port in which our device is connected
-    std::string deviceNode("2-3.3:1.1");
-    std::string output = getStdoutFromCommand("ls -l /sys/class/tty/ttyUSB*");
-    std::string port = "/dev" + output.substr(output.find(deviceNode) + deviceNode.size(), 8);
-
-    ROS_INFO("(wheels::initSerial) MD49 port : %s", port.c_str());
-
-    // Set the serial port, baudrate and timeout in milliseconds
-    serialConnection.setPort(port);
-    //Send 1200 bytes per second
-    serialConnection.setBaudrate(9600);
-    serial::Timeout timeout = serial::Timeout::simpleTimeout(200);
-    serialConnection.setTimeout(timeout);
-    serialConnection.close();
-    serialConnection.open();
-
-    ROS_INFO("(wheels::initSerial) MD49 serial communication : %d", serialConnection.isOpen());
-
-    if(serialConnection.isOpen()){
-        /// First 3 bytes : set the mode (see MD49 documentation)
-        /// then 2 bytes to disable the 2 sec timeout
-        /// then 3 bytes to set the acceleration steps (1-10)
-        writeAndRead(std::vector<uint8_t>({0x00, 0x34, 0x00, 
-            0x00, 0x38, 
-            0x00, 0x33, 0x01}));
-
-        return true;
-    } else
-        return false;
 }
 
 /// Set the speed, 0 (full reverse)  128 (stop)   255 (full forward)
@@ -174,6 +143,39 @@ bool stopTests(std_srvs::Empty::Request &req, std_srvs::Empty::Response &res){
 }
 
 
+bool initSerial() {
+    /// Get the port in which our device is connected
+    std::string deviceNode(MD49device);
+    std::string output = getStdoutFromCommand("ls -l /sys/class/tty/ttyUSB*");
+    std::string port = "/dev" + output.substr(output.find(deviceNode) + deviceNode.size(), 8);
+
+    ROS_INFO("(wheels::initSerial) MD49 port : %s", port.c_str());
+
+    // Set the serial port, baudrate and timeout in milliseconds
+    serialConnection.setPort(port);
+    //Send 1200 bytes per second
+    serialConnection.setBaudrate(9600);
+    serial::Timeout timeout = serial::Timeout::simpleTimeout(200);
+    serialConnection.setTimeout(timeout);
+    serialConnection.close();
+    serialConnection.open();
+
+    ROS_INFO("(wheels::initSerial) MD49 serial communication : %d", serialConnection.isOpen());
+
+    if(serialConnection.isOpen()){
+        /// First 3 bytes : set the mode (see MD49 documentation)
+        /// then 2 bytes to disable the 2 sec timeout
+        /// then 3 bytes to set the acceleration steps (1-10)
+        writeAndRead(std::vector<uint8_t>({0x00, 0x34, 0x00, 
+            0x00, 0x38, 
+            0x00, 0x33, 0x01}));
+
+        return true;
+    } else
+        return false;
+}
+
+
 void mySigintHandler(int sig)
 {
     try{
@@ -191,10 +193,12 @@ int main(int argc, char **argv) {
     ros::NodeHandle nh;
     signal(SIGINT, mySigintHandler);
 
+    nh.getParam("MD49device", MD49device);
+
     if(initSerial()){
-        ros::ServiceServer setSpeedsSrv = nh.advertiseService("setSpeeds", setSpeeds);
-        ros::ServiceServer getEncodersSrv = nh.advertiseService("getEncoders", getEncoders);
-        ros::ServiceServer resetEncodersSrv = nh.advertiseService("resetEncoders", resetEncoders);
+        ros::ServiceServer setSpeedsSrv = nh.advertiseService("/gobot_motor/setSpeeds", setSpeeds);
+        ros::ServiceServer getEncodersSrv = nh.advertiseService("/gobot_motor/getEncoders", getEncoders);
+        ros::ServiceServer resetEncodersSrv = nh.advertiseService("/gobot_motor/resetEncoders", resetEncoders);
         ros::ServiceServer testEncodersSrv = nh.advertiseService("testEncoders", testEncoders);
         ros::ServiceServer testEncodersSrv2 = nh.advertiseService("testEncoders2", testEncoders2);
         ros::ServiceServer stopTestsSrv = nh.advertiseService("stopTests", stopTests);

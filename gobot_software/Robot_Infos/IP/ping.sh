@@ -13,7 +13,6 @@ isAlive="$1"
 #echo $var
 #fping -r 0 -g $var 2>/dev/null | grep alive > tmp.txt
 #cut -f 1 tmp.txt --delimiter=' ' >$isAlive
+#rm tmp.txt
 rm $isAlive
-#echo 127.0.0.1 >> $isAlive
 echo 192.168.100.61 >> $isAlive
-rm tmp.txt

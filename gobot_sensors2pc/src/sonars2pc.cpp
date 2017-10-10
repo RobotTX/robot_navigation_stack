@@ -2,11 +2,10 @@
 #include <tf/transform_listener.h>
 #include <sensor_msgs/LaserScan.h>
 
-#define SONAR_THRESHOLD 1.5
+#define SONAR_THRESHOLD 1.8
 #define SONAR_MAX 2.0
 #define SONAR_VIEW 0.2 //11.5degree //0.165 //9.45degree 
 #define SONAR_RESOLUTION 0.0165 //0.945 degree
-#define SOME_FACTOR 0.25
 
 ros::Publisher rearPublisher;
 ros::Publisher frontLeftPublisher;
@@ -126,7 +125,7 @@ void newSonarsInfo(const gobot_msg_srv::SonarMsg::ConstPtr& sonars){
 
 bool initParams(void){
 
-    ros::NodeHandle nh("sonars2pc");
+    ros::NodeHandle nh;
 
     /// We get the frames on which the sonars are attached
     nh.param("rear_frame", rear_frame, std::string("/rear_sonar"));

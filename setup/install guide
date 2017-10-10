@@ -1,3 +1,13 @@
+### To install Ubuntu ###
+```
+install Ubuntu 16.04 LTS using USB drive
+#space allocation
+swap=1GB,ext4/boot=2GB,ext4/=20GB,ext4/home=rest
+
+### To install ROS ###
+install ros-kinetic-desktop
+http://wiki.ros.org/kinetic/Installation/Ubuntu
+
 ### To Configure The System Files ###
 ```
 #avoid password for sudo cmd

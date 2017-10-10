@@ -10,10 +10,10 @@ int main(int argc, char** argv){
 
     ros::NodeHandle n;
 
-    if(ros::service::waitForService("resetEncoders", ros::Duration(5))){
+    if(ros::service::waitForService("/gobot_motor/resetEncoders", ros::Duration(5))){
 
         std_srvs::Empty arg;
-        ros::service::call("resetEncoders", arg);
+        ros::service::call("/gobot_motor/resetEncoders", arg);
 
         ros::Publisher odom_pub = n.advertise<nav_msgs::Odometry>("odom", 50);
         ros::Publisher odom_test_pub = n.advertise<gobot_msg_srv::OdomTestMsg>("odom_test", 50);
@@ -49,7 +49,7 @@ int main(int argc, char** argv){
             ros::spinOnce();
 
             gobot_msg_srv::GetEncoders encoders;
-            if(ros::service::call("getEncoders", encoders)){
+            if(ros::service::call("/gobot_motor/getEncoders", encoders)){
                 current_time = ros::Time::now();
 
                 double dt = (current_time - last_time).toSec();
@@ -132,12 +132,12 @@ int main(int argc, char** argv){
                 last_time = current_time;
             } else {
                 skipped++;
-                ROS_INFO("(odom) couldn't call service getEncoders, skipping this odom pub, total skipped : %d", skipped);
+                ROS_INFO("(odom) couldn't call service /gobot_motor/getEncoders, skipping this odom pub, total skipped : %d", skipped);
             }
 
             r.sleep();
         }
     } else {
-        ROS_INFO("(odom) waited 5 seconds for service resetEncoders");
+        ROS_INFO("(odom) waited 5 seconds for service /gobot_motor/resetEncoders");
     }
 }

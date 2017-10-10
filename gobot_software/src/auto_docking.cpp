@@ -195,7 +195,7 @@ bool setSpeed(const char directionR, const int velocityR, const char directionL,
     speed.request.directionL = std::string(1, directionL);
     speed.request.velocityL = velocityL;
 
-    return ros::service::call("setSpeeds", speed);
+    return ros::service::call("/gobot_motor/setSpeeds", speed);
 }
 
 void newBatteryInfo(const gobot_msg_srv::BatteryMsg::ConstPtr& batteryInfo){

@@ -1321,7 +1321,7 @@ int main(int argc, char* argv[]){
     try{
         ros::init(argc, argv, "command_system");
         ros::NodeHandle n;
-        ros::Subscriber sub = n.subscribe("server_disconnected", 1000, serverDisconnected);
+        ros::Subscriber sub = n.subscribe("/gobot_software/server_disconnected", 1000, serverDisconnected);
 
         go_pub = n.advertise<geometry_msgs::PoseStamped>("/move_base_simple/goal", 1000);
         teleop_pub = n.advertise<geometry_msgs::Twist>("/cmd_vel", 1000);
@@ -1329,7 +1329,7 @@ int main(int argc, char* argv[]){
         ros::ServiceServer setDockStatusSrv = n.advertiseService("setDockStatus", setDockStatus);
         ros::ServiceServer getDockStatusSrv = n.advertiseService("getDockStatus", getDockStatus);
         ros::ServiceServer lowBatterySrv = n.advertiseService("lowBattery", lowBattery);
-        ros::ServiceServer goDockSrv = n.advertiseService("goDock", goDockService);
+        ros::ServiceServer goDockSrv = n.advertiseService("/gobot_function/goDock", goDockService);
 
         n.param<bool>("simulation", simulation, false);
         ROS_INFO("(New Map) simulation : %d", simulation);

@@ -21,6 +21,7 @@ int error_count = 0;
 std::vector<uint8_t> cmd;
 std::mutex connectionMutex;
 bool display_data = false;
+std::string STMdevice;
 
 bool setSpeed(const char directionR, const int velocityR, const char directionL, const int velocityL){
     //ROS_INFO("(auto_docking::setSpeed) %c %d %c %d", directionR , velocityR, directionL, velocityL);
@@ -30,7 +31,20 @@ bool setSpeed(const char directionR, const int velocityR, const char directionL,
     speed.request.directionL = std::string(1, directionL);
     speed.request.velocityL = velocityL;
 
-    return ros::service::call("setSpeeds", speed);
+    return ros::service::call("/gobot_motor/setSpeeds", speed);
+}
+
+bool resetMotorSrvCallback(std_srvs::Empty::Request &req, std_srvs::Empty::Response &res){
+    if(serialConnection.isOpen()){
+        connectionMutex.lock();
+        serialConnection.write(std::vector<uint8_t>({0xC0, 0x01, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x1B}));
+        std::vector<uint8_t> buff;
+        serialConnection.read(buff, 40);
+        serialConnection.flush();
+        connectionMutex.unlock();
+        ROS_WARN("(sensors::publishSensors) Reseted MD49 Motor Driver. Received %lu bytes", buff.size());
+    } else 
+        ROS_ERROR("(sensors::publishSensors) Check serial connection 1");
 }
 
 bool displaySensorData(gobot_msg_srv::SetBattery::Request &req, gobot_msg_srv::SetBattery::Response &res){
@@ -46,12 +60,10 @@ void resetStm(void){
 
         std::vector<uint8_t> buff;
         serialConnection.read(buff, 40);
-
         serialConnection.flush();
-
         connectionMutex.unlock();
 
-        ROS_WARN("(sensors::publishSensors) resetStm %lu", buff.size());
+        ROS_WARN("(sensors::publishSensors) Reseted STM32. Received %lu bytes", buff.size());
 
     } else 
         ROS_ERROR("(sensors::publishSensors) Check serial connection 1");
@@ -253,7 +265,7 @@ void publishSensors(void){
 
 bool initSerial(void) {
     /// Get the port in which our device is connected
-    std::string deviceNode("2-3.3:1.0");
+    std::string deviceNode(STMdevice);
     std::string output = getStdoutFromCommand("ls -l /sys/class/tty/ttyUSB*");
     std::string port = "/dev" + output.substr(output.find(deviceNode) + deviceNode.size(), 8);
 
@@ -322,6 +334,8 @@ int main(int argc, char **argv) {
     ros::NodeHandle nh;
     signal(SIGINT, mySigintHandler);
 
+    nh.getParam("STMdevice", STMdevice);
+
     bumper_pub = nh.advertise<gobot_msg_srv::BumperMsg>("/gobot_base/bumpers_topic", 50);
     ir_pub = nh.advertise<gobot_msg_srv::IrMsg>("/gobot_base/ir_topic", 50);
     proximity_pub = nh.advertise<gobot_msg_srv::ProximityMsg>("/gobot_base/proximity_topic", 50);
@@ -333,7 +347,7 @@ int main(int argc, char **argv) {
 
     ros::ServiceServer isChargingSrv = nh.advertiseService("/gobot_base/isCharging", isChargingService);
     ros::ServiceServer setLedSrv = nh.advertiseService("/gobot_base/setLed", setLedSrvCallback);
-
+    ros::ServiceServer resetMotorSrv = nh.advertiseService("resetMotorDriver", resetMotorSrvCallback);
     ros::ServiceServer displayDataService = nh.advertiseService("/gobot_base/displaySensorData", displaySensorData);
 
     if(initSerial()){

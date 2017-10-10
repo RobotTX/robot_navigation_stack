@@ -29,7 +29,7 @@ bool setSpeed(const char directionR, const int velocityR, const char directionL,
     speed.request.directionL = std::string(1, directionL);
     speed.request.velocityL = velocityL;
 
-    return ros::service::call("setSpeeds", speed);
+    return ros::service::call("/gobot_motor/setSpeeds", speed);
 }
 
 void getButtonCallback(const std_msgs::Int8::ConstPtr& msg){
@@ -93,7 +93,7 @@ void goalReached(){
                 // resets the current goal
                 currentGoal.x = -1;
 
-                if(!ros::service::call("goDock", empty_srv))
+                if(!ros::service::call("/gobot_function/goDock", empty_srv))
                     ROS_ERROR("(PlayPath::goalReached) Could not go charging");
 
                 dockAfterPath = false;
@@ -291,7 +291,7 @@ bool stopPathService(std_srvs::Empty::Request &req, std_srvs::Empty::Response &r
     if(dockAfterPath){
         ROS_INFO("(PlayPath::goalReached) Battery is low, go to charging station!!");
         
-        if(!ros::service::call("goDock", empty_srv))
+        if(!ros::service::call("/gobot_function/goDock", empty_srv))
             ROS_ERROR("(PlayPath::goalReached) Could not go charging");
 
         dockAfterPath = false;

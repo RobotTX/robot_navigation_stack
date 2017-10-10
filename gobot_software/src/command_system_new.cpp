@@ -892,21 +892,42 @@ bool goDock(void){
 
 /*********************************** SERVICES ***********************************/
 bool pausePathSrvCallback(std_srvs::Empty::Request &req, std_srvs::Empty::Response &res){
-    std::vector<std::string> str;
-    str.push_back("pause");
-    return pausePath(str);
+    std::vector<std::string> command({"d"});
+    std::string commandStr = "d" + sep;
+
+    std::string msg;
+    commandMutex.lock();
+    msg = (execCommand("", command) ? "done" : "failed") + sep + commandStr;
+    sendMessageToAll(msg);
+    commandMutex.unlock();
+
+    return true;
 }
 
 bool playPathSrvCallback(std_srvs::Empty::Request &req, std_srvs::Empty::Response &res){
-    std::vector<std::string> str;
-    str.push_back("pause");
-    return playPath(str);
+    std::vector<std::string> command({"j"});
+    std::string commandStr = "j" + sep;
+
+    std::string msg;
+    commandMutex.lock();
+    msg = (execCommand("", command) ? "done" : "failed") + sep + commandStr;
+    sendMessageToAll(msg);
+    commandMutex.unlock();
+    
+    return true;
 }
 
 bool stopPathSrvCallback(std_srvs::Empty::Request &req, std_srvs::Empty::Response &res){
-    std::vector<std::string> str;
-    str.push_back("pause");
-    return stopPath(str);
+    std::vector<std::string> command({"l"});
+    std::string commandStr = "l" + sep;
+
+    std::string msg;
+    commandMutex.lock();
+    msg = (execCommand("", command) ? "done" : "failed") + sep + commandStr;
+    sendMessageToAll(msg);
+    commandMutex.unlock();
+
+    return true;
 }
 
 
@@ -1251,7 +1272,7 @@ int main(int argc, char* argv[]){
     try{
         ros::init(argc, argv, "command_system");
         ros::NodeHandle n;
-        ros::Subscriber sub = n.subscribe("server_disconnected", 1000, serverDisconnected);
+        ros::Subscriber sub = n.subscribe("/gobot_software/server_disconnected", 1000, serverDisconnected);
 
         go_pub = n.advertise<geometry_msgs::PoseStamped>("/move_base_simple/goal", 1000);
         teleop_pub = n.advertise<geometry_msgs::Twist>("/cmd_vel", 1000);
@@ -1259,7 +1280,7 @@ int main(int argc, char* argv[]){
         ros::ServiceServer setDockStatusSrv = n.advertiseService("setDockStatus", setDockStatus);
         ros::ServiceServer getDockStatusSrv = n.advertiseService("getDockStatus", getDockStatus);
         ros::ServiceServer lowBatterySrv = n.advertiseService("lowBattery", lowBattery);
-        ros::ServiceServer goDockSrv = n.advertiseService("goDock", goDockService);
+        ros::ServiceServer goDockSrv = n.advertiseService("/gobot_function/goDock", goDockService);
 
         ros::ServiceServer pausePathSrv = n.advertiseService("/command_system/pause_path", pausePathSrvCallback);
         ros::ServiceServer playPathSrc = n.advertiseService("/command_system/play_path", playPathSrvCallback);

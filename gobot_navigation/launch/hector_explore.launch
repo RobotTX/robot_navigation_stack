@@ -5,7 +5,7 @@
         <rosparam file="$(find gobot_navigation)/params/scan_global_costmap_params.yaml" command="load" />
     </node>
 
-    <node pkg="hector_exploration_node" type="move_base_controller" name="hector_to_move_base" output="screen" required="true">
+    <node pkg="hector_exploration_node" type="move_base_controller" name="exploration_controller" output="screen" required="true">
         <param name="new_goal_frequency" type="double" value="0.25"/>
         <param name="no_frontier_threshold" type="int" value="5"/>
     </node>

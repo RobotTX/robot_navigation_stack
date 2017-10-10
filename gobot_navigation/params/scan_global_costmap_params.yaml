@@ -70,8 +70,8 @@ global_costmap:
         }
 
         rear_sonar: {
-            obstacle_range: 1.5,
-            raytrace_range: 1.9,
+            obstacle_range: 1.8,
+            raytrace_range: 2.0,
             data_type: PointCloud2,
             topic: /rear_sonar_pc,
             marking: true,
@@ -81,8 +81,8 @@ global_costmap:
         }
 
         frontRight_sonar: {
-            obstacle_range: 1.5,
-            raytrace_range: 1.9,
+            obstacle_range: 1.8,
+            raytrace_range: 2.0,
             data_type: PointCloud2,
             topic:  /frontRight_sonar_pc,
             marking: true,
@@ -92,8 +92,8 @@ global_costmap:
         }
 
         frontLeft_sonar: {
-            obstacle_range: 1.5,
-            raytrace_range: 1.9,
+            obstacle_range: 1.8,
+            raytrace_range: 2.0,
             data_type: PointCloud2,
             topic:  /frontLeft_sonar_pc,
             marking: true,

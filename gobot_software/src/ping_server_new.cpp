@@ -111,7 +111,7 @@ void updateIP(){
         else {
             oldIPs.at(i).second++;
             if(oldIPs.at(i).second >= PING_THRESHOLD){
-                /// Publish a message to the topic /server_disconnected with the IP address of the server which disconnected
+                /// Publish a message to the topic /gobot_software/server_disconnected with the IP address of the server which disconnected
                 ROS_WARN("The ip %s disconnected", oldIPs.at(i).first.c_str());
                 std_msgs::String msg;
                 msg.data = oldIPs.at(i).first;
@@ -172,7 +172,7 @@ void pingIP(std::string ip, std::string dataToSend){
 void newBatteryInfo(const gobot_msg_srv::BatteryMsg::ConstPtr& batteryInfo){
     chargingFlag = batteryInfo->ChargingFlag;
     if(batteryInfo->FullCapacity != 0)
-        batteryLevel = batteryInfo->BatteryStatus;
+        batteryLevel = batteryInfo->Percentage*100;
 }
 
 /**
@@ -217,7 +217,7 @@ int main(int argc, char* argv[]){
     ros::NodeHandle n;
 
     ros::Subscriber batterySub = n.subscribe("/gobot_base/battery_topic", 1, newBatteryInfo);
-    disco_pub = n.advertise<std_msgs::String>("server_disconnected", 10);
+    disco_pub = n.advertise<std_msgs::String>("/gobot_software/server_disconnected", 10);
 
     /// We get the path to the file with all the ips
     if(n.hasParam("ips_file"))

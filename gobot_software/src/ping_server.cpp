@@ -190,7 +190,7 @@ int main(int argc, char* argv[]){
     else 
         ROS_INFO("(ping_server) The parameter <ips_file> does not exist");
 
-    ros::Publisher publisher = n.advertise<std_msgs::String>("server_disconnected", 10);
+    ros::Publisher publisher = n.advertise<std_msgs::String>("/gobot_software/server_disconnected", 10);
 
     ros::Rate loop_rate(1);
 

@@ -1,4 +1,0 @@
-<launch>
-  	<node name="command_system" pkg="gobot_software" type="command_system" 
-	output="screen"/>
-</launch>

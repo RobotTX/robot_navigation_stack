@@ -98,7 +98,7 @@ int main(int argc, char **argv){
 
     ros::NodeHandle n;
 
-    ros::Subscriber sub = n.subscribe("server_disconnected", 1000, serverDisconnected);
+    ros::Subscriber sub = n.subscribe("/gobot_software/server_disconnected", 1000, serverDisconnected);
 
     ros::ServiceServer send_service = n.advertiseService("send_laser_data_sender", sendLaserService);
     ros::ServiceServer stop_send_service = n.advertiseService("stop_send_laser_data_sender", stopSendLaserService);

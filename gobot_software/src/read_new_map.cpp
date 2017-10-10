@@ -304,7 +304,7 @@ int main(int argc, char **argv){
     ROS_INFO("(New Map) Ready to be launched.");
 
     /// Subscribe to know when we disconnected from the server
-    ros::Subscriber sub = n.subscribe("server_disconnected", 1000, serverDisconnected);
+    ros::Subscriber sub = n.subscribe("/gobot_software/server_disconnected", 1000, serverDisconnected);
 
     /// Advertise that we are going to publish to /map
     map_pub = n.advertise<nav_msgs::OccupancyGrid>("/map", 1000);
