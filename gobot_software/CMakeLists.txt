@@ -95,12 +95,6 @@ target_link_libraries(send_laser_data ${catkin_LIBRARIES} ${gobot_software} ${Bo
 add_dependencies(send_laser_data ${${gobot_msg_srv}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
 
 
-add_library(cluster_optimized src/cluster_optimized.cpp)
-add_executable(isLocalized_optimized src/isLocalized_optimized.cpp)
-target_link_libraries(isLocalized_optimized ${catkin_LIBRARIES} ${gobot_software} cluster_optimized)
-add_dependencies(isLocalized_optimized ${${gobot_msg_srv}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
-
-
 add_executable(recover_position src/recover_position.cpp)
 target_link_libraries(recover_position ${catkin_LIBRARIES} ${gobot_software} ${Boost_FILESYSTEM_LIBRARY} ${Boost_SYSTEM_LIBRARY} )
 add_dependencies(recover_position ${${gobot_msg_srv}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
@@ -111,19 +105,9 @@ target_link_libraries(ping_server ${catkin_LIBRARIES} ${gobot_software} ${Boost_
 add_dependencies(ping_server ${${gobot_msg_srv}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
 
 
-add_executable(backup_server src/backup_server.cpp)
-target_link_libraries(backup_server ${catkin_LIBRARIES} ${gobot_software} ${Boost_FILESYSTEM_LIBRARY} ${Boost_SYSTEM_LIBRARY} )
-add_dependencies(backup_server ${${gobot_msg_srv}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
-
-
 add_executable(auto_docking src/auto_docking.cpp)
 target_link_libraries(auto_docking ${catkin_LIBRARIES} ${gobot_software} ${Boost_FILESYSTEM_LIBRARY} ${Boost_SYSTEM_LIBRARY} )
 add_dependencies(auto_docking ${${gobot_msg_srv}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
-
-
-add_executable(initialPosePublisher src/initialPosePublisher.cpp)
-target_link_libraries(initialPosePublisher ${catkin_LIBRARIES} ${gobot_software} )
-add_dependencies(initialPosePublisher ${${gobot_msg_srv}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
 
 
 add_executable(battery_check src/battery_check.cpp)
