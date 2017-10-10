@@ -172,7 +172,7 @@ void publishSensors(void){
             else
                 battery_data.Percentage=percentage;
 
-            if(battery_data.BatteryVoltage == 0 || battery_data.ChargingCurrent == 0 || battery_data.Temperature < 0){
+            if(battery_data.BatteryVoltage == 0 || battery_data.Temperature < 0){
                 error = true;
                 ROS_ERROR("(sensors::publishSensors) Check battery data : %d %d %d %d", (int) battery_data.BatteryVoltage, battery_data.ChargingCurrent,
                 battery_data.FullCapacity, battery_data.Temperature);
