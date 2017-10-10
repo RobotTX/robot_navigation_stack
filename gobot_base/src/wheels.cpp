@@ -48,7 +48,7 @@ std::string getStdoutFromCommand(std::string cmd) {
 
 bool initSerial() {
     /// Get the port in which our device is connected
-    std::string deviceNode("2-3.2:1.1");
+    std::string deviceNode("2-3.3:1.1");
     std::string output = getStdoutFromCommand("ls -l /sys/class/tty/ttyUSB*");
     std::string port = "/dev" + output.substr(output.find(deviceNode) + deviceNode.size(), 8);
 

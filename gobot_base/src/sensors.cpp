@@ -253,7 +253,7 @@ void publishSensors(void){
 
 bool initSerial(void) {
     /// Get the port in which our device is connected
-    std::string deviceNode("2-3.2:1.0");
+    std::string deviceNode("2-3.3:1.0");
     std::string output = getStdoutFromCommand("ls -l /sys/class/tty/ttyUSB*");
     std::string port = "/dev" + output.substr(output.find(deviceNode) + deviceNode.size(), 8);
 
