@@ -178,13 +178,13 @@ void findChargingStation(void){
     ros::NodeHandle nh;
 
     /// To check if we are charging
-    batterySub = nh.subscribe("/battery_topic", 1, newBatteryInfo);
+    batterySub = nh.subscribe("/gobot_base/battery_topic", 1, newBatteryInfo);
 
     /// To check for collision
-    bumperSub = nh.subscribe("/bumpers_topic", 1, newBumpersInfo);
+    bumperSub = nh.subscribe("/gobot_base/bumpers_topic", 1, newBumpersInfo);
 
     /// Pid control with the ir signal
-    irSub = nh.subscribe("/ir_topic", 1, newIrSignal);
+    irSub = nh.subscribe("/gobot_base/ir_topic", 1, newIrSignal);
 }
 
 bool setSpeed(const char directionR, const int velocityR, const char directionL, const int velocityL){
@@ -252,7 +252,7 @@ void newBumpersInfo(const gobot_msg_srv::BumperMsg::ConstPtr& bumpers){
                     setSpeed('F', 0, 'F', 0);
                     moving_away_from_collision = false;
                     lostIrSignal = false;
-                    irSub = nh.subscribe("/ir_topic", 1, newIrSignal);
+                    irSub = nh.subscribe("/gobot_base/ir_topic", 1, newIrSignal);
                 }).detach();
 
             } else if(bumpers->bumper5 && bumpers->bumper6 && !(bumpers->bumper7 && bumpers->bumper8)){
@@ -274,7 +274,7 @@ void newBumpersInfo(const gobot_msg_srv::BumperMsg::ConstPtr& bumpers){
                     setSpeed('F', 0, 'F', 0);
                     moving_away_from_collision = false;
                     lostIrSignal = false;
-                    irSub = nh.subscribe("/ir_topic", 1, newIrSignal);
+                    irSub = nh.subscribe("/gobot_base/ir_topic", 1, newIrSignal);
                 }).detach();
 
             } else
@@ -373,7 +373,7 @@ void alignWithCS(void){
     setSpeed('F', 0, 'F', 0);
 
     ros::NodeHandle nh;
-    proximitySub = nh.subscribe("/proximity_topic", 1, newProximityInfo);
+    proximitySub = nh.subscribe("/gobot_base/proximity_topic", 1, newProximityInfo);
 }
 
 void newProximityInfo(const gobot_msg_srv::ProximityMsg::ConstPtr& proximitySignal){
@@ -491,8 +491,8 @@ int main(int argc, char* argv[]){
 
     currentGoal.target_pose.header.frame_id = "map";
 
-    ros::ServiceServer startDockingSrv = nh.advertiseService("startDocking", startDockingService);
-    ros::ServiceServer stopDockingSrv = nh.advertiseService("stopDocking", stopDockingService);
+    ros::ServiceServer startDockingSrv = nh.advertiseService("/gobot_function/startDocking", startDockingService);
+    ros::ServiceServer stopDockingSrv = nh.advertiseService("/gobot_function/stopDocking", stopDockingService);
 
     ros::spin();
     

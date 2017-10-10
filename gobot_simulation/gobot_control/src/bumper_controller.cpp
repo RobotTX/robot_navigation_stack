@@ -68,7 +68,7 @@ int main(int argc, char **argv){
     sub_frontRightBumper = n.subscribe("front_right_bumper", 1, newFrontRightBumper);
     sub_frontRightCylBumper = n.subscribe("front_right_cyl_bumper", 1, newFrontRightCylBumper);
 
-    ros::Publisher bumperPublisher = n.advertise<gobot_msg_srv::BumperMsg>("bumpers_topic", 50);
+    ros::Publisher bumperPublisher = n.advertise<gobot_msg_srv::BumperMsg>("/gobot_base/bumpers_topic", 50);
     gobot_msg_srv::BumperMsg msg;
 
     std::cout << "(bumper_controller) launched." << std::endl;

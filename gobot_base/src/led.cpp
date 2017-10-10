@@ -274,9 +274,9 @@ int main(int argc, char **argv) {
     ros::Subscriber goalResult = nh.subscribe("/move_base/result",1,goalResultCallback);
     ros::Subscriber goalGet = nh.subscribe("/move_base/goal",1,goalGetCallback);
     ros::Subscriber goalCancel = nh.subscribe("/move_base/cancel",1,goalCancelCallback);
-    ros::Subscriber bumpersSub = nh.subscribe("/bumpers_topic", 1, newBumpersInfo);
+    ros::Subscriber bumpersSub = nh.subscribe("/gobot_base/bumpers_topic", 1, newBumpersInfo);
     ros::Subscriber initialPoseResult = nh.subscribe("/gobot_recovery/find_initial_pose",1, initialPoseResultCallback);
-    ros::Subscriber battery = nh.subscribe("/battery_topic",1, batteryCallback);
+    ros::Subscriber battery = nh.subscribe("/gobot_base/battery_topic",1, batteryCallback);
     ros::Subscriber exploration = nh.subscribe("/move_base_controller/exploration_result",1,explorationCallback);
     last_time=ros::Time::now();
 

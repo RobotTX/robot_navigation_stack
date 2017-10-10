@@ -29,16 +29,23 @@ void sonarToCloud(double sonarData,pcl::PointCloud<pcl::PointXYZ> &cloudData){
 }
 
 void sonarFrontToCloud(double sonarR,double sonarL,pcl::PointCloud<pcl::PointXYZ> &cloudR,pcl::PointCloud<pcl::PointXYZ> &cloudL){
-    sonarR = sonarR>SONAR_THRESHOLD?SONAR_MAX:sonarR;
-    sonarL = sonarL>SONAR_THRESHOLD?SONAR_MAX:sonarL;
+    if(sonarR==0 && sonarL == 0){
+        //sth wrong with the sonar data, check stm32
+        sonarR=SONAR_MAX;
+        sonarL=SONAR_MAX;
+    }
+    else{
+        sonarR = sonarR>SONAR_THRESHOLD?SONAR_MAX:sonarR;
+        sonarL = sonarL>SONAR_THRESHOLD?SONAR_MAX:sonarL;
+    }
 
     if(sonarL==SONAR_MAX){
-        for(double i=tan(SONAR_VIEW*2)*SONAR_MAX;i>tan(SONAR_VIEW)*SONAR_MAX;i=i-SONAR_RESOLUTION)
+        for(double i=tan(SONAR_VIEW*1.5)*SONAR_MAX;i>tan(SONAR_VIEW)*SONAR_MAX;i=i-SONAR_RESOLUTION)
             cloudL.push_back(pcl::PointXYZ(SONAR_MAX, i, 0));
     }
 
     if(sonarR==SONAR_MAX){
-        for(double i=-tan(SONAR_VIEW*2)*SONAR_MAX;i<-tan(SONAR_VIEW)*SONAR_MAX;i=i+SONAR_RESOLUTION)
+        for(double i=-tan(SONAR_VIEW*1.5)*SONAR_MAX;i<-tan(SONAR_VIEW)*SONAR_MAX;i=i+SONAR_RESOLUTION)
             cloudR.push_back(pcl::PointXYZ(SONAR_MAX, i, 0));
     }
 
@@ -149,7 +156,7 @@ int main(int argc, char* argv[]){
         topPublisher = nh.advertise<pcl::PointCloud<pcl::PointXYZ> >("/top_sonar_pc", 10);
 
         // get the sonars information
-        ros::Subscriber sonarSub = nh.subscribe("/sonar_topic", 1, newSonarsInfo);
+        ros::Subscriber sonarSub = nh.subscribe("/gobot_base/sonar_topic", 1, newSonarsInfo);
 
         ros::spin();
     }

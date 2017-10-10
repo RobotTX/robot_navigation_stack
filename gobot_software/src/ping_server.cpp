@@ -171,7 +171,7 @@ int main(int argc, char* argv[]){
     ros::init(argc, argv, "ping_server");
     ros::NodeHandle n;
 
-    ros::Subscriber batterySub = n.subscribe("/battery_topic", 1, newBatteryInfo);
+    ros::Subscriber batterySub = n.subscribe("/gobot_base/battery_topic", 1, newBatteryInfo);
 
     std::string serverFile;
     if(n.hasParam("server_file"))

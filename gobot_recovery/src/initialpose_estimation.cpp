@@ -127,8 +127,8 @@ bool initializePoseSrvCallback(std_srvs::Empty::Request &req, std_srvs::Empty::R
                         break;
 
                     case CHARGING_STAGE:
-                        ros::service::waitForService("/isCharging", ros::Duration(30.0));
-                        ros::service::call("/isCharging",arg);
+                        ros::service::waitForService("/gobot_base/isCharging", ros::Duration(30.0));
+                        ros::service::call("/gobot_base/isCharging",arg);
                         //if robot is charging, it is in CS station 
                         if(arg.response.isCharging || evaluatePose(1)){
                         //if(false){

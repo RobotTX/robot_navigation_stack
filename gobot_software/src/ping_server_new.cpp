@@ -79,7 +79,7 @@ void pingAllIPs(void){
         /// We create threads to ping every IP adress
         /// => threads reduce the required time to ping from ~12 sec to 2 sec
         serverMutex.lock();
-        ROS_INFO("(ping_server) Trying to ping everyone %lu", availableIPs.size());
+        //ROS_INFO("(ping_server) Trying to ping everyone %lu", availableIPs.size());
         for(int i = 0; i < availableIPs.size(); ++i)
             threads.push_back(std::thread(pingIP, availableIPs.at(i), dataToSend));
         serverMutex.unlock();
@@ -88,7 +88,7 @@ void pingAllIPs(void){
         for(int i = 0; i < threads.size(); ++i)
             threads.at(i).join();
 
-        ROS_INFO("(ping_server) Done pinging everyone");
+        //ROS_INFO("(ping_server) Done pinging everyone");
 
         updateIP();
 
@@ -157,7 +157,7 @@ void pingIP(std::string ip, std::string dataToSend){
             connectedMutex.lock();
             connectedIPs.push_back(ip);
             connectedMutex.unlock();
-            ROS_INFO("(ping_server) Connected to %s", ip.c_str());
+            //ROS_INFO("(ping_server) Connected to %s", ip.c_str());
         } else
             ROS_ERROR("(ping_server) read %lu bytes : %s", read.size(), read.c_str());
         
@@ -186,7 +186,7 @@ void checkNewServers(void){
     while(ros::ok()){ 
         ros::spinOnce();
 
-        ROS_INFO("(ping_server) Refreshing the list of potential servers");
+        //ROS_INFO("(ping_server) Refreshing the list of potential servers");
         /// Script which will check all the IP on the local network and put them in a file
         const std::string ping_script = "sudo sh " + pingFile + " " + ipsFile;
         system(ping_script.c_str());
@@ -216,7 +216,7 @@ int main(int argc, char* argv[]){
     ros::init(argc, argv, "ping_server");
     ros::NodeHandle n;
 
-    ros::Subscriber batterySub = n.subscribe("/battery_topic", 1, newBatteryInfo);
+    ros::Subscriber batterySub = n.subscribe("/gobot_base/battery_topic", 1, newBatteryInfo);
     disco_pub = n.advertise<std_msgs::String>("server_disconnected", 10);
 
     /// We get the path to the file with all the ips

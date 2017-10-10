@@ -126,7 +126,7 @@ int main(int argc, char **argv) {
     ros::Subscriber goalResult = nh.subscribe("/move_base/result",1,goalResultCallback);
     ros::Subscriber goalGet = nh.subscribe("/move_base/goal",1,goalGetCallback);
     ros::Subscriber initialPoseResult = nh.subscribe("/gobot_recovery/find_initial_pose",1, initialPoseResultCallback);
-    ros::Subscriber button_sub = nh.subscribe("button_topic",1,getButtonCallback);
+    ros::Subscriber button_sub = nh.subscribe("/gobot_base/button_topic",1,getButtonCallback);
     
     ros::service::waitForService("/gobot_recovery/initialize_pose", ros::Duration(30.0));
     while(!ros::service::call("/gobot_recovery/initialize_pose",empty_srv)){

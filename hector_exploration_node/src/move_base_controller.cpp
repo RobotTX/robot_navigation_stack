@@ -56,10 +56,10 @@ void backToStart(){
         case 1:
         {
             std_srvs::Empty arg;
-            if(ros::service::call("startDocking", arg))
+            if(ros::service::call("/gobot_function/startDocking", arg))
                 ROS_INFO("(move_base_controller) Trying to go back to a charging station after mapping");
             else 
-                ROS_ERROR("(move_base_controller) Couldn't call service startDocking");
+                ROS_ERROR("(move_base_controller) Couldn't call service /gobot_function/startDocking");
         }
         break;
         case 2:
@@ -184,7 +184,7 @@ bool stopExploration(void){
 
 int main(int argc, char* argv[]){
     ros::init(argc, argv, "move_base_controller");
-    ros::NodeHandle nh("move_base_controller");
+    ros::NodeHandle nh;
 
     ROS_INFO("(move_base_controller) running...");
 
@@ -209,8 +209,8 @@ int main(int argc, char* argv[]){
 
     /// Launch service's servers
     //0-don't go back to starting point; 1-go back to charging station; 2-go back to normal staring point
-    ros::ServiceServer startExploration = nh.advertiseService("startExploration", startExplorationSrv);
-    ros::ServiceServer stopExploration = nh.advertiseService("stopExploration", stopExplorationSrv);
+    ros::ServiceServer startExploration = nh.advertiseService("/gobot_scan/startExploration", startExplorationSrv);
+    ros::ServiceServer stopExploration = nh.advertiseService("/gobot_scan/stopExploration", stopExplorationSrv);
 
     ros::spin();
 

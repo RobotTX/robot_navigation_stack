@@ -41,7 +41,7 @@ int main(int argc, char* argv[]){
 
     ros::ServiceServer testAutoDockingService = nh.advertiseService("testAutoDocking", testAutoDocking);
 
-    ros::Subscriber batterySub = nh.subscribe("/battery_topic", 1, newBatteryInfo);
+    ros::Subscriber batterySub = nh.subscribe("/gobot_base/battery_topic", 1, newBatteryInfo);
 
     ros::spin();
 

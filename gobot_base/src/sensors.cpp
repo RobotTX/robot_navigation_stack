@@ -111,7 +111,7 @@ void publishSensors(void){
             sonar_data.distance6 = (buff.at(13) << 8) | buff.at(14);
             sonar_data.distance7 = (buff.at(15) << 8) | buff.at(16);
 
-            if((sonar_data.distance1 == 0 + sonar_data.distance2 == 0 + sonar_data.distance3 == 0 ) > 2){
+            if(sonar_data.distance1 == 0 && (sonar_data.distance2 == 0 || sonar_data.distance3 == 0)){
                 error = true;
                 ROS_ERROR("(sensors::publishSensors) Check sonars data : %d %d %d %d %d %d %d", sonar_data.distance1, sonar_data.distance2, sonar_data.distance3,
                 sonar_data.distance4, sonar_data.distance5, sonar_data.distance6, sonar_data.distance7);
@@ -177,7 +177,7 @@ void publishSensors(void){
                 battery_data.FullCapacity, battery_data.Temperature);
             } else {
                 if(battery_data.ChargingCurrent != last_charging_current){
-                    if((battery_data.BatteryVoltage>BATTERY_MAX && battery_data.ChargingCurrent>500) || battery_data.ChargingCurrent > 1000 || (last_charging_current > 0 && battery_data.ChargingCurrent - last_charging_current > 60))
+                    if(battery_data.ChargingCurrent > 1000 || (last_charging_current > 0 && battery_data.ChargingCurrent - last_charging_current > 60))
                         battery_data.ChargingFlag = true;
                     else 
                         battery_data.ChargingFlag = false;
@@ -322,19 +322,19 @@ int main(int argc, char **argv) {
     ros::NodeHandle nh;
     signal(SIGINT, mySigintHandler);
 
-    bumper_pub = nh.advertise<gobot_msg_srv::BumperMsg>("bumpers_topic", 50);
-    ir_pub = nh.advertise<gobot_msg_srv::IrMsg>("ir_topic", 50);
-    proximity_pub = nh.advertise<gobot_msg_srv::ProximityMsg>("proximity_topic", 50);
-    sonar_pub = nh.advertise<gobot_msg_srv::SonarMsg>("sonar_topic", 50);
-    weight_pub = nh.advertise<gobot_msg_srv::WeightMsg>("weight_topic", 50);
-    battery_pub = nh.advertise<gobot_msg_srv::BatteryMsg>("battery_topic", 50);
-    cliff_pub = nh.advertise<gobot_msg_srv::CliffMsg>("cliff_topic", 50);
-    button_pub = nh.advertise<std_msgs::Int8>("button_topic",50);
+    bumper_pub = nh.advertise<gobot_msg_srv::BumperMsg>("/gobot_base/bumpers_topic", 50);
+    ir_pub = nh.advertise<gobot_msg_srv::IrMsg>("/gobot_base/ir_topic", 50);
+    proximity_pub = nh.advertise<gobot_msg_srv::ProximityMsg>("/gobot_base/proximity_topic", 50);
+    sonar_pub = nh.advertise<gobot_msg_srv::SonarMsg>("/gobot_base/sonar_topic", 50);
+    weight_pub = nh.advertise<gobot_msg_srv::WeightMsg>("/gobot_base/weight_topic", 50);
+    battery_pub = nh.advertise<gobot_msg_srv::BatteryMsg>("/gobot_base/battery_topic", 50);
+    cliff_pub = nh.advertise<gobot_msg_srv::CliffMsg>("/gobot_base/cliff_topic", 50);
+    button_pub = nh.advertise<std_msgs::Int8>("/gobot_base/button_topic",50);
 
-    ros::ServiceServer isChargingSrv = nh.advertiseService("isCharging", isChargingService);
+    ros::ServiceServer isChargingSrv = nh.advertiseService("/gobot_base/isCharging", isChargingService);
     ros::ServiceServer setLedSrv = nh.advertiseService("/gobot_base/setLed", setLedSrvCallback);
 
-    ros::ServiceServer displayDataService = nh.advertiseService("displaySensorData", displaySensorData);
+    ros::ServiceServer displayDataService = nh.advertiseService("/gobot_base/displaySensorData", displaySensorData);
 
     if(initSerial()){
         ros::Rate r(5);

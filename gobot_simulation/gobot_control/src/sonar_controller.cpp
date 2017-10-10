@@ -52,7 +52,7 @@ int main(int argc, char **argv){
     std::cout << "(sonar_controller) launched." << std::endl;
 
 
-    ros::Publisher sonarPublisher = n.advertise<gobot_msg_srv::SonarMsg>("sonar_topic", 50);
+    ros::Publisher sonarPublisher = n.advertise<gobot_msg_srv::SonarMsg>("/gobot_base/sonar_topic", 50);
     gobot_msg_srv::SonarMsg msg;
 
     ros::Rate loop_rate(10);

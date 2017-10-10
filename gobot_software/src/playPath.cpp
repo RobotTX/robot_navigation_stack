@@ -135,7 +135,7 @@ void checkGoalDelay(){
 		ros::NodeHandle n;
 		ROS_INFO("Goal reached. Waiting for human action.");
 		waitingForAction=true;
-		button_sub = n.subscribe("/button_topic",1,getButtonCallback);
+		button_sub = n.subscribe("/gobot_base/button_topic",1,getButtonCallback);
 		while(waitingForAction && !stop_flag && ros::ok()){
 			ros::Duration(0.2).sleep();
 			ros::spinOnce();
@@ -264,7 +264,7 @@ bool playPathService(std_srvs::Empty::Request &req, std_srvs::Empty::Response &r
 
     std::thread([](){
         gobot_msg_srv::IsCharging arg;
-        if(ros::service::call("isCharging", arg) && arg.response.isCharging){
+        if(ros::service::call("/gobot_base/isCharging", arg) && arg.response.isCharging){
             ROS_WARN("(PlayPath::playPathService) we are charging so we go straight to avoid bumping into the CS when turning");
             setSpeed('F', 10, 'F', 10);
             std::this_thread::sleep_for(std::chrono::milliseconds(3000));
@@ -343,17 +343,17 @@ int main(int argc, char* argv[]){
 		currentGoal.isHome = false;
 
 		// service to play the robot's path
-		ros::ServiceServer _playPathService = n.advertiseService("play_path", playPathService);
+		ros::ServiceServer _playPathService = n.advertiseService("/gobot_function/play_path", playPathService);
 		// service to pause the robot's path
-		ros::ServiceServer _pausePathService = n.advertiseService("pause_path", pausePathService);
+		ros::ServiceServer _pausePathService = n.advertiseService("/gobot_function/pause_path", pausePathService);
 		// service to stop the robot's path
-		ros::ServiceServer _stopPathService = n.advertiseService("stop_path", stopPathService);
+		ros::ServiceServer _stopPathService = n.advertiseService("/gobot_function/stop_path", stopPathService);
         // service to make the path loop
-        ros::ServiceServer _startLoopPath = n.advertiseService("startLoopPath", startLoopPathService);
+        ros::ServiceServer _startLoopPath = n.advertiseService("/gobot_function/startLoopPath", startLoopPathService);
         // service to stop the path loop
-        ros::ServiceServer _stopLoopPath = n.advertiseService("stopLoopPath", stopLoopPathService);
+        ros::ServiceServer _stopLoopPath = n.advertiseService("/gobot_function/stopLoopPath", stopLoopPathService);
         // the battery is low so we need to go dock after finishing our path
-        ros::ServiceServer _goDockAfterPath = n.advertiseService("goDockAfterPath", goDockAfterPathService);
+        ros::ServiceServer _goDockAfterPath = n.advertiseService("/gobot_function/goDockAfterPath", goDockAfterPathService);
 		// tell the action client that we want to spin a thread by default
 		
 		ac = std::shared_ptr<MoveBaseClient> (new MoveBaseClient("move_base", true));	

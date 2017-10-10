@@ -135,8 +135,8 @@ int main(int argc, char **argv) {
 
     ros::NodeHandle nh;
 
-    ros::Subscriber bumpersSub = nh.subscribe("bumpers_topic", 1, newBumpersInfo);
     ros::Subscriber cmdVelSub = nh.subscribe("cmd_vel", 1, newCmdVel);
+    ros::Subscriber bumpersSub = nh.subscribe("/gobot_base/bumpers_topic", 1, newBumpersInfo);
     ros::ServiceServer continueRobot = nh.advertiseService("/gobot_base/continue_robot",continueRobotSrvCallback);
     ros::ServiceServer pauseRobot = nh.advertiseService("/gobot_base/pause_robot",pauseRobotSrvCallback);
 

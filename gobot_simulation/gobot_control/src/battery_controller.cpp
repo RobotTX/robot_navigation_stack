@@ -60,9 +60,9 @@ int main(int argc, char **argv){
     ros::NodeHandle n;
     
     ros::ServiceServer setBatteryService = n.advertiseService("setBattery", setBattery);
-    ros::ServiceServer isChargingSrv = n.advertiseService("isCharging", isChargingService);
+    ros::ServiceServer isChargingSrv = n.advertiseService("/gobot_base/isCharging", isChargingService);
 
-    ros::Publisher batteryPublisher = n.advertise<gobot_msg_srv::BatteryMsg>("battery_topic", 50);
+    ros::Publisher batteryPublisher = n.advertise<gobot_msg_srv::BatteryMsg>("/gobot_base/battery_topic", 50);
 
     sub_leftBattery = n.subscribe("left_battery", 1, newLeftBattery);
     sub_rightBattery = n.subscribe("right_battery", 1, newRightBattery);
