@@ -24,9 +24,10 @@ sudo apt install ros-kinetic-gmapping
 sudo apt install ros-kinetic-openslam-gmapping
 sudo apt install ros-kinetic-hector-nav-msgs
 sudo apt install ros-kinetic-teb-local-planner
-sudo apt install ros-kinetic-telop-twist-keyboard
+sudo apt install ros-kinetic-teleop-twist-keyboard
 sudo apt install ros-kinetic-urg-node
 sudo apt install ros-kinetic-hector-sensors-description (gazebo)
+sudo apt install ros-kinetic-hector_gazebo-plugins (gazebo)
 ```
 To configure the system files:
 '''

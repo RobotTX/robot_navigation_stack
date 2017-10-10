@@ -294,8 +294,8 @@ bool goHomeSrvCallback(std_srvs::Empty::Request &req, std_srvs::Empty::Response 
     geometry_msgs::PoseStamped home;
     home.header.frame_id = "map";
     home.header.stamp = ros::Time::now();
-    home.pose.position.x=home_pos_x;
-    home.pose.position.y=home_pos_y;
+    home.pose.position.x=home_pos_x+0.5;
+    home.pose.position.y=home_pos_y+0.5;
     home.pose.position.z=0.0;
     home.pose.orientation.x=home_ang_x;
     home.pose.orientation.y=home_ang_y;
@@ -370,21 +370,21 @@ int main(int argc, char **argv) {
     ros::init(argc, argv, "initialpose_estimation");
     ros::NodeHandle nh;
 
-    if(nh.hasParam("home_pose_file")){
-        nh.getParam("home_pose_file", homeFile);
+    if(nh.hasParam("home_pose")){
+        nh.getParam("home_pose", homeFile);
         //Get charging station pose
         getPose(homeFile,0);
     } 
     else
-        ROS_ERROR("Could not find the param home_pose_file");
+        ROS_ERROR("Could not find the param home_pose");
 
-    if(nh.hasParam("last_pose_file")){
-        nh.getParam("last_pose_file", lastPoseFile);
+    if(nh.hasParam("last_pose")){
+        nh.getParam("last_pose", lastPoseFile);
         //Get last stop pose
         getPose(lastPoseFile,1);
     } 
     else
-        ROS_ERROR("Could not find the param last_pose_file");
+        ROS_ERROR("Could not find the param last_pose");
     
         //Get ros server pose
     while(ros::ok()){

@@ -111,8 +111,7 @@ void publishSensors(void){
             sonar_data.distance6 = (buff.at(13) << 8) | buff.at(14);
             sonar_data.distance7 = (buff.at(15) << 8) | buff.at(16);
 
-            if((sonar_data.distance1 == 0 + sonar_data.distance2 == 0 + sonar_data.distance3 == 0 + sonar_data.distance4 == 0
-               + sonar_data.distance5 == 0 + sonar_data.distance6 == 0 + sonar_data.distance7 == 0) > 2){
+            if((sonar_data.distance1 == 0 + sonar_data.distance2 == 0 + sonar_data.distance3 == 0 ) > 2){
                 error = true;
                 ROS_ERROR("(sensors::publishSensors) Check sonars data : %d %d %d %d %d %d %d", sonar_data.distance1, sonar_data.distance2, sonar_data.distance3,
                 sonar_data.distance4, sonar_data.distance5, sonar_data.distance6, sonar_data.distance7);
@@ -176,7 +175,6 @@ void publishSensors(void){
                 error = true;
                 ROS_ERROR("(sensors::publishSensors) Check battery data : %d %d %d %d", (int) battery_data.BatteryVoltage, battery_data.ChargingCurrent,
                 battery_data.FullCapacity, battery_data.Temperature);
-                setSpeed('F', 0, 'F', 0);
             } else {
                 if(battery_data.ChargingCurrent != last_charging_current){
                     if((battery_data.BatteryVoltage>BATTERY_MAX && battery_data.ChargingCurrent>500) || battery_data.ChargingCurrent > 1000 || (last_charging_current > 0 && battery_data.ChargingCurrent - last_charging_current > 60))

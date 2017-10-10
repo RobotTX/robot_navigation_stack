@@ -11,5 +11,6 @@ then
     gnome-terminal -x bash -c "source /opt/ros/kinetic/setup.bash;roscore;exec bash;"
     sleep 2s
 fi
-gnome-terminal -x bash -c "source /opt/ros/kinetic/setup.bash;source /home/gtdollar/catkin_ws/devel/setup.bash;roslaunch gobot_navigation navigationAll.launch;exec bash;"
+gnome-terminal -x bash -c "source /opt/ros/kinetic/setup.bash;source /home/gtdollar/catkin_ws/devel/setup.bash;roslaunch gobot_software software.launch;exec bash;"
+gnome-terminal -x bash -c "source /opt/ros/kinetic/setup.bash;source /home/gtdollar/catkin_ws/devel/setup.bash;roslaunch gobot_navigation navigation.launch;exec bash;"
 

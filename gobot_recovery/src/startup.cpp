@@ -57,8 +57,8 @@ void getButtonCallback(const std_msgs::Int8::ConstPtr& msg){
       ros::service::call("/command_system/play_path",empty_srv);
     }
     else if(dt>10.0 && dt<=20.0){
-      ROS_INFO("Home robot.");
-      ros::service::call("/gobot_recovery/go_home",empty_srv);
+      ROS_INFO("Charge robot.");
+      ros::service::call("/goDock",empty_srv);
 		}
     else if(dt>99.0){
       ROS_INFO("Globalize robot.");
