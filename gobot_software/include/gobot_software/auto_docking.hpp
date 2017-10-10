@@ -18,6 +18,7 @@
 #include <gobot_msg_srv/IrMsg.h>
 #include <gobot_msg_srv/ProximityMsg.h>
 #include <gobot_msg_srv/SetDockStatus.h>
+#include <gobot_msg_srv/GoalStatus.h>
 #include <ctime>
 #include <chrono>
 #include <thread>

@@ -30,6 +30,7 @@ ros::Subscriber irSub;
 ros::Subscriber batterySub;
 ros::Subscriber proximitySub;
 
+std_srvs::Empty empty_srv;
 /****************************************** STEP 1 : Go 1.5 meters in front of the charging station *********************************************************/
 
 /// Service to start docking
@@ -50,8 +51,12 @@ bool startDocking(void){
     irSub.shutdown();
     batterySub.shutdown();
 
-    if(ac->isServerConnected())
-        ac->cancelAllGoals();
+    gobot_msg_srv::GoalStatus goal_status;
+    ros::service::call("/gobot_function/get_goal_status",goal_status);
+    //stop path when goal active or goal reached(may wait for human action)
+    if(goal_status.response.status==1 || goal_status.response.status==3){
+        ros::service::call("/gobot_command/pause_path",empty_srv);
+    }
 
     ros::spinOnce();
 
@@ -422,7 +427,7 @@ void finishedDocking(const int16_t status){
     gobot_msg_srv::SetDockStatus dockStatus;
     dockStatus.request.status = status;
 
-    ros::service::call("setDockStatus", dockStatus);
+    ros::service::call("/gobot_command/setDockStatus", dockStatus);
 }
 
 /***************************************************************************************************/

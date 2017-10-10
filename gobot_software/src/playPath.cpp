@@ -32,23 +32,6 @@ bool setSpeed(const char directionR, const int velocityR, const char directionL,
     return ros::service::call("/gobot_motor/setSpeeds", speed);
 }
 
-void getButtonCallback(const std_msgs::Int8::ConstPtr& msg){
-	/// External button 1-No press; 0-press
-	if(msg->data==0 && waitingForAction && readAction){
-		action_time = ros::Time::now();
-		readAction=false;
-	}
-	else if(msg->data==1 && !readAction){
-		readAction = true;
-		double dt = (ros::Time::now() - action_time).toSec();
-		if(dt<=5.0){
-			//Go to next point
-			waitingForAction=false;
-			ROS_INFO("Received Human Action %.2f seconds.",dt);
-		}
-	}
-}
-
 void goalResultCallback(const move_base_msgs::MoveBaseActionResult::ConstPtr& msg){
 	switch(msg->status.status){
 		//PREEMTED
@@ -93,7 +76,7 @@ void goalReached(){
                 // resets the current goal
                 currentGoal.x = -1;
 
-                if(!ros::service::call("/gobot_function/goDock", empty_srv))
+                if(!ros::service::call("/gobot_command/goDock", empty_srv))
                     ROS_ERROR("(PlayPath::goalReached) Could not go charging");
 
                 dockAfterPath = false;
@@ -148,6 +131,23 @@ void checkGoalDelay(){
 	}
 }
 
+void getButtonCallback(const std_msgs::Int8::ConstPtr& msg){
+	/// External button 1-No press; 0-press
+	if(msg->data==0 && waitingForAction && readAction){
+		action_time = ros::Time::now();
+		readAction=false;
+	}
+	else if(msg->data==1 && !readAction){
+		readAction = true;
+		double dt = (ros::Time::now() - action_time).toSec();
+		if(dt<=5.0){
+			//Go to next point
+			waitingForAction=false;
+			ROS_INFO("Received Human Action %.2f seconds.",dt);
+		}
+	}
+}
+
 void goNextPoint(){
 	// get the next point in the path list and tell the robot to go there
 	if(path.size()-1 == stage)
@@ -183,8 +183,10 @@ void goToPoint(const Point& point){
     goal.target_pose.pose.orientation.w = quaternion.w();
 
 	currentGoal = point;
-	if(ac->isServerConnected()) ac->sendGoal(goal);
-	else ROS_INFO("(PlayPath::goToPoint) no action server");
+	if(ac->isServerConnected()) 
+		ac->sendGoal(goal);
+	else 
+		ROS_INFO("(PlayPath::goToPoint) no action server");
 }
 
 void setStageInFile(const int _stage){
@@ -291,7 +293,7 @@ bool stopPathService(std_srvs::Empty::Request &req, std_srvs::Empty::Response &r
     if(dockAfterPath){
         ROS_INFO("(PlayPath::goalReached) Battery is low, go to charging station!!");
         
-        if(!ros::service::call("/gobot_function/goDock", empty_srv))
+        if(!ros::service::call("/gobot_command/goDock", empty_srv))
             ROS_ERROR("(PlayPath::goalReached) Could not go charging");
 
         dockAfterPath = false;
@@ -323,8 +325,7 @@ bool stopLoopPathService(std_srvs::Empty::Request &req, std_srvs::Empty::Respons
 bool goDockAfterPathService(std_srvs::Empty::Request &req, std_srvs::Empty::Response &res){
     ROS_INFO("(PlayPath::goDockAfterPathService) service called");
     looping = false;
-    //dockAfterPath = true;  //I don't have docking station for my robot now.
-	dockAfterPath = false;
+    dockAfterPath = true;  //I don't have docking station for my robot now.
     return true;
 }
 

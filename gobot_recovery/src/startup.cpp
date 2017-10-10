@@ -42,23 +42,27 @@ void getButtonCallback(const std_msgs::Int8::ConstPtr& msg){
 		buttonOn = true;
     double dt = (ros::Time::now() - action_time).toSec();
     if(dt<=5.0){
-      if(robot_pause && goal_state==-1){
+      if(robot_pause && goal_state==2){
         ROS_INFO("Continue robot.");
-        ros::service::call("/command_system/play_path",empty_srv);
+        ros::service::call("/gobot_command/play_path",empty_srv);
       }
       else if(!robot_pause && goal_state==1){
         ROS_INFO("Pause robot.");
-        ros::service::call("/command_system/pause_path",empty_srv);
+        ros::service::call("/gobot_command/pause_path",empty_srv);
       }
     }
-    else if(dt>5.0 && dt<=10.0 && (goal_state==-2 || goal_state==-1 || goal_state==0)){
+    else if(dt>5.0 && dt<=10.0){
       //play path when robot stop due to aborted goal
       ROS_INFO("Resume robot.");
-      ros::service::call("/command_system/play_path",empty_srv);
+      if(goal_state==3){
+        ros::service::call("/gobot_command/pause_path",empty_srv);
+        ROS_INFO("Pause path because robot may wait for human action.");
+      }
+      ros::service::call("/gobot_command/play_path",empty_srv);
     }
     else if(dt>10.0 && dt<=20.0){
       ROS_INFO("Charge robot.");
-      ros::service::call("/gobot_function/goDock",empty_srv);
+      ros::service::call("/gobot_command/goDock",empty_srv);
 		}
     else if(dt>99.0){
       ROS_INFO("Globalize robot.");
@@ -74,6 +78,7 @@ void getButtonCallback(const std_msgs::Int8::ConstPtr& msg){
 }
 
 void goalGetCallback(const move_base_msgs::MoveBaseActionGoal::ConstPtr& msg){
+  //Active
   goal_state=1;
   robot_pause=false;
 }
@@ -83,25 +88,30 @@ void goalResultCallback(const move_base_msgs::MoveBaseActionResult::ConstPtr& ms
     //PREEMTED
     case 2:
       robot_pause=true;
-      goal_state=-1;
+      goal_state=2;
       break;
 		//SUCCEED
 		case 3:
-			goal_state=0;
+			goal_state=3;
 			break;
 		//ABORTED
 		case 4:
-			goal_state=-2;
+			goal_state=4;
 			break;
 		//REJECTED
 		case 5:
-			goal_state=-2;
+			goal_state=5;
 			break;
 		//OTHER CASE
 		default:
 			ROS_ERROR("Unknown goal status %d",msg->status.status);
 			break;
 	}
+}
+
+bool goalStatusSrvCallback(gobot_msg_srv::GoalStatus::Request &req, gobot_msg_srv::GoalStatus::Response &res){
+    res.status = goal_state;
+    return true;
 }
 
 void mySigintHandler(int sig)
@@ -127,7 +137,9 @@ int main(int argc, char **argv) {
     ros::Subscriber goalGet = nh.subscribe("/move_base/goal",1,goalGetCallback);
     ros::Subscriber initialPoseResult = nh.subscribe("/gobot_recovery/find_initial_pose",1, initialPoseResultCallback);
     ros::Subscriber button_sub = nh.subscribe("/gobot_base/button_topic",1,getButtonCallback);
-    
+
+    ros::ServiceServer goalStatusSrv = nh.advertiseService("/gobot_function/get_goal_status", goalStatusSrvCallback);
+
     ros::service::waitForService("/gobot_recovery/initialize_pose", ros::Duration(30.0));
     while(!ros::service::call("/gobot_recovery/initialize_pose",empty_srv)){
         ROS_ERROR("Failed to initilize robot pose");

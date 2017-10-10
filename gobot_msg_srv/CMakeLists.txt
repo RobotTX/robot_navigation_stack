@@ -72,8 +72,8 @@ add_service_files(
     SetSpeeds.srv
     LedStrip.srv
     SetBattery.srv
-    String.srv
     SendMap.srv
+    GoalStatus.srv
 )
 
 ## Generate actions in the 'action' folder

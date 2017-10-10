@@ -10,7 +10,7 @@
 #define MAGENTA 0x4D
 #define OFF 0x00
 
-
+#define LOW_BATTERY_STAGE 99
 #define COMPLETE_STAGE 11
 #define BUMPER_STAGE 10
 #define GOAL_STAGE 9
@@ -182,7 +182,7 @@ void batteryCallback(const gobot_msg_srv::BatteryMsg::ConstPtr& msg){
         charging_state=3;
 
     std::vector<uint8_t> color;
-    if(msg->ChargingFlag && (current_stage<CHARGING_STAGE || charging_state!=pre_charing_state)){
+    if(msg->ChargingFlag && (current_stage==LOW_BATTERY_STAGE || current_stage<CHARGING_STAGE || charging_state!=pre_charing_state)){
         current_stage = CHARGING_STAGE;
         pre_charing_state=charging_state;
         switch (charging_state){
@@ -211,6 +211,8 @@ void batteryCallback(const gobot_msg_srv::BatteryMsg::ConstPtr& msg){
         }
     }
     else if(!msg->ChargingFlag && current_stage==CHARGING_STAGE){
+        current_stage = FREE_STAGE;
+        pre_charing_state = -1;
         switch (charging_state){
             case 0:
             color.push_back(MAGENTA);
@@ -232,7 +234,6 @@ void batteryCallback(const gobot_msg_srv::BatteryMsg::ConstPtr& msg){
             setLedPermanent(color);
             break;
         }
-        current_stage = FREE_STAGE;
     }
 }
 
@@ -257,10 +258,30 @@ void explorationCallback(const std_msgs::Int8::ConstPtr& msg){
 
 void timerCallback(const ros::TimerEvent&){
     //Turn off LED if no goal for 5 mins
-    if((ros::Time::now() - last_time).toSec()>300 && current_stage==FREE_STAGE){
-        std::vector<uint8_t> color;
-        color.push_back(WHITE);
+    std::vector<uint8_t> color;
+    if (charging_state == 0 && current_stage != CHARGING_STAGE && current_stage<LOW_BATTERY_STAGE){
+        color.push_back(MAGENTA);
         setLedPermanent(color);
+        current_stage = LOW_BATTERY_STAGE;
+    }
+
+    if((ros::Time::now() - last_time).toSec()>300 && current_stage==FREE_STAGE){
+        switch (charging_state){
+            case 1:
+            color.push_back(YELLOW);
+            setLedPermanent(color);
+            break;
+
+            case 2:
+            color.push_back(CYAN);
+            setLedPermanent(color);
+            break;
+
+            case 3:
+            color.push_back(CYAN);
+            setLedPermanent(color);
+            break;
+        }
     }   
 }
 
@@ -274,8 +295,8 @@ int main(int argc, char **argv) {
     ros::Subscriber goalResult = nh.subscribe("/move_base/result",1,goalResultCallback);
     ros::Subscriber goalGet = nh.subscribe("/move_base/goal",1,goalGetCallback);
     ros::Subscriber goalCancel = nh.subscribe("/move_base/cancel",1,goalCancelCallback);
-    ros::Subscriber bumpersSub = nh.subscribe("/gobot_base/bumpers_topic", 1, newBumpersInfo);
     ros::Subscriber initialPoseResult = nh.subscribe("/gobot_recovery/find_initial_pose",1, initialPoseResultCallback);
+    ros::Subscriber bumpersSub = nh.subscribe("/gobot_base/bumpers_topic", 1, newBumpersInfo);
     ros::Subscriber battery = nh.subscribe("/gobot_base/battery_topic",1, batteryCallback);
     ros::Subscriber exploration = nh.subscribe("/move_base_controller/exploration_result",1,explorationCallback);
     last_time=ros::Time::now();

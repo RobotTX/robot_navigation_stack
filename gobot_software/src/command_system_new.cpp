@@ -930,6 +930,18 @@ bool stopPathSrvCallback(std_srvs::Empty::Request &req, std_srvs::Empty::Respons
     return true;
 }
 
+bool goDockSrvCallback(std_srvs::Empty::Request &req, std_srvs::Empty::Response &res){
+    std::vector<std::string> command({"o"});
+    std::string commandStr = "o" + sep;
+
+    std::string msg;
+    commandMutex.lock();
+    msg = (execCommand("", command) ? "done" : "failed") + sep + commandStr;
+    sendMessageToAll(msg);
+    commandMutex.unlock();
+
+    return true;
+}
 
 bool setDockStatus(gobot_msg_srv::SetDockStatus::Request &req, gobot_msg_srv::SetDockStatus::Response &res){
     ROS_INFO("(Command system) setDockStatus service called %d", req.status);
@@ -947,11 +959,7 @@ bool getDockStatus(gobot_msg_srv::GetDockStatus::Request &req, gobot_msg_srv::Ge
     return true;
 }
 
-bool goDockService(std_srvs::Empty::Request &req, std_srvs::Empty::Response &res){
-    goDock();
-}
-
-bool lowBattery(std_srvs::Empty::Request &req, std_srvs::Empty::Response &res){
+bool lowBatterySrvCallback(std_srvs::Empty::Request &req, std_srvs::Empty::Response &res){
     ROS_INFO("(Command system) lowBattery service called");
     if(!goDockAfterPath){
         /// If the robot is not already trying to dock, we go dock
@@ -1277,14 +1285,13 @@ int main(int argc, char* argv[]){
         go_pub = n.advertise<geometry_msgs::PoseStamped>("/move_base_simple/goal", 1000);
         teleop_pub = n.advertise<geometry_msgs::Twist>("/cmd_vel", 1000);
 
-        ros::ServiceServer setDockStatusSrv = n.advertiseService("setDockStatus", setDockStatus);
-        ros::ServiceServer getDockStatusSrv = n.advertiseService("getDockStatus", getDockStatus);
-        ros::ServiceServer lowBatterySrv = n.advertiseService("lowBattery", lowBattery);
-        ros::ServiceServer goDockSrv = n.advertiseService("/gobot_function/goDock", goDockService);
-
-        ros::ServiceServer pausePathSrv = n.advertiseService("/command_system/pause_path", pausePathSrvCallback);
-        ros::ServiceServer playPathSrc = n.advertiseService("/command_system/play_path", playPathSrvCallback);
-        ros::ServiceServer stopPathSrc = n.advertiseService("/command_system/stop_path", stopPathSrvCallback);
+        ros::ServiceServer setDockStatusSrv = n.advertiseService("/gobot_command/setDockStatus", setDockStatus);
+        ros::ServiceServer getDockStatusSrv = n.advertiseService("/gobot_command/getDockStatus", getDockStatus);
+        ros::ServiceServer lowBatterySrv = n.advertiseService("/gobot_command/lowBattery", lowBatterySrvCallback);
+        ros::ServiceServer goDockSrv = n.advertiseService("/gobot_command/goDock", goDockSrvCallback);
+        ros::ServiceServer pausePathSrv = n.advertiseService("/gobot_command/pause_path", pausePathSrvCallback);
+        ros::ServiceServer playPathSrc = n.advertiseService("/gobot_command/play_path", playPathSrvCallback);
+        ros::ServiceServer stopPathSrc = n.advertiseService("/gobot_command/stop_path", stopPathSrvCallback);
 
         n.param<bool>("simulation", simulation, false);
         ROS_INFO("(Command system) simulation : %d", simulation);

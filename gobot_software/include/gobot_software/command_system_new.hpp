@@ -146,9 +146,9 @@ bool setDockStatus(gobot_msg_srv::SetDockStatus::Request &req, gobot_msg_srv::Se
 
 bool getDockStatus(gobot_msg_srv::GetDockStatus::Request &req, gobot_msg_srv::GetDockStatus::Response &res);
 
-bool goDockService(std_srvs::Empty::Request &req, std_srvs::Empty::Response &res);
+bool goDockSrvCallback(std_srvs::Empty::Request &req, std_srvs::Empty::Response &res);
 
-bool lowBattery(std_srvs::Empty::Request &req, std_srvs::Empty::Response &res);
+bool lowBatterySrvCallback(std_srvs::Empty::Request &req, std_srvs::Empty::Response &res);
 
 
 /*********************************** COMMUNICATION FUNCTIONS ***********************************/

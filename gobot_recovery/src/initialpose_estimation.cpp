@@ -8,7 +8,6 @@ double last_pos_x=0.0,last_pos_y=0.0,last_pos_yaw=0.0,last_ang_x=0.0,last_ang_y=
 double home_pos_x=0.0,home_pos_y=0.0,home_pos_yaw=0.0,home_ang_x=0.0,home_ang_y=0.0,home_ang_z=0.0,home_ang_w=0.0;
 double rosparam_x=0.0,rosparam_y=0.0,rosparam_yaw=0.0,rosparam_cov_x=0.0,rosparam_cov_y=0.0,rosparam_cov_yaw=0.0;
 
-bool goalActive = false;
 bool running = false,found_pose=false;;
 
 std_srvs::Empty empty_srv;
@@ -96,14 +95,6 @@ void publishInitialpose(const double position_x, const double position_y, const 
         ROS_ERROR("(initial_pose_publisher) got a wrong position (robot probably got no home)");
 }
 
-void goalStatusCallback(const actionlib_msgs::GoalStatusArray::ConstPtr& msg){
-    if (!msg->status_list.empty() && msg->status_list.back().status!=2) //has active goal
-        //cancel goal
-        goalActive = true;
-    else
-        goalActive =false;
-}
-
 bool initializePoseSrvCallback(std_srvs::Empty::Request &req, std_srvs::Empty::Response &res){
     if(!running){
         std::thread([](){
@@ -111,9 +102,12 @@ bool initializePoseSrvCallback(std_srvs::Empty::Request &req, std_srvs::Empty::R
             gobot_msg_srv::IsCharging arg;
             running = true;
             found_pose=false;
-            if(goalActive){
-                ros::service::waitForService("/command_system/pause_path", ros::Duration(30.0));
-                ros::service::call("/command_system/pause_path",empty_srv);
+
+            gobot_msg_srv::GoalStatus goal_status;
+            ros::service::call("/gobot_function/get_goal_status",goal_status);
+            //pause when goal active or goal reached(may wait for human action)
+            if(goal_status.response.status==1 || goal_status.response.status==3){
+                ros::service::call("/gobot_command/pause_path",empty_srv);
                 ROS_INFO("Cancelled active goal to proceed gobalo localization.");
             }
 
@@ -191,9 +185,12 @@ bool globalizePoseSrvCallback(std_srvs::Empty::Request &req, std_srvs::Empty::Re
             int current_stage=START_STAGE;
             running = true;
             found_pose=false;
-            if(goalActive){
-                ros::service::waitForService("/command_system/pause_path", ros::Duration(30.0));
-                ros::service::call("/command_system/pause_path",empty_srv);
+
+            gobot_msg_srv::GoalStatus goal_status;
+            ros::service::call("/gobot_function/get_goal_status",goal_status);
+            //pause when goal active or goal reached(may wait for human action)
+            if(goal_status.response.status==1 || goal_status.response.status==3){
+                ros::service::call("/gobot_command/pause_path",empty_srv);
                 ROS_INFO("Cancelled active goal to proceed gobalo localization.");
             }
             
@@ -286,8 +283,13 @@ void getAmclPoseCallback(const geometry_msgs::PoseWithCovarianceStamped::ConstPt
 }
 
 bool goHomeSrvCallback(std_srvs::Empty::Request &req, std_srvs::Empty::Response &res){
-    ros::service::call("/command_system/stop_path",empty_srv);
-    ROS_INFO("Cancelled active goal to go home.");
+    gobot_msg_srv::GoalStatus goal_status;
+    ros::service::call("/gobot_function/get_goal_status",goal_status);
+    //pause when goal active or goal reached(may wait for human action)
+    if(goal_status.response.status==1 || goal_status.response.status==3){
+        ros::service::call("/gobot_command/pause_path",empty_srv);
+        ROS_INFO("Cancelled active goal to go home.");
+    }
 
     ros::service::call("/move_base/clear_costmap",empty_srv);
     ROS_INFO("Go Home, sweet home.");
@@ -408,13 +410,10 @@ int main(int argc, char **argv) {
     initial_pose_publisher = nh.advertise<geometry_msgs::PoseWithCovarianceStamped>("/initialpose", 1);
     goal_pub = nh.advertise<geometry_msgs::PoseStamped>("/move_base_simple/goal",1);
 
-    ros::Subscriber goalStatus = nh.subscribe("/move_base/status",1,goalStatusCallback);
     ros::Subscriber initialPose = nh.subscribe("/amcl_pose",1,getAmclPoseCallback);
-
     ros::ServiceServer initializePose = nh.advertiseService("/gobot_recovery/initialize_pose",initializePoseSrvCallback);
     ros::ServiceServer globalizePose = nh.advertiseService("/gobot_recovery/globalize_pose",globalizePoseSrvCallback);
     ros::ServiceServer stopGlobalizePose = nh.advertiseService("/gobot_recovery/stop_globalize_pose",stopGlobalizePoseSrvCallback);
-
     ros::ServiceServer goHome = nh.advertiseService("/gobot_recovery/go_home",goHomeSrvCallback);
 
 

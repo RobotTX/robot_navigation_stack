@@ -347,8 +347,8 @@ int main(int argc, char **argv) {
 
     ros::ServiceServer isChargingSrv = nh.advertiseService("/gobot_base/isCharging", isChargingService);
     ros::ServiceServer setLedSrv = nh.advertiseService("/gobot_base/setLed", setLedSrvCallback);
+    ros::ServiceServer displayDataSrv = nh.advertiseService("/gobot_base/displaySensorData", displaySensorData);
     ros::ServiceServer resetMotorSrv = nh.advertiseService("resetMotorDriver", resetMotorSrvCallback);
-    ros::ServiceServer displayDataService = nh.advertiseService("/gobot_base/displaySensorData", displaySensorData);
 
     if(initSerial()){
         ros::Rate r(5);

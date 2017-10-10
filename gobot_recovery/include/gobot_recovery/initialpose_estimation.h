@@ -4,7 +4,6 @@
 #include <geometry_msgs/PoseWithCovarianceStamped.h>
 #include <geometry_msgs/Twist.h>
 #include <geometry_msgs/PoseStamped.h>
-#include <gobot_msg_srv/IsCharging.h>
 #include <actionlib_msgs/GoalStatusArray.h>
 #include <actionlib_msgs/GoalID.h>
 #include <std_srvs/Empty.h>
@@ -18,6 +17,8 @@
 #include <signal.h>
 #include <tf/LinearMath/Matrix3x3.h>
 #include <tf/LinearMath/Quaternion.h>
+#include <gobot_msg_srv/IsCharging.h>
+#include <gobot_msg_srv/GoalStatus.h>
 
 #define PI 3.1415926
 
@@ -46,8 +47,6 @@ void findPoseResult(int status);
 void publishInitialpose(const double position_x, const double position_y, const double angle_x, const double angle_y, const double angle_z, const double angle_w,const double cov1,const double cov2);
 
 void getAmclPoseCallback(const geometry_msgs::PoseWithCovarianceStamped::ConstPtr& msg);
-
-void goalStatusCallback(const actionlib_msgs::GoalStatusArray::ConstPtr& msg);
 
 bool initializePoseSrvCallback(std_srvs::Empty::Request &req, std_srvs::Empty::Response &res);
 

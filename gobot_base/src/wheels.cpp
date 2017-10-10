@@ -199,9 +199,9 @@ int main(int argc, char **argv) {
         ros::ServiceServer setSpeedsSrv = nh.advertiseService("/gobot_motor/setSpeeds", setSpeeds);
         ros::ServiceServer getEncodersSrv = nh.advertiseService("/gobot_motor/getEncoders", getEncoders);
         ros::ServiceServer resetEncodersSrv = nh.advertiseService("/gobot_motor/resetEncoders", resetEncoders);
-        ros::ServiceServer testEncodersSrv = nh.advertiseService("testEncoders", testEncoders);
-        ros::ServiceServer testEncodersSrv2 = nh.advertiseService("testEncoders2", testEncoders2);
-        ros::ServiceServer stopTestsSrv = nh.advertiseService("stopTests", stopTests);
+        ros::ServiceServer testEncodersSrv = nh.advertiseService("/gobot_test/testEncoders", testEncoders);
+        ros::ServiceServer testEncodersSrv2 = nh.advertiseService("/gobot_test/testEncoders2", testEncoders2);
+        ros::ServiceServer stopTestsSrv = nh.advertiseService("/gobot_test/stopTestEncoder", stopTests);
 
         ros::spin();
     } else

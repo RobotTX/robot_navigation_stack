@@ -1,5 +1,7 @@
 #include <gobot_software/battery_check.hpp>
 
+#define LOW_VOLTAGE 21500
+
 bool canGoCharge = true;
 int test = -1;
 
@@ -15,10 +17,10 @@ void newBatteryInfo(const gobot_msg_srv::BatteryMsg::ConstPtr& batteryInfo){
 
     ROS_INFO("(Battery check) Battery info : %d %d %d %d", batteryInfo->BatteryVoltage, batteryInfo->ChargingCurrent, batteryInfo->ChargingFlag, canGoCharge);
 
-    if(!batteryInfo->ChargingFlag && (batteryInfo->BatteryVoltage < 21500 || test == 0) && canGoCharge){
+    if(!batteryInfo->ChargingFlag && (batteryInfo->BatteryVoltage < LOW_VOLTAGE || test == 0) && canGoCharge){
         ROS_ERROR("(Battery check) Battery is low, let's go charge!!");
         std_srvs::Empty arg;
-        if(ros::service::call("lowBattery", arg))
+        if(ros::service::call("/gobot_command/lowBattery", arg))
             canGoCharge = false;
         else
             ROS_WARN("(Battery check) Could not go docking, the robot might be busy with its path, will try again later");
@@ -29,7 +31,6 @@ void newBatteryInfo(const gobot_msg_srv::BatteryMsg::ConstPtr& batteryInfo){
         ROS_INFO("(Battery check) Can go charge again!!");
         canGoCharge = true;
     }
-
     sleep(2);
 }
 
@@ -39,7 +40,7 @@ int main(int argc, char* argv[]){
 
     ROS_INFO("(Battery check) running");
 
-    ros::ServiceServer testAutoDockingService = nh.advertiseService("testAutoDocking", testAutoDocking);
+    ros::ServiceServer testAutoDockingService = nh.advertiseService("/gobot_test/testAutoDocking", testAutoDocking);
 
     ros::Subscriber batterySub = nh.subscribe("/gobot_base/battery_topic", 1, newBatteryInfo);
 

@@ -70,11 +70,6 @@ target_link_libraries(robot_pos_transfer ${catkin_LIBRARIES} ${gobot_software} $
 add_dependencies(robot_pos_transfer ${${gobot_msg_srv}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
 
 
-add_executable(command_system src/command_system.cpp)
-target_link_libraries(command_system ${catkin_LIBRARIES} ${gobot_software} ${Boost_FILESYSTEM_LIBRARY} ${Boost_SYSTEM_LIBRARY} )
-add_dependencies(command_system ${${gobot_msg_srv}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
-
-
 add_executable(read_new_map src/read_new_map.cpp)
 target_link_libraries(read_new_map ${catkin_LIBRARIES} ${gobot_software} ${Boost_FILESYSTEM_LIBRARY} ${Boost_SYSTEM_LIBRARY} )
 add_dependencies(read_new_map ${${gobot_msg_srv}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
@@ -98,11 +93,6 @@ add_dependencies(send_laser_data ${${gobot_msg_srv}_EXPORTED_TARGETS} ${catkin_E
 add_executable(recover_position src/recover_position.cpp)
 target_link_libraries(recover_position ${catkin_LIBRARIES} ${gobot_software} ${Boost_FILESYSTEM_LIBRARY} ${Boost_SYSTEM_LIBRARY} )
 add_dependencies(recover_position ${${gobot_msg_srv}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
-
-
-add_executable(ping_server src/ping_server.cpp)
-target_link_libraries(ping_server ${catkin_LIBRARIES} ${gobot_software} ${Boost_FILESYSTEM_LIBRARY} ${Boost_SYSTEM_LIBRARY} )
-add_dependencies(ping_server ${${gobot_msg_srv}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
 
 
 add_executable(auto_docking src/auto_docking.cpp)

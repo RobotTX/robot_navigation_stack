@@ -39,10 +39,10 @@ std::string getDataToSend(void){
     /// Retrieve the docking status
     gobot_msg_srv::GetDockStatus _dockStatus;
     int dockStatus = 0;
-    if(ros::service::call("getDockStatus", _dockStatus))
+    if(ros::service::call("/gobot_command/getDockStatus", _dockStatus))
         dockStatus = _dockStatus.response.status;
     else
-        ROS_ERROR("(ping_server) could not call getDockStatus service");
+        ROS_ERROR("(ping_server) could not call /gobot_command/getDockStatus service");
 
     /// Retrieves the path stage
     int stage(0);
@@ -184,7 +184,7 @@ void checkNewServers(void){
     ros::Rate loop_rate(0.1);
 
     while(ros::ok()){ 
-        ros::spinOnce();
+        //ros::spinOnce();
 
         //ROS_INFO("(ping_server) Refreshing the list of potential servers");
         /// Script which will check all the IP on the local network and put them in a file
@@ -199,7 +199,7 @@ void checkNewServers(void){
             serverMutex.lock();
             /// Save all the IP addresses in an array
             availableIPs.clear();
-            while(std::getline(ifs, currentIP))
+            while(std::getline(ifs, currentIP) && ros::ok())
                 availableIPs.push_back(currentIP);
             serverMutex.unlock();
         }
