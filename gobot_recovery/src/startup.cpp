@@ -9,7 +9,7 @@ ros::Time action_time;
 std::string restartRobotFile;
 
 //-1=no goal, 0=complete goal, 1=active goal
-int goal_state = 99;
+int goal_state = 0;
 bool robot_pause = false;
 
 void initialPoseResultCallback(const std_msgs::Int8::ConstPtr& msg){
@@ -51,7 +51,7 @@ void getButtonCallback(const std_msgs::Int8::ConstPtr& msg){
         ros::service::call("/command_system/pause_path",empty_srv);
       }
     }
-    else if(dt>5.0 && dt<=10.0 && (goal_state==-2 || goal_state==-1 || goal_state == 0)){
+    else if(dt>5.0 && dt<=10.0 && (goal_state==-2 || goal_state==-1 || goal_state==0)){
       //play path when robot stop due to aborted goal
       ROS_INFO("Resume robot.");
       ros::service::call("/command_system/play_path",empty_srv);
