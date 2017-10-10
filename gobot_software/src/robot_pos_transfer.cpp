@@ -87,7 +87,7 @@ int main(int argc, char **argv){
     disco_pub = n.advertise<std_msgs::String>("server_disconnected", 10);
 	
     //Periodically send robot pose to connected clients
-    ros::Timer timer = n.createTimer(ros::Duration(1), sendRobotPos);
+    ros::Timer timer = n.createTimer(ros::Duration(0.5), sendRobotPos);
 
     ros::Subscriber sub = n.subscribe("server_disconnected", 1000, serverDisconnected);
 

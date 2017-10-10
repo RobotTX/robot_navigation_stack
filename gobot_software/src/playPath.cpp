@@ -171,7 +171,7 @@ void goToPoint(const Point& point){
 	move_base_msgs::MoveBaseGoal goal;
 
 	tf::Quaternion quaternion;
-	quaternion.setEuler(0, 0, -(point.yaw-90)*3.14159/180);
+	quaternion.setEuler(0, 0, -(point.yaw+90)*3.14159/180);
 
 	goal.target_pose.header.frame_id = "map";
     goal.target_pose.header.stamp = ros::Time::now();
