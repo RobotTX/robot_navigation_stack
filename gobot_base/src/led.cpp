@@ -11,6 +11,7 @@
 #define OFF 0x00
 
 #define LOW_BATTERY_STAGE 99
+#define LOST_STAGE 12
 #define COMPLETE_STAGE 11
 #define BUMPER_STAGE 10
 #define GOAL_STAGE 9
@@ -108,7 +109,7 @@ void goalGetCallback(const move_base_msgs::MoveBaseActionGoal::ConstPtr& msg){
 }
 
 void goalCancelCallback(const actionlib_msgs::GoalID::ConstPtr& msg){
-    if(current_stage==GOAL_STAGE){
+    if(current_stage==GOAL_STAGE && current_stage<COMPLETE_STAGE){
         std::vector<uint8_t> color;
         //ROS_INFO("Goal Cancelled and disable teb_local_planner allow_init_with_backwards_motion.");
         color.push_back(BLUE);
@@ -256,16 +257,31 @@ void explorationCallback(const std_msgs::Int8::ConstPtr& msg){
     }
 }
 
+void lostCallback(const std_msgs::Int8::ConstPtr& msg){
+    std::vector<uint8_t> color;
+    if(msg->data==1 && current_stage<LOST_STAGE){
+        current_stage=LOST_STAGE;
+        color.push_back(RED);
+        color.push_back(BLUE);
+        color.push_back(GREEN);
+        setLedRunning(color);
+    }
+    else if(msg->data==0 && current_stage==LOST_STAGE){
+        current_stage=FREE_STAGE;
+        color.push_back(GREEN);
+        setLedPermanent(color);
+    }
+}
+
 void timerCallback(const ros::TimerEvent&){
-    //Turn off LED if no goal for 5 mins
     std::vector<uint8_t> color;
     if (charging_state == 0 && current_stage != CHARGING_STAGE && current_stage<LOW_BATTERY_STAGE){
+        current_stage = LOW_BATTERY_STAGE;
         color.push_back(MAGENTA);
         setLedPermanent(color);
-        current_stage = LOW_BATTERY_STAGE;
     }
-
-    if((ros::Time::now() - last_time).toSec()>300 && current_stage==FREE_STAGE){
+    //Show battery status if no goal for 5 mins
+    if((ros::Time::now() - last_time).toSec()>300.0 && current_stage==FREE_STAGE){
         switch (charging_state){
             case 1:
             color.push_back(YELLOW);
@@ -290,7 +306,7 @@ int main(int argc, char **argv) {
     ros::init(argc, argv, "led");
     ros::NodeHandle nh;
 
-    ros::Timer timer = nh.createTimer(ros::Duration(120), timerCallback);
+    ros::Timer timer = nh.createTimer(ros::Duration(5), timerCallback);
 
     ros::Subscriber goalResult = nh.subscribe("/move_base/result",1,goalResultCallback);
     ros::Subscriber goalGet = nh.subscribe("/move_base/goal",1,goalGetCallback);
@@ -299,6 +315,7 @@ int main(int argc, char **argv) {
     ros::Subscriber bumpersSub = nh.subscribe("/gobot_base/bumpers_topic", 1, newBumpersInfo);
     ros::Subscriber battery = nh.subscribe("/gobot_base/battery_topic",1, batteryCallback);
     ros::Subscriber exploration = nh.subscribe("/move_base_controller/exploration_result",1,explorationCallback);
+    ros::Subscriber lostRobot = nh.subscribe("/gobot_recovery/lost_robot",1,lostCallback);
     last_time=ros::Time::now();
 
     ros::spin();

@@ -7,6 +7,7 @@ bool pause_robot = false;
 
 std::chrono::system_clock::time_point collisionTime;
 
+ros::Publisher bumper_pub;
 
 bool setSpeed(const char directionR, const int velocityR, const char directionL, const int velocityL){
     //ROS_INFO("(auto_docking::setSpeed) %c %d %c %d", directionR , velocityR, directionL, velocityL);
@@ -47,13 +48,14 @@ void newBumpersInfo(const gobot_msg_srv::BumperMsg::ConstPtr& bumpers){
             collisionTime = std::chrono::system_clock::now();
             setSpeed('F', 0, 'F', 0);
         } else {
-            /// if after 6 seconds, the obstacle is still there, we go to the opposite direction
-            if(std::chrono::duration_cast<std::chrono::seconds>(std::chrono::system_clock::now() - collisionTime).count() > 6 
+            /// if after 5 seconds, the obstacle is still there, we go to the opposite direction
+            if(std::chrono::duration_cast<std::chrono::seconds>(std::chrono::system_clock::now() - collisionTime).count() > 5 
                 && !moved_away_from_collision){
                 moving_from_collision = true;
                 moved_away_from_collision = true;
+                bumper_pub.publish(*bumpers); 
                 /// We create a thread that will make the robot go into the opposite direction, then sleep for 2 seconds and make the robot stop
-                if(front && !back){
+                if(front && !back){  
                     std::thread([](){
                         ROS_WARN("(twist::newBumpersInfo) Launching thread to move away from the obstacle");
                         setSpeed('B', 5, 'B', 5);
@@ -77,6 +79,7 @@ void newBumpersInfo(const gobot_msg_srv::BumperMsg::ConstPtr& bumpers){
     } else {
         /// if we had a collision and the obstacle left
         if(collision && !moving_from_collision){
+            bumper_pub.publish(*bumpers);
             ROS_INFO("(twist::newBumpersInfo) the obstacle left after %f seconds", (double) (std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now() - collisionTime).count() / 1000));
             collision = false;
             moved_away_from_collision = false;
@@ -128,6 +131,8 @@ int main(int argc, char **argv) {
     ros::init(argc, argv, "twist");
 
     ros::NodeHandle nh;
+
+    bumper_pub = nh.advertise<gobot_msg_srv::BumperMsg>("/gobot_base/bumpers_collision", 1);
 
     ros::Subscriber cmdVelSub = nh.subscribe("cmd_vel", 1, newCmdVel);
     ros::Subscriber bumpersSub = nh.subscribe("/gobot_base/bumpers_topic", 1, newBumpersInfo);

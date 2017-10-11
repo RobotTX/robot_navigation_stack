@@ -15,4 +15,4 @@ isAlive="$1"
 #cut -f 1 tmp.txt --delimiter=' ' >$isAlive
 #rm tmp.txt
 rm $isAlive
-echo 192.168.100.61 >> $isAlive
+echo 192.168.100.29 >> $isAlive

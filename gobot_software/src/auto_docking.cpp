@@ -51,13 +51,6 @@ bool startDocking(void){
     irSub.shutdown();
     batterySub.shutdown();
 
-    gobot_msg_srv::GoalStatus goal_status;
-    ros::service::call("/gobot_function/get_goal_status",goal_status);
-    //stop path when goal active or goal reached(may wait for human action)
-    if(goal_status.response.status==1 || goal_status.response.status==3){
-        ros::service::call("/gobot_command/pause_path",empty_srv);
-    }
-
     ros::spinOnce();
 
     /// Get the charging station position from the home file
@@ -427,7 +420,7 @@ void finishedDocking(const int16_t status){
     gobot_msg_srv::SetDockStatus dockStatus;
     dockStatus.request.status = status;
 
-    ros::service::call("/gobot_command/setDockStatus", dockStatus);
+    ros::service::call("/gobot_status/setDockStatus", dockStatus);
 }
 
 /***************************************************************************************************/
@@ -447,8 +440,6 @@ void failedDocking(const int status){
 void stopDocking(void){
     ROS_INFO("(auto_docking::stopDocking) called");
 
-    setSpeed('F', 0, 'F', 0);
-
     attempt = 0;
     docking = false;
     landingPointReached = false;
@@ -460,6 +451,7 @@ void stopDocking(void){
     if(ac->isServerConnected())
         ac->cancelAllGoals();
 
+    setSpeed('F', 0, 'F', 0);
     /// unsubscribe so we don't receive messages for nothing
     goalStatusSub.shutdown();
     robotPoseSub.shutdown();
@@ -478,9 +470,13 @@ bool stopDockingService(std_srvs::Empty::Request &req, std_srvs::Empty::Response
 
 bool startDockingService(std_srvs::Empty::Request &req, std_srvs::Empty::Response &res){
     ROS_INFO("(auto_docking::startDockingService) service called");
-
     docking = false;
     attempt = 0;
+    gobot_msg_srv::IsCharging arg;
+    if(ros::service::call("/gobot_status/charging_status", arg) && arg.response.isCharging){
+        ROS_INFO("(auto_docking::startDockingService) Gobot is charging.");
+        return true;
+    }
 
     return startDocking();
 }

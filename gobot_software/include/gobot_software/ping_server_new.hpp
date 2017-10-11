@@ -30,4 +30,6 @@ void checkNewServers(void);
 
 void updateIP(void);
 
+void mySigintHandler(int sig);
+
 #endif

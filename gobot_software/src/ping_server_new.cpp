@@ -39,10 +39,10 @@ std::string getDataToSend(void){
     /// Retrieve the docking status
     gobot_msg_srv::GetDockStatus _dockStatus;
     int dockStatus = 0;
-    if(ros::service::call("/gobot_command/getDockStatus", _dockStatus))
+    if(ros::service::call("/gobot_status/getDockStatus", _dockStatus))
         dockStatus = _dockStatus.response.status;
     else
-        ROS_ERROR("(ping_server) could not call /gobot_command/getDockStatus service");
+        ROS_ERROR("(ping_server) could not call /gobot_status/getDockStatus service");
 
     /// Retrieves the path stage
     int stage(0);
@@ -210,11 +210,17 @@ void checkNewServers(void){
     }
 }
 
+void mySigintHandler(int sig)
+{   
+    ros::shutdown();
+}
 
 int main(int argc, char* argv[]){
 
     ros::init(argc, argv, "ping_server");
     ros::NodeHandle n;
+
+    signal(SIGINT, mySigintHandler);
 
     ros::Subscriber batterySub = n.subscribe("/gobot_base/battery_topic", 1, newBatteryInfo);
     disco_pub = n.advertise<std_msgs::String>("/gobot_software/server_disconnected", 10);

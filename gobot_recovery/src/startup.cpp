@@ -57,8 +57,10 @@ void getButtonCallback(const std_msgs::Int8::ConstPtr& msg){
       if(goal_state==3){
         ros::service::call("/gobot_command/pause_path",empty_srv);
         ROS_INFO("Pause path because robot may wait for human action.");
+        ros::Duration(0.5).sleep();
       }
-      ros::service::call("/gobot_command/play_path",empty_srv);
+      if(goal_state!=1)
+        ros::service::call("/gobot_command/play_path",empty_srv);
     }
     else if(dt>10.0 && dt<=20.0){
       ROS_INFO("Charge robot.");
@@ -138,7 +140,7 @@ int main(int argc, char **argv) {
     ros::Subscriber initialPoseResult = nh.subscribe("/gobot_recovery/find_initial_pose",1, initialPoseResultCallback);
     ros::Subscriber button_sub = nh.subscribe("/gobot_base/button_topic",1,getButtonCallback);
 
-    ros::ServiceServer goalStatusSrv = nh.advertiseService("/gobot_function/get_goal_status", goalStatusSrvCallback);
+    ros::ServiceServer goalStatusSrv = nh.advertiseService("/gobot_status/get_goal_status", goalStatusSrvCallback);
 
     ros::service::waitForService("/gobot_recovery/initialize_pose", ros::Duration(30.0));
     while(!ros::service::call("/gobot_recovery/initialize_pose",empty_srv)){

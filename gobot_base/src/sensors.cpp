@@ -189,7 +189,7 @@ void publishSensors(void){
                 battery_data.FullCapacity, battery_data.Temperature);
             } else {
                 if(battery_data.ChargingCurrent != last_charging_current){
-                    if(battery_data.ChargingCurrent > 1000 || (last_charging_current > 0 && battery_data.ChargingCurrent - last_charging_current > 60))
+                    if(battery_data.ChargingCurrent > 1000 || (last_charging_current > 0 && battery_data.ChargingCurrent - last_charging_current > 100))
                         battery_data.ChargingFlag = true;
                     else 
                         battery_data.ChargingFlag = false;
@@ -230,16 +230,15 @@ void publishSensors(void){
             }
 
             /// The last byte is the Frame Check Sum and is not used
-
             if(!error){
-                sonar_pub.publish(sonar_data);
-                ir_pub.publish(ir_data);
-                proximity_pub.publish(proximity_data);
-                cliff_pub.publish(cliff_data);
-                battery_pub.publish(battery_data);
-                weight_pub.publish(weight_data);
-                if(!error_bumpers)
-                    bumper_pub.publish(bumper_data);
+            sonar_pub.publish(sonar_data);
+            ir_pub.publish(ir_data);
+            proximity_pub.publish(proximity_data);
+            cliff_pub.publish(cliff_data);
+            battery_pub.publish(battery_data);
+            weight_pub.publish(weight_data);
+            if(!error_bumpers)
+                bumper_pub.publish(bumper_data);
             }
 
         } else {
@@ -247,10 +246,12 @@ void publishSensors(void){
             error = true;
         }
 
-        if(error)
-            error_count++;
-        else
+        if(!error){
             error_count = 0;
+        }
+        else{
+            error_count++;
+        }
 
         /// If we got more than <ERROR_THRESHOLD> errors in a row, we send a command to reset the stm32
         if(error_count > ERROR_THRESHOLD){
@@ -259,8 +260,11 @@ void publishSensors(void){
             error_count = 0;
         }
             
-    } else
+    } else{
+        //Try reopen STM32 serial
+        initSerial();
         ROS_ERROR("(sensors::publishSensors) Check serial connection 2");
+    }
 }
 
 bool initSerial(void) {
@@ -345,7 +349,7 @@ int main(int argc, char **argv) {
     cliff_pub = nh.advertise<gobot_msg_srv::CliffMsg>("/gobot_base/cliff_topic", 50);
     button_pub = nh.advertise<std_msgs::Int8>("/gobot_base/button_topic",50);
 
-    ros::ServiceServer isChargingSrv = nh.advertiseService("/gobot_base/isCharging", isChargingService);
+    ros::ServiceServer isChargingSrv = nh.advertiseService("/gobot_status/charging_status", isChargingService);
     ros::ServiceServer setLedSrv = nh.advertiseService("/gobot_base/setLed", setLedSrvCallback);
     ros::ServiceServer displayDataSrv = nh.advertiseService("/gobot_base/displaySensorData", displaySensorData);
     ros::ServiceServer resetMotorSrv = nh.advertiseService("resetMotorDriver", resetMotorSrvCallback);

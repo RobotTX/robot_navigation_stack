@@ -2,7 +2,7 @@
 #include <tf/transform_listener.h>
 #include <sensor_msgs/LaserScan.h>
 
-#define SONAR_THRESHOLD 1.8
+#define SONAR_THRESHOLD 1.5
 #define SONAR_MAX 2.0
 #define SONAR_VIEW 0.2 //11.5degree //0.165 //9.45degree 
 #define SONAR_RESOLUTION 0.0165 //0.945 degree
@@ -50,13 +50,16 @@ void sonarFrontToCloud(double sonarR,double sonarL,pcl::PointCloud<pcl::PointXYZ
 
 
     if(std::abs(sonarR-sonarL)<0.04){
-        //Mark obstacle in the inner side
         for(double i=-tan(SONAR_VIEW)*sonarR;i<tan(SONAR_VIEW)*sonarR;i=i+SONAR_RESOLUTION)
             cloudR.push_back(pcl::PointXYZ(SONAR_MAX, i, 0)); 
         for(double i=tan(SONAR_VIEW)*sonarL;i>-tan(SONAR_VIEW)*sonarL;i=i-SONAR_RESOLUTION)
             cloudL.push_back(pcl::PointXYZ(SONAR_MAX, i, 0));
-        cloudR.push_back(pcl::PointXYZ(sonarR, tan(SONAR_VIEW)*sonarR, 0));
-        cloudL.push_back(pcl::PointXYZ(sonarL, -tan(SONAR_VIEW)*sonarL, 0));
+        //Mark obstacle in the inner side
+        //cloudR.push_back(pcl::PointXYZ(sonarR, tan(SONAR_VIEW)*sonarR, 0));
+        //cloudL.push_back(pcl::PointXYZ(sonarL, -tan(SONAR_VIEW)*sonarL, 0));
+        //Mark obstacle in the middle side
+        cloudR.push_back(pcl::PointXYZ(sonarR, 0, 0));
+        cloudL.push_back(pcl::PointXYZ(sonarL, 0, 0));
     }
     else if(std::abs(sonarR-sonarL)<0.16){
         if(sonarR>sonarL){

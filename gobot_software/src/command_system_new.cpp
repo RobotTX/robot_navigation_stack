@@ -878,6 +878,13 @@ bool stopSendingMapAutomatically(const std::string ip){
 
 bool goDock(void){
     std_srvs::Empty arg;
+    gobot_msg_srv::GoalStatus goal_status;
+    ros::service::call("/gobot_status/get_goal_status",goal_status);
+    //stop path when goal active or goal reached(may wait for human action)
+    if(goal_status.response.status==1 || goal_status.response.status==3){
+        sendCommand("d");
+    }
+
     if(ros::service::call("/gobot_function/startDocking", arg)){
         ROS_INFO("(Command system) /gobot_function/startDocking service called with success");
         dockStatus = 3;
@@ -889,56 +896,38 @@ bool goDock(void){
     }
 }
 
-
-/*********************************** SERVICES ***********************************/
-bool pausePathSrvCallback(std_srvs::Empty::Request &req, std_srvs::Empty::Response &res){
-    std::vector<std::string> command({"d"});
-    std::string commandStr = "d" + sep;
+void sendCommand(const std::string str){
+    std::vector<std::string> command({str});
+    std::string commandStr = str + sep;
 
     std::string msg;
     commandMutex.lock();
     msg = (execCommand("", command) ? "done" : "failed") + sep + commandStr;
     sendMessageToAll(msg);
     commandMutex.unlock();
+}
+
+/*********************************** SERVICES ***********************************/
+bool pausePathSrvCallback(std_srvs::Empty::Request &req, std_srvs::Empty::Response &res){
+    sendCommand("d");
 
     return true;
 }
 
 bool playPathSrvCallback(std_srvs::Empty::Request &req, std_srvs::Empty::Response &res){
-    std::vector<std::string> command({"j"});
-    std::string commandStr = "j" + sep;
-
-    std::string msg;
-    commandMutex.lock();
-    msg = (execCommand("", command) ? "done" : "failed") + sep + commandStr;
-    sendMessageToAll(msg);
-    commandMutex.unlock();
+    sendCommand("j");
     
     return true;
 }
 
 bool stopPathSrvCallback(std_srvs::Empty::Request &req, std_srvs::Empty::Response &res){
-    std::vector<std::string> command({"l"});
-    std::string commandStr = "l" + sep;
-
-    std::string msg;
-    commandMutex.lock();
-    msg = (execCommand("", command) ? "done" : "failed") + sep + commandStr;
-    sendMessageToAll(msg);
-    commandMutex.unlock();
+    sendCommand("l");
 
     return true;
 }
 
 bool goDockSrvCallback(std_srvs::Empty::Request &req, std_srvs::Empty::Response &res){
-    std::vector<std::string> command({"o"});
-    std::string commandStr = "o" + sep;
-
-    std::string msg;
-    commandMutex.lock();
-    msg = (execCommand("", command) ? "done" : "failed") + sep + commandStr;
-    sendMessageToAll(msg);
-    commandMutex.unlock();
+    sendCommand("o");
 
     return true;
 }
@@ -1064,6 +1053,7 @@ void sendConnectionData(boost::shared_ptr<tcp::socket> sock){
     }
 
     std::string laserStr("0");
+    /*
     std::string laserFile;
     if(n.hasParam("laser_file")){
         n.getParam("laser_file", laserFile);
@@ -1076,6 +1066,7 @@ void sendConnectionData(boost::shared_ptr<tcp::socket> sock){
             ifLaser.close();
         }
     }
+    */
 
     if(mapId.empty())
         mapId = "{00000000-0000-0000-0000-000000000000}";
@@ -1285,8 +1276,9 @@ int main(int argc, char* argv[]){
         go_pub = n.advertise<geometry_msgs::PoseStamped>("/move_base_simple/goal", 1000);
         teleop_pub = n.advertise<geometry_msgs::Twist>("/cmd_vel", 1000);
 
-        ros::ServiceServer setDockStatusSrv = n.advertiseService("/gobot_command/setDockStatus", setDockStatus);
-        ros::ServiceServer getDockStatusSrv = n.advertiseService("/gobot_command/getDockStatus", getDockStatus);
+        ros::ServiceServer setDockStatusSrv = n.advertiseService("/gobot_status/setDockStatus", setDockStatus);
+        ros::ServiceServer getDockStatusSrv = n.advertiseService("/gobot_status/getDockStatus", getDockStatus);
+
         ros::ServiceServer lowBatterySrv = n.advertiseService("/gobot_command/lowBattery", lowBatterySrvCallback);
         ros::ServiceServer goDockSrv = n.advertiseService("/gobot_command/goDock", goDockSrvCallback);
         ros::ServiceServer pausePathSrv = n.advertiseService("/gobot_command/pause_path", pausePathSrvCallback);

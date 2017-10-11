@@ -1,18 +1,18 @@
 #include <gobot_recovery/initialpose_estimation.h>
 
 
-double cov_x=0.0,cov_y=0.0,cov_yaw=0.0,initial_cov_xy=0.15,initial_cov_yaw=0.1;
+double cov_x=0.0,cov_y=0.0,cov_yaw=0.0,initial_cov_xy=0.02,initial_cov_yaw=0.02;
 //Make robot rotate 360 degrees
 double rot_vel = 0.4, rot_time = 150;
 double last_pos_x=0.0,last_pos_y=0.0,last_pos_yaw=0.0,last_ang_x=0.0,last_ang_y=0.0,last_ang_z=0.0,last_ang_w=0.0;
 double home_pos_x=0.0,home_pos_y=0.0,home_pos_yaw=0.0,home_ang_x=0.0,home_ang_y=0.0,home_ang_z=0.0,home_ang_w=0.0;
 double rosparam_x=0.0,rosparam_y=0.0,rosparam_yaw=0.0,rosparam_cov_x=0.0,rosparam_cov_y=0.0,rosparam_cov_yaw=0.0;
 
-bool running = false,found_pose=false;;
+bool running = false,found_pose=false;
 
 std_srvs::Empty empty_srv;
 
-ros::Publisher vel_pub,foundPose_pub,initial_pose_publisher,goal_pub;
+ros::Publisher vel_pub,foundPose_pub,initial_pose_publisher,goal_pub,lost_pub;
 std::string lastPoseFile,homeFile;
 
 bool evaluatePose(int type){
@@ -104,7 +104,7 @@ bool initializePoseSrvCallback(std_srvs::Empty::Request &req, std_srvs::Empty::R
             found_pose=false;
 
             gobot_msg_srv::GoalStatus goal_status;
-            ros::service::call("/gobot_function/get_goal_status",goal_status);
+            ros::service::call("/gobot_status/get_goal_status",goal_status);
             //pause when goal active or goal reached(may wait for human action)
             if(goal_status.response.status==1 || goal_status.response.status==3){
                 ros::service::call("/gobot_command/pause_path",empty_srv);
@@ -121,8 +121,8 @@ bool initializePoseSrvCallback(std_srvs::Empty::Request &req, std_srvs::Empty::R
                         break;
 
                     case CHARGING_STAGE:
-                        ros::service::waitForService("/gobot_base/isCharging", ros::Duration(30.0));
-                        ros::service::call("/gobot_base/isCharging",arg);
+                        ros::service::waitForService("/gobot_status/charging_status", ros::Duration(30.0));
+                        ros::service::call("/gobot_status/charging_status",arg);
                         //if robot is charging, it is in CS station 
                         if(arg.response.isCharging || evaluatePose(1)){
                         //if(false){
@@ -163,6 +163,8 @@ bool initializePoseSrvCallback(std_srvs::Empty::Request &req, std_srvs::Empty::R
                         break;
                 }
             }
+            //clear costmap after finish
+            ros::service::call("/move_base/clear_costmaps",empty_srv);
             if(found_pose){
                 findPoseResult(FOUND);
                 //Update and record last pose when found
@@ -187,7 +189,7 @@ bool globalizePoseSrvCallback(std_srvs::Empty::Request &req, std_srvs::Empty::Re
             found_pose=false;
 
             gobot_msg_srv::GoalStatus goal_status;
-            ros::service::call("/gobot_function/get_goal_status",goal_status);
+            ros::service::call("/gobot_status/get_goal_status",goal_status);
             //pause when goal active or goal reached(may wait for human action)
             if(goal_status.response.status==1 || goal_status.response.status==3){
                 ros::service::call("/gobot_command/pause_path",empty_srv);
@@ -216,8 +218,6 @@ bool globalizePoseSrvCallback(std_srvs::Empty::Request &req, std_srvs::Empty::Re
                                 //failed to localize
                                 findPoseResult(NOT_FOUND);
                             }
-                            //clear costmap after rotating
-                            ros::service::call("/move_base/clear_costmaps",empty_srv);
                         }
                         else{
                             ROS_ERROR("Failed to reset particles");
@@ -230,6 +230,9 @@ bool globalizePoseSrvCallback(std_srvs::Empty::Request &req, std_srvs::Empty::Re
                         break;
                 }
             }
+
+            //clear costmap after finish
+            ros::service::call("/move_base/clear_costmaps",empty_srv);
             if(found_pose){
                 findPoseResult(FOUND);
                 //Update and record last pose when found
@@ -264,13 +267,17 @@ void getAmclPoseCallback(const geometry_msgs::PoseWithCovarianceStamped::ConstPt
     cov_y=msg->pose.covariance[7];
     cov_yaw=msg->pose.covariance[35];
 
+    //ROS_INFO("cov_x:%.4f,cov_y:%.4f,cov_yaw:%.4f",cov_x,cov_y,cov_yaw);
     //Write lastest amcl_pose to file
     if(found_pose){
-        if(cov_x > 5*COV_XY_T || cov_y > 5*COV_XY_T || cov_yaw > 5*COV_YAW_T){
+        std_msgs::Int8 lost;
+        if(cov_x > 5*initial_cov_xy || cov_y > 5*initial_cov_xy || cov_yaw > 5*initial_cov_yaw){
+            lost.data = 1;         
             //Robot may get lost because big covariance in the current pose
             ROS_ERROR("Big covariance in the amcl pose");
         }
         else{
+            lost.data=0;
             std::ofstream ofs(lastPoseFile, std::ofstream::out | std::ofstream::trunc);
             if(ofs.is_open()){
                 ofs << msg->pose.pose.position.x << " " << msg->pose.pose.position.y << " " << msg->pose.pose.orientation.x<<" "<< msg->pose.pose.orientation.y<<" "<< msg->pose.pose.orientation.z<<" "<< msg->pose.pose.orientation.w;
@@ -279,19 +286,19 @@ void getAmclPoseCallback(const geometry_msgs::PoseWithCovarianceStamped::ConstPt
             else
                 ROS_ERROR("Could not open the file %s", lastPoseFile.c_str());
         }
+        lost_pub.publish(lost);
     }
 }
 
 bool goHomeSrvCallback(std_srvs::Empty::Request &req, std_srvs::Empty::Response &res){
     gobot_msg_srv::GoalStatus goal_status;
-    ros::service::call("/gobot_function/get_goal_status",goal_status);
+    ros::service::call("/gobot_status/get_goal_status",goal_status);
     //pause when goal active or goal reached(may wait for human action)
     if(goal_status.response.status==1 || goal_status.response.status==3){
         ros::service::call("/gobot_command/pause_path",empty_srv);
         ROS_INFO("Cancelled active goal to go home.");
     }
 
-    ros::service::call("/move_base/clear_costmap",empty_srv);
     ROS_INFO("Go Home, sweet home.");
     geometry_msgs::PoseStamped home;
     home.header.frame_id = "map";
@@ -406,9 +413,10 @@ int main(int argc, char **argv) {
     }
 
     vel_pub = nh.advertise<geometry_msgs::Twist>("/cmd_vel",10);
-    foundPose_pub = nh.advertise<std_msgs::Int8>("/gobot_recovery/find_initial_pose",10);
     initial_pose_publisher = nh.advertise<geometry_msgs::PoseWithCovarianceStamped>("/initialpose", 1);
     goal_pub = nh.advertise<geometry_msgs::PoseStamped>("/move_base_simple/goal",1);
+    foundPose_pub = nh.advertise<std_msgs::Int8>("/gobot_recovery/find_initial_pose",10);
+    lost_pub = nh.advertise<std_msgs::Int8>("/gobot_recovery/lost_robot",1);
 
     ros::Subscriber initialPose = nh.subscribe("/amcl_pose",1,getAmclPoseCallback);
     ros::ServiceServer initializePose = nh.advertiseService("/gobot_recovery/initialize_pose",initializePoseSrvCallback);

@@ -16,6 +16,7 @@
 #include <gobot_msg_srv/BatteryMsg.h>
 #include <gobot_msg_srv/BumperMsg.h>
 #include <gobot_msg_srv/IrMsg.h>
+#include <gobot_msg_srv/IsCharging.h>
 #include <gobot_msg_srv/ProximityMsg.h>
 #include <gobot_msg_srv/SetDockStatus.h>
 #include <gobot_msg_srv/GoalStatus.h>

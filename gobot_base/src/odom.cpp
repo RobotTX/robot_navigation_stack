@@ -42,7 +42,7 @@ int main(int argc, char** argv){
 
         double pi = 3.14159;
 
-        ros::Rate r(20);
+        ros::Rate r(10); //20
         while(n.ok()){
 
             // check for incoming messages

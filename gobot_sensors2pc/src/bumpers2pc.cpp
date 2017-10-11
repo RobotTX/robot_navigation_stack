@@ -11,9 +11,10 @@ std::vector<std::vector<point_>> bumpers_pc;
 double space, bumpers_height, resolution, front_offset, back_offset;
 std::string pc_frame;
 
+
+
 /// Convert the bumpers info to a pointcloud and publish it
 void newBumpersInfo(const gobot_msg_srv::BumperMsg::ConstPtr& bumpers){
-
     pcl::PointCloud<pcl::PointXYZ> cloud;
     cloud.header.frame_id = pc_frame;
 
@@ -262,8 +263,8 @@ int main(int argc, char* argv[]){
             // the pointcloud publisher
             pcPublisher = nh.advertise<pcl::PointCloud<pcl::PointXYZ> >("/bumpers_pc", 10);
 
-            // get the bumpers information
-            ros::Subscriber pcSubscriber = nh.subscribe("/gobot_base/bumpers_topic", 1, newBumpersInfo);
+            // get the bumpers collision information
+            ros::Subscriber pcSubscriber = nh.subscribe("/gobot_base/bumpers_collision", 1, newBumpersInfo);
 
             ros::spin();
         }

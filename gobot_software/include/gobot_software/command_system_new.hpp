@@ -20,6 +20,7 @@
 #include <gobot_msg_srv/GetDockStatus.h>
 #include <gobot_msg_srv/String.h>
 #include <gobot_msg_srv/SendMap.h>
+#include <gobot_msg_srv/GoalStatus.h>
 #include <hector_exploration_node/Exploration.h>
 #include <mutex>
 #include <thread>
@@ -125,6 +126,7 @@ bool stopAutoExplore(const std::vector<std::string> command);
 /// /
 bool loopPath(const std::vector<std::string> command);
 
+void sendCommand(const std::string str);
 
 /*********************************** SOME FUNCTIONS USED MULTIPLE TIMES ***********************************/
 
