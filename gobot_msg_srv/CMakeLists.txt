@@ -74,6 +74,8 @@ add_service_files(
     SetBattery.srv
     SendMap.srv
     GoalStatus.srv
+    GetGobotStatus.srv
+    SetGobotStatus.srv
 )
 
 ## Generate actions in the 'action' folder

@@ -311,9 +311,9 @@ int main(int argc, char **argv){
 
 	ros::NodeHandle n;
 
-	ros::ServiceServer send_once_service = n.advertiseService("send_once_map_sender", sendOnceMap);
-	ros::ServiceServer send_auto_service = n.advertiseService("send_auto_map_sender", sendAutoMap);
-	ros::ServiceServer stop_auto_service = n.advertiseService("stop_auto_map_sender", stopAutoMap);
+	ros::ServiceServer send_once_service = n.advertiseService("/gobot_function/send_once_map_sender", sendOnceMap);
+	ros::ServiceServer send_auto_service = n.advertiseService("/gobot_function/send_auto_map_sender", sendAutoMap);
+	ros::ServiceServer stop_auto_service = n.advertiseService("/gobot_function/stop_auto_map_sender", stopAutoMap);
 
     ros::Subscriber sub = n.subscribe("/gobot_software/server_disconnected", 1000, serverDisconnected);
 

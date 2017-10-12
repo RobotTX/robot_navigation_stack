@@ -13,4 +13,5 @@
     <param name="ips_file" type="string" value="$(find gobot_software)/Robot_Infos/IP/isAlive.txt" />
     <param name="ping_file" type="string" value="$(find gobot_software)/Robot_Infos/IP/ping.sh" />
     <param name="robot_position_file" type="string" value="$(find gobot_software)/Robot_Infos/robot_position.txt" />
+    <param name="restart_file" type="string" value="$(find gobot_software)/Robot_Infos/restart_robot.sh" />
 </launch>

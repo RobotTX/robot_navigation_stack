@@ -22,6 +22,7 @@
 #include <cmath>
 #include <gobot_msg_srv/SetSpeeds.h>
 #include <gobot_msg_srv/IsCharging.h>
+#include <gobot_msg_srv/SetGobotStatus.h>
 #include <thread>
 
 typedef actionlib::SimpleActionClient<move_base_msgs::MoveBaseAction> MoveBaseClient;

@@ -642,11 +642,11 @@ bool sendMapOnce(const std::string ip, const std::vector<std::string> command){
         srv.request.who = std::stoi(command.at(1));
         srv.request.ip = ip;
 
-        if (ros::service::call("send_once_map_sender", srv)) {
-            ROS_INFO("(Command system) send_once_map_sender service started");
+        if (ros::service::call("/gobot_function/send_once_map_sender", srv)) {
+            ROS_INFO("(Command system) /gobot_function/send_once_map_sender service started");
             return true;
         } else
-            ROS_ERROR("(Command system) Failed to call service send_once_map_sender");
+            ROS_ERROR("(Command system) Failed to call service /gobot_function/send_once_map_sender");
     } else 
         ROS_ERROR("(Command system) Not enough arguments, received %lu arguments, 2 arguments expected", command.size()); 
 
@@ -860,11 +860,11 @@ bool sendMapAutomatically(const std::string ip){
     gobot_msg_srv::String srv;
     srv.request.data = ip;
 
-    if (ros::service::call("send_auto_map_sender", srv)) {
-        ROS_INFO("(Command system) send_auto_map_sender service started");
+    if (ros::service::call("/gobot_function/send_auto_map_sender", srv)) {
+        ROS_INFO("(Command system) /gobot_function/send_auto_map_sender service started");
         return true;
     } else {
-        ROS_ERROR("(Command system) Failed to call service send_auto_map_sender");
+        ROS_ERROR("(Command system) Failed to call service /gobot_function/send_auto_map_sender");
         return false;
     }
 }
@@ -875,11 +875,11 @@ bool stopSendingMapAutomatically(const std::string ip){
     gobot_msg_srv::String srv;
     srv.request.data = ip;
 
-    if (ros::service::call("stop_auto_map_sender", srv)) {
-        ROS_INFO("(Command system) stop_auto_map_sender service started");
+    if (ros::service::call("/gobot_function/stop_auto_map_sender", srv)) {
+        ROS_INFO("(Command system) /gobot_function/stop_auto_map_sender service started");
         return true;
     } else {
-        ROS_ERROR("(Command system) Failed to call service stop_auto_map_sender");
+        ROS_ERROR("(Command system) Failed to call service /gobot_function/stop_auto_map_sender");
         return false;
     }
 }

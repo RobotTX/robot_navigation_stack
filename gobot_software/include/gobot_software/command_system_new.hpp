@@ -21,6 +21,8 @@
 #include <gobot_msg_srv/String.h>
 #include <gobot_msg_srv/SendMap.h>
 #include <gobot_msg_srv/GoalStatus.h>
+#include <gobot_msg_srv/GetGobotStatus.h>
+#include <gobot_msg_srv/SetGobotStatus.h>
 #include <hector_exploration_node/Exploration.h>
 #include <mutex>
 #include <thread>
@@ -42,7 +44,6 @@ bool renameRobot(const std::vector<std::string> command);
 
 /// NOT USED ANYMORE
 /// b
-bool changeWifi(const std::vector<std::string> command);
 
 /// c
 bool newGoal(const std::vector<std::string> command);
@@ -51,10 +52,8 @@ bool newGoal(const std::vector<std::string> command);
 bool pausePath(const std::vector<std::string> command);
 
 /// e
-bool playScan(const std::string ip, const std::vector<std::string> command);
 
 /// f
-bool pauseScan(const std::string ip, const std::vector<std::string> command);
 
 /// g
 bool startScanAndAutoExplore(const std::string ip, const std::vector<std::string> command);
@@ -70,7 +69,6 @@ bool playPath(const std::vector<std::string> command);
 
 /// NOT USED ANYMORE
 /// k
-bool deletePath(const std::vector<std::string> command);
 
 /// l
 bool stopPath(const std::vector<std::string> command);
@@ -88,10 +86,8 @@ bool goToChargingStation(const std::vector<std::string> command);
 bool stopGoingToChargingStation(const std::vector<std::string> command);
 
 /// q
-bool sendLaserData(const std::vector<std::string> command);
 
 /// r
-bool stopSendingLaserData(const std::vector<std::string> command);
 
 /// s
 bool sendMapOnce(const std::string ip, const std::vector<std::string> command);
@@ -103,16 +99,12 @@ bool startNewScan(const std::string ip, const std::vector<std::string> command);
 bool stopScanning(const std::string ip, const std::vector<std::string> command);
 
 /// v
-bool recoverPosition(const std::vector<std::string> command);
 
 /// w
-bool pauseRecoveringPosition(const std::vector<std::string> command);
 
 /// x
-bool stopRecoveringPosition(const std::vector<std::string> command);
 
 /// y
-bool resumeRecoveringPosition(const std::vector<std::string> command);
 
 /// z
 bool restartEverything(const std::vector<std::string> command);
@@ -126,8 +118,6 @@ bool stopAutoExplore(const std::vector<std::string> command);
 /// /
 bool loopPath(const std::vector<std::string> command);
 
-void sendCommand(const std::string str);
-
 /*********************************** SOME FUNCTIONS USED MULTIPLE TIMES ***********************************/
 
 bool sendMapAutomatically(const std::string ip);
@@ -136,6 +126,9 @@ bool stopSendingMapAutomatically(const std::string ip);
 
 bool goDock(void);
 
+void sendCommand(const std::string ip, const std::vector<std::string> command, std::string commandStr);
+
+void checkCommand(char c);
 
 /*********************************** SERVICES ***********************************/
 bool pausePathSrvCallback(std_srvs::Empty::Request &req, std_srvs::Empty::Response &res);

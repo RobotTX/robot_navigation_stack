@@ -29,11 +29,8 @@ ros::Subscriber bumperSub;
 ros::Subscriber irSub;
 ros::Subscriber batterySub;
 ros::Subscriber proximitySub;
-ros::ServiceClient setGobotStatusSrv;
 
 std_srvs::Empty empty_srv;
-
-gobot_msg_srv::SetGobotStatus gobot_status;
 /****************************************** STEP 1 : Go 1.5 meters in front of the charging station *********************************************************/
 
 /// Service to start docking
@@ -108,10 +105,6 @@ bool startDocking(void){
                     robotPoseSub = nh.subscribe("/robot_pose", 1, newRobotPos);
 
                     ROS_INFO("(auto_docking::startDocking) service called successfully");
-
-                    gobot_status.request.status = 15;
-                    gobot_status.request.text = "DOCKING";
-                    setGobotStatusSrv.call(gobot_status);
 
                     return true;
                 } else 
@@ -458,18 +451,13 @@ void stopDocking(void){
     if(ac->isServerConnected())
         ac->cancelAllGoals();
 
+    setSpeed('F', 0, 'F', 0);
     /// unsubscribe so we don't receive messages for nothing
     goalStatusSub.shutdown();
     robotPoseSub.shutdown();
     bumperSub.shutdown();
     irSub.shutdown();
     batterySub.shutdown();
-
-    setSpeed('F', 0, 'F', 0);
-    
-    gobot_status.request.status = 1;
-    gobot_status.request.text = "STOP_DOCKING";
-    setGobotStatusSrv.call(gobot_status);
 }
 
 bool stopDockingService(std_srvs::Empty::Request &req, std_srvs::Empty::Response &res){
@@ -506,8 +494,6 @@ int main(int argc, char* argv[]){
 
     ros::ServiceServer startDockingSrv = nh.advertiseService("/gobot_function/startDocking", startDockingService);
     ros::ServiceServer stopDockingSrv = nh.advertiseService("/gobot_function/stopDocking", stopDockingService);
-
-    setGobotStatusSrv = nh.serviceClient<gobot_msg_srv::SetGobotStatus>("/gobot_status/set_gobot_status");
 
     ros::spin();
     

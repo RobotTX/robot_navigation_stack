@@ -7,6 +7,8 @@ int count = 1;
 bool buttonOn=true;
 ros::Time action_time;
 std::string restartRobotFile;
+gobot_msg_srv::GetGobotStatus get_gobot_status;
+ros::ServiceClient getGobotStatusSrv;
 
 //-1=no goal, 0=complete goal, 1=active goal
 int goal_state = 0;
@@ -54,9 +56,10 @@ void getButtonCallback(const std_msgs::Int8::ConstPtr& msg){
     else if(dt>5.0 && dt<=10.0){
       //play path when robot stop due to aborted goal
       ROS_INFO("Resume robot.");
-      if(goal_state==3){
+      getGobotStatusSrv.call(get_gobot_status);
+      if(get_gobot_status.response.status==10){
         ros::service::call("/gobot_command/pause_path",empty_srv);
-        ROS_INFO("Pause path because robot may wait for human action.");
+        ROS_INFO("Pause path because robot wait for human action.");
         ros::Duration(0.5).sleep();
       }
       if(goal_state!=1)
@@ -141,6 +144,8 @@ int main(int argc, char **argv) {
     ros::Subscriber button_sub = nh.subscribe("/gobot_base/button_topic",1,getButtonCallback);
 
     ros::ServiceServer goalStatusSrv = nh.advertiseService("/gobot_status/get_goal_status", goalStatusSrvCallback);
+
+    getGobotStatusSrv = nh.serviceClient<gobot_msg_srv::GetGobotStatus>("/gobot_status/get_gobot_status");
 
     ros::service::waitForService("/gobot_recovery/initialize_pose", ros::Duration(30.0));
     while(!ros::service::call("/gobot_recovery/initialize_pose",empty_srv)){

@@ -98,8 +98,6 @@ void pingAllIPs(void){
 
 //update old IP list with the now-connected IPs
 void updateIP(){
-    /// We check the oldIPs vs the new connected IP so we now which one disconnected
-    ROS_INFO("(ping_server) Connected IPs : %lu", connectedIPs.size());
     std::vector<int> toRemove;
     for(int i = 0; i < oldIPs.size(); ++i){
         bool still_connected = false;
@@ -135,6 +133,8 @@ void updateIP(){
         if(!hasIP)
             oldIPs.push_back(std::pair<std::string, int>(connectedIPs.at(i), 0));
     }
+    /// We check the oldIPs vs the new connected IP so we now which one disconnected
+    ROS_INFO("(ping_server) Connected IPs : %lu", connectedIPs.size());
 }
 
 /**
@@ -159,7 +159,7 @@ void pingIP(std::string ip, std::string dataToSend){
             connectedMutex.unlock();
             //ROS_INFO("(ping_server) Connected to %s", ip.c_str());
         } else
-            ROS_ERROR("(ping_server) read %lu bytes : %s", read.size(), read.c_str());
+            //ROS_ERROR("(ping_server) read %lu bytes : %s", read.size(), read.c_str());
         
     } catch(std::exception& e) {
         //ROS_ERROR("(ping_server) error %s : %s", ip.c_str(), e.what());

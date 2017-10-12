@@ -4,4 +4,5 @@
     <include file="$(find gobot_navigation)/launch/gmapping.launch"/>
     <include file="$(find gobot_navigation)/launch/scan_move_base.launch"/>
     <include file="$(find gobot_navigation)/launch/hector_explore.launch"/>
+    <include file="$(find gobot_software)/launch/gobot_function.launch"/>
 </launch>
