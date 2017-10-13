@@ -99,7 +99,6 @@ void pingAllIPs(void){
 //update old IP list with the now-connected IPs
 void updateIP(){
     /// We check the oldIPs vs the new connected IP so we now which one disconnected
-    ROS_INFO("(ping_server) Connected IPs : %lu", connectedIPs.size());
     std::vector<int> toRemove;
     for(int i = 0; i < oldIPs.size(); ++i){
         bool still_connected = false;
@@ -204,8 +203,7 @@ void checkNewServers(void){
             serverMutex.unlock();
         }
 
-        ROS_INFO("(ping_server) Done refreshing the list of potential servers : %lu servers found", availableIPs.size());
-
+        ROS_INFO("(ping_server) Potential servers :%lu, Connected IPs :%lu", availableIPs.size(),connectedIPs.size());
         loop_rate.sleep();        
     }
 }

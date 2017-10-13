@@ -11,6 +11,7 @@
 #define PAUSE_PATH 4
 #define STOP_PATH 1
 #define STOP_DOCKING 1
+#define COMPLETE_PATH 0
 #define FREE -99
 
 std::mutex msgMutex;

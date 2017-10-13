@@ -72,12 +72,14 @@ void goalReached(){
             if(dockAfterPath){
                 ROS_INFO("(PlayPath::goalReached) Battery is low, go to charging station!!");
 
-				currentGoal.x = -1;
+				gobot_status.request.status = 0;
+				gobot_status.request.text = "COMPLETE_PATH";
+				setGobotStatusSrv.call(gobot_status);
 
-				std::thread([](){
-					if(!ros::service::call("/gobot_command/goDock", empty_srv))
-                    	ROS_ERROR("(PlayPath::goalReached) Could not go charging");
-				}).detach();
+				currentGoal.x = -1;
+				
+				if(!ros::service::call("/gobot_command/goDock", empty_srv))
+					ROS_ERROR("(PlayPath::goalReached) Could not go charging");
 
                 dockAfterPath = false;
             } 
@@ -88,16 +90,17 @@ void goalReached(){
 				setStageInFile(stage);
 				if(!stop_flag){
 					goNextPoint();
-				}
-				
+				}	
             } 
-			else {
+			else{
+				gobot_status.request.status = 0;
+				gobot_status.request.text = "COMPLETE_PATH";
+				setGobotStatusSrv.call(gobot_status);
+
                 // resets the current goal
                 currentGoal.x = -1;
 				//set the UI button
-				std::thread([](){
-					ros::service::call("/gobot_command/pause_path",empty_srv);
-				}).detach();
+				ros::service::call("/gobot_command/pause_path",empty_srv);
             }
 		} 
 		else {
@@ -295,13 +298,13 @@ bool playPathService(std_srvs::Empty::Request &req, std_srvs::Empty::Response &r
 
 bool stopPathService(std_srvs::Empty::Request &req, std_srvs::Empty::Response &res){
 	ROS_INFO("(PlayPath::stopPathService) stopPathService called");
-	stop_flag = true;
-	/// if action server is up -> cancel
-	if(ac->isServerConnected())
-		ac->cancelAllGoals();
+
+	gobot_status.request.status = 1;
+	gobot_status.request.text = "STOP_PATH";
+	setGobotStatusSrv.call(gobot_status);
+
 	currentGoal.x = -1;
 	stage = 0;
-
 	setStageInFile(stage);
 	
     if(dockAfterPath){
@@ -312,23 +315,20 @@ bool stopPathService(std_srvs::Empty::Request &req, std_srvs::Empty::Response &r
 
         dockAfterPath = false;
     }
-
-	gobot_status.request.status = 1;
-	gobot_status.request.text = "STOP_PATH";
-	setGobotStatusSrv.call(gobot_status);
 	
 	return true;
 }
 
 bool pausePathService(std_srvs::Empty::Request &req, std_srvs::Empty::Response &res){
 	ROS_INFO("(PlayPath::pausePathService) pausePathService called");
-	stop_flag = true;
-	if(ac->isServerConnected())
-		ac->cancelAllGoals();
-    
+
 	gobot_status.request.status = 4;
 	gobot_status.request.text = "PAUSE_PATH";
 	setGobotStatusSrv.call(gobot_status);
+
+	stop_flag = true;
+	if(ac->isServerConnected())
+		ac->cancelAllGoals();
 
 	return true;
 }
