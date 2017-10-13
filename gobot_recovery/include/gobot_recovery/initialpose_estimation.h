@@ -19,6 +19,7 @@
 #include <tf/LinearMath/Quaternion.h>
 #include <gobot_msg_srv/IsCharging.h>
 #include <gobot_msg_srv/GoalStatus.h>
+#include <gobot_msg_srv/SetGobotStatus.h>
 
 #define PI 3.1415926
 

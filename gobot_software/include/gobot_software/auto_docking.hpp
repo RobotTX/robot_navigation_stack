@@ -27,6 +27,7 @@
 
 typedef actionlib::SimpleActionClient<move_base_msgs::MoveBaseAction> MoveBaseClient;
 
+void setGobotStatus(int status,std::string text);
 bool startDocking(void);
 void newRobotPos(const geometry_msgs::Pose::ConstPtr& robotPos);
 void goalStatus(const actionlib_msgs::GoalStatusArray::ConstPtr& goalStatusArray);

@@ -1,0 +1,13 @@
+#install
+rosrun robot_upstart install gobot_navigation/launch/gobot_navigation.launch gobot_software/launch/gobot_software.launch
+#uninstall
+rosrun robot_upstart uninstall gobot_navigation/launch/gobot_navigation.launch gobot_software/launch/gobot_software.launch
+
+sudo systemctl daemon-reload && sudo systemctl start gobot
+
+#manually start/stop
+sudo service gobot start
+sudo service gobot stop
+
+#log for error
+sudo tail /var/log/upstart/gobot.log -n 30

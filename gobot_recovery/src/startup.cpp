@@ -6,7 +6,7 @@ std_srvs::Empty empty_srv;
 int count = 1;
 bool buttonOn=true;
 ros::Time action_time;
-std::string restartRobotFile;
+std::string restart_sh;
 gobot_msg_srv::GetGobotStatus get_gobot_status;
 ros::ServiceClient getGobotStatusSrv;
 
@@ -21,7 +21,7 @@ void initialPoseResultCallback(const std_msgs::Int8::ConstPtr& msg){
     if(count<3){
       ROS_ERROR("Tried %d times",count);
       ros::Duration(10.0).sleep();
-      while(!ros::service::call("/gobot_recovery/globalize_pose",empty_srv)){
+      while(!ros::service::call("/gobot_recovery/globalize_pose",empty_srv) && ros::ok()){
           ROS_ERROR("Failed to start robot");
           ros::service::call("/gobot_recovery/stop_globalize_pose",empty_srv);
           ros::Duration(1.0).sleep();
@@ -76,7 +76,7 @@ void getButtonCallback(const std_msgs::Int8::ConstPtr& msg){
 		else if(dt>999.0){
 			//restart
       ROS_INFO("Restart robot. Please wait for xx seconds...");
-			const std::string restart_script = "sudo sh " + restartRobotFile + " &";
+			const std::string restart_script = "sh " + restart_sh + " &";
       system(restart_script.c_str());
 		}
 	}
@@ -132,9 +132,8 @@ int main(int argc, char **argv) {
     signal(SIGINT, mySigintHandler);
 
     ROS_INFO("Starting Robot...");
-    ros::Duration(5.0).sleep();
 
-    nh.getParam("restart_robot_file", restartRobotFile);
+    nh.getParam("restart_file", restart_sh);
 
     vel_pub = nh.advertise<geometry_msgs::Twist>("/cmd_vel",10);
 
@@ -147,8 +146,18 @@ int main(int argc, char **argv) {
 
     getGobotStatusSrv = nh.serviceClient<gobot_msg_srv::GetGobotStatus>("/gobot_status/get_gobot_status");
 
+    //Startup begin
+    getGobotStatusSrv.waitForExistence(ros::Duration(30.0));
+    getGobotStatusSrv.call(get_gobot_status);
+    while((get_gobot_status.response.status!=0 || get_gobot_status.response.text!="STM32_READY") && ros::ok()){
+        ROS_WARN("Sensors not ready");
+        getGobotStatusSrv.call(get_gobot_status);
+        ros::Duration(0.5).sleep();
+    }
+    //Startup end
+
     ros::service::waitForService("/gobot_recovery/initialize_pose", ros::Duration(30.0));
-    while(!ros::service::call("/gobot_recovery/initialize_pose",empty_srv)){
+    while(!ros::service::call("/gobot_recovery/initialize_pose",empty_srv) && ros::ok()){
         ROS_ERROR("Failed to initilize robot pose");
         ros::service::call("/gobot_recovery/stop_globalize_pose",empty_srv);
         ros::Duration(1.0).sleep();

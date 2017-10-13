@@ -1,6 +1,6 @@
 <?xml version="1.0"?>
 <launch>
-    <node pkg="map_server" type="map_server" name="map_server" args="$(find gobot_navigation)/maps/used_map.yaml" required="true">
+    <node pkg="map_server" type="map_server" name="map_server" args="$(find gobot_data)/maps/used_map.yaml" required="true">
         <param name="frame_id" type="string" value="/map" />
     </node>
 

@@ -49,6 +49,7 @@ bool playPathService(std_srvs::Empty::Request &req, std_srvs::Empty::Response &r
 void goToPoint(const Point& point);
 void goalReached(void);
 void setStageInFile(const int _stage);
+void setGobotStatus(int status,std::string text);
 void getButtonCallback(const std_msgs::Int8::ConstPtr& msg);
 void checkGoalDelay(void);
 #endif

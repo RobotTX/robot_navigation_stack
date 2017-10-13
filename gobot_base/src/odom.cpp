@@ -10,7 +10,7 @@ int main(int argc, char** argv){
 
     ros::NodeHandle n;
 
-    if(ros::service::waitForService("/gobot_motor/resetEncoders", ros::Duration(5))){
+    if(ros::service::waitForService("/gobot_motor/resetEncoders", ros::Duration(30))){
 
         std_srvs::Empty arg;
         ros::service::call("/gobot_motor/resetEncoders", arg);
@@ -42,7 +42,8 @@ int main(int argc, char** argv){
 
         double pi = 3.14159;
 
-        ros::Rate r(10); //20
+        ros::Rate r(20); //20
+        ros::service::waitForService("/gobot_motor/getEncoders",ros::Duration(30));
         while(n.ok()){
 
             // check for incoming messages
@@ -140,4 +141,6 @@ int main(int argc, char** argv){
     } else {
         ROS_INFO("(odom) waited 5 seconds for service /gobot_motor/resetEncoders");
     }
+    
+    return 0;
 }

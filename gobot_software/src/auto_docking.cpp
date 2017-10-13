@@ -7,7 +7,6 @@ move_base_msgs::MoveBaseGoal currentGoal;
 std::shared_ptr<MoveBaseClient> ac(0);
 
 int attempt = 0;
-int dockStatus = 0;
 bool docking = false;
 bool landingPointReached = false;
 bool collision = false;
@@ -29,11 +28,19 @@ ros::Subscriber bumperSub;
 ros::Subscriber irSub;
 ros::Subscriber batterySub;
 ros::Subscriber proximitySub;
-ros::ServiceClient setGobotStatusSrv;
+ros::ServiceClient setGobotStatusSrv,setDockStatusSrv;
 
 std_srvs::Empty empty_srv;
 
-gobot_msg_srv::SetGobotStatus gobot_status;
+gobot_msg_srv::SetGobotStatus set_gobot_status;
+gobot_msg_srv::SetDockStatus set_dock_status;
+
+void setGobotStatus(int status,std::string text){
+	set_gobot_status.request.status = status;
+	set_gobot_status.request.text = text;
+	setGobotStatusSrv.call(set_gobot_status);
+}
+
 /****************************************** STEP 1 : Go 1.5 meters in front of the charging station *********************************************************/
 
 /// Service to start docking
@@ -109,9 +116,10 @@ bool startDocking(void){
 
                     ROS_INFO("(auto_docking::startDocking) service called successfully");
 
-                    gobot_status.request.status = 15;
-                    gobot_status.request.text = "DOCKING";
-                    setGobotStatusSrv.call(gobot_status);
+                    setGobotStatus(15,"DOCKING");
+                    
+                    set_dock_status.request.status = 1;
+                    setDockStatusSrv.call(set_dock_status);
 
                     return true;
                 } else 
@@ -411,23 +419,21 @@ void newProximityInfo(const gobot_msg_srv::ProximityMsg::ConstPtr& proximitySign
 
 void finishedDocking(const int16_t status){
     ROS_INFO("(auto_docking::finishedDocking) Finished trying to dock with status %d", status);
-    proximitySub.shutdown();
 
     /// TODO if simulation set battery voltage to 25000 => charged flag ?
-
+    gobot_msg_srv::IsCharging arg;
     /// If the battery is still charging, we succesfully docked the robot
-    if(chargingFlag)
+    if(ros::service::call("/gobot_status/charging_status", arg) && arg.response.isCharging){
+        set_dock_status.request.status = 3;
         ROS_INFO("(auto_docking::finishedDocking) Finished docking and we are still charging");
-    else
+    }
+    else{
+        set_dock_status.request.status = -1;
         ROS_WARN("(auto_docking::finishedDocking) Finished docking but we are not charging anymore.... oops");
+    }
+    setDockStatusSrv.call(set_dock_status);
 
-    batterySub.shutdown();
-    bumperSub.shutdown();
-
-    gobot_msg_srv::SetDockStatus dockStatus;
-    dockStatus.request.status = status;
-
-    ros::service::call("/gobot_status/setDockStatus", dockStatus);
+    stopDocking();
 }
 
 /***************************************************************************************************/
@@ -438,10 +444,8 @@ void failedDocking(const int status){
 
     if(attempt <= 3)
         startDocking();
-    else {
+    else 
         finishedDocking(status);
-        stopDocking();
-    }
 }
 
 void stopDocking(void){
@@ -464,18 +468,25 @@ void stopDocking(void){
     bumperSub.shutdown();
     irSub.shutdown();
     batterySub.shutdown();
+    proximitySub.shutdown();
 
     setSpeed('F', 0, 'F', 0);
     
-    gobot_status.request.status = 1;
-    gobot_status.request.text = "STOP_DOCKING";
-    setGobotStatusSrv.call(gobot_status);
+    setGobotStatus(1,"STOP_DOCKING");
 }
 
 bool stopDockingService(std_srvs::Empty::Request &req, std_srvs::Empty::Response &res){
     ROS_INFO("(auto_docking::stopDockingService) service called");
 
     stopDocking();
+    gobot_msg_srv::IsCharging arg;
+    if(ros::service::call("/gobot_status/charging_status", arg) && arg.response.isCharging){
+        set_dock_status.request.status = 3;
+    }
+    else{
+        set_dock_status.request.status = 0;
+    }
+    setDockStatusSrv.call(set_dock_status);
 
     return true;
 }
@@ -484,12 +495,7 @@ bool startDockingService(std_srvs::Empty::Request &req, std_srvs::Empty::Respons
     ROS_INFO("(auto_docking::startDockingService) service called");
     docking = false;
     attempt = 0;
-    gobot_msg_srv::IsCharging arg;
-    if(ros::service::call("/gobot_status/charging_status", arg) && arg.response.isCharging){
-        ROS_INFO("(auto_docking::startDockingService) Gobot is charging.");
-        return true;
-    }
-
+    
     return startDocking();
 }
 
@@ -508,6 +514,7 @@ int main(int argc, char* argv[]){
     ros::ServiceServer stopDockingSrv = nh.advertiseService("/gobot_function/stopDocking", stopDockingService);
 
     setGobotStatusSrv = nh.serviceClient<gobot_msg_srv::SetGobotStatus>("/gobot_status/set_gobot_status");
+    setDockStatusSrv = nh.serviceClient<gobot_msg_srv::SetDockStatus>("/gobot_status/setDockStatus");
 
     ros::spin();
     

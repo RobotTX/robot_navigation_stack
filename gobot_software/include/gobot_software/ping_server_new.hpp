@@ -12,6 +12,7 @@
 #include <stdio.h>
 #include <gobot_msg_srv/GetDockStatus.h>
 #include <gobot_msg_srv/BatteryMsg.h>
+#include <gobot_msg_srv/GetGobotStatus.h>
 #include <gobot_software/timeout_blocking_tcp_client.h>
 #include <mutex>
 #include <thread>

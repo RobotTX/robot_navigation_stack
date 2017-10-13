@@ -123,7 +123,7 @@ bool initParams(void){
     /// We get the footprint as a XmlRpcValue
     XmlRpc::XmlRpcValue footprint_list;
     if(!nh.getParam("footprint", footprint_list)){
-        std::cout << "(bumpers2pc::initParams) Failed to get parameter \"footprint\" from server." << std::endl;
+        //std::cout << "(bumpers2pc::initParams) Failed to get parameter \"footprint\" from server." << std::endl;
         return false;
     }
 
@@ -132,20 +132,20 @@ bool initParams(void){
         return false;
 
     /// Verify the validity of the footprint
-    std::cout <<  "(bumpers2pc::initParams) footprint size : " << footprint.size() << std::endl;
+    //std::cout <<  "(bumpers2pc::initParams) footprint size : " << footprint.size() << std::endl;
     for(int32_t i = 0; i < footprint.size(); ++i){
         if(footprint.at(i).size() != 2){
-            std::cout <<  "(bumpers2pc::initParams) The element " << i << " of the footprint does not contain 2 numbers but " << footprint.at(i).size() << std::endl;
+            //std::cout <<  "(bumpers2pc::initParams) The element " << i << " of the footprint does not contain 2 numbers but " << footprint.at(i).size() << std::endl;
             return false;
         }
-        std::cout <<  "(bumpers2pc::initParams) [" << footprint.at(i).at(0) << ", " << footprint.at(i).at(1) << "]" << std::endl;
+        //std::cout <<  "(bumpers2pc::initParams) [" << footprint.at(i).at(0) << ", " << footprint.at(i).at(1) << "]" << std::endl;
     }
 
 
     /// We get the bumpers description as a XmlRpcValue
     XmlRpc::XmlRpcValue bumpers_description_list;
     if(!nh.getParam("bumpers_description", bumpers_description_list)){
-        std::cout <<  "(bumpers2pc::initParams) Failed to get parameter \"bumpers_description\" from server." << std::endl;
+        //std::cout <<  "(bumpers2pc::initParams) Failed to get parameter \"bumpers_description\" from server." << std::endl;
         return false;
     }
 
@@ -154,18 +154,18 @@ bool initParams(void){
         return false;
 
     /// Verify the validity of the bumpers description
-    std::cout <<  "(bumpers2pc::initParams) bumpers_description size :" << bumpers_description.size() << std::endl;
+    //std::cout <<  "(bumpers2pc::initParams) bumpers_description size :" << bumpers_description.size() << std::endl;
     if(bumpers_description.size() != 8){
-        std::cout <<  "(bumpers2pc::initParams) The bumpers_description is supposed to be made of 8 bumpers, not " << bumpers_description.size() << std::endl;
+        //std::cout <<  "(bumpers2pc::initParams) The bumpers_description is supposed to be made of 8 bumpers, not " << bumpers_description.size() << std::endl;
         return false;
     }
 
     for(int32_t i = 0; i < bumpers_description.size(); ++i){
         if(bumpers_description.at(i).size() != 2){
-            std::cout <<  "(bumpers2pc::initParams) The element " << i << " of the bumpers_description does not contain 2 numbers but " << bumpers_description.at(i).size() << std::endl;
+            //std::cout <<  "(bumpers2pc::initParams) The element " << i << " of the bumpers_description does not contain 2 numbers but " << bumpers_description.at(i).size() << std::endl;
             return false;
         }
-        std::cout <<  "(bumpers2pc::initParams) [" << bumpers_description.at(i).at(0) << ", " << bumpers_description.at(i).at(1) << "]" << std::endl;
+        //std::cout <<  "(bumpers2pc::initParams) [" << bumpers_description.at(i).at(0) << ", " << bumpers_description.at(i).at(1) << "]" << std::endl;
     }
 
 
@@ -173,40 +173,41 @@ bool initParams(void){
     nh.param("space", space, 0.05);
 
     if(space <= 0){
-        std::cout <<  "(bumpers2pc::initParams) The space between elements should be positive" << std::endl;
+        //std::cout <<  "(bumpers2pc::initParams) The space between elements should be positive" << std::endl;
         return false;
     }
-    std::cout <<  "(bumpers2pc::initParams) space : " << space << std::endl;
+    //std::cout <<  "(bumpers2pc::initParams) space : " << space << std::endl;
 
 
     /// We get the frame on which the bumpers are attached
     nh.param("pc_frame", pc_frame, std::string("base_link"));
-    std::cout <<  "(bumpers2pc::initParams) pointcloud frame : " << pc_frame << std::endl;
+    //std::cout <<  "(bumpers2pc::initParams) pointcloud frame : " << pc_frame << std::endl;
 
     /// We get the height of the bumpers compared to their frame
     /// TODO could use a tf transform with a bumpers_frame instead
     nh.param("bumpers_height", bumpers_height, 0.08);
-    std::cout <<  "(bumpers2pc::initParams) bumpers height : " << bumpers_height << std::endl;
+    //std::cout <<  "(bumpers2pc::initParams) bumpers height : " << bumpers_height << std::endl;
 
     nh.param("front_offset", front_offset, 0.01);
-    std::cout <<  "(bumpers2pc::initParams) front_offset : " << front_offset << std::endl;
+    //std::cout <<  "(bumpers2pc::initParams) front_offset : " << front_offset << std::endl;
 
     nh.param("back_offset", back_offset, 0.01);
-    std::cout <<  "(bumpers2pc::initParams) back_offset : " << back_offset << std::endl;
+    //std::cout <<  "(bumpers2pc::initParams) back_offset : " << back_offset << std::endl;
 
     /// We get the costmap resolution
     nh.param("resolution", resolution, 0.02);
-    std::cout <<  "(bumpers2pc::initParams) resolution : " << resolution << std::endl;
+    //std::cout <<  "(bumpers2pc::initParams) resolution : " << resolution << std::endl;
 
 
 
     initBumperPC(footprint, bumpers_description);
-
+    /*
     for(int32_t i = 0; i < bumpers_pc.size(); ++i){
         std::cout <<  "(bumpers2pc::initParams) Bumper " << i+1 << std::endl;
         for(int32_t j = 0; j < bumpers_pc.at(i).size(); ++j)
             std::cout <<  "(bumpers2pc::initParams) [" << bumpers_pc.at(i).at(j).x << ", " << bumpers_pc.at(i).at(j).y << "]" << std::endl;
     }
+    */
 
     return true;
 }

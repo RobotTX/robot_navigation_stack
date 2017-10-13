@@ -16,13 +16,14 @@
 #include <tf/transform_broadcaster.h>
 #include <stdio.h>
 #include <nav_msgs/MapMetaData.h>
+#include <gobot_msg_srv/String.h>
 #include <gobot_msg_srv/SetDockStatus.h>
 #include <gobot_msg_srv/GetDockStatus.h>
-#include <gobot_msg_srv/String.h>
 #include <gobot_msg_srv/SendMap.h>
 #include <gobot_msg_srv/GoalStatus.h>
 #include <gobot_msg_srv/GetGobotStatus.h>
 #include <gobot_msg_srv/SetGobotStatus.h>
+#include <gobot_msg_srv/IsCharging.h>
 #include <hector_exploration_node/Exploration.h>
 #include <mutex>
 #include <thread>
@@ -136,10 +137,6 @@ bool pausePathSrvCallback(std_srvs::Empty::Request &req, std_srvs::Empty::Respon
 bool playPathSrvCallback(std_srvs::Empty::Request &req, std_srvs::Empty::Response &res);
 
 bool stopPathSrvCallback(std_srvs::Empty::Request &req, std_srvs::Empty::Response &res);
-
-bool setDockStatus(gobot_msg_srv::SetDockStatus::Request &req, gobot_msg_srv::SetDockStatus::Response &res);
-
-bool getDockStatus(gobot_msg_srv::GetDockStatus::Request &req, gobot_msg_srv::GetDockStatus::Response &res);
 
 bool goDockSrvCallback(std_srvs::Empty::Request &req, std_srvs::Empty::Response &res);
 

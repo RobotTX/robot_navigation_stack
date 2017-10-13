@@ -121,7 +121,6 @@ bool initializePoseSrvCallback(std_srvs::Empty::Request &req, std_srvs::Empty::R
                         break;
 
                     case CHARGING_STAGE:
-                        ros::service::waitForService("/gobot_status/charging_status", ros::Duration(30.0));
                         ros::service::call("/gobot_status/charging_status",arg);
                         //if robot is charging, it is in CS station 
                         if(arg.response.isCharging || evaluatePose(1)){
@@ -169,6 +168,13 @@ bool initializePoseSrvCallback(std_srvs::Empty::Request &req, std_srvs::Empty::R
                 findPoseResult(FOUND);
                 //Update and record last pose when found
                 ros::service::call("/request_nomotion_update",empty_srv);
+
+                 //Startup begin
+                gobot_msg_srv::SetGobotStatus set_gobot_status;
+                set_gobot_status.request.status = 0;
+                set_gobot_status.request.text ="FOUND_POSE";
+                ros::service::call("/gobot_status/set_gobot_status",set_gobot_status);
+                //Startup end
             }
             running = false;
         }).detach();
@@ -405,9 +411,6 @@ int main(int argc, char **argv) {
             ros::param::get("/amcl/initial_cov_aa",rosparam_cov_yaw);
             ROS_INFO("ROS: pos(%.2f,%.2f,%.2f), cov(%.2f,%.2f,%.2f).",rosparam_x,rosparam_y,rosparam_yaw,rosparam_cov_x,rosparam_cov_y,rosparam_cov_yaw);
             break;
-        }
-        else{
-            ROS_WARN("Could not get the param from ROS server");
         }
         ros::Duration(1.0).sleep();
     }

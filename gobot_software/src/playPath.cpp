@@ -20,7 +20,7 @@ ros::Subscriber button_sub;
 ros::ServiceClient setGobotStatusSrv;
 ros::Time action_time;
 
-gobot_msg_srv::SetGobotStatus gobot_status;
+gobot_msg_srv::SetGobotStatus set_gobot_status;
 
 bool setSpeed(const char directionR, const int velocityR, const char directionL, const int velocityL){
     //ROS_INFO("(auto_docking::setSpeed) %c %d %c %d", directionR, velocityR, directionL, velocityL);
@@ -45,10 +45,16 @@ void goalResultCallback(const move_base_msgs::MoveBaseActionResult::ConstPtr& ms
 		//ABORTED
 		case 4:
 			setStageInFile(-stage - 1);
+			setGobotStatus(0,"ABORTED_PATH");
+			//set the UI button
+			ros::service::call("/gobot_command/pause_path",empty_srv);
 			break;
 		//REJECTED
 		case 5:
 			setStageInFile(-stage - 1);
+			setGobotStatus(0,"ABORTED_PATH");
+			//set the UI button
+			ros::service::call("/gobot_command/pause_path",empty_srv);
 			break;
 		//OTHER CASE
 		default:
@@ -72,9 +78,7 @@ void goalReached(){
             if(dockAfterPath){
                 ROS_INFO("(PlayPath::goalReached) Battery is low, go to charging station!!");
 
-				gobot_status.request.status = 0;
-				gobot_status.request.text = "COMPLETE_PATH";
-				setGobotStatusSrv.call(gobot_status);
+				setGobotStatus(0,"COMPLETE_PATH");
 
 				currentGoal.x = -1;
 				
@@ -93,9 +97,7 @@ void goalReached(){
 				}	
             } 
 			else{
-				gobot_status.request.status = 0;
-				gobot_status.request.text = "COMPLETE_PATH";
-				setGobotStatusSrv.call(gobot_status);
+				setGobotStatus(0,"COMPLETE_PATH");
 
                 // resets the current goal
                 currentGoal.x = -1;
@@ -117,9 +119,7 @@ void goalReached(){
 void checkGoalDelay(){
 	if(currentGoal.waitingTime != 0)
 	{
-		gobot_status.request.status = 10;
-		gobot_status.request.text = "WAITING";
-		setGobotStatusSrv.call(gobot_status);
+		setGobotStatus(10,"WAITING");
 
 		if(currentGoal.waitingTime > 0){
 			ROS_INFO("(PlayPath::goalReached) goalReached going to sleep for %f seconds", currentGoal.waitingTime);
@@ -222,6 +222,12 @@ void setStageInFile(const int _stage){
 	}
 }
 
+void setGobotStatus(int status,std::string text){
+	set_gobot_status.request.status = status;
+	set_gobot_status.request.text = text;
+	setGobotStatusSrv.call(set_gobot_status);
+}
+
 bool playPathService(std_srvs::Empty::Request &req, std_srvs::Empty::Response &res){
 	ROS_INFO("(PlayPath::playPathService) called while at stage : %d", stage);
 
@@ -278,20 +284,17 @@ bool playPathService(std_srvs::Empty::Request &req, std_srvs::Empty::Response &r
 		setStageInFile(stage);
 	}
 
-    std::thread([](){
-        gobot_msg_srv::IsCharging arg;
-        if(ros::service::call("/gobot_status/charging_status", arg) && arg.response.isCharging){
-            ROS_WARN("(PlayPath::playPathService) we are charging so we go straight to avoid bumping into the CS when turning");
-            setSpeed('F', 10, 'F', 10);
-            std::this_thread::sleep_for(std::chrono::milliseconds(3000));
-            setSpeed('F', 0, 'F', 0);
-        }
-        goNextPoint();
-    }).detach();
+	gobot_msg_srv::IsCharging arg;
+	if(ros::service::call("/gobot_status/charging_status", arg) && arg.response.isCharging){
+		ROS_WARN("(PlayPath::playPathService) we are charging so we go straight to avoid bumping into the CS when turning");
+		setSpeed('F', 20, 'F', 20);
+		std::this_thread::sleep_for(std::chrono::milliseconds(1500));
+		setSpeed('F', 0, 'F', 0);
+	}
+	goNextPoint();
 
-	gobot_status.request.status = 5;
-	gobot_status.request.text = "PLAY_PATH";
-	setGobotStatusSrv.call(gobot_status);
+	setGobotStatus(5,"PLAY_PATH");
+
 	return true;	
 }
 
@@ -299,9 +302,7 @@ bool playPathService(std_srvs::Empty::Request &req, std_srvs::Empty::Response &r
 bool stopPathService(std_srvs::Empty::Request &req, std_srvs::Empty::Response &res){
 	ROS_INFO("(PlayPath::stopPathService) stopPathService called");
 
-	gobot_status.request.status = 1;
-	gobot_status.request.text = "STOP_PATH";
-	setGobotStatusSrv.call(gobot_status);
+	setGobotStatus(1,"STOP_PATH");
 
 	currentGoal.x = -1;
 	stage = 0;
@@ -322,9 +323,7 @@ bool stopPathService(std_srvs::Empty::Request &req, std_srvs::Empty::Response &r
 bool pausePathService(std_srvs::Empty::Request &req, std_srvs::Empty::Response &res){
 	ROS_INFO("(PlayPath::pausePathService) pausePathService called");
 
-	gobot_status.request.status = 4;
-	gobot_status.request.text = "PAUSE_PATH";
-	setGobotStatusSrv.call(gobot_status);
+	setGobotStatus(4,"PAUSE_PATH");
 
 	stop_flag = true;
 	if(ac->isServerConnected())
