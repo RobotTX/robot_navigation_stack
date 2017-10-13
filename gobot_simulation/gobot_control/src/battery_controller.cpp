@@ -10,6 +10,7 @@ int32_t chargingCurrent = 200;
 int16_t temperature = 3000;
 int32_t fullCapacity = 120;
 int32_t remainCapacity = 120;
+double batteryPercentage = 1.0;
 bool chargingFlagLeft = false;
 bool chargingFlagRight = false;
 int nb = 20;
@@ -49,6 +50,7 @@ void newRightBattery(const gazebo_msgs::ContactsState::ConstPtr& msg){
 bool setBattery(gobot_msg_srv::SetBattery::Request &req, gobot_msg_srv::SetBattery::Response &res){
     std::cout << "(battery_controller) Service setBattery called" << std::endl;
     batteryVoltage = req.voltage;
+    batteryPercentage = req.percentage;
     return true;
 }
 
@@ -80,6 +82,7 @@ int main(int argc, char **argv){
 
     while(ros::ok()){
         msg.BatteryVoltage = batteryVoltage;
+        msg.Percentage = batteryPercentage;
         msg.ChargingFlag = (chargingFlagLeft & chargingFlagRight);
         batteryPublisher.publish(msg);
 
