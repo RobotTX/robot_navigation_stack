@@ -10,6 +10,7 @@
 #include <std_srvs/Empty.h>
 #include <gobot_msg_srv/GetEncoders.h>
 #include <gobot_msg_srv/SetSpeeds.h>
+#include <gobot_msg_srv/SetGobotStatus.h>
 #include <serial/serial.h>
 
 

@@ -60,7 +60,6 @@ add_message_files(
 ## Generate services in the 'srv' folder
 add_service_files(
     FILES
-    GetDockStatus.srv
     GetEncoders.srv
     InitBack.srv
     IsCharging.srv
@@ -68,15 +67,22 @@ add_service_files(
     PortLaser.srv
     RecoveredPosition.srv
     SendMessageToPc.srv
-    SetDockStatus.srv
     SetSpeeds.srv
     LedStrip.srv
     SetBattery.srv
     SendMap.srv
-    GoalStatus.srv
     GetGobotStatus.srv
     SetGobotStatus.srv
-    String.srv
+    GetStage.srv
+    SetStage.srv
+    GetPath.srv
+    SetPath.srv
+    GetString.srv
+    SetString.srv
+    GetInt.srv
+    SetInt.srv
+    GetDockStatus.srv
+    SetDockStatus.srv
 )
 
 ## Generate actions in the 'action' folder

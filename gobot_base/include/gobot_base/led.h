@@ -9,6 +9,7 @@
 #include <actionlib_msgs/GoalID.h>
 #include <move_base_msgs/MoveBaseActionResult.h>
 #include <move_base_msgs/MoveBaseActionGoal.h>
+#include <gobot_msg_srv/GetGobotStatus.h>
 #include <gobot_msg_srv/BumperMsg.h>
 #include <gobot_msg_srv/BatteryMsg.h>
 

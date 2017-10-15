@@ -2,16 +2,14 @@
 <launch>
 		<param name="map_image_used" type="string" value="$(find gobot_data)/maps/used_map.pgm" />
     <param name="restart_file" type="string" value="$(find gobot_data)/command/restart_robot.sh" />
-    <param name="map_id_file" type="string" value="$(find gobot_data)/Robot_Infos/mapId.txt" />
-    <param name="last_known_position_file" type="string" value="$(find gobot_data)/Robot_Infos/lastKnownPosition.txt" />
-    <param name="path_file" type="string" value="$(find gobot_data)/Robot_Infos/path.txt" />
-    <param name="home_file" type="string" value="$(find gobot_data)/Robot_Infos/home.txt" />
-    <param name="path_stage_file" type="string" value="$(find gobot_data)/Robot_Infos/path_stage.txt" />
-    <param name="robot_name_file" type="string" value="$(find gobot_data)/Robot_Infos/name.txt" />
-    <param name="laser_file" type="string" value="$(find gobot_data)/Robot_Infos/laser.txt" />
-    <param name="battery_file" type="string" value="$(find gobot_data)/Robot_Infos/battery.txt" />
-    <param name="server_file" type="string" value="$(find gobot_data)/Robot_Infos/IP/serverIP.txt" />
-    <param name="ips_file" type="string" value="$(find gobot_data)/Robot_Infos/IP/isAlive.txt" />
-    <param name="ping_file" type="string" value="$(find gobot_data)/Robot_Infos/IP/ping.sh" />
-    <param name="robot_position_file" type="string" value="$(find gobot_data)/Robot_Infos/robot_position.txt" />
+    <param name="ping_file" type="string" value="$(find gobot_data)/IP/ping.sh" />
+    <param name="map_id_file" type="string" value="$(find gobot_data)/data/mapId.txt" />
+    <param name="last_known_position_file" type="string" value="$(find gobot_data)/data/lastKnownPosition.txt" />
+    <param name="ips_file" type="string" value="$(find gobot_data)/IP/isAlive.txt" />
+    <param name="robot_position_file" type="string" value="$(find gobot_data)/data/robot_position.txt" />
+    <param name="path_file" type="string" value="$(find gobot_data)/data/path.txt" />
+    <param name="path_stage_file" type="string" value="$(find gobot_data)/data/path_stage.txt" />
+    <param name="path_loop_file" type="string" value="$(find gobot_data)/data/loop.txt" />
+    <param name="home_file" type="string" value="$(find gobot_data)/data/home.txt" />
+    <param name="robot_name_file" type="string" value="$(find gobot_data)/data/name.txt" />
 </launch>

@@ -22,7 +22,14 @@
 #include <cmath>
 #include <gobot_msg_srv/SetSpeeds.h>
 #include <gobot_msg_srv/IsCharging.h>
+#include <gobot_msg_srv/GetGobotStatus.h>
 #include <gobot_msg_srv/SetGobotStatus.h>
+#include <gobot_msg_srv/SetStage.h>
+#include <gobot_msg_srv/GetStage.h>
+#include <gobot_msg_srv/SetPath.h>
+#include <gobot_msg_srv/GetPath.h>
+#include <gobot_msg_srv/GetInt.h>
+#include <gobot_msg_srv/SetInt.h>
 #include <thread>
 
 typedef actionlib::SimpleActionClient<move_base_msgs::MoveBaseAction> MoveBaseClient;
@@ -44,9 +51,9 @@ bool stopPathService(std_srvs::Empty::Request &req, std_srvs::Empty::Response &r
 bool pausePathService(std_srvs::Empty::Request &req, std_srvs::Empty::Response &res);
 bool startLoopPathService(std_srvs::Empty::Request &req, std_srvs::Empty::Response &res);
 bool stopLoopPathService(std_srvs::Empty::Request &req, std_srvs::Empty::Response &res);
+bool skipPathService(gobot_msg_srv::SetInt::Request &req, gobot_msg_srv::SetInt::Response &res);
 void goNextPoint(void);
 bool playPathService(std_srvs::Empty::Request &req, std_srvs::Empty::Response &res);
-void goToPoint(const Point& point);
 void goalReached(void);
 void setStageInFile(const int _stage);
 void setGobotStatus(int status,std::string text);

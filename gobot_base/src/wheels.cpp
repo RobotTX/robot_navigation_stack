@@ -84,7 +84,7 @@ bool getEncoders(gobot_msg_srv::GetEncoders::Request &req, gobot_msg_srv::GetEnc
 /// Set the encoders to 0
 bool resetEncoders(std_srvs::Empty::Request &req, std_srvs::Empty::Response &res){
     writeAndRead(std::vector<uint8_t>({0x00, 0x35}));
-
+    ros::Duration(0.5).sleep();
     return true;
 }
 
@@ -162,18 +162,17 @@ bool initSerial() {
     serialConnection.close();
     serialConnection.open();
 
-    ROS_INFO("(wheels::initSerial) MD49 serial communication : %d", serialConnection.isOpen());
 
     if(serialConnection.isOpen()){
         /// First 3 bytes : set the mode (see MD49 documentation)
         /// then 2 bytes to disable the 2 sec timeout
         /// then 3 bytes to set the acceleration steps (1-10)
-        writeAndRead(std::vector<uint8_t>({0x00, 0x34, 0x00, 
-            0x00, 0x38, 
-            0x00, 0x33, 0x01}));
+        writeAndRead(std::vector<uint8_t>({0x00, 0x34, 0x00,0x00,0x38,0x00, 0x33, 0x01}));
 
+        ROS_INFO("(wheels::initSerial) Established connection to MD49.");
         return true;
-    } else
+    } 
+    else
         return false;
 }
 
@@ -205,6 +204,14 @@ int main(int argc, char **argv) {
         ros::ServiceServer testEncodersSrv2 = nh.advertiseService("/gobot_test/testEncoders2", testEncoders2);
         ros::ServiceServer stopTestsSrv = nh.advertiseService("/gobot_test/stopTestEncoder", stopTests);
 
+        //Startup begin
+        ros::service::waitForService("/gobot_status/set_gobot_status", ros::Duration(30.0));
+        gobot_msg_srv::SetGobotStatus set_gobot_status;
+        set_gobot_status.request.status = -1;
+        set_gobot_status.request.text ="MD49_READY";
+        ros::service::call("/gobot_status/set_gobot_status",set_gobot_status);
+        //Startup end
+        
         ros::spin();
     } else
         ROS_INFO("(wheels::main) Could not open the serial communication");

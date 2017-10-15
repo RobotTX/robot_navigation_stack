@@ -1,4 +1,5 @@
 #!/bin/bash
+sleep 15s
 var0=$(ps -a | grep roscore)
 if [ $? -ne 0 ] 
 then

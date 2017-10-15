@@ -35,11 +35,6 @@ std_srvs::Empty empty_srv;
 gobot_msg_srv::SetGobotStatus set_gobot_status;
 gobot_msg_srv::SetDockStatus set_dock_status;
 
-void setGobotStatus(int status,std::string text){
-	set_gobot_status.request.status = status;
-	set_gobot_status.request.text = text;
-	setGobotStatusSrv.call(set_gobot_status);
-}
 
 /****************************************** STEP 1 : Go 1.5 meters in front of the charging station *********************************************************/
 
@@ -55,81 +50,74 @@ bool startDocking(void){
     leftFlag = false;
     newGoal = false;
 
-    goalStatusSub.shutdown();
-    robotPoseSub.shutdown();
-    bumperSub.shutdown();
-    irSub.shutdown();
-    batterySub.shutdown();
-
     ros::spinOnce();
 
     /// Get the charging station position from the home file
-    std::string homeFile;
-    if(nh.hasParam("home_file")){
-        nh.getParam("home_file", homeFile);
-        ROS_INFO("(auto_docking::startDocking) home file path : %s", homeFile.c_str());
-        std::ifstream ifs(homeFile);
+    gobot_msg_srv::GetString get_home;
+    if(ros::service::call("/gobot_status/get_home",get_home)){
+        tfScalar x, y, oriX, oriY, oriZ, oriW;
+        x=std::stod(get_home.response.data[0]);
+        y=std::stod(get_home.response.data[1]);
+        oriX=std::stod(get_home.response.data[2]);
+        oriY=std::stod(get_home.response.data[3]);
+        oriZ=std::stod(get_home.response.data[4]);
+        oriW=std::stod(get_home.response.data[5]);
 
-        if(ifs.is_open()){
-            tfScalar x, y, oriX, oriY, oriZ, oriW;
-            ifs >> x >> y >> oriX >> oriY >> oriZ >> oriW;
-            ifs.close();
+        if(x != 0 || y != 0 || oriX != 0 || oriY != 0 || oriZ != 0 || oriW != 0){
 
-            if(x != 0 || y != 0 || oriX != 0 || oriY != 0 || oriZ != 0 || oriW != 0){
+            ROS_INFO("(auto_docking::startDocking) home found : [%f, %f] [%f, %f, %f, %f]", x, y, oriX, oriY, oriZ, oriW);
 
-                ROS_INFO("(auto_docking::startDocking) home found : [%f, %f] [%f, %f, %f, %f]", x, y, oriX, oriY, oriZ, oriW);
+            /// Got a quaternion and want an orientation in radian
+            tf::Matrix3x3 matrix = tf::Matrix3x3(tf::Quaternion(oriX , oriY , oriZ, oriW));
 
-                /// Got a quaternion and want an orientation in radian
-                tf::Matrix3x3 matrix = tf::Matrix3x3(tf::Quaternion(oriX , oriY , oriZ, oriW));
+            tfScalar roll;
+            tfScalar pitch;
+            tfScalar yaw;
 
-                tfScalar roll;
-                tfScalar pitch;
-                tfScalar yaw;
+            matrix.getRPY(roll, pitch, yaw);
+            double homeOri = -(yaw*180/3.14159);//-(orientation+90)*3.14159/180);
 
-                matrix.getRPY(roll, pitch, yaw);
-                double homeOri = -(yaw*180/3.14159);//-(orientation+90)*3.14159/180);
+            /// We want to go 1 metre in front of the charging station
+            double landingPointX = x + 1.0 * std::cos(yaw);
+            double landingPointY = y + 1.0 * std::sin(yaw);
+            ROS_INFO("(auto_docking::startDocking) landing point : [%f, %f, %f]", landingPointX, landingPointY, homeOri);
 
-                /// We want to go 1 metre in front of the charging station
-                double landingPointX = x + 1.0 * std::cos(yaw);
-                double landingPointY = y + 1.0 * std::sin(yaw);
-                ROS_INFO("(auto_docking::startDocking) landing point : [%f, %f, %f]", landingPointX, landingPointY, homeOri);
+            /// Create the goal
+            currentGoal.target_pose.header.stamp = ros::Time::now();
+            currentGoal.target_pose.pose.position.x = landingPointX;
+            currentGoal.target_pose.pose.position.y = landingPointY;
+            currentGoal.target_pose.pose.position.z = 0;
+            currentGoal.target_pose.pose.orientation.x = oriX;
+            currentGoal.target_pose.pose.orientation.y = oriY;
+            currentGoal.target_pose.pose.orientation.z = oriZ;
+            currentGoal.target_pose.pose.orientation.w = oriW;
+            
+            /// send the goal
+            if(ac->isServerConnected()) {
+                ac->sendGoal(currentGoal);
 
-                /// Create the goal
-                currentGoal.target_pose.header.stamp = ros::Time::now();
-                currentGoal.target_pose.pose.position.x = landingPointX;
-                currentGoal.target_pose.pose.position.y = landingPointY;
-                currentGoal.target_pose.pose.position.z = 0;
-                currentGoal.target_pose.pose.orientation.x = oriX;
-                currentGoal.target_pose.pose.orientation.y = oriY;
-                currentGoal.target_pose.pose.orientation.z = oriZ;
-                currentGoal.target_pose.pose.orientation.w = oriW;
-                
-                /// send the goal
-                if(ac->isServerConnected()) {
-                    ac->sendGoal(currentGoal);
+                docking = true;
 
-                    docking = true;
+                /// will allow us to check that we arrived at our destination
+                goalStatusSub = nh.subscribe("/move_base/status", 1, goalStatus);
+                robotPoseSub = nh.subscribe("/robot_pose", 1, newRobotPos);
 
-                    /// will allow us to check that we arrived at our destination
-                    goalStatusSub = nh.subscribe("/move_base/status", 1, goalStatus);
-                    robotPoseSub = nh.subscribe("/robot_pose", 1, newRobotPos);
+                ROS_INFO("(auto_docking::startDocking) service called successfully");
 
-                    ROS_INFO("(auto_docking::startDocking) service called successfully");
+                set_gobot_status.request.status = 15;
+                set_gobot_status.request.text = "DOCKING";
+                setGobotStatusSrv.call(set_gobot_status);
 
-                    setGobotStatus(15,"DOCKING");
-                    
-                    set_dock_status.request.status = 1;
-                    setDockStatusSrv.call(set_dock_status);
+                set_dock_status.request.status = 1;
+                setDockStatusSrv.call(set_dock_status);
 
-                    return true;
-                } else 
-                    ROS_ERROR("(auto_docking::startDocking) no action server");
-            } else
-                ROS_ERROR("(auto_docking::startDocking) home is not valid (probably not set)");
+                return true;
+            } else 
+                ROS_ERROR("(auto_docking::startDocking) no action server");
         } else
-            ROS_ERROR("(auto_docking::startDocking) could not open the file %s", homeFile.c_str());
+            ROS_ERROR("(auto_docking::startDocking) home is not valid (probably not set)");
     } else
-        ROS_ERROR("(auto_docking::startDocking) could not find the param home_file %s", homeFile.c_str());
+        ROS_ERROR("(auto_docking::startDocking) could not find the home pose");
 
     return false;
 }
@@ -449,6 +437,10 @@ void failedDocking(const int status){
 }
 
 void stopDocking(void){
+    set_gobot_status.request.status = 11;
+	set_gobot_status.request.text = (set_dock_status.request.status==-1) ? "FAIL_DOCKING" : "STOP_DOCKING";
+	setGobotStatusSrv.call(set_gobot_status);
+    
     ROS_INFO("(auto_docking::stopDocking) called");
 
     attempt = 0;
@@ -458,6 +450,7 @@ void stopDocking(void){
     charging = false;
     lostIrSignal = false;
 
+    
     /// if action server is up -> cancel
     if(ac->isServerConnected())
         ac->cancelAllGoals();
@@ -471,14 +464,11 @@ void stopDocking(void){
     proximitySub.shutdown();
 
     setSpeed('F', 0, 'F', 0);
-    
-    setGobotStatus(1,"STOP_DOCKING");
 }
 
 bool stopDockingService(std_srvs::Empty::Request &req, std_srvs::Empty::Response &res){
     ROS_INFO("(auto_docking::stopDockingService) service called");
 
-    stopDocking();
     gobot_msg_srv::IsCharging arg;
     if(ros::service::call("/gobot_status/charging_status", arg) && arg.response.isCharging){
         set_dock_status.request.status = 3;
@@ -487,6 +477,8 @@ bool stopDockingService(std_srvs::Empty::Request &req, std_srvs::Empty::Response
         set_dock_status.request.status = 0;
     }
     setDockStatusSrv.call(set_dock_status);
+
+    stopDocking();
 
     return true;
 }
@@ -514,7 +506,7 @@ int main(int argc, char* argv[]){
     ros::ServiceServer stopDockingSrv = nh.advertiseService("/gobot_function/stopDocking", stopDockingService);
 
     setGobotStatusSrv = nh.serviceClient<gobot_msg_srv::SetGobotStatus>("/gobot_status/set_gobot_status");
-    setDockStatusSrv = nh.serviceClient<gobot_msg_srv::SetDockStatus>("/gobot_status/setDockStatus");
+    setDockStatusSrv = nh.serviceClient<gobot_msg_srv::SetDockStatus>("/gobot_status/set_dock_status");
 
     ros::spin();
     
