@@ -25,6 +25,7 @@ std_srvs::Empty empty_srv;
 gobot_msg_srv::GetGobotStatus get_gobot_status;
 gobot_msg_srv::GetDockStatus get_dock_status;
 
+ros::Publisher disco_pub;
 ros::Publisher go_pub;
 ros::Publisher teleop_pub;
 ros::ServiceClient getGobotStatusSrv,getDockStatusSrv;
@@ -961,21 +962,23 @@ bool sendMessageToSock(boost::shared_ptr<tcp::socket> sock, const std::string me
 }
 
 bool sendMessageToAll(const std::string message){
-    //ROS_INFO("(Command system) Sending message : %s", message.c_str());
-
-    try {
+    if(sockets.size() > 0){
+        //ROS_INFO("(Command system) Sending message : %s", message.c_str());
         socketsMutex.lock();
-        /// We send the result of the command to every Qt app
-        for(auto const &elem : sockets)
-            boost::asio::write(*(elem.second), boost::asio::buffer(message, message.length()));
-
+        for(auto const &elem : sockets){
+            try {
+                /// We send the result of the command to every Qt app
+                boost::asio::write(*(elem.second), boost::asio::buffer(message, message.length()));
+            } catch (std::exception& e) {
+                ROS_ERROR("(Command system) Message not sent:%s: %s",elem.first.c_str(),e.what());
+                std_msgs::String msg;
+                msg.data = elem.first;
+                disco_pub.publish(msg);
+            }
+        }
+        socketsMutex.unlock();
         ROS_INFO("(Command system) Message sent to all succesfully");
-        socketsMutex.unlock();
         return true;
-    } catch (std::exception& e) {
-        ROS_ERROR("(Command system) Message not sent : %s", e.what());
-        socketsMutex.unlock();
-        return false;
     }
 }
 
@@ -1005,7 +1008,6 @@ void session(boost::shared_ptr<tcp::socket> sock){
                 disconnect(ip);
                 throw boost::system::system_error(error); // Some other error.
             }
-
 
             for(int i = 0; i < length; i++){
                 //Null
@@ -1048,14 +1050,14 @@ void session(boost::shared_ptr<tcp::socket> sock){
                     if(static_cast<int>(data[i]) != 0)
                         ROS_ERROR("%d : %d or %c", i, static_cast<int>(data[i]), data[i]);
 
-
                 ROS_ERROR("(Command system) Stopping the function\n******************\n");
             }
         }
     } catch (std::exception& e) {
         ROS_ERROR("(Command system) Exception in thread, ip : %s => %s ", ip.c_str(), e.what());
     }
-    ROS_WARN("(Command system) Done with this session %s", ip.c_str());
+
+    ROS_INFO("(Command system) Done with this session %s", ip.c_str());
 }
 
 void server(void){
@@ -1118,6 +1120,7 @@ int main(int argc, char* argv[]){
 
         ros::Subscriber sub = n.subscribe("/gobot_software/server_disconnected", 1000, serverDisconnected);
 
+        disco_pub = n.advertise<std_msgs::String>("/gobot_software/server_disconnected", 10);
         go_pub = n.advertise<geometry_msgs::PoseStamped>("/move_base_simple/goal", 1000);
         teleop_pub = n.advertise<geometry_msgs::Twist>("/cmd_vel", 1000);
 

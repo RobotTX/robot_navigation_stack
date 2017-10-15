@@ -54,7 +54,7 @@ int main(int argc, char** argv){
 
     double pi = 3.14159;
 
-    ros::Rate r(20); //20
+    ros::Rate r(10); //20
     ros::service::waitForService("/gobot_motor/getEncoders",ros::Duration(30));
     while(n.ok()){
 

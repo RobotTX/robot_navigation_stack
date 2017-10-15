@@ -36,6 +36,7 @@ std::string getDataToSend(void){
     /// Retrieves the path stage
     gobot_msg_srv::GetStage get_stage;
     ros::service::call("/gobot_status/get_stage", get_stage);
+    chargingFlag=get_dock_status.response.status==3 ? true : false;
 
     /// Form the string to send to the Qt app
     return get_name.response.data[0] + sep + std::to_string(get_stage.response.stage) + sep + std::to_string(batteryLevel) + sep + std::to_string(chargingFlag) + sep + std::to_string(get_dock_status.response.status);
@@ -142,22 +143,14 @@ void pingIP(std::string ip, std::string dataToSend){
             connectedIPs.push_back(ip);
             connectedMutex.unlock();
             //ROS_INFO("(ping_server) Connected to %s", ip.c_str());
-        } else
-            ROS_ERROR("(ping_server) read %lu bytes : %s", read.size(), read.c_str());
+        } //else
+            //ROS_ERROR("(ping_server) read %lu bytes : %s", read.size(), read.c_str());
         
     } catch(std::exception& e) {
         //ROS_ERROR("(ping_server) error %s : %s", ip.c_str(), e.what());
     }
 }
 
-/**
- * Update the battery informations we need to send to the Qt app
- */
-void newBatteryInfo(const gobot_msg_srv::BatteryMsg::ConstPtr& batteryInfo){
-    chargingFlag = batteryInfo->ChargingFlag;
-    if(batteryInfo->FullCapacity != 0)
-        batteryLevel = batteryInfo->Percentage*100;
-}
 
 /**
  * Check all the IP addresses we can find on the local network and put them in an array
@@ -179,7 +172,6 @@ void checkNewServers(void){
         std::ifstream ifs(ipsFile, std::ifstream::in);
         if(ifs){
             std::string currentIP;
-
             serverMutex.lock();
             /// Save all the IP addresses in an array
             availableIPs.clear();
@@ -221,7 +213,6 @@ int main(int argc, char* argv[]){
     ROS_INFO("(ping_server) Robot finding initial pose is ready.");
     //Startup end
 
-    ros::Subscriber batterySub = n.subscribe("/gobot_base/battery_topic", 1, newBatteryInfo);
     disco_pub = n.advertise<std_msgs::String>("/gobot_software/server_disconnected", 10);
 
     /// We get the path to the file with all the ips

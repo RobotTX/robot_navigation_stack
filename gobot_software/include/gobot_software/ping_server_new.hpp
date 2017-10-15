@@ -29,8 +29,6 @@ void pingAllIPs(void);
 
 void pingIP(std::string ip, std::string dataToSend);
 
-void newBatteryInfo(const gobot_msg_srv::BatteryMsg::ConstPtr& batteryInfo);
-
 void checkNewServers(void);
 
 void updateIP(void);
