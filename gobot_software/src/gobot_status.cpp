@@ -77,7 +77,7 @@ bool setHomeSrvCallback(gobot_msg_srv::SetString::Request &req, gobot_msg_srv::S
 bool getHomeSrvCallback(gobot_msg_srv::GetString::Request &req, gobot_msg_srv::GetString::Response &res){
     homeMutex.lock();
     for(int i=0;i<home_.size();i++)
-        res.data[i] = home_.at(i);
+        res.data.push_back(home_.at(i));
     homeMutex.unlock();
     return true;
 }
@@ -92,7 +92,7 @@ bool setNameSrvCallback(gobot_msg_srv::SetString::Request &req, gobot_msg_srv::S
     if(ofsName){
         ofsName << hostname_;
         ofsName.close();
-        ROS_INFO("(Gobot_status) set Gobot name: %s",hostname_.c_str());
+        ROS_INFO("(Gobot_status) Set Gobot name: %s",hostname_.c_str());
     }
 
     return true;
@@ -100,8 +100,10 @@ bool setNameSrvCallback(gobot_msg_srv::SetString::Request &req, gobot_msg_srv::S
 
 bool getNameSrvCallback(gobot_msg_srv::GetString::Request &req, gobot_msg_srv::GetString::Response &res){
     nameMutex.lock();
-    res.data[0]=hostname_;
+    res.data.push_back(hostname_);
     nameMutex.unlock();
+
+    //ROS_INFO("(Gobot_status) Get Gobot name: %s",res.data[0].c_str());
     return true;
 }
 
@@ -128,7 +130,7 @@ bool setPathSrvCallback(gobot_msg_srv::SetPath::Request &req, gobot_msg_srv::Set
 bool getPathSrvCallback(gobot_msg_srv::GetPath::Request &req, gobot_msg_srv::GetPath::Response &res){
     pathMutex.lock();
     for(int i=0;i<path_.size();i++)
-        res.path[i] = path_.at(i);
+        res.path.push_back(path_.at(i));
     pathMutex.unlock();
     return true;
 }
@@ -152,7 +154,7 @@ bool setLoopSrvCallback(gobot_msg_srv::SetInt::Request &req, gobot_msg_srv::SetI
 
 bool getLoopSrvCallback(gobot_msg_srv::GetInt::Request &req, gobot_msg_srv::GetInt::Response &res){
     loopMutex.lock();
-    res.data[0] = loop_;
+    res.data.push_back(loop_);
     loopMutex.unlock();
     return true;
 }
@@ -177,6 +179,8 @@ bool getStageSrvCallback(gobot_msg_srv::GetStage::Request &req, gobot_msg_srv::G
     stageMutex.lock();
     res.stage = stage_;
     stageMutex.unlock();
+
+    //ROS_INFO("(Gobot_status) Get Gobot stage: %d",stage_);
     return true;
 }
 
@@ -194,6 +198,7 @@ bool getDockStatusSrvCallback(gobot_msg_srv::GetDockStatus::Request &req, gobot_
     dockStatusMutex.lock();
     res.status = dock_status_;
     dockStatusMutex.unlock();
+    //ROS_INFO("(Gobot_status) Get Dock status: %d", dock_status_);
 
     return true;
 }

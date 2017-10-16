@@ -218,7 +218,7 @@ bool renameRobot(const std::vector<std::string> command){
         ROS_INFO("(Command system) New name : %s", command.at(1).c_str());
 
         gobot_msg_srv::SetString set_name;
-        set_name.request.data[0]=command.at(1);
+        set_name.request.data.push_back(command.at(1));
         if(ros::service::call("/gobot_status/set_name",set_name))
             return true;
     } else 
@@ -298,7 +298,7 @@ bool pausePath(const std::vector<std::string> command){
 bool nextPath(const std::vector<std::string> command){
     if(command.size() == 1) {
         gobot_msg_srv::SetInt next_path;
-        next_path.request.data[0]=1;
+        next_path.request.data.push_back(1);
         ros::service::call("/gobot_function/skip_path",next_path);
         return true;
     }
@@ -309,7 +309,7 @@ bool nextPath(const std::vector<std::string> command){
 bool previousPath(const std::vector<std::string> command){
     if(command.size() == 1) {
         gobot_msg_srv::SetInt previous_path;
-        previous_path.request.data[0]=-1;
+        previous_path.request.data.push_back(-1);
         ros::service::call("/gobot_function/skip_path",previous_path);
         return true;
     }
@@ -379,7 +379,7 @@ bool newPath(const std::vector<std::string> command){
         ROS_INFO("(Command system) New path received");
         gobot_msg_srv::SetPath set_path;
         for(int i = 1; i < command.size(); i++)
-            set_path.request.path[i]=command.at(i);
+            set_path.request.path.push_back(command.at(i));
 
         if(ros::service::call("/gobot_status/set_path", set_path)){
             // reset the path stage in the file
@@ -464,12 +464,12 @@ bool newChargingStation(const std::vector<std::string> command){
         int orientation = std::stoi(command.at(3));
         tf::Quaternion quaternion;
         quaternion.setEuler(0, 0, -(orientation+90)*3.14159/180);
-        set_home.request.data[0]=command.at(1);
-        set_home.request.data[1]=command.at(2);
-        set_home.request.data[2]=quaternion.x();
-        set_home.request.data[3]=quaternion.y();
-        set_home.request.data[4]=quaternion.z();
-        set_home.request.data[5]=quaternion.w();
+        set_home.request.data.push_back(command.at(1));
+        set_home.request.data.push_back(command.at(2));
+        set_home.request.data.push_back(std::to_string(quaternion.x()));
+        set_home.request.data.push_back(std::to_string(quaternion.y()));
+        set_home.request.data.push_back(std::to_string(quaternion.z()));
+        set_home.request.data.push_back(std::to_string(quaternion.w()));
 
         ros::service::call("/gobot_status/set_home",set_home);
         return true;

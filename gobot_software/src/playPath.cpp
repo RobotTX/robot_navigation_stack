@@ -280,7 +280,7 @@ bool startLoopPathService(std_srvs::Empty::Request &req, std_srvs::Empty::Respon
     ROS_INFO("(PlayPath::startLoopPathService) service called");
 	looping = true;
 	gobot_msg_srv::SetInt set_loop;
-	set_loop.request.data[0]=1;
+	set_loop.request.data.push_back(1);
 	ros::service::call("/gobot_status/set_loop",set_loop);
     return true;
 }
@@ -289,7 +289,7 @@ bool stopLoopPathService(std_srvs::Empty::Request &req, std_srvs::Empty::Respons
     ROS_INFO("(PlayPath::stopLoopPathService) service called");
 	looping = false;
 	gobot_msg_srv::SetInt set_loop;
-	set_loop.request.data[0]=0;
+	set_loop.request.data.push_back(0);
 	ros::service::call("/gobot_status/set_loop",set_loop);
     return true;
 }

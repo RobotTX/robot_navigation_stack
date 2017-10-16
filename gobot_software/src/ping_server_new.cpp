@@ -36,19 +36,19 @@ std::string getDataToSend(void){
     /// Retrieves the path stage
     gobot_msg_srv::GetStage get_stage;
     ros::service::call("/gobot_status/get_stage", get_stage);
-    chargingFlag=get_dock_status.response.status==3 ? true : false;
-
+    
+    chargingFlag=get_dock_status.response.status==3 ? 1 : 0;
     /// Form the string to send to the Qt app
-    return get_name.response.data[0] + sep + std::to_string(get_stage.response.stage) + sep + std::to_string(batteryLevel) + sep + std::to_string(chargingFlag) + sep + std::to_string(get_dock_status.response.status);
+    return  get_name.response.data[0] + sep + std::to_string(get_stage.response.stage) + sep + std::to_string(batteryLevel) + sep + std::to_string(chargingFlag) + sep + std::to_string(get_dock_status.response.status);
 }
 
 /**
  * Will ping all available IP addresses and send a message when we disconnect to one
  */
 void pingAllIPs(void){
-    /// Ping all servers every 2 secs
+    /// Ping all servers every 3 secs
     //tx??//detect disconnection after 6 seconds->too long?
-    ros::Rate loop_rate(1/2.0);
+    ros::Rate loop_rate(1/3.0);
 
     std::vector<std::thread> threads;
 
@@ -59,7 +59,6 @@ void pingAllIPs(void){
         /// Get the data to send to the Qt app
         std::string dataToSend = getDataToSend();
         //ROS_INFO("(ping_server) Data to send : %s", dataToSend.c_str());
-
 
         /// We create threads to ping every IP adress
         /// => threads reduce the required time to ping from ~12 sec to 2 sec
@@ -76,7 +75,6 @@ void pingAllIPs(void){
         //ROS_INFO("(ping_server) Done pinging everyone");
 
         updateIP();
-
         loop_rate.sleep();        
     }
 }
@@ -147,7 +145,7 @@ void pingIP(std::string ip, std::string dataToSend){
             //ROS_ERROR("(ping_server) read %lu bytes : %s", read.size(), read.c_str());
         
     } catch(std::exception& e) {
-        //ROS_ERROR("(ping_server) error %s : %s", ip.c_str(), e.what());
+        ROS_ERROR("(ping_server) error %s : %s", ip.c_str(), e.what());
     }
 }
 
@@ -161,7 +159,7 @@ void checkNewServers(void){
     ros::Rate loop_rate(0.1);
 
     while(ros::ok()){ 
-        //ros::spinOnce();
+        ros::spinOnce();
 
         //ROS_INFO("(ping_server) Refreshing the list of potential servers");
         /// Script which will check all the IP on the local network and put them in a file
@@ -185,6 +183,13 @@ void checkNewServers(void){
     }
 }
 
+/**  * Update the battery informations we need to send to the Qt app  */ 
+void newBatteryInfo(const gobot_msg_srv::BatteryMsg::ConstPtr& batteryInfo){         
+    if(batteryInfo->FullCapacity != 0)         
+        batteryLevel = batteryInfo->BatteryStatus; 
+}
+
+
 void mySigintHandler(int sig)
 {   
     ros::shutdown();
@@ -202,19 +207,24 @@ int main(int argc, char* argv[]){
 
     getGobotStatusSrv = n.serviceClient<gobot_msg_srv::GetGobotStatus>("/gobot_status/get_gobot_status");
     
-    //Startup begin
-    ROS_INFO("(ping_server) Waiting for Robot finding initial pose...");
-    getGobotStatusSrv.waitForExistence(ros::Duration(30.0));
-    getGobotStatusSrv.call(get_gobot_status);
-    while((get_gobot_status.response.status!=-1 || get_gobot_status.response.text!="FOUND_POSE") && ros::ok() && !simulation){
+    if(!simulation){
+        //Startup begin
+        ROS_INFO("(ping_server) Waiting for Robot finding initial pose...");
+        getGobotStatusSrv.waitForExistence(ros::Duration(30.0));
         getGobotStatusSrv.call(get_gobot_status);
-        ros::Duration(0.2).sleep();
+        while((get_gobot_status.response.status!=-1 || get_gobot_status.response.text!="FOUND_POSE") && ros::ok()){
+            getGobotStatusSrv.call(get_gobot_status);
+            ros::Duration(0.2).sleep();
+        }
+        ROS_INFO("(ping_server) Robot finding initial pose is ready.");
     }
-    ROS_INFO("(ping_server) Robot finding initial pose is ready.");
+    else{
+         ros::service::waitForService("/gobot_status/get_name",ros::Duration(30.0));
+    }
     //Startup end
 
     disco_pub = n.advertise<std_msgs::String>("/gobot_software/server_disconnected", 10);
-
+    ros::Subscriber batterySub = n.subscribe("/battery_topic", 1, newBatteryInfo);
     /// We get the path to the file with all the ips
     if(n.hasParam("ips_file"))
         n.getParam("ips_file", ipsFile);
@@ -239,6 +249,7 @@ int main(int argc, char* argv[]){
     /// We try to ping all the available IPs
     std::thread t2(pingAllIPs);
 
+    ROS_INFO("(ping_server) pingAllIPs thread launched");
     ros::spin();
 
     return 0;
