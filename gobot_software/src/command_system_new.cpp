@@ -696,7 +696,7 @@ bool sendMapAutomatically(const std::string ip){
     ROS_INFO("(Command system) Launching the service to get the map auto");
 
     gobot_msg_srv::SetString srv;
-    srv.request.data[0] = ip;
+    srv.request.data.push_back(ip);
 
     if (ros::service::call("/gobot_function/send_auto_map_sender", srv)) {
         ROS_INFO("(Command system) /gobot_function/send_auto_map_sender service started");
@@ -711,7 +711,7 @@ bool stopSendingMapAutomatically(const std::string ip){
     ROS_INFO("(Command system) Launching the service to stop the map auto");
 
     gobot_msg_srv::SetString srv;
-    srv.request.data[0] = ip;
+    srv.request.data.push_back(ip);
 
     if (ros::service::call("/gobot_function/stop_auto_map_sender", srv)) {
         ROS_INFO("(Command system) /gobot_function/stop_auto_map_sender service started");
@@ -1117,7 +1117,7 @@ int main(int argc, char* argv[]){
 
         n.param<bool>("simulation", simulation, false);
         ROS_INFO("(Command system) simulation : %d", simulation);
-
+        
         ros::Subscriber sub = n.subscribe("/gobot_software/server_disconnected", 1000, serverDisconnected);
 
         disco_pub = n.advertise<std_msgs::String>("/gobot_software/server_disconnected", 10);
@@ -1133,6 +1133,8 @@ int main(int argc, char* argv[]){
 
         getDockStatusSrv = n.serviceClient<gobot_msg_srv::GetDockStatus>("/gobot_status/get_dock_status");
         getGobotStatusSrv = n.serviceClient<gobot_msg_srv::GetGobotStatus>("/gobot_status/get_gobot_status");
+        
+        getGobotStatusSrv.waitForExistence(ros::Duration(30.0));
         
         std::thread t(server);
 

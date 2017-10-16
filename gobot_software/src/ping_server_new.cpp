@@ -207,10 +207,10 @@ int main(int argc, char* argv[]){
 
     getGobotStatusSrv = n.serviceClient<gobot_msg_srv::GetGobotStatus>("/gobot_status/get_gobot_status");
     
+    getGobotStatusSrv.waitForExistence(ros::Duration(30.0));
     if(!simulation){
         //Startup begin
         ROS_INFO("(ping_server) Waiting for Robot finding initial pose...");
-        getGobotStatusSrv.waitForExistence(ros::Duration(30.0));
         getGobotStatusSrv.call(get_gobot_status);
         while((get_gobot_status.response.status!=-1 || get_gobot_status.response.text!="FOUND_POSE") && ros::ok()){
             getGobotStatusSrv.call(get_gobot_status);
@@ -218,9 +218,7 @@ int main(int argc, char* argv[]){
         }
         ROS_INFO("(ping_server) Robot finding initial pose is ready.");
     }
-    else{
-         ros::service::waitForService("/gobot_status/get_name",ros::Duration(30.0));
-    }
+
     //Startup end
 
     disco_pub = n.advertise<std_msgs::String>("/gobot_software/server_disconnected", 10);
