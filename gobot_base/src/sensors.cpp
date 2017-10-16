@@ -204,7 +204,7 @@ void publishSensors(void){
                     charging = battery_data.ChargingFlag;
                     gobot_msg_srv::SetDockStatus set_dock_status;
                     if(charging){
-                        set_dock_status.request.status = 3;
+                        set_dock_status.request.status = 1;
                         ROS_INFO("Gobot is charging");
                     }
                     else{
@@ -319,7 +319,6 @@ bool initSerial(void) {
     serialConnection.open();
 
     if(serialConnection.isOpen()){
-        resetStm();
         
         ROS_INFO("Established connection to STM32.");
         return true;

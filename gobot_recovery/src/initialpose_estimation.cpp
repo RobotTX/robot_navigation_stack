@@ -27,10 +27,11 @@ bool evaluatePose(int type){
     }
     //Evaluate Last pose compared to Home pose
     else if(type==1){
-        if(std::abs(home_pos_x-last_pos_x)<0.5 && std::abs(home_pos_y-last_pos_y)<0.5 && std::abs(home_pos_yaw-last_pos_yaw)<PI*15/180)
-            return true;
-        else
-            return false;
+        if(home_pos_x!=0 || home_pos_y!=0 || home_ang_x!=0 || home_ang_y!=0 || home_ang_z!=0 || home_ang_w!=0)
+            if(std::abs(home_pos_x-last_pos_x)<0.5 && std::abs(home_pos_y-last_pos_y)<0.5 && std::abs(home_pos_yaw-last_pos_yaw)<PI*15/180)
+                return true;
+        
+        return false;
     }
 }
 
@@ -128,10 +129,9 @@ bool initializePoseSrvCallback(std_srvs::Empty::Request &req, std_srvs::Empty::R
                         ros::service::call("/gobot_status/charging_status",arg);
                         //if robot is charging, it is in CS station 
                         if(arg.response.isCharging || evaluatePose(1)){
-                        //if(false){
-                            found_pose=true;
-                            ROS_INFO("Robot is in the charing station");
                             publishInitialpose(home_pos_x,home_pos_y,home_ang_x,home_ang_y,home_ang_z,home_ang_w,initial_cov_xy,initial_cov_yaw);
+                            ROS_INFO("Robot is in the charing station");
+                            found_pose=true;
                             current_stage=COMPLETE_STAGE;
                         }
                         else{
@@ -143,8 +143,8 @@ bool initializePoseSrvCallback(std_srvs::Empty::Request &req, std_srvs::Empty::R
                     case ROSPARAM_POSE_STAGE:
                         ROS_INFO("Try ROS server pose...");
                         if(evaluatePose(0)){
-                            found_pose=true;
                             ROS_INFO("Robot is near the rosparam server pose.");
+                            found_pose=true;
                             current_stage=COMPLETE_STAGE;
                         }
                         else{
@@ -155,9 +155,9 @@ bool initializePoseSrvCallback(std_srvs::Empty::Request &req, std_srvs::Empty::R
 
                     case LAST_POSE_STAGE:
                         //try the pose from last stop pose
-                        found_pose=true;
                         publishInitialpose(last_pos_x,last_pos_y,last_ang_x,last_ang_y,last_ang_z,last_ang_w,initial_cov_xy,initial_cov_yaw);
                         ROS_INFO("Robot is near the last stop pose.");
+                        found_pose=true;
                         current_stage=COMPLETE_STAGE;
                         break;
 

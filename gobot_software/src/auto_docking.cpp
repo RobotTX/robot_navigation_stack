@@ -108,7 +108,7 @@ bool startDocking(void){
                 set_gobot_status.request.text = "DOCKING";
                 setGobotStatusSrv.call(set_gobot_status);
 
-                set_dock_status.request.status = 1;
+                set_dock_status.request.status = 3;
                 setDockStatusSrv.call(set_dock_status);
 
                 return true;
@@ -412,7 +412,7 @@ void finishedDocking(const int16_t status){
     gobot_msg_srv::IsCharging arg;
     /// If the battery is still charging, we succesfully docked the robot
     if(ros::service::call("/gobot_status/charging_status", arg) && arg.response.isCharging){
-        set_dock_status.request.status = 3;
+        set_dock_status.request.status = 1;
         ROS_INFO("(auto_docking::finishedDocking) Finished docking and we are still charging");
     }
     else{
@@ -471,7 +471,7 @@ bool stopDockingService(std_srvs::Empty::Request &req, std_srvs::Empty::Response
 
     gobot_msg_srv::IsCharging arg;
     if(ros::service::call("/gobot_status/charging_status", arg) && arg.response.isCharging){
-        set_dock_status.request.status = 3;
+        set_dock_status.request.status = 1;
     }
     else{
         set_dock_status.request.status = 0;

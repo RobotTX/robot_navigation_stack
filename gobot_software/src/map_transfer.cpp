@@ -93,9 +93,9 @@ std::vector<uint8_t> compress(const std::vector<int8_t> map, const int map_width
 			ROS_INFO("(Map::compress) map_transfer got map id file %s", mapIdFile.c_str());
 		}
 		std::string mapId("{0}");
+		std::string mapDate("0");
 	   	std::ifstream ifMap(mapIdFile, std::ifstream::in);
-	   	
-	   	std::string mapDate("0");
+	
 	   	if(ifMap){
 	   		std::getline(ifMap, mapId);
 	   		std::getline(ifMap, mapDate);

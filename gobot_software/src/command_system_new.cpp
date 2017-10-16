@@ -894,6 +894,10 @@ void sendConnectionData(boost::shared_ptr<tcp::socket> sock){
     y_angle=std::stod(get_home.response.data[3]);
     z_angle=std::stod(get_home.response.data[4]);
     w_angle=std::stod(get_home.response.data[5]);
+    if(homeX=="0" && homeY=="0" && x_angle==0 && y_angle==0 && z_angle==0 && w_angle==0){
+        homeX = "-150";
+        homeY = "-150";
+    }
     tf::Matrix3x3 matrix = tf::Matrix3x3(tf::Quaternion(x_angle , y_angle , z_angle, w_angle));
     matrix.getRPY(roll, pitch, yaw);
     homeOri = -(yaw*180/3.14159) - 90.0;//-(orientation+90)*3.14159/180);

@@ -28,8 +28,8 @@ GOBOT STATUS
 -1 STM32_READY/FOUND_POSE
 
 DOCK STATUS
-3  CHARGING
-1  GO TO CHARING
+3  GO TO CHARGING
+1  CHARING
 0  NOT CHARGING
 -1 FAILED TO GO TO CHARGING
 */
@@ -52,10 +52,10 @@ std::string pathFile;
 std::vector<std::string> path_;
 
 std::string nameFile;
-std::string hostname_;
+std::string hostname_="Go_Gobot";
 
 std::string homeFile;
-std::vector<std::string> home_(6,"");
+std::vector<std::string> home_(6,"0");
 
 bool setHomeSrvCallback(gobot_msg_srv::SetString::Request &req, gobot_msg_srv::SetString::Response &res){
     homeMutex.lock();
@@ -284,7 +284,7 @@ void initialData(){
         if(ifsHome){
             ifsHome >> home_.at(0) >> home_.at(1) >> home_.at(2) >> home_.at(3) >> home_.at(4) >> home_.at(5);
             ifsHome.close();
-            ROS_INFO("(Gobot_status) Read Gobot home: [%f, %f] [%f, %f, %f, %f]", std::stod(home_.at(0)),std::stod(home_.at(1)),std::stod(home_.at(2)),std::stod(home_.at(3)),std::stod(home_.at(4)),std::stod(home_.at(5)));
+            ROS_INFO("(Gobot_status) Read Gobot home: [%.2f, %.2f] [%.2f, %.2f, %.2f, %.2f]", std::stod(home_.at(0)),std::stod(home_.at(1)),std::stod(home_.at(2)),std::stod(home_.at(3)),std::stod(home_.at(4)),std::stod(home_.at(5)));
         }
     }
 }

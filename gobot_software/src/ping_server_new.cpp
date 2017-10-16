@@ -37,7 +37,7 @@ std::string getDataToSend(void){
     gobot_msg_srv::GetStage get_stage;
     ros::service::call("/gobot_status/get_stage", get_stage);
     
-    chargingFlag=get_dock_status.response.status==3 ? 1 : 0;
+    chargingFlag=get_dock_status.response.status==1 ? 1 : 0;
     /// Form the string to send to the Qt app
     return  get_name.response.data[0] + sep + std::to_string(get_stage.response.stage) + sep + std::to_string(batteryLevel) + sep + std::to_string(chargingFlag) + sep + std::to_string(get_dock_status.response.status);
 }
@@ -145,7 +145,7 @@ void pingIP(std::string ip, std::string dataToSend){
             //ROS_ERROR("(ping_server) read %lu bytes : %s", read.size(), read.c_str());
         
     } catch(std::exception& e) {
-        ROS_ERROR("(ping_server) error %s : %s", ip.c_str(), e.what());
+        //ROS_ERROR("(ping_server) error %s : %s", ip.c_str(), e.what());
     }
 }
 
@@ -163,7 +163,7 @@ void checkNewServers(void){
 
         //ROS_INFO("(ping_server) Refreshing the list of potential servers");
         /// Script which will check all the IP on the local network and put them in a file
-        const std::string ping_script = "sudo sh " + pingFile + " " + ipsFile;
+        const std::string ping_script = "sudo sh " + pingFile + " " + ipsFile ;
         system(ping_script.c_str());
 
         /// Get the file with the available IP addresses
