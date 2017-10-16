@@ -340,7 +340,7 @@ int main(int argc, char* argv[]){
 		ros::init(argc, argv, "play_path");
 		ros::NodeHandle n;
 		
-		currentGoal.x = -1;
+		currentGoal.x = 0;
 		currentGoal.y = -1;
 		currentGoal.waitingTime = -1;
 		currentGoal.isHome = false;
@@ -378,6 +378,10 @@ int main(int argc, char* argv[]){
 		gobot_msg_srv::GetInt get_loop;
 		ros::service::call("/gobot_status/get_loop",get_loop);
 		looping = get_loop.response.data[0];
+
+		gobot_msg_srv::GetStage get_stage;
+		ros::service::call("/gobot_status/get_stage", get_stage);
+		stage=get_stage.response.stage;
 
 		ros::spin();
 

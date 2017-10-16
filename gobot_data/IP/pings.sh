@@ -14,4 +14,4 @@ isAlive="$1"
 #fping -r 0 -g $var 2>/dev/null | grep alive > tmp.txt
 #cut -f 1 tmp.txt --delimiter=' ' > isAlive.txt
 #rm tmp.txt
-echo 192.168.100.34 > $isAlive
+echo 192.168.100.29 > $isAlive

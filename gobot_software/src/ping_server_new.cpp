@@ -178,7 +178,7 @@ void checkNewServers(void){
             serverMutex.unlock();
         }
 
-        ROS_INFO("(ping_server) Potential servers :%lu, Connected IPs :%lu", availableIPs.size(),connectedIPs.size());
+        ROS_INFO("(ping_server) Available IPs: %lu, Connected IPs: %lu", availableIPs.size(),connectedIPs.size());
         loop_rate.sleep();        
     }
 }

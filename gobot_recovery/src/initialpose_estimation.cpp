@@ -283,7 +283,7 @@ void getAmclPoseCallback(const geometry_msgs::PoseWithCovarianceStamped::ConstPt
     //Write lastest amcl_pose to file
     if(found_pose){
         std_msgs::Int8 lost;
-        if(cov_x > 5*initial_cov_xy || cov_y > 5*initial_cov_xy || cov_yaw > 5*initial_cov_yaw){
+        if(cov_x > 10*initial_cov_xy || cov_y > 10*initial_cov_xy || cov_yaw > 10*initial_cov_yaw){
             lost.data = 1;         
             //Robot may get lost because big covariance in the current pose
             ROS_ERROR("Big covariance in the amcl pose");
