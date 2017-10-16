@@ -268,7 +268,7 @@ void lostCallback(const std_msgs::Int8::ConstPtr& msg){
     }
     else if(msg->data==0 && current_stage==LOST_STAGE){
         current_stage=FREE_STAGE;
-        color.push_back(GREEN);
+        color.push_back(BLUE);
         setLedPermanent(color);
     }
 }

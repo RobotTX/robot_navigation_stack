@@ -60,9 +60,9 @@ std::string getDataToSend(void){
  * Will ping all available IP addresses and send a message when we disconnect to one
  */
 void pingAllIPs(void){
-    /// Ping all servers every 3 secs
+    /// Ping all servers every 2 secs
     //tx??//detect disconnection after 6 seconds->too long?
-    ros::Rate loop_rate(1/3.0);
+    ros::Rate loop_rate(1/2.0);
 
     std::vector<std::thread> threads;
 
