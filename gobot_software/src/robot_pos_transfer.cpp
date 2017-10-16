@@ -18,6 +18,7 @@ void sendRobotPos(const ros::TimerEvent&){
             try {
                 boost::asio::write(*(elem.second), boost::asio::buffer(robot_string, robot_string.length()));
             } catch (std::exception& e) {
+                //if can not send pose to the ip, disconnect it
                 ROS_ERROR("(Robot Pos) Exception %s : %s", elem.first.c_str(), e.what());
                 std_msgs::String msg;
                 msg.data = elem.first;
@@ -83,12 +84,12 @@ int main(int argc, char **argv){
 	ROS_INFO("(Robot Pos) Ready to be launched.");
 
 	ros::NodeHandle n;
-
-    disco_pub = n.advertise<std_msgs::String>("/gobot_software/server_disconnected", 10);
 	
     //Periodically send robot pose to connected clients
     ros::Timer timer = n.createTimer(ros::Duration(0.5), sendRobotPos);
 
+    disco_pub = n.advertise<std_msgs::String>("/gobot_software/server_disconnected", 10);
+    
     ros::Subscriber sub = n.subscribe("/gobot_software/server_disconnected", 1000, serverDisconnected);
 
     ros::Subscriber sub_robot = n.subscribe("/robot_pose", 1, getRobotPos);

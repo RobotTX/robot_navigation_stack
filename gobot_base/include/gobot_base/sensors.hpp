@@ -17,6 +17,7 @@
 #include <gobot_msg_srv/CliffMsg.h>
 #include <gobot_msg_srv/IsCharging.h>
 #include <gobot_msg_srv/LedStrip.h>
+#include <gobot_msg_srv/GetGobotStatus.h>
 #include <gobot_msg_srv/SetGobotStatus.h>
 #include <gobot_msg_srv/SetDockStatus.h>
 #include <thread>

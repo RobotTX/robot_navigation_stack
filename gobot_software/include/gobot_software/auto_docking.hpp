@@ -19,15 +19,15 @@
 #include <gobot_msg_srv/IsCharging.h>
 #include <gobot_msg_srv/ProximityMsg.h>
 #include <gobot_msg_srv/SetDockStatus.h>
-#include <gobot_msg_srv/GoalStatus.h>
 #include <gobot_msg_srv/SetGobotStatus.h>
+#include <gobot_msg_srv/SetString.h>
+#include <gobot_msg_srv/GetString.h>
 #include <ctime>
 #include <chrono>
 #include <thread>
 
 typedef actionlib::SimpleActionClient<move_base_msgs::MoveBaseAction> MoveBaseClient;
 
-void setGobotStatus(int status,std::string text);
 bool startDocking(void);
 void newRobotPos(const geometry_msgs::Pose::ConstPtr& robotPos);
 void goalStatus(const actionlib_msgs::GoalStatusArray::ConstPtr& goalStatusArray);

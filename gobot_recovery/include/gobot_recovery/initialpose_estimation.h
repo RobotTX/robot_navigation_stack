@@ -18,8 +18,10 @@
 #include <tf/LinearMath/Matrix3x3.h>
 #include <tf/LinearMath/Quaternion.h>
 #include <gobot_msg_srv/IsCharging.h>
-#include <gobot_msg_srv/GoalStatus.h>
 #include <gobot_msg_srv/SetGobotStatus.h>
+#include <gobot_msg_srv/SetString.h>
+#include <gobot_msg_srv/GetString.h>
+#include <gobot_msg_srv/GetGobotStatus.h>
 
 #define PI 3.1415926
 
@@ -56,6 +58,4 @@ bool globalizePoseSrvCallback(std_srvs::Empty::Request &req, std_srvs::Empty::Re
 bool stopGlobalizePoseSrvCallback(std_srvs::Empty::Request &req, std_srvs::Empty::Response &res);
 
 bool goHomeSrvCallback(std_srvs::Empty::Request &req, std_srvs::Empty::Response &res);
-
-void getPose(std::string file_name,int type);
 

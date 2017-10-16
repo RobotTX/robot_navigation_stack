@@ -40,7 +40,5 @@ InitBackRecovery::InitBackRecovery(): global_costmap_(NULL), local_costmap_(NULL
             ROS_WARN("Allow teb init with backwards motion");
         else
             ROS_ERROR("Failed to allow teb init with backwards motion");
-
-        ros::Duration(0.1).sleep();
     }
 };

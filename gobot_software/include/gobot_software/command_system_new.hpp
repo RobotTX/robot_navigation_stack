@@ -16,14 +16,20 @@
 #include <tf/transform_broadcaster.h>
 #include <stdio.h>
 #include <nav_msgs/MapMetaData.h>
-#include <gobot_msg_srv/String.h>
+#include <gobot_msg_srv/SetString.h>
+#include <gobot_msg_srv/GetString.h>
 #include <gobot_msg_srv/SetDockStatus.h>
 #include <gobot_msg_srv/GetDockStatus.h>
 #include <gobot_msg_srv/SendMap.h>
-#include <gobot_msg_srv/GoalStatus.h>
 #include <gobot_msg_srv/GetGobotStatus.h>
 #include <gobot_msg_srv/SetGobotStatus.h>
+#include <gobot_msg_srv/SetStage.h>
+#include <gobot_msg_srv/GetStage.h>
 #include <gobot_msg_srv/IsCharging.h>
+#include <gobot_msg_srv/SetPath.h>
+#include <gobot_msg_srv/GetPath.h>
+#include <gobot_msg_srv/GetInt.h>
+#include <gobot_msg_srv/SetInt.h>
 #include <hector_exploration_node/Exploration.h>
 #include <mutex>
 #include <thread>
@@ -53,8 +59,10 @@ bool newGoal(const std::vector<std::string> command);
 bool pausePath(const std::vector<std::string> command);
 
 /// e
+bool nextPath(const std::vector<std::string> command);
 
 /// f
+bool previousPath(const std::vector<std::string> command);
 
 /// g
 bool startScanAndAutoExplore(const std::string ip, const std::vector<std::string> command);
@@ -125,8 +133,6 @@ bool sendMapAutomatically(const std::string ip);
 
 bool stopSendingMapAutomatically(const std::string ip);
 
-bool goDock(void);
-
 void sendCommand(const std::string ip, const std::vector<std::string> command, std::string commandStr);
 
 void checkCommand(char c);
@@ -140,6 +146,8 @@ bool stopPathSrvCallback(std_srvs::Empty::Request &req, std_srvs::Empty::Respons
 
 bool goDockSrvCallback(std_srvs::Empty::Request &req, std_srvs::Empty::Response &res);
 
+bool stopGoDockSrvCallback(std_srvs::Empty::Request &req, std_srvs::Empty::Response &res);
+    
 bool lowBatterySrvCallback(std_srvs::Empty::Request &req, std_srvs::Empty::Response &res);
 
 

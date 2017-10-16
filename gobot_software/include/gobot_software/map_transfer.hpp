@@ -3,7 +3,7 @@
 
 #include <ros/ros.h>
 #include <gobot_msg_srv/SendMap.h>
-#include <gobot_msg_srv/String.h>
+#include <gobot_msg_srv/SetString.h>
 #include <nav_msgs/OccupancyGrid.h>
 #include <std_msgs/String.h>
 #include <iostream>
@@ -41,12 +41,12 @@ std::vector<uint8_t> compress(const std::vector<int8_t> map, const int map_width
 /**
  * Service called to start sending the map to the app (constantly)
  */
-bool sendAutoMap(gobot_msg_srv::String::Request &req, gobot_msg_srv::String::Response &res);
+bool sendAutoMap(gobot_msg_srv::SetString::Request &req, gobot_msg_srv::SetString::Response &res);
 
 /**
  * Service called to stop sending the map to the app
  */
-bool stopAutoMap(gobot_msg_srv::String::Request &req, gobot_msg_srv::String::Response &res);
+bool stopAutoMap(gobot_msg_srv::SetString::Request &req, gobot_msg_srv::SetString::Response &res);
 
 /* who:
  * 0 : scan

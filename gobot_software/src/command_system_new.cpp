@@ -4,7 +4,6 @@ const int max_length = 1024;
 
 bool scanning = false;
 bool simulation = false;
-bool looping = false;
 
 int robot_pos_port = 4001;
 int map_port = 4002;
@@ -23,10 +22,10 @@ std::map<std::string, boost::shared_ptr<tcp::socket>> sockets;
 
 std_srvs::Empty empty_srv;
 
-gobot_msg_srv::SetGobotStatus set_gobot_status;
 gobot_msg_srv::GetGobotStatus get_gobot_status;
 gobot_msg_srv::GetDockStatus get_dock_status;
 
+ros::Publisher disco_pub;
 ros::Publisher go_pub;
 ros::Publisher teleop_pub;
 ros::ServiceClient getGobotStatusSrv,getDockStatusSrv;
@@ -68,16 +67,14 @@ bool execCommand(const std::string ip, const std::vector<std::string> command){
             status = pausePath(command);
         break;
 
-        /// NOT USED ANYMORE
-        /// Command for the robot to play the ongoing scan
+        /// Command for the robot to move to the next point
         case 'e':
-
+            status = nextPath(command);
         break;
 
-        /// NOT USED ANYMORE
-        /// Command for the robot to pause the ongoing scan
+        /// Command for the robot to move to the previous point
         case 'f':
-
+            status = previousPath(command);
         break;
 
         case 'g':
@@ -220,16 +217,10 @@ bool renameRobot(const std::vector<std::string> command){
     if(command.size() == 2){
         ROS_INFO("(Command system) New name : %s", command.at(1).c_str());
 
-        std::string nameFile;
-        if(n.hasParam("robot_name_file")){
-            n.getParam("robot_name_file", nameFile);
-            ROS_INFO("commandSystem set name file to %s", nameFile.c_str());
-            std::ofstream ofs;
-            ofs.open(nameFile, std::ofstream::out | std::ofstream::trunc);
-            ofs << command.at(1);
-            ofs.close();
+        gobot_msg_srv::SetString set_name;
+        set_name.request.data[0]=command.at(1);
+        if(ros::service::call("/gobot_status/set_name",set_name))
             return true;
-        }
     } else 
         ROS_ERROR("(Command system) Name missing");
 
@@ -283,25 +274,48 @@ bool newGoal(const std::vector<std::string> command){
 /// First param = d
 bool pausePath(const std::vector<std::string> command){
     if(command.size() == 1) {
-        ROS_INFO("(Command system) Pausing the path");
         getGobotStatusSrv.call(get_gobot_status);
         //status==0 means complete path, no need to pause again
-        if(get_gobot_status.response.status==0 && (get_gobot_status.response.text=="ABORTED_PATH" || get_gobot_status.response.text=="COMPLETE_PATH")){
-            return true;
-        }
+        if(get_gobot_status.response.status!=4){
+            if(get_gobot_status.response.status==0){
+                ROS_INFO("(Command system) Pause the path for changing icon");
+                return true;
+            }
 
-        ros::service::call("/gobot_function/pause_path", empty_srv);
-        ROS_INFO("(Command system) Pause path service called with success");
-        return true;
+            if (ros::service::call("/gobot_function/pause_path", empty_srv)){
+                ROS_INFO("(Command system) Pause the path");
+                return true;
+            }
+        }
+        else
+            ROS_INFO("(Command system) Path alrd paused");
     }
 
     return false;
 }
 
 /// First param = e
+bool nextPath(const std::vector<std::string> command){
+    if(command.size() == 1) {
+        gobot_msg_srv::SetInt next_path;
+        next_path.request.data[0]=1;
+        ros::service::call("/gobot_function/skip_path",next_path);
+        return true;
+    }
 
+    return false;
+}
 /// First param = f
+bool previousPath(const std::vector<std::string> command){
+    if(command.size() == 1) {
+        gobot_msg_srv::SetInt previous_path;
+        previous_path.request.data[0]=-1;
+        ros::service::call("/gobot_function/skip_path",previous_path);
+        return true;
+    }
 
+    return false;
+}
 
 /// First param = g
 bool startScanAndAutoExplore(const std::string ip, const std::vector<std::string> command){
@@ -362,48 +376,18 @@ bool robotStartup(const std::vector<std::string> command){
 bool newPath(const std::vector<std::string> command){
     ros::NodeHandle n;
     if(command.size() >= 6 && command.size()%5 == 2){
+        ROS_INFO("(Command system) New path received");
+        gobot_msg_srv::SetPath set_path;
+        for(int i = 1; i < command.size(); i++)
+            set_path.request.path[i]=command.at(i);
 
-        ROS_INFO("(Command system) Path received :");
-
-        std::string pathFile;
-        if(n.hasParam("path_file")){
-            n.getParam("path_file", pathFile);
-            ROS_INFO("commandSystem set path file to %s", pathFile.c_str());
-            std::ofstream ofs(pathFile, std::ofstream::out | std::ofstream::trunc);
-        
-            if(ofs){
-                std::string strPath;
-                for(int i = 1; i < command.size(); i++){
-                    ofs << command.at(i) << "\n";
-                    strPath += sep + command.at(i);
-                }
-
-                ofs.close();
-                
-                // reset the path stage in the file
-                std::string pathStageFile;
-                if(n.hasParam("path_stage_file")){
-                    n.getParam("path_stage_file", pathStageFile);
-                    ROS_INFO("commandSystem set pathStageFile to %s", pathStageFile.c_str());
-                }
-                std::ofstream path_stage_file(pathStageFile, std::ofstream::out | std::ofstream::trunc);
-
-                if(path_stage_file){
-                    path_stage_file << "0";
-                    path_stage_file.close();
-
-                    if(ros::service::call("/gobot_function/stop_path", empty_srv)){
-                        ROS_INFO("Stop path service called with success");
-                    } else
-                        ROS_ERROR("Stop path service call failed");
-
-                    return true;
-                } else
-                    ROS_ERROR("Sorry we were not able to find the file play_path.txt in order to keep track of the stage of the path to be played");
-            } else 
-                ROS_ERROR("sorry could not open the file %s", pathFile.c_str());
-        }
-    } else 
+        if(ros::service::call("/gobot_status/set_path", set_path)){
+            // reset the path stage in the file
+            if(ros::service::call("/gobot_function/stop_path", empty_srv))
+                return true;
+        } 
+    } 
+    else 
         ROS_ERROR("(Command system) Parameter missing %lu %lu", command.size(), command.size()%5);
 
     return false;
@@ -413,16 +397,18 @@ bool newPath(const std::vector<std::string> command){
 bool playPath(const std::vector<std::string> command){
     if(command.size() == 1) {
         getGobotStatusSrv.call(get_gobot_status);
+        //if go docking, can not play
         if(get_gobot_status.response.status!=15){
-            ROS_INFO("(Command system) Playing the path");
-
-            if(ros::service::call("/gobot_function/play_path", empty_srv)){
-                ROS_INFO("(Command system) Play path service called with success");
+            if(get_gobot_status.response.status==5){
+                ROS_ERROR("(Command system) Gobot is playing the path");
+            }
+            else if(ros::service::call("/gobot_function/play_path", empty_srv)){
+                ROS_INFO("(Command system) Play the path");
                 return true;
-            } else
-                ROS_ERROR("(Command system) Play path service call failed");
-        } else 
-            ROS_ERROR("(Command system) Wait for the robot to dock before launching a new path");
+            }
+        } 
+        else 
+            ROS_ERROR("(Command system) Gobot is going to dock");
     }
     return false;
 }
@@ -434,8 +420,13 @@ bool playPath(const std::vector<std::string> command){
 /// First param = l
 bool stopPath(const std::vector<std::string> command){
     if(command.size() == 1) {
-        ROS_INFO("(Command system) Stopping the current motion");
-        return true;
+        ROS_INFO("(Command system) Stop the current motion");
+        getGobotStatusSrv.call(get_gobot_status);
+        //not stop docking
+        if(get_gobot_status.response.status!=11){
+            if(ros::service::call("/gobot_function/stop_path", empty_srv))
+                return true;
+        }
     }
 
     return false;
@@ -445,25 +436,18 @@ bool stopPath(const std::vector<std::string> command){
 bool stopAndDeletePath(const std::vector<std::string> command){
     ros::NodeHandle n;
     if(command.size() == 1) {
-
         getGobotStatusSrv.call(get_gobot_status);
+        //if go docking, can not
         if(get_gobot_status.response.status!=15){
-            ROS_INFO("(Command system) Stopping the robot and deleting its path");
-
-            if(ros::service::call("/gobot_function/stop_path", empty_srv)){
-                ROS_INFO("(Command system) Stop path service called with success");
-                std::string pathFile;
-                if(n.hasParam("path_file")){
-                    n.getParam("path_file", pathFile);
-                    ROS_INFO("(Command system) set path file to %s", pathFile.c_str());
-                    // deleting the path
-                    std::ofstream ofs(pathFile, std::ofstream::out | std::ofstream::trunc);
-                    ofs.close();
+            ROS_INFO("(Command system) Stop the robot and delete its path");
+            gobot_msg_srv::SetPath set_path;
+            if(ros::service::call("/gobot_status/set_path", set_path)){
+                // reset the path stage in the file
+                if(ros::service::call("/gobot_function/stop_path", empty_srv))
                     return true;
-                }
-            } else
-                ROS_ERROR("(Command system) Stop path service call failed");
-        } else 
+            } 
+        } 
+        else
             ROS_ERROR("(Command system) Wait for the robot to dock before launching a new path");
     }
 
@@ -474,28 +458,23 @@ bool stopAndDeletePath(const std::vector<std::string> command){
 bool newChargingStation(const std::vector<std::string> command){
     ros::NodeHandle n;
     if(command.size() == 4){
-        
         // TODO send an angle from the application and convert it to store it in home.txt
         ROS_INFO("(Command system) Home received %s %s %s", command.at(1).c_str(), command.at(2).c_str(), command.at(3).c_str());
+        gobot_msg_srv::SetString set_home;
+        int orientation = std::stoi(command.at(3));
+        tf::Quaternion quaternion;
+        quaternion.setEuler(0, 0, -(orientation+90)*3.14159/180);
+        set_home.request.data[0]=command.at(1);
+        set_home.request.data[1]=command.at(2);
+        set_home.request.data[2]=quaternion.x();
+        set_home.request.data[3]=quaternion.y();
+        set_home.request.data[4]=quaternion.z();
+        set_home.request.data[5]=quaternion.w();
 
-        std::string homeFile;
-        if(n.hasParam("home_file")){
-            n.getParam("home_file", homeFile);
-            ROS_INFO("(Command system) set home file to %s", homeFile.c_str());
-            std::ofstream ofs(homeFile, std::ofstream::out | std::ofstream::trunc);
-        
-            if(ofs){
-                int orientation = std::stoi(command.at(3));
-                tf::Quaternion quaternion;
-                quaternion.setEuler(0, 0, -(orientation+90)*3.14159/180);
-                ofs << command.at(1) << " " << command.at(2) << " " << quaternion.x() << " " << quaternion.y() << " " << quaternion.z() << " " << quaternion.w();
-                ofs.close();
-                return true;
-            } else
-                ROS_ERROR("(Command system) sorry could not open the file %s", homeFile.c_str());
-        } else
-            ROS_ERROR("(Command system) Could not find the param home_file");
-    } else
+        ros::service::call("/gobot_status/set_home",set_home);
+        return true;
+    } 
+    else
         ROS_ERROR("(Command system) Not enough arguments, received %lu arguments, 4 arguments expected", command.size());
 
     return false;
@@ -507,12 +486,16 @@ bool goToChargingStation(const std::vector<std::string> command){
         getDockStatusSrv.call(get_dock_status);
         //if go to charging or charging, ignore
         if(get_dock_status.response.status==3 || get_dock_status.response.status==1){
-            ROS_INFO("Gobot is charging or going to charging station.");
-            return true;
+            ROS_INFO("(Command system) Gobot is charging or going to charging station.");
         }
         else{
-            ROS_INFO("(Command system) Sending the robot home");
-            return goDock();
+            if(ros::service::call("/gobot_function/startDocking", empty_srv)){
+                ROS_INFO("(Command system) Sending the robot home");
+                return true;
+            } 
+            else {
+                ROS_ERROR("(Command system) Failed sending the robot home");
+            }
         }
     }
     return false;
@@ -521,15 +504,15 @@ bool goToChargingStation(const std::vector<std::string> command){
 /// First param = p
 bool stopGoingToChargingStation(const std::vector<std::string> command){
     if(command.size() == 1) {
-        ROS_INFO("(Command system) Stopping the robot on its way home");
         getGobotStatusSrv.call(get_gobot_status);
         //WAITING OR PLAY PATH
         if(get_gobot_status.response.status==15){
-            if(ros::service::call("/gobot_function/stopDocking", empty_srv)){
-                ROS_INFO("(Command system) Stop going home service called with success");
-            }
+            ROS_INFO("(Command system) Stop sending the robot home");
+            if(ros::service::call("/gobot_function/stopDocking", empty_srv))
+                return true;
         }
-        return true;
+        else
+            ROS_INFO("(Command system) Not sending the robot home");
     }
 
     return false;
@@ -692,13 +675,11 @@ bool loopPath(const std::vector<std::string> command){
         ROS_INFO("(Command system) Loop the path %s", command.at(1).c_str());
         if(std::stoi(command.at(1)) == 0){
             if(ros::service::call("/gobot_function/stopLoopPath", empty_srv)){
-                looping = false;
                 return true;
             } else
                 ROS_ERROR("(Command system) Could not call the service /gobot_function/stopLoopPath");
         } else {
             if(ros::service::call("/gobot_function/startLoopPath", empty_srv)){
-                looping = true;
                 return true;
             } else
                 ROS_ERROR("(Command system) Could not call the service /gobot_function/startLoopPath");
@@ -714,8 +695,8 @@ bool loopPath(const std::vector<std::string> command){
 bool sendMapAutomatically(const std::string ip){
     ROS_INFO("(Command system) Launching the service to get the map auto");
 
-    gobot_msg_srv::String srv;
-    srv.request.data = ip;
+    gobot_msg_srv::SetString srv;
+    srv.request.data[0] = ip;
 
     if (ros::service::call("/gobot_function/send_auto_map_sender", srv)) {
         ROS_INFO("(Command system) /gobot_function/send_auto_map_sender service started");
@@ -729,8 +710,8 @@ bool sendMapAutomatically(const std::string ip){
 bool stopSendingMapAutomatically(const std::string ip){
     ROS_INFO("(Command system) Launching the service to stop the map auto");
 
-    gobot_msg_srv::String srv;
-    srv.request.data = ip;
+    gobot_msg_srv::SetString srv;
+    srv.request.data[0] = ip;
 
     if (ros::service::call("/gobot_function/stop_auto_map_sender", srv)) {
         ROS_INFO("(Command system) /gobot_function/stop_auto_map_sender service started");
@@ -741,21 +722,10 @@ bool stopSendingMapAutomatically(const std::string ip){
     }
 }
 
-bool goDock(void){
-    if(ros::service::call("/gobot_function/startDocking", empty_srv)){
-        ROS_INFO("(Command system) /gobot_function/startDocking service called with success");
-        return true;
-    } 
-    else {
-        ROS_ERROR("(Command system) /gobot_function/startDocking service call failed");
-        return false;
-    }
-}
-
 
 void sendCommand(const std::string ip, const std::vector<std::string> command, std::string commandStr){
     //ROS_INFO("(Command system) Executing command for ip: %s", ip.c_str());
-    ROS_INFO("Command char:'%s'", command.at(0).c_str());
+    ROS_INFO("Command char:'%s', Command from ip: %s", command.at(0).c_str(),ip.c_str());
 
     std::string msg;
     commandMutex.lock();
@@ -771,7 +741,7 @@ void checkCommand(char c){
         /// new path
         case 'i':
             getGobotStatusSrv.call(get_gobot_status);
-            if(get_gobot_status.response.status==10 || get_gobot_status.response.status==5){
+            if(get_gobot_status.response.status==5){
                 std::vector<std::string> command({"d"});
                 std::string commandStr = command.at(0) + sep;
                 sendCommand("",command,commandStr);
@@ -794,25 +764,18 @@ void checkCommand(char c){
                 std::string commandStr = command.at(0) + sep;
                 sendCommand("",command,commandStr);
             }
-            //if robot moving, pause and reset stage
-            else if(get_gobot_status.response.status==10 || get_gobot_status.response.status==5){
+            //if robot moving, pause
+            else if(get_gobot_status.response.status==5){
                 std::vector<std::string> command({"d"});
                 std::string commandStr = command.at(0) + sep;
                 sendCommand("",command,commandStr);
-                if(ros::service::call("/gobot_function/stop_path", empty_srv))
-                    ROS_INFO("(Command system) Stop path service called with success");
-            }
-            //just reset stage
-            else {
-                if(ros::service::call("/gobot_function/stop_path", empty_srv))
-                    ROS_INFO("(Command system) Stop path service called with success");
             }
         break;
 
         /// delete and stop path
         case 'm':
             getGobotStatusSrv.call(get_gobot_status);
-            if(get_gobot_status.response.status==10 || get_gobot_status.response.status==5){
+            if(get_gobot_status.response.status==5){
                 std::vector<std::string> command({"d"});
                 std::string commandStr = command.at(0) + sep;
                 sendCommand("",command,commandStr);
@@ -833,7 +796,7 @@ void checkCommand(char c){
         case 'o':
             getGobotStatusSrv.call(get_gobot_status);
             //WAITING OR PLAY PATH
-            if(get_gobot_status.response.status==10 || get_gobot_status.response.status==5){
+            if(get_gobot_status.response.status==5){
                 std::vector<std::string> command({"d"});
                 std::string commandStr = command.at(0) + sep;
                 sendCommand("",command,commandStr);
@@ -852,7 +815,6 @@ bool pausePathSrvCallback(std_srvs::Empty::Request &req, std_srvs::Empty::Respon
     std::string commandStr = command.at(0) + sep;
     checkCommand(commandStr.at(0));
     sendCommand("",command,commandStr);
-
     return true;
 }
 
@@ -882,11 +844,18 @@ bool goDockSrvCallback(std_srvs::Empty::Request &req, std_srvs::Empty::Response 
     return true;
 }
 
+bool stopGoDockSrvCallback(std_srvs::Empty::Request &req, std_srvs::Empty::Response &res){
+    std::vector<std::string> command({"p"});
+    std::string commandStr = command.at(0) + sep;
+    checkCommand(commandStr.at(0));
+    sendCommand("",command,commandStr);
+    return true;
+}
+
 bool lowBatterySrvCallback(std_srvs::Empty::Request &req, std_srvs::Empty::Response &res){
     getGobotStatusSrv.call(get_gobot_status);
     //robot is doing the path
-    if(get_gobot_status.response.status==10 || get_gobot_status.response.status==5){
-
+    if(get_gobot_status.response.status==5){
         ros::service::call("/gobot_function/goDockAfterPath", empty_srv);
         ROS_WARN("(Command system) The battery is low, the robot will go back when it stops being busy with its path");
     }
@@ -911,51 +880,30 @@ bool lowBatterySrvCallback(std_srvs::Empty::Request &req, std_srvs::Empty::Respo
 void sendConnectionData(boost::shared_ptr<tcp::socket> sock){
     ros::NodeHandle n;
     /// Send a message to the app to tell we are connected
-    /// send home position and timestamp
-    std::string homeX("");
-    std::string homeY("");
-    double x_angle(0);
-    double y_angle(0);
-    double z_angle(0);
-    double w_angle(1);
-    tfScalar roll;
-    tfScalar pitch;
-    tfScalar yaw;
-    std::string homeFile;
+
+    /// Get the charging station position from the home file
+    std::string homeX,homeY;
+    double x_angle,y_angle,z_angle,w_angle;
+    tfScalar roll,pitch,yaw;
     double homeOri = 0;
-    if(n.hasParam("home_file")){
-        n.getParam("home_file", homeFile);
-        //ROS_INFO("(Command system) set homefile to %s", homeFile.c_str());
-        std::ifstream ifs(homeFile, std::ifstream::in);
-        
-        if(ifs){
-            ifs >> homeX >> homeY >> x_angle >> y_angle >> z_angle >> w_angle;
-
-            tf::Matrix3x3 matrix = tf::Matrix3x3(tf::Quaternion(x_angle , y_angle , z_angle, w_angle));
-
-            matrix.getRPY(roll, pitch, yaw);
-            homeOri = -(yaw*180/3.14159) - 90;//-(orientation+90)*3.14159/180);
-            //ROS_INFO("(Command system) rotation %f", homeOri);
-            //ROS_INFO("(Command system) Home : [%s, %s, %f]", homeX.c_str(), homeY.c_str(), homeOri);
-            ifs.close();
-        }
-    }
+    gobot_msg_srv::GetString get_home;
+    ros::service::call("/gobot_status/get_home",get_home);
+    homeX=get_home.response.data[0];
+    homeY=get_home.response.data[1];
+    x_angle=std::stod(get_home.response.data[2]);
+    y_angle=std::stod(get_home.response.data[3]);
+    z_angle=std::stod(get_home.response.data[4]);
+    w_angle=std::stod(get_home.response.data[5]);
+    tf::Matrix3x3 matrix = tf::Matrix3x3(tf::Quaternion(x_angle , y_angle , z_angle, w_angle));
+    matrix.getRPY(roll, pitch, yaw);
+    homeOri = -(yaw*180/3.14159) - 90.0;//-(orientation+90)*3.14159/180);
 
     /// we send the path along with the time of the last modification of its file
     std::string path("");
-    std::string pathFile;
-    if(n.hasParam("path_file")){
-        n.getParam("path_file", pathFile);
-        //ROS_INFO("(Command system) set path file to %s", pathFile.c_str());
-        std::ifstream ifPath(pathFile, std::ifstream::in);
-        
-        if(ifPath){
-            std::string line("");
-            //ROS_INFO("(Command system) Line path");
-            while(getline(ifPath, line) && ros::ok()) 
-                path += line + sep;
-            ifPath.close();
-        }
+    gobot_msg_srv::GetPath get_path;
+	ros::service::call("/gobot_status/get_path", get_path);
+    for(int i=0;i<get_path.response.path.size();i++){
+        path += get_path.response.path.at(i) + sep;
     }
 
     /// we send the map id along with the time of the last modification of the map
@@ -984,25 +932,26 @@ void sendConnectionData(boost::shared_ptr<tcp::socket> sock){
     if(homeY.empty())
         homeY = "-150";
 
-     getGobotStatusSrv.call(get_gobot_status);
+    getGobotStatusSrv.call(get_gobot_status);
+    gobot_msg_srv::GetInt get_loop;
+    ros::service::call("/gobot_status/get_loop",get_loop);
 
     std::string scan = (scanning) ? "1" : "0";
-    std::string looping_str = (looping) ? "1" : "0";
-    std::string following_path_str = (get_gobot_status.response.status==10 || get_gobot_status.response.status==5) ? "1" : "0";
+    std::string looping_str = (get_loop.response.data[0]) ? "1" : "0";
+    std::string following_path_str = (get_gobot_status.response.status==5) ? "1" : "0";
 
     sendMessageToSock(sock, std::string("Connected" + sep + mapId + sep + mapDate + sep + homeX + sep + homeY + sep + std::to_string(homeOri) + sep + scan + sep + laserStr + sep + following_path_str + sep + looping_str + sep + path));
 }
 
 bool sendMessageToSock(boost::shared_ptr<tcp::socket> sock, const std::string message){
     std::string ip = sock->remote_endpoint().address().to_string();
-    ROS_INFO("(Command system) Sending message to %s : %s", ip.c_str(), message.c_str());
 
     try {
         socketsMutex.lock();
         /// We send the result of the command to the given socket
         boost::asio::write(*sock, boost::asio::buffer(message, message.length()));
 
-        ROS_INFO("(Command system) Message sent succesfully");
+        ROS_INFO("(Command system) Message sent to %s succesfully",ip.c_str());
         socketsMutex.unlock();
         return true;
     } catch (std::exception& e) {
@@ -1013,21 +962,23 @@ bool sendMessageToSock(boost::shared_ptr<tcp::socket> sock, const std::string me
 }
 
 bool sendMessageToAll(const std::string message){
-    //ROS_INFO("(Command system) Sending message : %s", message.c_str());
-
-    try {
+    if(sockets.size() > 0){
+        //ROS_INFO("(Command system) Sending message : %s", message.c_str());
         socketsMutex.lock();
-        /// We send the result of the command to every Qt app
-        for(auto const &elem : sockets)
-            boost::asio::write(*(elem.second), boost::asio::buffer(message, message.length()));
-
-        ROS_INFO("(Command system) Message sent succesfully");
+        for(auto const &elem : sockets){
+            try {
+                /// We send the result of the command to every Qt app
+                boost::asio::write(*(elem.second), boost::asio::buffer(message, message.length()));
+            } catch (std::exception& e) {
+                ROS_ERROR("(Command system) Message not sent:%s: %s",elem.first.c_str(),e.what());
+                std_msgs::String msg;
+                msg.data = elem.first;
+                disco_pub.publish(msg);
+            }
+        }
         socketsMutex.unlock();
+        ROS_INFO("(Command system) Message sent to all succesfully");
         return true;
-    } catch (std::exception& e) {
-        ROS_ERROR("(Command system) Message not sent : %s", e.what());
-        socketsMutex.unlock();
-        return false;
     }
 }
 
@@ -1052,11 +1003,11 @@ void session(boost::shared_ptr<tcp::socket> sock){
                 ROS_WARN("(Command system) Connection closed %s", ip.c_str());
                 disconnect(ip);
                 return;
-            } else if (error) {
+            } 
+            else if (error) {
                 disconnect(ip);
                 throw boost::system::system_error(error); // Some other error.
             }
-
 
             for(int i = 0; i < length; i++){
                 //Null
@@ -1099,14 +1050,14 @@ void session(boost::shared_ptr<tcp::socket> sock){
                     if(static_cast<int>(data[i]) != 0)
                         ROS_ERROR("%d : %d or %c", i, static_cast<int>(data[i]), data[i]);
 
-
                 ROS_ERROR("(Command system) Stopping the function\n******************\n");
             }
         }
     } catch (std::exception& e) {
         ROS_ERROR("(Command system) Exception in thread, ip : %s => %s ", ip.c_str(), e.what());
     }
-    ROS_WARN("(Command system) Done with this session %s", ip.c_str());
+
+    ROS_INFO("(Command system) Done with this session %s", ip.c_str());
 }
 
 void server(void){
@@ -1163,23 +1114,26 @@ int main(int argc, char* argv[]){
     try{
         ros::init(argc, argv, "command_system");
         ros::NodeHandle n;
+
+        n.param<bool>("simulation", simulation, false);
+        ROS_INFO("(Command system) simulation : %d", simulation);
+
         ros::Subscriber sub = n.subscribe("/gobot_software/server_disconnected", 1000, serverDisconnected);
 
+        disco_pub = n.advertise<std_msgs::String>("/gobot_software/server_disconnected", 10);
         go_pub = n.advertise<geometry_msgs::PoseStamped>("/move_base_simple/goal", 1000);
         teleop_pub = n.advertise<geometry_msgs::Twist>("/cmd_vel", 1000);
 
         ros::ServiceServer lowBatterySrv = n.advertiseService("/gobot_command/lowBattery", lowBatterySrvCallback);
         ros::ServiceServer goDockSrv = n.advertiseService("/gobot_command/goDock", goDockSrvCallback);
+        ros::ServiceServer stopGoDockSrv = n.advertiseService("/gobot_command/stopGoDock", stopGoDockSrvCallback);
         ros::ServiceServer pausePathSrv = n.advertiseService("/gobot_command/pause_path", pausePathSrvCallback);
         ros::ServiceServer playPathSrc = n.advertiseService("/gobot_command/play_path", playPathSrvCallback);
         ros::ServiceServer stopPathSrc = n.advertiseService("/gobot_command/stop_path", stopPathSrvCallback);
 
+        getDockStatusSrv = n.serviceClient<gobot_msg_srv::GetDockStatus>("/gobot_status/get_dock_status");
         getGobotStatusSrv = n.serviceClient<gobot_msg_srv::GetGobotStatus>("/gobot_status/get_gobot_status");
-        getDockStatusSrv = n.serviceClient<gobot_msg_srv::GetDockStatus>("/gobot_status/getDockStatus");
-
-        n.param<bool>("simulation", simulation, false);
-        ROS_INFO("(Command system) simulation : %d", simulation);
-
+        
         std::thread t(server);
 
         ros::spin();

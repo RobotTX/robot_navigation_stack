@@ -5,8 +5,6 @@
 static const std::string sep = std::string(1, 31);
 std::string pingFile;
 std::string ipsFile;
-std::string nameFile;
-std::string pathStageFile;
 
 bool simulation = false;
 bool chargingFlag = false;
@@ -28,32 +26,20 @@ gobot_msg_srv::GetGobotStatus get_gobot_status;
  */
 std::string getDataToSend(void){
     /// Retrieves the hostname
-    std::ifstream ifs(nameFile, std::ifstream::in);
-    std::string hostname;
-    if(ifs){
-        ifs >> hostname;
-        ifs.close();
-    } else 
-        ROS_ERROR("(ping_server) could not open file %s", nameFile.c_str());
-
-    if(hostname.empty())
-        hostname = "Default Name";
+    gobot_msg_srv::GetString get_name;
+    ros::service::call("/gobot_status/get_name",get_name);
 
     /// Retrieve the docking status
     gobot_msg_srv::GetDockStatus get_dock_status;
-    ros::service::call("/gobot_status/getDockStatus", get_dock_status);
+    ros::service::call("/gobot_status/get_dock_status", get_dock_status);
     
     /// Retrieves the path stage
-    int stage(0);
-    std::ifstream ifsStage(pathStageFile, std::ifstream::in);
-    if(ifsStage){
-        ifsStage >> stage;
-        ifsStage.close();
-    } else
-        ROS_ERROR("(ping_server) could not open file to retrieve path stage");
+    gobot_msg_srv::GetStage get_stage;
+    ros::service::call("/gobot_status/get_stage", get_stage);
+    chargingFlag=get_dock_status.response.status==3 ? true : false;
 
     /// Form the string to send to the Qt app
-    return hostname + sep + std::to_string(stage) + sep + std::to_string(batteryLevel) + sep + std::to_string(chargingFlag) + sep + std::to_string(get_dock_status.response.status);
+    return get_name.response.data[0] + sep + std::to_string(get_stage.response.stage) + sep + std::to_string(batteryLevel) + sep + std::to_string(chargingFlag) + sep + std::to_string(get_dock_status.response.status);
 }
 
 /**
@@ -115,7 +101,8 @@ void updateIP(){
                 msg.data = oldIPs.at(i).first;
                 disco_pub.publish(msg);
                 toRemove.push_back(i);
-            } else
+            } 
+            else
                 ROS_WARN("Could not ping IP %s for %d time(s)", oldIPs.at(i).first.c_str(), oldIPs.at(i).second);
         }
     }
@@ -156,22 +143,14 @@ void pingIP(std::string ip, std::string dataToSend){
             connectedIPs.push_back(ip);
             connectedMutex.unlock();
             //ROS_INFO("(ping_server) Connected to %s", ip.c_str());
-        } else
-            ROS_ERROR("(ping_server) read %lu bytes : %s", read.size(), read.c_str());
+        } //else
+            //ROS_ERROR("(ping_server) read %lu bytes : %s", read.size(), read.c_str());
         
     } catch(std::exception& e) {
         //ROS_ERROR("(ping_server) error %s : %s", ip.c_str(), e.what());
     }
 }
 
-/**
- * Update the battery informations we need to send to the Qt app
- */
-void newBatteryInfo(const gobot_msg_srv::BatteryMsg::ConstPtr& batteryInfo){
-    chargingFlag = batteryInfo->ChargingFlag;
-    if(batteryInfo->FullCapacity != 0)
-        batteryLevel = batteryInfo->Percentage*100;
-}
 
 /**
  * Check all the IP addresses we can find on the local network and put them in an array
@@ -193,7 +172,6 @@ void checkNewServers(void){
         std::ifstream ifs(ipsFile, std::ifstream::in);
         if(ifs){
             std::string currentIP;
-
             serverMutex.lock();
             /// Save all the IP addresses in an array
             availableIPs.clear();
@@ -218,11 +196,24 @@ int main(int argc, char* argv[]){
     ros::NodeHandle n;
 
     signal(SIGINT, mySigintHandler);
-
-    ros::Subscriber batterySub = n.subscribe("/gobot_base/battery_topic", 1, newBatteryInfo);
-    disco_pub = n.advertise<std_msgs::String>("/gobot_software/server_disconnected", 10);
+    
+    n.param<bool>("simulation", simulation, false);
+    ROS_INFO("(Command system) simulation : %d", simulation);
 
     getGobotStatusSrv = n.serviceClient<gobot_msg_srv::GetGobotStatus>("/gobot_status/get_gobot_status");
+    
+    //Startup begin
+    ROS_INFO("(ping_server) Waiting for Robot finding initial pose...");
+    getGobotStatusSrv.waitForExistence(ros::Duration(30.0));
+    getGobotStatusSrv.call(get_gobot_status);
+    while((get_gobot_status.response.status!=-1 || get_gobot_status.response.text!="FOUND_POSE") && ros::ok() && !simulation){
+        getGobotStatusSrv.call(get_gobot_status);
+        ros::Duration(0.2).sleep();
+    }
+    ROS_INFO("(ping_server) Robot finding initial pose is ready.");
+    //Startup end
+
+    disco_pub = n.advertise<std_msgs::String>("/gobot_software/server_disconnected", 10);
 
     /// We get the path to the file with all the ips
     if(n.hasParam("ips_file"))
@@ -239,34 +230,6 @@ int main(int argc, char* argv[]){
         ROS_ERROR("(ping_server) The parameter <ping_file> does not exist");
         return -1;
     }
-
-    /// File containing the name of the robot
-    if(n.hasParam("robot_name_file"))
-        n.getParam("robot_name_file", nameFile);
-    else {
-        ROS_ERROR("(ping_server) The parameter <robot_name_file> does not exist");
-        return -1;
-    }
-
-    /// File containing the stage of the path
-    if(n.hasParam("path_stage_file"))
-        n.getParam("path_stage_file", pathStageFile);
-    else
-        ROS_INFO("(ping_server) parameter <path_stage_file> does not exist");
-
-    n.param<bool>("simulation", simulation, false);
-    ROS_INFO("(Command system) simulation : %d", simulation);
-    
-    //Startup begin
-    getGobotStatusSrv.waitForExistence(ros::Duration(30.0));
-    getGobotStatusSrv.call(get_gobot_status);
-    while((get_gobot_status.response.status!=0 || get_gobot_status.response.text!="FOUND_POSE") && ros::ok() && !simulation){
-        ROS_WARN("Robot not ready");
-        getGobotStatusSrv.call(get_gobot_status);
-        ros::Duration(1.0).sleep();
-    }
-    //Startup end
-
 
     /// Thread which will get an array of potential servers
     std::thread t1(checkNewServers);

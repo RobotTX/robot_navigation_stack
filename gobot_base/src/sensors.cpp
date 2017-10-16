@@ -22,6 +22,8 @@ std::vector<uint8_t> cmd;
 std::mutex connectionMutex;
 bool display_data = false;
 std::string STMdevice;
+gobot_msg_srv::GetGobotStatus get_gobot_status;
+ros::ServiceClient getGobotStatusSrv;
 
 bool setSpeed(const char directionR, const int velocityR, const char directionL, const int velocityL){
     //ROS_INFO("(auto_docking::setSpeed) %c %d %c %d", directionR , velocityR, directionL, velocityL);
@@ -209,7 +211,7 @@ void publishSensors(void){
                         set_dock_status.request.status = 0;
                         ROS_INFO("Gobot is not charging");
                     }
-                    ros::service::call("/gobot_status/setDockStatus",set_dock_status);
+                    ros::service::call("/gobot_status/set_dock_status",set_dock_status);
                 }
             }
 
@@ -279,6 +281,26 @@ void publishSensors(void){
     }
 }
 
+
+bool setLedSrvCallback(gobot_msg_srv::LedStrip::Request &req, gobot_msg_srv::LedStrip::Response &res){
+    ROS_INFO("Receive a LED change request.");
+    if(serialConnection.isOpen()){
+        cmd={req.data[0],req.data[1],req.data[2],req.data[3],req.data[4],req.data[5],req.data[6],req.data[7],req.data[8],req.data[9],req.data[10]};
+
+        connectionMutex.lock();
+        serialConnection.write(cmd);
+        std::vector<uint8_t> buff;
+        serialConnection.read(buff,5);
+        serialConnection.flush();
+        connectionMutex.unlock();
+        return true;
+    }
+    else{
+        return false;
+    } 
+}
+
+
 bool initSerial(void) {
     /// Get the port in which our device is connected
     std::string deviceNode(STMdevice);
@@ -297,32 +319,14 @@ bool initSerial(void) {
     serialConnection.open();
 
     if(serialConnection.isOpen()){
-        ROS_INFO("Connection established to STM32.");
+        resetStm();
+        
+        ROS_INFO("Established connection to STM32.");
         return true;
     }
     else
         return false;
 }
-
-bool setLedSrvCallback(gobot_msg_srv::LedStrip::Request &req, gobot_msg_srv::LedStrip::Response &res){
-    ROS_INFO("Receive a LED change request.");
-    if(serialConnection.isOpen()){
-        cmd={req.data[0],req.data[1],req.data[2],req.data[3],req.data[4],req.data[5],req.data[6],req.data[7],req.data[8],req.data[9],req.data[10]};
-
-        connectionMutex.lock();
-        serialConnection.write(cmd);
-        std::vector<uint8_t> buff;
-        serialConnection.read(buff,5);
-        serialConnection.flush();
-        connectionMutex.unlock();
-        return true;
-    }
-    else{
-        return false;
-    }
-    
-}
-
 
 void mySigintHandler(int sig)
 {   
@@ -350,6 +354,19 @@ int main(int argc, char **argv) {
     ros::NodeHandle nh;
     signal(SIGINT, mySigintHandler);
 
+    getGobotStatusSrv = nh.serviceClient<gobot_msg_srv::GetGobotStatus>("/gobot_status/get_gobot_status");
+
+    //Startup begin
+    ROS_INFO("(Sensors) Waiting for MD49 to be ready...");
+    getGobotStatusSrv.waitForExistence(ros::Duration(30.0));
+    getGobotStatusSrv.call(get_gobot_status);
+    while((get_gobot_status.response.status!=-1 || get_gobot_status.response.text!="MD49_READY") && ros::ok()){
+        getGobotStatusSrv.call(get_gobot_status);
+        ros::Duration(0.2).sleep();
+    }
+    ROS_INFO("(Sensors) MD49 is ready.");
+    //Startup end
+
     nh.getParam("STMdevice", STMdevice);
 
     if(initSerial()){
@@ -369,9 +386,8 @@ int main(int argc, char **argv) {
         ros::ServiceServer resetMotorSrv = nh.advertiseService("resetMotorDriver", resetMotorSrvCallback);
 
         //Startup begin
-        ros::service::waitForService("/gobot_status/set_gobot_status", ros::Duration(30.0));
         gobot_msg_srv::SetGobotStatus set_gobot_status;
-        set_gobot_status.request.status = 0;
+        set_gobot_status.request.status = -1;
         set_gobot_status.request.text ="STM32_READY";
         ros::service::call("/gobot_status/set_gobot_status",set_gobot_status);
         //Startup end
