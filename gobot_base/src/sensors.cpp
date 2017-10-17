@@ -174,9 +174,9 @@ void publishSensors(void){
             battery_data.Temperature = (buff.at(36) << 8) | buff.at(37);
             battery_data.RemainCapacity = ((buff.at(38) << 8) | buff.at(39))/100;
             battery_data.FullCapacity = ((buff.at(40) << 8) | buff.at(41))/100;
+
             double percentage = battery_data.BatteryVoltage;
-            percentage=(percentage-BATTERY_MIN)/(BATTERY_MAX-BATTERY_MIN);
-            
+            percentage=(percentage-BATTERY_MIN)/(BATTERY_MAX-BATTERY_MIN); 
             if(percentage>1.0)
                 battery_data.Percentage=1.0;
             else if(percentage<0.0)
@@ -188,13 +188,15 @@ void publishSensors(void){
                 error = true;
                 ROS_ERROR("(sensors::publishSensors) Check battery data : %d %d %d %d", (int) battery_data.BatteryVoltage, battery_data.ChargingCurrent,
                 battery_data.FullCapacity, battery_data.Temperature);
-            } else {
+            } 
+            else {
                 if(battery_data.ChargingCurrent != last_charging_current){
-                    if(battery_data.ChargingCurrent > 1000 || (last_charging_current > 0 && battery_data.ChargingCurrent - last_charging_current > 100))
+                    if(battery_data.ChargingCurrent > 1200 || (last_charging_current > 0 && (battery_data.ChargingCurrent - last_charging_current > 80)))
                         battery_data.ChargingFlag = true;
                     else 
                         battery_data.ChargingFlag = false;
-                } else {
+                } 
+                else {
                     battery_data.ChargingFlag = charging;
                 }
 

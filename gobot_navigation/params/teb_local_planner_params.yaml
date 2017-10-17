@@ -36,17 +36,18 @@ TebLocalPlannerROS:
     allow_init_with_backwards_motion: False
 
     # Robot
-    
+    # VELOCITY
     #MAX_VEL_LINEAR=1.1m/s     
     max_vel_x: 0.5
-    max_vel_x_backwards: 0.1
+    max_vel_x_backwards: 0.15
     #2*vel/wheel_sep(=0.45)
-    max_vel_theta: 1.2
-
+    max_vel_theta: 1.0
+    # ACCELERATION
     #MAX_ACC_LINEAR=ACC_STEP*0.53m/s^2
-    acc_lim_x: 0.4
+    acc_lim_x: 0.5
     #MAX_ACC_ANGULAR=ACC_STEP*2.35rad/s^2
-    acc_lim_theta: 1.0
+    acc_lim_theta: 1.2
+
     #Minimum turning radius of a carlike robot (set to zero for a diff-drive robot). 
     min_turning_radius: 0.0
     footprint_model: # types: "point", "circular", "two_circles", "line", "polygon"
@@ -54,20 +55,22 @@ TebLocalPlannerROS:
         vertices: [[0.332, -0.3], [0.358, -0.29], [0.4, -0.234], [0.413, -0.164], [0.413, 0.164], [0.4, 0.234], [0.358, 0.29], [0.332, 0.3], [-0.1425, 0.3], [-0.199, 0.283], [-0.24, 0.2375], [-0.267, 0.161], [-0.267, -0.161], [-0.24, -0.2375], [-0.199, -0.283], [-0.1425, -0.3]] # for type "polygon"
 
     # GoalTolerance
-    
-    xy_goal_tolerance: 0.05
-    yaw_goal_tolerance: 0.1
+    xy_goal_tolerance: 0.1
+    yaw_goal_tolerance: 0.17 #10 degrees
     #Remove the goal velocity constraint such that the robot can arrive at the goal with maximum speed 
     free_goal_vel: True
 
     # Obstacles
 
     #Minimum desired separation from obstacles in meters 
-    min_obstacle_dist: 0.03
+    min_obstacle_dist: 0.05
     include_costmap_obstacles: True
     costmap_obstacles_behind_robot_dist: 3.0 # 1.0
     obstacle_poses_affected: 30
-
+    #Buffer zone around obstacles with non-zero penalty costs (should be larger than min_obstacle_dist in order to take effect). 
+    #Also refer to the weight weight_inflation. 
+    inflation_dist: 0.6 #0.6
+    dynamic_obstacle_inflation_dist: 0.6 #0.6
     # Optimization
 
     no_inner_iterations: 4

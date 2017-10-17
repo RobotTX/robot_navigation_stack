@@ -131,13 +131,12 @@ void server(void){
 /*********************************** DISCONNECTION FUNCTIONS ***********************************/
 
 void serverDisconnected(const std_msgs::String::ConstPtr& msg){
-    ROS_WARN("(Teleop) The ip %s just disconnected", msg->data.c_str());
-
     /// Close and remove the socket
     socketsMutex.lock();
     if(sockets.count(msg->data)){
         sockets.at(msg->data)->close();
         sockets.erase(msg->data);
+        ROS_WARN("(Teleop) The ip %s just disconnected", msg->data.c_str());
     }
     socketsMutex.unlock();
 }

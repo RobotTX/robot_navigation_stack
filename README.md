@@ -6,60 +6,8 @@ Contain all the custom packaged to run Gobot
 
 ### Prerequisites
 
-Packages you'll need to install in order to make everything works :
-* navigation
-* robot_pose_publisher
-* gmapping (actually just need open_slam)
-* hector_nav_msgs
-* teb_local_planner
-* hector_sensors_description (gazebo)
-* hector_gazebo-plugins (gazebo)
-* telop_twist_keyboard (if you want to make the robot with your keyboard)
-
-To install this driver packages : 
-```
-sudo apt install ros-kinetic-navigation
-sudo apt install ros-kinetic-robot-pose-publisher
-sudo apt install ros-kinetic-gmapping
-sudo apt install ros-kinetic-openslam-gmapping
-sudo apt install ros-kinetic-hector-nav-msgs
-sudo apt install ros-kinetic-teb-local-planner
-sudo apt install ros-kinetic-teleop-twist-keyboard
-sudo apt install ros-kinetic-urg-node
-sudo apt install ros-kinetic-hector-sensors-description (gazebo)
-sudo apt install ros-kinetic-hector_gazebo-plugins (gazebo)
-```
-To configure the system files:
-'''
-sudo visudo (avoid password for sudo cmd)
-
-sudo apt install fping
-
-udev rules (avoid sudo chmod for /dev/tty)
-sudo cp <rule file> /etc/udev/rules.d/>
-sudo udevadm control --reload-rules && sudo service udev restart && sudo udevadm trigger
-
-sudo apt-get install openssh-server openssh-client
-
-settings >> appearance >> behavior
-sudo apt install unity-tweak-tool
-
-*Log in without password
-
-bashrc:
-alias ls='ls -l --color'
-alias cat_make='cd ~/catkin_ws/ && catkin_make && source devel/setup.bash && . ~/catkin_ws/devel/setup.bash'
-alias shut='sudo shutdown -h now'
-source /opt/ros/kinetic/setup.bash
-source /home/username/catkin_ws/devel/setup.bash
-export ROS_PACKAGE_PATH=$ROS_PACKAGE_PATH:/home/username/catkin_ws/src
-'''
-
 ### Installing
 
-gobot_navigation_stack
-
-Then catkin_make, then add the packages above to the src, then catkin_make again.
 
 # Description of the packages :
 

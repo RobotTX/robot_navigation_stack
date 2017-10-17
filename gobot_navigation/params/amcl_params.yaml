@@ -8,7 +8,7 @@ update_min_d: 0.2  #0.2 meter
 update_min_a: 0.16 #10 degree
 #Number of filter updates required before resampling
 resample_interval: 2
-transform_tolerance: 0.3 #0.2
+transform_tolerance: 0.5 #0.2
 #Maximum rate (Hz) at which to store the last estimated pose and covariance to the parameter server,
 #This saved pose will be used on subsequent runs to initialize the filter
 save_pose_rate: 0.5

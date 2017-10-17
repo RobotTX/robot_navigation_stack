@@ -11,4 +11,4 @@ then
 fi
 echo $var
 fping -r 0 -g "$var.0/24" 2>/dev/null | grep alive | cut -d ' ' -f1 > $isAlive
-sed -i "/$var.29/d" $isAlive
+sed -i "/$var.33/d" $isAlive

@@ -283,7 +283,7 @@ void getAmclPoseCallback(const geometry_msgs::PoseWithCovarianceStamped::ConstPt
     //Write lastest amcl_pose to file
     if(found_pose){
         std_msgs::Int8 lost;
-        if(cov_x > 10*initial_cov_xy || cov_y > 10*initial_cov_xy || cov_yaw > 10*initial_cov_yaw){
+        if((cov_x > 10*initial_cov_xy && cov_y > 10*initial_cov_xy) || cov_yaw > 10*initial_cov_yaw){
             lost.data = 1;         
             //Robot may get lost because big covariance in the current pose
             ROS_ERROR("Big covariance in the amcl pose");
@@ -335,6 +335,23 @@ int main(int argc, char **argv) {
     ros::init(argc, argv, "initialpose_estimation");
     ros::NodeHandle nh;
     
+    //Get home pose
+    gobot_msg_srv::GetString get_home;
+    ros::service::waitForService("/gobot_status/get_home",ros::Duration(30.0));
+    if(ros::service::call("/gobot_status/get_home",get_home)){
+        home_pos_x=std::stod(get_home.response.data[0]);
+        home_pos_y=std::stod(get_home.response.data[1]);
+        home_ang_x=std::stod(get_home.response.data[2]);
+        home_ang_y=std::stod(get_home.response.data[3]);
+        home_ang_z=std::stod(get_home.response.data[4]);
+        home_ang_w=std::stod(get_home.response.data[5]);
+        double roll,pitch;
+        tf::Matrix3x3(tf::Quaternion(home_ang_x,home_ang_y,home_ang_z,home_ang_w)).getRPY(roll,pitch,home_pos_yaw);
+        ROS_INFO("Home: pos(%.2f,%.2f,%.2f),cov(%.2f,%.2f,%.2f).",home_pos_x,home_pos_y,home_pos_yaw,initial_cov_xy,initial_cov_xy,initial_cov_yaw);
+    }
+    else
+        ROS_ERROR("Could not find the param home_pose");
+    
     //Get ros server pose
     while(ros::ok()){
         if (ros::param::get("/amcl/initial_pose_x",rosparam_x)){
@@ -349,26 +366,9 @@ int main(int argc, char **argv) {
         ros::Duration(0.5).sleep();
     }
 
-
-    gobot_msg_srv::GetString get_home;
-    if(ros::service::call("/gobot_status/get_home",get_home)){
-        home_pos_x=std::stod(get_home.response.data[0]);
-        home_pos_y=std::stod(get_home.response.data[1]);
-        home_ang_x=std::stod(get_home.response.data[2]);
-        home_ang_y=std::stod(get_home.response.data[3]);
-        home_ang_z=std::stod(get_home.response.data[4]);
-        home_ang_w=std::stod(get_home.response.data[5]);
-        double roll,pitch;
-        tf::Matrix3x3(tf::Quaternion(home_ang_x,home_ang_y,home_ang_z,home_ang_w)).getRPY(roll,pitch,home_pos_yaw);
-        ROS_INFO("Home: pos(%.2f,%.2f,%.2f),cov(%.2f,%.2f,%.2f).",home_pos_x,home_pos_y,home_pos_yaw,initial_cov_xy,initial_cov_xy,initial_cov_yaw);
-    }
-    else
-        ROS_ERROR("Could not find the param home_pose");
-
-
+    //Get last stop pose
     if(nh.hasParam("last_known_position_file")){
         nh.getParam("last_known_position_file", lastPoseFile);
-        //Get last stop pose
         std::ifstream ifs(lastPoseFile, std::ifstream::in);
         if(ifs){
             ifs >> last_pos_x >> last_pos_y >> last_ang_x >> last_ang_y >> last_ang_z >> last_ang_w;

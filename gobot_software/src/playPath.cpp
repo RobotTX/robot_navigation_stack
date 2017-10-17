@@ -71,9 +71,9 @@ void goalReached(){
 	if(stage >= path.size()){
 		if(looping && !dockAfterPath){
 			ROS_INFO("(PlayPath:: complete path but looping!!");
-			checkGoalDelay();
 			stage = 0;
 			setStageInFile(stage);
+			checkGoalDelay();
 			if(!stop_flag)
 				goNextPoint();
 		}

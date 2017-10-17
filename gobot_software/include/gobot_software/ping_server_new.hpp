@@ -10,6 +10,7 @@
 #include <boost/smart_ptr.hpp>
 #include <fstream>
 #include <stdio.h>
+#include <std_srvs/Empty.h>
 #include <gobot_msg_srv/GetDockStatus.h>
 #include <gobot_msg_srv/BatteryMsg.h>
 #include <gobot_msg_srv/GetGobotStatus.h>

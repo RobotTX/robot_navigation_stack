@@ -971,17 +971,15 @@ bool sendMessageToAll(const std::string message){
         socketsMutex.lock();
         for(auto const &elem : sockets){
             try {
-                /// We send the result of the command to every Qt app
+                // We send the result of the command to every Qt app
                 boost::asio::write(*(elem.second), boost::asio::buffer(message, message.length()));
             } catch (std::exception& e) {
+                // can not send msg to the ip, disconnect it
                 ROS_ERROR("(Command system) Message not sent:%s: %s",elem.first.c_str(),e.what());
-                std_msgs::String msg;
-                msg.data = elem.first;
-                disco_pub.publish(msg);
             }
         }
         socketsMutex.unlock();
-        ROS_INFO("(Command system) Message sent to all succesfully");
+        ROS_INFO("(Command system) Message sent to ALL succesfully");
         return true;
     }
 }
@@ -1100,13 +1098,12 @@ void serverDisconnected(const std_msgs::String::ConstPtr& msg){
 }
 
 void disconnect(const std::string ip){
-    ROS_WARN("(Command system) The ip %s just disconnected", ip.c_str());
-
     /// Close and remove the socket
     socketsMutex.lock();
     if(sockets.count(ip)){
         sockets.at(ip)->close();
         sockets.erase(ip);
+        ROS_WARN("(Command system) The ip %s just disconnected", ip.c_str());
     }
     socketsMutex.unlock();
 }

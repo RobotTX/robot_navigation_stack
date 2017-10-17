@@ -18,8 +18,7 @@ void newBatteryInfo(const gobot_msg_srv::BatteryMsg::ConstPtr& batteryInfo){
     //ROS_INFO("(Battery check) Battery info : %d %d %d %d", batteryInfo->BatteryVoltage, batteryInfo->ChargingCurrent, batteryInfo->ChargingFlag, canGoCharge);
 
     if(!batteryInfo->ChargingFlag && (batteryInfo->BatteryVoltage < LOW_VOLTAGE || test == 0) && canGoCharge){
-        ROS_INFO("(Battery check) Battery info : %d %d %d %d", batteryInfo->BatteryVoltage, batteryInfo->ChargingCurrent, batteryInfo->ChargingFlag, canGoCharge);
-        ROS_WARN("(Battery check) Battery is low, let's go charge!!");
+        ROS_WARN("(Battery check) Battery info : %d %.2f %d. Battery is low, let's go charge!!", batteryInfo->BatteryVoltage, batteryInfo->Percentage,batteryInfo->ChargingCurrent);
         std_srvs::Empty arg;
         ros::service::call("/gobot_command/lowBattery", arg);
         canGoCharge = false;
@@ -27,8 +26,7 @@ void newBatteryInfo(const gobot_msg_srv::BatteryMsg::ConstPtr& batteryInfo){
     
     //reset the gocharge when complete godock
     if(!canGoCharge && batteryInfo->ChargingFlag){
-        ROS_INFO("(Battery check) Battery info : %d %d %d %d", batteryInfo->BatteryVoltage, batteryInfo->ChargingCurrent, batteryInfo->ChargingFlag, canGoCharge);
-        ROS_INFO("(Battery check) Can go charge again!!");
+        ROS_WARN("(Battery check) Battery info : %d %.2f %d. (Battery check) Can go charge again!!", batteryInfo->BatteryVoltage, batteryInfo->Percentage,batteryInfo->ChargingCurrent);
         canGoCharge = true;
     }
 }

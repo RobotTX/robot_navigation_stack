@@ -20,6 +20,7 @@ ros::Publisher disco_pub;
 ros::ServiceClient getGobotStatusSrv;
 gobot_msg_srv::GetGobotStatus get_gobot_status;
 
+std_srvs::Empty empty_srv;
 /**
  * Create the string with information to connect to the Qt app
  * hostname + sep + stage + sep + batteryLevel + sep + chargingFlag + sep + dockStatus
@@ -47,7 +48,6 @@ std::string getDataToSend(void){
  */
 void pingAllIPs(void){
     /// Ping all servers every 3 secs
-    //tx??//detect disconnection after 6 seconds->too long?
     ros::Rate loop_rate(1/3.0);
 
     std::vector<std::thread> threads;
@@ -94,14 +94,17 @@ void updateIP(){
             oldIPs.at(i).second++;
             if(oldIPs.at(i).second >= PING_THRESHOLD){
                 /// Publish a message to the topic /gobot_software/server_disconnected with the IP address of the server which disconnected
-                ROS_WARN("The ip %s disconnected", oldIPs.at(i).first.c_str());
+                ROS_WARN("(ping_server) The ip %s disconnected", oldIPs.at(i).first.c_str());
                 std_msgs::String msg;
                 msg.data = oldIPs.at(i).first;
                 disco_pub.publish(msg);
                 toRemove.push_back(i);
+                if(oldIPs.at(i).first=="192.168.100.29")
+                    ros::service::call("/gobot_test/disconnected",empty_srv);
             } 
-            else
-                ROS_WARN("Could not ping IP %s for %d time(s)", oldIPs.at(i).first.c_str(), oldIPs.at(i).second);
+            else{
+                //ROS_WARN("Could not ping IP %s for %d time(s)", oldIPs.at(i).first.c_str(), oldIPs.at(i).second);
+            }
         }
     }
 

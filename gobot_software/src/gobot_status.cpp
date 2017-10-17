@@ -3,6 +3,7 @@
 #include <mutex>
 #include <fstream>
 #include <iostream>
+#include <std_srvs/Empty.h>
 #include <gobot_msg_srv/GetGobotStatus.h>
 #include <gobot_msg_srv/SetGobotStatus.h>
 #include <gobot_msg_srv/SetDockStatus.h>
@@ -56,6 +57,19 @@ std::string hostname_="Go_Gobot";
 
 std::string homeFile;
 std::vector<std::string> home_(6,"0");
+
+std::string disconnectedFile;
+int disconnected = 0;
+
+bool disconnectedSrvCallback(std_srvs::Empty::Request &req, std_srvs::Empty::Response &res){
+    disconnected++;
+    std::ofstream ofsDisconnected(disconnectedFile, std::ofstream::out | std::ofstream::trunc);
+    if(ofsDisconnected){
+        ofsDisconnected << disconnected;
+    }
+
+    return true;
+}
 
 bool setHomeSrvCallback(gobot_msg_srv::SetString::Request &req, gobot_msg_srv::SetString::Response &res){
     homeMutex.lock();
@@ -287,6 +301,15 @@ void initialData(){
             ROS_INFO("(Gobot_status) Read Gobot home: [%.2f, %.2f] [%.2f, %.2f, %.2f, %.2f]", std::stod(home_.at(0)),std::stod(home_.at(1)),std::stod(home_.at(2)),std::stod(home_.at(3)),std::stod(home_.at(4)),std::stod(home_.at(5)));
         }
     }
+
+    if(n.hasParam("disconnected_file")){
+        n.getParam("disconnected_file", disconnectedFile);
+
+        std::ofstream ofsDisconnected(disconnectedFile, std::ofstream::out | std::ofstream::trunc);
+        if(ofsDisconnected){
+            ofsDisconnected << disconnected;
+        }
+    }
 }
 
 int main(int argc, char* argv[]){
@@ -317,6 +340,8 @@ int main(int argc, char* argv[]){
 
         ros::ServiceServer setHomeSrv = n.advertiseService("/gobot_status/set_home", setHomeSrvCallback);
         ros::ServiceServer getHomeSrv = n.advertiseService("/gobot_status/get_home", getHomeSrvCallback);
+
+        ros::ServiceServer disconnectedSrv = n.advertiseService("/gobot_test/disconnected", disconnectedSrvCallback);
 
 
         ros::spin();

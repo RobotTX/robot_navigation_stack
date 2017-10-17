@@ -1,7 +1,7 @@
 #!/bin/bash
 sleep 10s
-path=$(rospack find gobot_navigation | cut -d '/' -f1-3)
-var=$(rosclean check | cut -d 'M' -f1)
+path=$(pwd | cut -d '/' -f1-3)
+var=$(rosclean check | cut -d 'M' -f1 | cut -d 'K' -f1)
 if [ "$var" -gt 1000 ] 
 then
     echo "y" | rosclean purge

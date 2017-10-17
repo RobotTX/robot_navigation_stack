@@ -12,20 +12,22 @@ ros::Publisher disco_pub;
 
 void sendRobotPos(const ros::TimerEvent&){
     if(sockets.size() > 0){
+        std::vector<std::string> dis_ip;
         socketsMutex.lock();
         /// We send the position of the robot to every Qt app
         for(auto const &elem : sockets){
             try {
                 boost::asio::write(*(elem.second), boost::asio::buffer(robot_string, robot_string.length()));
             } catch (std::exception& e) {
-                //if can not send pose to the ip, disconnect it
+                //can not send pose to the ip
                 ROS_ERROR("(Robot Pos) Exception %s : %s", elem.first.c_str(), e.what());
-                std_msgs::String msg;
-                msg.data = elem.first;
-                disco_pub.publish(msg);
+                dis_ip.push_back(elem.first);
             }
         }
         socketsMutex.unlock();
+        //disconnect it
+        for(int i=0;i<dis_ip.size();i++)
+            disconnect(dis_ip.at(i));
     }
 }
 
@@ -65,16 +67,19 @@ void server(void){
 /*********************************** DISCONNECTION FUNCTIONS ***********************************/
 
 void serverDisconnected(const std_msgs::String::ConstPtr& msg){
-    ROS_WARN("(Robot Pos) The ip %s just disconnected", msg->data.c_str());
+    disconnect(msg->data);
+}
+
+void disconnect(const std::string ip){
     /// Close and remove the socket
     socketsMutex.lock();
-    if(sockets.count(msg->data)){
-        sockets.at(msg->data)->close();
-        sockets.erase(msg->data);
+    if(sockets.count(ip)){
+        sockets.at(ip)->close();
+        sockets.erase(ip);
+        ROS_WARN("(Robot Pos) The ip %s just disconnected", ip.c_str());
     }
     socketsMutex.unlock();
 }
-
 
 /*********************************** MAIN ***********************************/
 
