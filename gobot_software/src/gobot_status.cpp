@@ -1,22 +1,4 @@
-#include <ros/ros.h>
-#include <string>
-#include <mutex>
-#include <fstream>
-#include <iostream>
-#include <std_srvs/Empty.h>
-#include <gobot_msg_srv/GetGobotStatus.h>
-#include <gobot_msg_srv/SetGobotStatus.h>
-#include <gobot_msg_srv/SetDockStatus.h>
-#include <gobot_msg_srv/GetDockStatus.h>
-#include <gobot_msg_srv/SetStage.h>
-#include <gobot_msg_srv/GetStage.h>
-#include <gobot_msg_srv/SetPath.h>
-#include <gobot_msg_srv/GetPath.h>
-#include <gobot_msg_srv/SetString.h>
-#include <gobot_msg_srv/GetString.h>
-#include <gobot_msg_srv/SetInt.h>
-#include <gobot_msg_srv/GetInt.h>
-
+#include <gobot_software/gobot_status.hpp>
 
 /*
 GOBOT STATUS
@@ -40,7 +22,7 @@ std::mutex gobotStatusMutex,dockStatusMutex,stageMutex,pathMutex,nameMutex,homeM
 int gobot_status_=-99;
 std::string gobot_text_ = "FREE";
 
-//3->charging 1->go to docking 0->not charging -1->failed to docking
+//3->go to docking 1->charging 0->not charging -1->failed to docking
 int dock_status_ = 0;
 
 std::string pathStageFile;

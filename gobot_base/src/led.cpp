@@ -94,8 +94,9 @@ void setLedRunning(std::vector<uint8_t> &color)
 }
 
 void goalResultCallback(const move_base_msgs::MoveBaseActionResult::ConstPtr& msg){
+    getGobotStatusSrv.call(get_gobot_status);
     //LED permanent ON
-    if(current_stage<COMPLETE_STAGE){
+    if(current_stage<COMPLETE_STAGE && get_gobot_status.response.status!=15){
         std::vector<uint8_t> color;
         switch(msg->status.status){
             case 2:
@@ -151,7 +152,7 @@ void goalCancelCallback(const actionlib_msgs::GoalID::ConstPtr& msg){
             setLedPermanent(color);
             current_stage=FREE_STAGE;
         }
-        else{
+        else {
             color.push_back(BLUE);
             setLedPermanent(color);
             current_stage=FREE_STAGE;

@@ -26,6 +26,9 @@ int main(int argc, char** argv){
     std_srvs::Empty arg;
     ros::service::waitForService("/gobot_motor/resetEncoders", ros::Duration(30));
     ros::service::call("/gobot_motor/resetEncoders", arg);
+    /// The encoders should be reinitialized to 0 every time we launch odom
+    int64_t last_left_encoder = 0;
+    int64_t last_right_encoder = 0;
     
     ros::Publisher odom_pub = n.advertise<nav_msgs::Odometry>("odom", 50);
     ros::Publisher odom_test_pub = n.advertise<gobot_msg_srv::OdomTestMsg>("odom_test", 50);
@@ -47,10 +50,6 @@ int main(int argc, char** argv){
     n.getParam("wheel_radius", wheel_radius);
     double ticks_per_rotation;
     n.getParam("ticks_per_rotation", ticks_per_rotation);
-
-    /// The encoders should be reinitialized to 0 every time we launch odom
-    int64_t last_left_encoder = 0;
-    int64_t last_right_encoder = 0;
 
     double pi = 3.14159;
 

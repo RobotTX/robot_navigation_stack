@@ -133,7 +133,7 @@ void pingIP(std::string ip, std::string dataToSend){
     try {
         /// Try to connect to the remote Qt app
         //tx??//close client connection after timeout
-        client.connect(ip, "6000", boost::posix_time::seconds(2));
+        client.connect(ip, "6000", boost::posix_time::seconds(2.5));
         /// If we succesfully connect to the server, then the server is supposed to send us "OK"
         std::string read = client.read_some();
         if(read.compare("OK") == 0){

@@ -22,6 +22,7 @@
 #include <gobot_msg_srv/SetGobotStatus.h>
 #include <gobot_msg_srv/SetString.h>
 #include <gobot_msg_srv/GetString.h>
+#include <move_base_msgs/MoveBaseActionResult.h>
 #include <ctime>
 #include <chrono>
 #include <thread>
@@ -29,8 +30,6 @@
 typedef actionlib::SimpleActionClient<move_base_msgs::MoveBaseAction> MoveBaseClient;
 
 bool startDocking(void);
-void newRobotPos(const geometry_msgs::Pose::ConstPtr& robotPos);
-void goalStatus(const actionlib_msgs::GoalStatusArray::ConstPtr& goalStatusArray);
 void findChargingStation(void);
 bool setSpeed(const char directionR, const int velocityR, const char directionL, const int velocityL);
 void newBumpersInfo(const gobot_msg_srv::BumperMsg::ConstPtr& bumpers);
@@ -38,10 +37,10 @@ void newBatteryInfo(const gobot_msg_srv::BatteryMsg::ConstPtr& batteryInfo);
 void newIrSignal(const gobot_msg_srv::IrMsg::ConstPtr& irSignal);
 void alignWithCS(void);
 void newProximityInfo(const gobot_msg_srv::ProximityMsg::ConstPtr& proximitySignal);
-void finishedDocking(const int16_t status);
-void failedDocking(const int status);
+void finishedDocking(void);
 void stopDocking(void);
 bool stopDockingService(std_srvs::Empty::Request &req, std_srvs::Empty::Response &res);
 bool startDockingService(std_srvs::Empty::Request &req, std_srvs::Empty::Response &res);
+void goalResultCallback(const move_base_msgs::MoveBaseActionResult::ConstPtr& msg);
 
 #endif

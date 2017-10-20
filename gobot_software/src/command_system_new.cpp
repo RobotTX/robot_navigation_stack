@@ -505,7 +505,7 @@ bool goToChargingStation(const std::vector<std::string> command){
 bool stopGoingToChargingStation(const std::vector<std::string> command){
     if(command.size() == 1) {
         getGobotStatusSrv.call(get_gobot_status);
-        //WAITING OR PLAY PATH
+        //docking
         if(get_gobot_status.response.status==15){
             ROS_INFO("(Command system) Stop sending the robot home");
             if(ros::service::call("/gobot_function/stopDocking", empty_srv))

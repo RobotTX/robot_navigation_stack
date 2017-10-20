@@ -51,6 +51,9 @@ export ROS_PACKAGE_PATH=$ROS_PACKAGE_PATH:/home/username/catkin_ws/src
 settings >> appearance >> behavior
 sudo apt install unity-tweak-tool
 
+#file transfer
+FileZilla
+
 ###################################################
 
 ### To Install Driver Packages ###

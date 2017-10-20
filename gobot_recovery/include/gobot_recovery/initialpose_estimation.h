@@ -22,6 +22,7 @@
 #include <gobot_msg_srv/SetString.h>
 #include <gobot_msg_srv/GetString.h>
 #include <gobot_msg_srv/GetGobotStatus.h>
+#include <gobot_msg_srv/IsCharging.h>
 
 #define PI 3.1415926
 

@@ -28,7 +28,7 @@ bool evaluatePose(int type){
     //Evaluate Last pose compared to Home pose
     else if(type==1){
         if(home_pos_x!=0 || home_pos_y!=0 || home_ang_x!=0 || home_ang_y!=0 || home_ang_z!=0 || home_ang_w!=0)
-            if(std::abs(home_pos_x-last_pos_x)<0.5 && std::abs(home_pos_y-last_pos_y)<0.5 && std::abs(home_pos_yaw-last_pos_yaw)<PI*15/180)
+            if(std::abs(home_pos_x-last_pos_x)<0.5 && std::abs(home_pos_y-last_pos_y)<0.5 && std::abs(home_pos_yaw-last_pos_yaw)<PI*11/180)
                 return true;
         
         return false;
@@ -89,7 +89,7 @@ void publishInitialpose(const double position_x, const double position_y, const 
         initialPose.pose.covariance[35] = cov2;
         
         // we wait for amcl to launch
-        ros::Duration(3.0).sleep();
+        ros::Duration(2.0).sleep();
 
         initial_pose_publisher.publish(initialPose);
         //ROS_INFO("(initial_pose_publisher) initialpose published.");
@@ -284,9 +284,16 @@ void getAmclPoseCallback(const geometry_msgs::PoseWithCovarianceStamped::ConstPt
     if(found_pose){
         std_msgs::Int8 lost;
         if((cov_x > 10*initial_cov_xy && cov_y > 10*initial_cov_xy) || cov_yaw > 10*initial_cov_yaw){
-            lost.data = 1;         
-            //Robot may get lost because big covariance in the current pose
+            gobot_msg_srv::IsCharging arg;
             ROS_ERROR("Big covariance in the amcl pose");
+            if(ros::service::call("/gobot_status/charging_status", arg) && arg.response.isCharging){
+                ROS_ERROR("Found gobot is charging. Set its pose to home");
+                publishInitialpose(home_pos_x,home_pos_y,home_ang_x,home_ang_y,home_ang_z,home_ang_w,initial_cov_xy,initial_cov_yaw);
+                lost.data=0;
+            }
+            else{
+                lost.data = 1;         
+            }
         }
         else{
             lost.data=0;

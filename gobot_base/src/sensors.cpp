@@ -142,7 +142,8 @@ void publishSensors(void){
                 bumper_data.bumper6 = (buff.at(17) & 0b00100000) > 0;
                 bumper_data.bumper7 = (buff.at(17) & 0b01000000) > 0;
                 bumper_data.bumper8 = (buff.at(17) & 0b10000000) > 0;
-            } else {
+            } 
+            else {
                 ROS_ERROR("(sensors::publishSensors) All bumpers got a collision");
                 error_bumper = true;
             }
@@ -191,9 +192,11 @@ void publishSensors(void){
             } 
             else {
                 if(battery_data.ChargingCurrent != last_charging_current){
-                    if(battery_data.ChargingCurrent > 1200 || (last_charging_current > 0 && (battery_data.ChargingCurrent - last_charging_current > 80)))
+                    if(battery_data.ChargingCurrent < 2000 && (battery_data.ChargingCurrent - last_charging_current < -60))
+                        battery_data.ChargingFlag = false;
+                    else if(battery_data.ChargingCurrent > 1500 || (last_charging_current > 0 && (battery_data.ChargingCurrent - last_charging_current > 60)))
                         battery_data.ChargingFlag = true;
-                    else 
+                    else
                         battery_data.ChargingFlag = false;
                 } 
                 else {
@@ -253,11 +256,11 @@ void publishSensors(void){
             cliff_pub.publish(cliff_data);
             battery_pub.publish(battery_data);
             weight_pub.publish(weight_data);
-            if(!error_bumper)
-                bumper_pub.publish(bumper_data);
+                if(!error_bumper)
+                    bumper_pub.publish(bumper_data);
             }
-
-        } else {
+        } 
+        else {
             //ROS_INFO("(sensors::publishSensors) Check buff size : %lu", buff.size());
             error = true;
         }
@@ -273,6 +276,17 @@ void publishSensors(void){
         if(error_count > ERROR_THRESHOLD){
             setSpeed('F', 0, 'F', 0);
             resetStm();
+            //error may be caused by touching the power supply 
+            getGobotStatusSrv.call(get_gobot_status);
+            //go to docking state
+            if(get_gobot_status.response.status==15){
+                gobot_msg_srv::BatteryMsg battery_data;
+                battery_data.ChargingFlag = true;
+                battery_data.Temperature=-1;
+                charging = battery_data.ChargingFlag;
+                battery_pub.publish(battery_data);
+                ROS_WARN("(Sensors) Error caused by charging battery at the moment.");
+            }
             error_count = 0;
         }
             

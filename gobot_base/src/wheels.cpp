@@ -75,7 +75,8 @@ bool getEncoders(gobot_msg_srv::GetEncoders::Request &req, gobot_msg_srv::GetEnc
         res.leftEncoder = (encoders.at(0) << 24) + (encoders.at(1) << 16) + (encoders.at(2) << 8) + encoders.at(3);
         res.rightEncoder = (encoders.at(4) << 24) + (encoders.at(5) << 16) + (encoders.at(6) << 8) + encoders.at(7);
         return true;
-    } else {
+    } 
+    else {
         ROS_INFO("(wheels::getEncoders) Got the wrong number of encoders data : %lu", encoders.size());
         return false;
     }
