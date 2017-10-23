@@ -201,6 +201,16 @@ void session(boost::shared_ptr<tcp::socket> sock){
                         ofs.close();
                         ROS_INFO("(New Map) Path deleted");
 
+                        /// We delete the old path stage
+                        std::string pathStageFile;
+                        if(n.hasParam("path_stage_file")){
+                            n.getParam("path_stage_file", pathStageFile);
+                            ROS_INFO("read new map set path stage file to %s", pathStageFile.c_str());
+                        }
+                        ofs.open(pathStageFile, std::ofstream::out | std::ofstream::trunc);
+                        ofs.close();
+                        ROS_INFO("(New Map) Path stage deleted");
+
                         /// We delete the old home
                         std::string homeFile;
                         if(n.hasParam("home_file")){
@@ -211,11 +221,23 @@ void session(boost::shared_ptr<tcp::socket> sock){
                         ofs.close();
                         ROS_INFO("(New Map) Home deleted");
 
+                        /// We detele the loop
+                        std::string loopFile;
+                        if(n.hasParam("path_loop_file")){
+                            n.getParam("path_loop_file", loopFile);
+                            ROS_INFO("read new map loop file to %s", loopFile.c_str());
+                        }
+                        ofs.open(loopFile, std::ofstream::out | std::ofstream::trunc);
+                        ofs << 0;
+                        ofs.close();
+                        ROS_INFO("(New Map) Loop deleted");
+
+
                         /// Relaunch gobot_navigation
                         if(simulation)
                             cmd = "roslaunch gobot_navigation gazebo_slam.launch &";
                         else
-                            cmd = "roslaunch gobot_navigation slam.launch &";
+                            cmd = "roslaunch gobot_navigation gobot_navigation.launch &";
 
                         system(cmd.c_str());
                         ROS_INFO("(New Map) We relaunched gobot_navigation");

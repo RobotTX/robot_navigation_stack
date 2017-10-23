@@ -14,20 +14,15 @@ http://wiki.ros.org/kinetic/Installation/Ubuntu
 
 ###################################################
 
-### To Configure The System Files ###
+### To Configure The System ###
 
 #avoid password for sudo cmd
 sudo visudo 
-username ALL=(ALL) NOPASSWD: ALL
-
-#allow fping
-sudo apt install fping
-
-#allow ssh username@ip
-sudo apt-get install openssh-server openssh-client
+[username] ALL=(ALL) NOPASSWD: ALL
 
 #avoid sudo chmod for /dev/tty
-sudo cp <rule file> /etc/udev/rules.d/>
+udevadm info -a -p $(udevadm info -q path -n /dev/ttyUSB0)
+sudo cp [rules_file] /etc/udev/rules.d/>
 sudo udevadm control --reload-rules && sudo service udev restart && sudo udevadm trigger
 
 #allow remote desktop
@@ -37,26 +32,34 @@ configure "Desktop sharing" to allow "Remmina Remote Desktop Client"
 all settings->user accounts->automatic login
 
 #robot startup
-startup application->add "sudo sh /home/gtdollar/catkin_ws/src/gobot_navigation_stack/gobot_data/command/start_robot.sh"
+startup application->add "sudo sh /home/[username]/catkin_ws/src/gobot_navigation_stack/gobot_data/command/start_robot.sh"
 
 #configure .bashrc
 alias ls='ls -l --color'
 alias cat_make='cd ~/catkin_ws/ && catkin_make && source devel/setup.bash && . ~/catkin_ws/devel/setup.bash'
 alias shut='sudo shutdown -h now'
 source /opt/ros/kinetic/setup.bash
-source /home/username/catkin_ws/devel/setup.bash
-export ROS_PACKAGE_PATH=$ROS_PACKAGE_PATH:/home/username/catkin_ws/src
+source /home/[username]/catkin_ws/devel/setup.bash
+export ROS_PACKAGE_PATH=$ROS_PACKAGE_PATH:/home/[username]/catkin_ws/src
 
-#screen split
+#allow fping
+sudo apt install fping
+
+#allow ssh [username]@ip
+sudo apt install openssh-server openssh-client
+
+#screen split (not necessary)
 settings >> appearance >> behavior
 sudo apt install unity-tweak-tool
 
-#file transfer
+#file transfer (not necessary)
 FileZilla
+https://filezilla-project.org/download.php?type=client
 
 ###################################################
 
 ### To Install Driver Packages ###
+sudo sh /home/[username]/catkin_ws/src/gobot_navigation_stack/setup/driver_package.sh
 
 sudo apt install ros-kinetic-navigation
 sudo apt install ros-kinetic-robot-pose-publisher

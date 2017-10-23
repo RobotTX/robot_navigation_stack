@@ -97,6 +97,19 @@ void publishInitialpose(const double position_x, const double position_y, const 
         ROS_ERROR("(initial_pose_publisher) got a wrong position (robot probably got no home)");
 }
 
+bool initializeHomeSrcCallback(std_srvs::Empty::Request &req, std_srvs::Empty::Response &res){
+    gobot_msg_srv::IsCharging arg;
+    ros::service::call("/gobot_status/charging_status",arg);
+    if(arg.response.isCharging){
+        //get pose
+        getPose();
+        publishInitialpose(home_pos_x,home_pos_y,home_ang_x,home_ang_y,home_ang_z,home_ang_w,initial_cov_xy,initial_cov_yaw);
+        ROS_INFO("Robot is in the charing station");
+        found_pose=true;
+    }
+    return true;
+}
+
 bool initializePoseSrvCallback(std_srvs::Empty::Request &req, std_srvs::Empty::Response &res){
     if(!running){
         std::thread([](){
@@ -115,6 +128,9 @@ bool initializePoseSrvCallback(std_srvs::Empty::Request &req, std_srvs::Empty::R
                 ROS_INFO("Stop robot home.");
                 ros::service::call("/gobot_command/stopGoDock",empty_srv);
             }
+
+            //get pose
+            getPose();
 
             while(current_stage!=COMPLETE_STAGE && running && ros::ok()){
                 switch(current_stage){
@@ -310,6 +326,9 @@ void getAmclPoseCallback(const geometry_msgs::PoseWithCovarianceStamped::ConstPt
 }
 
 bool goHomeSrvCallback(std_srvs::Empty::Request &req, std_srvs::Empty::Response &res){
+    //get pose
+    getPose();
+
     getGobotStatusSrv.call(get_gobot_status);
     //pause when goal active or goal reached(may wait for human action)
     if(get_gobot_status.response.status==5){
@@ -337,11 +356,8 @@ bool goHomeSrvCallback(std_srvs::Empty::Request &req, std_srvs::Empty::Response 
     return true;
 }
 
-
-int main(int argc, char **argv) {
-    ros::init(argc, argv, "initialpose_estimation");
+void getPose(){
     ros::NodeHandle nh;
-    
     //Get home pose
     gobot_msg_srv::GetString get_home;
     ros::service::waitForService("/gobot_status/get_home",ros::Duration(30.0));
@@ -387,6 +403,13 @@ int main(int argc, char **argv) {
     } 
     else
         ROS_ERROR("Could not find the param last_pose");
+}
+
+
+int main(int argc, char **argv) {
+    ros::init(argc, argv, "initialpose_estimation");
+    ros::NodeHandle nh;
+    
 
     vel_pub = nh.advertise<geometry_msgs::Twist>("/cmd_vel",10);
     initial_pose_publisher = nh.advertise<geometry_msgs::PoseWithCovarianceStamped>("/initialpose", 1);
@@ -395,6 +418,7 @@ int main(int argc, char **argv) {
     lost_pub = nh.advertise<std_msgs::Int8>("/gobot_recovery/lost_robot",1);
 
     ros::Subscriber initialPose = nh.subscribe("/amcl_pose",1,getAmclPoseCallback);
+    ros::ServiceServer initializeHome = nh.advertiseService("/gobot_recovery/initialize_home",initializeHomeSrcCallback);
     ros::ServiceServer initializePose = nh.advertiseService("/gobot_recovery/initialize_pose",initializePoseSrvCallback);
     ros::ServiceServer globalizePose = nh.advertiseService("/gobot_recovery/globalize_pose",globalizePoseSrvCallback);
     ros::ServiceServer stopGlobalizePose = nh.advertiseService("/gobot_recovery/stop_globalize_pose",stopGlobalizePoseSrvCallback);

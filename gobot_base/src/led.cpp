@@ -322,7 +322,7 @@ int main(int argc, char **argv) {
     ros::init(argc, argv, "led");
     ros::NodeHandle nh;
 
-    ros::Timer timer = nh.createTimer(ros::Duration(10), timerCallback);
+    ros::Timer timer = nh.createTimer(ros::Duration(30), timerCallback);
 
     ros::Subscriber goalResult = nh.subscribe("/move_base/result",1,goalResultCallback);
     ros::Subscriber goalGet = nh.subscribe("/move_base/goal",1,goalGetCallback);

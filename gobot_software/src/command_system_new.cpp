@@ -472,6 +472,7 @@ bool newChargingStation(const std::vector<std::string> command){
         set_home.request.data.push_back(std::to_string(quaternion.w()));
 
         ros::service::call("/gobot_status/set_home",set_home);
+        ros::service::call("/gobot_recovery/initialize_home",empty_srv);
         return true;
     } 
     else
@@ -769,6 +770,10 @@ void checkCommand(char c){
                 std::vector<std::string> command({"d"});
                 std::string commandStr = command.at(0) + sep;
                 sendCommand("",command,commandStr);
+            }
+            //if robot stop docking, reset path
+            else if(get_gobot_status.response.status==11){
+                ros::service::call("/gobot_function/stop_path", empty_srv);
             }
         break;
 

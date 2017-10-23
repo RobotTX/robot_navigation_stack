@@ -1,9 +1,9 @@
 <?xml version="1.0"?>
 <launch>
 		<param name="map_image_used" type="string" value="$(find gobot_data)/maps/used_map.pgm" />
+    <param name="map_id_file" type="string" value="$(find gobot_data)/maps/mapId.txt" />
     <param name="restart_file" type="string" value="$(find gobot_data)/command/restart_robot.sh" />
     <param name="ping_file" type="string" value="$(find gobot_data)/IP/ping.sh" />
-    <param name="map_id_file" type="string" value="$(find gobot_data)/data/mapId.txt" />
     <param name="last_known_position_file" type="string" value="$(find gobot_data)/data/lastKnownPosition.txt" />
     <param name="ips_file" type="string" value="$(find gobot_data)/IP/isAlive.txt" />
     <param name="robot_position_file" type="string" value="$(find gobot_data)/data/robot_position.txt" />

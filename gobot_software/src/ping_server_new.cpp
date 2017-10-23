@@ -1,6 +1,6 @@
 #include "gobot_software/ping_server_new.hpp"
 
-#define PING_THRESHOLD 3
+#define PING_THRESHOLD 5
 
 static const std::string sep = std::string(1, 31);
 std::string pingFile;
@@ -47,7 +47,7 @@ std::string getDataToSend(void){
  * Will ping all available IP addresses and send a message when we disconnect to one
  */
 void pingAllIPs(void){
-    /// Ping all servers every 3 secs
+    /// Ping all servers every 2 secs
     ros::Rate loop_rate(1/3.0);
 
     std::vector<std::thread> threads;
@@ -59,22 +59,25 @@ void pingAllIPs(void){
         /// Get the data to send to the Qt app
         std::string dataToSend = getDataToSend();
         //ROS_INFO("(ping_server) Data to send : %s", dataToSend.c_str());
+        
+        if(availableIPs.size()>0){
+            /// We create threads to ping every IP adress
+            /// => threads reduce the required time to ping from ~12 sec to 2 sec
+            serverMutex.lock();
+            //ROS_INFO("(ping_server) Trying to ping everyone %lu", availableIPs.size());
+            for(int i = 0; i < availableIPs.size(); ++i)
+                threads.push_back(std::thread(pingIP, availableIPs.at(i), dataToSend));
+            serverMutex.unlock();
 
-        /// We create threads to ping every IP adress
-        /// => threads reduce the required time to ping from ~12 sec to 2 sec
-        serverMutex.lock();
-        //ROS_INFO("(ping_server) Trying to ping everyone %lu", availableIPs.size());
-        for(int i = 0; i < availableIPs.size(); ++i)
-            threads.push_back(std::thread(pingIP, availableIPs.at(i), dataToSend));
-        serverMutex.unlock();
+            /// We join all the threads => we wait for all the threads to be done
+            for(int i = 0; i < threads.size(); ++i)
+                threads.at(i).join();
 
-        /// We join all the threads => we wait for all the threads to be done
-        for(int i = 0; i < threads.size(); ++i)
-            threads.at(i).join();
+            //ROS_INFO("(ping_server) Done pinging everyone");
 
-        //ROS_INFO("(ping_server) Done pinging everyone");
+            updateIP();
+        }
 
-        updateIP();
         loop_rate.sleep();        
     }
 }
@@ -138,7 +141,7 @@ void pingIP(std::string ip, std::string dataToSend){
         std::string read = client.read_some();
         if(read.compare("OK") == 0){
             /// Send the required data
-            client.write_line(dataToSend, boost::posix_time::seconds(2));
+            client.write_line(dataToSend, boost::posix_time::seconds(2.0));
             /// Save the IP we just connected to in an array for later
             connectedMutex.lock();
             connectedIPs.push_back(ip);
@@ -158,8 +161,8 @@ void pingIP(std::string ip, std::string dataToSend){
  * Usually take 5 to 10 secs
  */
 void checkNewServers(void){
-    /// We check for new IP addresses every 10 secs
-    ros::Rate loop_rate(0.1);
+    /// We check for new IP addresses every 30 secs
+    ros::Rate loop_rate(1/30.0);
 
     while(ros::ok()){ 
         ros::spinOnce();

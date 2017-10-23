@@ -52,6 +52,8 @@ void publishInitialpose(const double position_x, const double position_y, const 
 
 void getAmclPoseCallback(const geometry_msgs::PoseWithCovarianceStamped::ConstPtr& msg);
 
+bool initializeHomeSrcCallback(std_srvs::Empty::Request &req, std_srvs::Empty::Response &res);
+    
 bool initializePoseSrvCallback(std_srvs::Empty::Request &req, std_srvs::Empty::Response &res);
 
 bool globalizePoseSrvCallback(std_srvs::Empty::Request &req, std_srvs::Empty::Response &res);
@@ -60,3 +62,4 @@ bool stopGlobalizePoseSrvCallback(std_srvs::Empty::Request &req, std_srvs::Empty
 
 bool goHomeSrvCallback(std_srvs::Empty::Request &req, std_srvs::Empty::Response &res);
 
+void getPose(void);
