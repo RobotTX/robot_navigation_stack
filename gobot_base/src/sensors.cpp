@@ -65,10 +65,11 @@ void resetStm(void){
         serialConnection.flush();
         connectionMutex.unlock();
 
-        ROS_WARN("(sensors::publishSensors) Reseted STM32. Received %lu bytes", buff.size());
+        ROS_WARN("(sensors::publishSensors WARN) Reseted STM32. Received %lu bytes", buff.size());
 
-    } else 
-        ROS_ERROR("(sensors::publishSensors) Check serial connection 1");
+    } 
+    else 
+        ROS_ERROR("(sensors::publishSensors ERROR) Check serial connection 1");
 }
 
 bool isChargingService(gobot_msg_srv::IsCharging::Request &req, gobot_msg_srv::IsCharging::Response &res){
@@ -124,11 +125,13 @@ void publishSensors(void){
             sonar_data.distance6 = (buff.at(13) << 8) | buff.at(14);
             sonar_data.distance7 = (buff.at(15) << 8) | buff.at(16);
 
+            /*
             if(sonar_data.distance1 == 0 && (sonar_data.distance2 == 0 || sonar_data.distance3 == 0)){
                 error = true;
                 ROS_ERROR("(sensors::publishSensors) Check sonars data : %d %d %d %d %d %d %d", sonar_data.distance1, sonar_data.distance2, sonar_data.distance3,
                 sonar_data.distance4, sonar_data.distance5, sonar_data.distance6, sonar_data.distance7);
             }
+            */
 
             /// Bumpers data
             gobot_msg_srv::BumperMsg bumper_data;
@@ -143,8 +146,8 @@ void publishSensors(void){
                 bumper_data.bumper7 = (buff.at(17) & 0b01000000) > 0;
                 bumper_data.bumper8 = (buff.at(17) & 0b10000000) > 0;
             } 
-            else {
-                ROS_ERROR("(sensors::publishSensors) All bumpers got a collision");
+            else{
+                ROS_ERROR("(sensors::publishSensors ERROR) All bumpers got a collision");
                 error_bumper = true;
             }
 
@@ -154,6 +157,7 @@ void publishSensors(void){
             ir_data.rearSignal = buff.at(18);
             ir_data.leftSignal = buff.at(19);
             ir_data.rightSignal = buff.at(20);
+            //ROS_INFO("(sensors::publishSensors) Check IR data : %d %d %d", ir_data.rearSignal,ir_data.leftSignal,ir_data.rightSignal);
 
             /// Proximity sensors
             gobot_msg_srv::ProximityMsg proximity_data;
@@ -187,14 +191,14 @@ void publishSensors(void){
 
             if(battery_data.BatteryVoltage == 0 || battery_data.Temperature < 0){
                 error = true;
-                ROS_ERROR("(sensors::publishSensors) Check battery data : %d %d %d %d", (int) battery_data.BatteryVoltage, battery_data.ChargingCurrent,
+                ROS_ERROR("(sensors::publishSensors ERROR) Check battery data : %d %d %d %d", (int) battery_data.BatteryVoltage, battery_data.ChargingCurrent,
                 battery_data.FullCapacity, battery_data.Temperature);
             } 
             else {
                 if(battery_data.ChargingCurrent != last_charging_current){
                     if(battery_data.ChargingCurrent < 2000 && (battery_data.ChargingCurrent - last_charging_current < -60))
                         battery_data.ChargingFlag = false;
-                    else if(battery_data.ChargingCurrent > 1500 || (last_charging_current > 0 && (battery_data.ChargingCurrent - last_charging_current > 60)))
+                    else if(battery_data.ChargingCurrent > 1500 || (battery_data.ChargingCurrent > 1000 && (battery_data.ChargingCurrent - last_charging_current > 60)))
                         battery_data.ChargingFlag = true;
                     else
                         battery_data.ChargingFlag = false;
@@ -210,11 +214,11 @@ void publishSensors(void){
                     gobot_msg_srv::SetDockStatus set_dock_status;
                     if(charging){
                         set_dock_status.request.status = 1;
-                        ROS_INFO("Gobot is charging");
+                        //~ROS_INFO("Gobot is charging");
                     }
                     else{
                         set_dock_status.request.status = 0;
-                        ROS_INFO("Gobot is not charging");
+                        //~ROS_INFO("Gobot is not charging");
                     }
                     ros::service::call("/gobot_status/set_dock_status",set_dock_status);
                 }
@@ -285,15 +289,16 @@ void publishSensors(void){
                 battery_data.Temperature=-1;
                 charging = battery_data.ChargingFlag;
                 battery_pub.publish(battery_data);
-                ROS_WARN("(Sensors) Error caused by charging battery at the moment.");
+                ROS_WARN("(sensors::publishSensors WARN) Error caused by charging battery at the moment.");
             }
             error_count = 0;
         }
             
-    } else{
+    } 
+    else{
         //Try reopen STM32 serial
         initSerial();
-        ROS_ERROR("(sensors::publishSensors) Check serial connection 2");
+        ROS_ERROR("(sensors::publishSensors error) Check serial connection 2");
     }
 }
 

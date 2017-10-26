@@ -79,6 +79,9 @@ add_executable(startup src/startup.cpp)
 add_dependencies(startup ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
 target_link_libraries(startup ${catkin_LIBRARIES})
 
+add_executable(scan_startup src/scan_startup.cpp)
+add_dependencies(scan_startup ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
+target_link_libraries(scan_startup ${catkin_LIBRARIES})
 
 #############
 ## Testing ##

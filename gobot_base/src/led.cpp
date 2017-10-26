@@ -96,7 +96,7 @@ void setLedRunning(std::vector<uint8_t> &color)
 void goalResultCallback(const move_base_msgs::MoveBaseActionResult::ConstPtr& msg){
     getGobotStatusSrv.call(get_gobot_status);
     //LED permanent ON
-    if(current_stage<COMPLETE_STAGE && get_gobot_status.response.status!=15){
+    if(current_stage<COMPLETE_STAGE && get_gobot_status.response.status!=15 && get_gobot_status.response.status!=25){
         std::vector<uint8_t> color;
         switch(msg->status.status){
             case 2:
@@ -146,16 +146,18 @@ void goalCancelCallback(const actionlib_msgs::GoalID::ConstPtr& msg){
         std::vector<uint8_t> color;
         //ROS_INFO("Goal Cancelled and disable teb_local_planner allow_init_with_backwards_motion.");
         getGobotStatusSrv.call(get_gobot_status);
-        //if cancel by failed docking, set red
-        if(get_gobot_status.response.status==11 && get_gobot_status.response.text=="FAIL_DOCKING"){
-            color.push_back(RED);
-            setLedPermanent(color);
-            current_stage=FREE_STAGE;
-        }
-        else {
-            color.push_back(BLUE);
-            setLedPermanent(color);
-            current_stage=FREE_STAGE;
+        if(get_gobot_status.response.status!=25){
+            //if cancel by failed docking, set red
+            if(get_gobot_status.response.status==11 && get_gobot_status.response.text=="FAIL_DOCKING"){
+                color.push_back(RED);
+                setLedPermanent(color);
+                current_stage=FREE_STAGE;
+            }
+            else {
+                color.push_back(BLUE);
+                setLedPermanent(color);
+                current_stage=FREE_STAGE;
+            }
         }
     }
 }
@@ -262,15 +264,23 @@ void explorationCallback(const std_msgs::Int8::ConstPtr& msg){
         switch(msg->data){
             //hector exploration completed
             case 1:
-                current_stage=FREE_STAGE;
-                color.push_back(BLUE);
                 color.push_back(GREEN);
+                setLedPermanent(color);
+                break;
+            //hector exploration stopped
+            case 0:
+                color.push_back(BLUE);
+                setLedPermanent(color);
+                break;
+            //hector exploration started
+            case -1:
+                color.push_back(GREEN);
+                color.push_back(WHITE);
                 setLedRunning(color);
-                break;
             default:
-                current_stage=FREE_STAGE;
                 break;
-        }
+        }   
+        current_stage=FREE_STAGE;
     }
 }
 

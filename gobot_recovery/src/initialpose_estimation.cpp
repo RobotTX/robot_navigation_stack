@@ -299,7 +299,7 @@ void getAmclPoseCallback(const geometry_msgs::PoseWithCovarianceStamped::ConstPt
     //Write lastest amcl_pose to file
     if(found_pose){
         std_msgs::Int8 lost;
-        if((cov_x > 10*initial_cov_xy && cov_y > 10*initial_cov_xy) || cov_yaw > 10*initial_cov_yaw){
+        if((cov_x > 20*initial_cov_xy && cov_y > 20*initial_cov_xy) || cov_yaw > 20*initial_cov_yaw){
             gobot_msg_srv::IsCharging arg;
             ROS_ERROR("Big covariance in the amcl pose");
             if(ros::service::call("/gobot_status/charging_status", arg) && arg.response.isCharging){

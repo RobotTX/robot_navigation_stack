@@ -121,6 +121,7 @@ void session(boost::shared_ptr<tcp::socket> sock){
                     map.erase(map.end() - 5, map.end());
                     ROS_INFO("(New Map) Size of the map received : %lu", map.size());
 
+                    /*
                     // if initPosX <= 100.0 it means we have just finished a scan and we have the position of the robot
                     if(initPosX > -100.0){
 
@@ -153,10 +154,26 @@ void session(boost::shared_ptr<tcp::socket> sock){
                             ROS_INFO("(New Map) Could not open the file to create a new initialPoseFile file %s", initialPoseFile.c_str());
                             message = "failed";
                         }
+                    }
+                    */ 
+
+
+                    /// Update the config file
+                    std::string mapConfig;
+                    if(n.hasParam("map_config_used")){
+                        n.getParam("map_config_used", mapConfig);
+                        ROS_INFO("read new map set map config to %s", mapConfig.c_str());
                     } 
+                    ofs.open(mapConfig, std::ofstream::out | std::ofstream::trunc);
+                    if(ofs.is_open()){
+                        std::string resolutionStr = "resolution: " + std::to_string(resolution);
+                        std::string originStr = "origin: [" + std::to_string(initPosX) + ", " + std::to_string(initPosY) + ", 0.00]";
+
+                        ofs << "image: used_map.pgm" << std::endl << resolutionStr << std::endl << originStr << std::endl << "negate: 0" << std::endl << "occupied_thresh: 0.65" << std::endl << "free_thresh: 0.196";
+                        ofs.close(); 
+                    }
 
                     /// We save the file in a the pgm file used by amcl
-
                     std::string mapFile;
                     if(n.hasParam("map_image_used")){
                         n.getParam("map_image_used", mapFile);
@@ -188,7 +205,6 @@ void session(boost::shared_ptr<tcp::socket> sock){
                         std::string cmd = "rosnode kill /move_base";
                         system(cmd.c_str());
 
-                        sleep(5);
                         ROS_INFO("(New Map) We killed gobot_navigation");
 
                         /// We delete the old path
@@ -232,14 +248,15 @@ void session(boost::shared_ptr<tcp::socket> sock){
                         ofs.close();
                         ROS_INFO("(New Map) Loop deleted");
 
-
+                        
                         /// Relaunch gobot_navigation
                         if(simulation)
-                            cmd = "roslaunch gobot_navigation gazebo_slam.launch &";
+                            cmd = "gnome-terminal -x bash -c \"source /opt/ros/kinetic/setup.bash;source /home/gtdollar/catkin_ws/devel/setup.bash;roslaunch gobot_navigation gazebo_slam.launch\"";
                         else
-                            cmd = "roslaunch gobot_navigation gobot_navigation.launch &";
-
+                            cmd = "gnome-terminal -x bash -c \"source /opt/ros/kinetic/setup.bash;source /home/gtdollar/catkin_ws/devel/setup.bash;roslaunch gobot_navigation gobot_navigation.launch\"";
+                        sleep(5);
                         system(cmd.c_str());
+
                         ROS_INFO("(New Map) We relaunched gobot_navigation");
                         message = "done 1";
 
@@ -258,6 +275,7 @@ void session(boost::shared_ptr<tcp::socket> sock){
             /// Clear the used variables
             gotMapData = 0;
             mapId = "";
+            mapDate = "";
             mapMetadata = "";
             map.clear();
 
@@ -310,7 +328,7 @@ void serverDisconnected(const std_msgs::String::ConstPtr& msg){
     if(sockets.count(msg->data)){
         sockets.at(msg->data)->close();
         sockets.erase(msg->data);
-        ROS_WARN("(New Map) The ip %s just disconnected", msg->data.c_str());
+        //~ROS_WARN("(New Map) The ip %s just disconnected", msg->data.c_str());
     }
     socketsMutex.unlock();
 }

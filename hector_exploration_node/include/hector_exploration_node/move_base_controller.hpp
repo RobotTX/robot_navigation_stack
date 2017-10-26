@@ -13,6 +13,10 @@
 #include <hector_exploration_node/Exploration.h>
 #include <geometry_msgs/Pose.h>
 #include <tf/transform_listener.h>
+#include <gobot_msg_srv/SetGobotStatus.h>
+#include <gobot_msg_srv/GetGobotStatus.h>
+#include <gobot_msg_srv/IsCharging.h>
+#include <gobot_msg_srv/SetSpeeds.h>
 
 /// Call a service to get the trajectory for exploration from the hector_exploration_planner and send the goal to move_base
 void doExploration(void);
@@ -32,4 +36,6 @@ void backToStart(void);
 /// To get the starting position
 bool getRobotPos(void);
 
+bool setSpeed(const char directionR, const int velocityR, const char directionL, const int velocityL);
+    
 #endif

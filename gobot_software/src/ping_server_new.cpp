@@ -1,6 +1,6 @@
 #include "gobot_software/ping_server_new.hpp"
 
-#define PING_THRESHOLD 5
+#define PING_THRESHOLD 3
 
 static const std::string sep = std::string(1, 31);
 std::string pingFile;
@@ -8,6 +8,7 @@ std::string ipsFile;
 
 bool simulation = false;
 bool chargingFlag = false;
+bool scanIP = false;
 int batteryLevel = 50;
 
 std::vector<std::string> availableIPs;
@@ -15,6 +16,7 @@ std::vector<std::string> connectedIPs;
 std::vector<std::pair<std::string, int>> oldIPs;
 std::mutex serverMutex;
 std::mutex connectedMutex;
+std::mutex ipMutex;
 
 ros::Publisher disco_pub;
 ros::ServiceClient getGobotStatusSrv;
@@ -44,11 +46,32 @@ std::string getDataToSend(void){
 }
 
 /**
+ * Will update gobot status when receive any command
+ */
+bool updataStatusSrvCallback(std_srvs::Empty::Request &req, std_srvs::Empty::Response &res){
+    std::thread([](){
+        std::string dataToSend = getDataToSend();
+        std::vector<std::thread> data_threads;
+        ipMutex.lock();
+        //ROS_INFO("(ping_server) Trying to ping everyone %lu", availableIPs.size());
+        for(int i = 0; i < oldIPs.size(); ++i)
+            data_threads.push_back(std::thread(pingIP2, oldIPs.at(i).first, dataToSend, 3.0));
+        ipMutex.unlock();
+
+        ///we wait for all the threads to be done
+        for(int i = 0; i < data_threads.size(); ++i)
+            data_threads.at(i).join();
+    }).detach();
+
+    return true;
+}
+
+/**
  * Will ping all available IP addresses and send a message when we disconnect to one
  */
 void pingAllIPs(void){
-    /// Ping all servers every 2 secs
-    ros::Rate loop_rate(1/3.0);
+    /// Ping all servers every 5 secs
+    ros::Rate loop_rate(1/8.0);
 
     std::vector<std::thread> threads;
 
@@ -66,7 +89,7 @@ void pingAllIPs(void){
             serverMutex.lock();
             //ROS_INFO("(ping_server) Trying to ping everyone %lu", availableIPs.size());
             for(int i = 0; i < availableIPs.size(); ++i)
-                threads.push_back(std::thread(pingIP, availableIPs.at(i), dataToSend));
+                threads.push_back(std::thread(pingIP, availableIPs.at(i), dataToSend, 6.0));
             serverMutex.unlock();
 
             /// We join all the threads => we wait for all the threads to be done
@@ -86,6 +109,7 @@ void pingAllIPs(void){
 void updateIP(){
     /// We check the oldIPs vs the new connected IP so we now which one disconnected
     std::vector<int> toRemove;
+    ipMutex.lock();
     for(int i = 0; i < oldIPs.size(); ++i){
         bool still_connected = false;
         for(int j = 0; j < connectedIPs.size(); ++j)
@@ -124,28 +148,51 @@ void updateIP(){
         if(!hasIP)
             oldIPs.push_back(std::pair<std::string, int>(connectedIPs.at(i), 0));
     }
+    ipMutex.unlock();
 }
 
 /**
  * Try to connect to the given IP, if can, then read OK, then send some data
  */
-void pingIP(std::string ip, std::string dataToSend){
+void pingIP(std::string ip, std::string dataToSend, double sec){
     //ROS_INFO("(ping_server) Called pingIP : %s", ip.c_str());
 
     timeout::tcp::Client client;
     try {
         /// Try to connect to the remote Qt app
         //tx??//close client connection after timeout
-        client.connect(ip, "6000", boost::posix_time::seconds(2.5));
+        client.connect(ip, "6000", boost::posix_time::seconds(sec));
         /// If we succesfully connect to the server, then the server is supposed to send us "OK"
         std::string read = client.read_some();
         if(read.compare("OK") == 0){
             /// Send the required data
-            client.write_line(dataToSend, boost::posix_time::seconds(2.0));
+            client.write_line(dataToSend, boost::posix_time::seconds(sec));
             /// Save the IP we just connected to in an array for later
             connectedMutex.lock();
             connectedIPs.push_back(ip);
             connectedMutex.unlock();
+            //ROS_INFO("(ping_server) Connected to %s", ip.c_str());
+        } //else
+            //ROS_ERROR("(ping_server) read %lu bytes : %s", read.size(), read.c_str());
+        
+    } catch(std::exception& e) {
+        //ROS_ERROR("(ping_server) error %s : %s", ip.c_str(), e.what());
+    }
+}
+
+void pingIP2(std::string ip, std::string dataToSend, double sec){
+    //ROS_INFO("(ping_server) Called pingIP : %s", ip.c_str());
+
+    timeout::tcp::Client client;
+    try {
+        /// Try to connect to the remote Qt app
+        //tx??//close client connection after timeout
+        client.connect(ip, "6000", boost::posix_time::seconds(sec));
+        /// If we succesfully connect to the server, then the server is supposed to send us "OK"
+        std::string read = client.read_some();
+        if(read.compare("OK") == 0){
+            /// Send the required data
+            client.write_line(dataToSend, boost::posix_time::seconds(sec));
             //ROS_INFO("(ping_server) Connected to %s", ip.c_str());
         } //else
             //ROS_ERROR("(ping_server) read %lu bytes : %s", read.size(), read.c_str());
@@ -162,11 +209,11 @@ void pingIP(std::string ip, std::string dataToSend){
  */
 void checkNewServers(void){
     /// We check for new IP addresses every 30 secs
-    ros::Rate loop_rate(1/30.0);
+    ros::Rate loop_rate(1/20.0);
 
     while(ros::ok()){ 
         ros::spinOnce();
-
+        scanIP=true;
         //ROS_INFO("(ping_server) Refreshing the list of potential servers");
         /// Script which will check all the IP on the local network and put them in a file
         const std::string ping_script = "sudo sh " + pingFile + " " + ipsFile ;
@@ -183,8 +230,8 @@ void checkNewServers(void){
                 availableIPs.push_back(currentIP);
             serverMutex.unlock();
         }
-
-        ROS_INFO("(ping_server) Available IPs: %lu, Connected IPs: %lu", availableIPs.size(),connectedIPs.size());
+        scanIP=false;
+        ROS_INFO("(ping_server) Available IPs: %lu, Connected IPs: %lu", availableIPs.size(),oldIPs.size());
         loop_rate.sleep();        
     }
 }
@@ -198,6 +245,10 @@ void newBatteryInfo(const gobot_msg_srv::BatteryMsg::ConstPtr& batteryInfo){
 
 void mySigintHandler(int sig)
 {   
+    while(scanIP){
+        ros::Duration(0.5).sleep();
+        ros::spinOnce();
+    }
     ros::shutdown();
 }
 
@@ -229,6 +280,8 @@ int main(int argc, char* argv[]){
 
     disco_pub = n.advertise<std_msgs::String>("/gobot_software/server_disconnected", 10);
     ros::Subscriber batterySub = n.subscribe("/battery_topic", 1, newBatteryInfo);
+    ros::ServiceServer updataStatusSrv = n.advertiseService("/gobot_software/update_status", updataStatusSrvCallback);
+
     /// We get the path to the file with all the ips
     if(n.hasParam("ips_file"))
         n.getParam("ips_file", ipsFile);

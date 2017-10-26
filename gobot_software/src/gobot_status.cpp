@@ -2,6 +2,9 @@
 
 /*
 GOBOT STATUS
+25 EXPLORING
+21 STOP_EXPLORING/COMPLETE_EXPLORING
+20 EXPLORATION
 15 DOCKING
 11 STOP_DOCKING/FAIL_DOKCING
 5  PLAY_PATH/WAITING
@@ -18,6 +21,7 @@ DOCK STATUS
 */
 
 std::mutex gobotStatusMutex,dockStatusMutex,stageMutex,pathMutex,nameMutex,homeMutex,loopMutex;
+std_srvs::Empty empty_srv;
 
 int gobot_status_=-99;
 std::string gobot_text_ = "FREE";
@@ -90,6 +94,7 @@ bool setNameSrvCallback(gobot_msg_srv::SetString::Request &req, gobot_msg_srv::S
         ofsName.close();
         ROS_INFO("(Gobot_status) Set Gobot name: %s",hostname_.c_str());
     }
+    ros::service::call("/gobot_software/update_status",empty_srv);
 
     return true;
 }
@@ -168,6 +173,8 @@ bool setStageSrvCallback(gobot_msg_srv::SetStage::Request &req, gobot_msg_srv::S
     }
 
     ROS_INFO("(Gobot_status) Set Gobot stage: %d",stage_);
+    ros::service::call("/gobot_software/update_status",empty_srv);
+
     return true;
 }
 
@@ -186,7 +193,8 @@ bool setDockStatusSrvCallback(gobot_msg_srv::SetDockStatus::Request &req, gobot_
     dock_status_ = req.status;
     dockStatusMutex.unlock();
     ROS_INFO("(Gobot_status) Set Dock status: %d", dock_status_);
-
+    ros::service::call("/gobot_software/update_status",empty_srv);
+    
     return true;
 }
 

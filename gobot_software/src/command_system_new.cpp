@@ -329,17 +329,17 @@ bool startScanAndAutoExplore(const std::string ip, const std::vector<std::string
         /// Kill gobot move so that we'll restart it with the new map
         std::string cmd = "rosnode kill /move_base";
         system(cmd.c_str());
-
-        sleep(5);
+        sleep(3);
+        
         /// Relaunch gobot_navigation
         if(simulation)
-            cmd = "roslaunch gobot_navigation gazebo_scan.launch &";
+            cmd = "gnome-terminal -x bash -c \"source /opt/ros/kinetic/setup.bash;source /home/gtdollar/catkin_ws/devel/setup.bash;roslaunch gobot_navigation gazebo_scan.launch\"";
         else
-            cmd = "roslaunch gobot_navigation gobot_scan.launch &";
+            cmd = "gnome-terminal -x bash -c \"source /opt/ros/kinetic/setup.bash;source /home/gtdollar/catkin_ws/devel/setup.bash;roslaunch gobot_navigation gobot_scan.launch\"";
         system(cmd.c_str());
         ROS_INFO("(New Map) We relaunched gobot_navigation");
 
-        sleep(2);
+        sleep(5);
 
         /// 0 : the robot doesn't go back to its starting point at the end of the scan
         /// 1 : robot goes back to its starting point which is its charging station
@@ -533,14 +533,14 @@ bool sendMapOnce(const std::string ip, const std::vector<std::string> command){
         // 0 : scan 
         // 1 : application requesting at connection time
         // 2 : to merge
-        ROS_INFO("(Command system) Launching the service to get the map once");
+        //~ROS_INFO("(Command system) Launching the service to get the map once");
 
         gobot_msg_srv::SendMap srv;
         srv.request.who = std::stoi(command.at(1));
         srv.request.ip = ip;
 
         if (ros::service::call("/gobot_function/send_once_map_sender", srv)) {
-            ROS_INFO("(Command system) /gobot_function/send_once_map_sender service started");
+            //~ROS_INFO("(Command system) /gobot_function/send_once_map_sender service started");
             return true;
         } else
             ROS_ERROR("(Command system) Failed to call service /gobot_function/send_once_map_sender");
@@ -560,14 +560,15 @@ bool startNewScan(const std::string ip, const std::vector<std::string> command){
         /// Kill gobot move so that we'll restart it with the new map
         std::string cmd = "rosnode kill /move_base";
         system(cmd.c_str());
+        sleep(3);
 
-        sleep(5);
         /// Relaunch gobot_navigation
         if(simulation)
             cmd = "gnome-terminal -x bash -c \"source /opt/ros/kinetic/setup.bash;source /home/gtdollar/catkin_ws/devel/setup.bash;roslaunch gobot_navigation gazebo_scan.launch\"";
         else
             cmd = "gnome-terminal -x bash -c \"source /opt/ros/kinetic/setup.bash;source /home/gtdollar/catkin_ws/devel/setup.bash;roslaunch gobot_navigation gobot_scan.launch\"";
         system(cmd.c_str());
+        sleep(5);
         ROS_INFO("(Command system) We relaunched gobot_navigation");
 
         return sendMapAutomatically(ip);
@@ -590,7 +591,7 @@ bool stopScanning(const std::string ip, const std::vector<std::string> command){
             /// Kill gobot move so that we'll restart it with the new map
             std::string cmd = "rosnode kill /move_base";
             system(cmd.c_str());
-            sleep(5);
+            sleep(3);
 
             /// Relaunch gobot_navigation
             if(simulation)
@@ -598,6 +599,7 @@ bool stopScanning(const std::string ip, const std::vector<std::string> command){
             else
                 cmd = "gnome-terminal -x bash -c \"source /opt/ros/kinetic/setup.bash;source /home/gtdollar/catkin_ws/devel/setup.bash;roslaunch gobot_navigation gobot_navigation.launch\"";
             system(cmd.c_str());
+            sleep(5);
             ROS_INFO("(Command system) We relaunched gobot_navigation");
         }
 
@@ -660,7 +662,7 @@ bool stopAutoExplore(const std::vector<std::string> command){
     if(command.size() == 1) {
         ROS_INFO("(Command system) Stop to explore");
         if(!ros::service::call("/gobot_scan/stopExploration", empty_srv)){
-            ROS_INFO("(Command system) Could not call the service /gobot_scan/stopExploration");
+            //~ROS_INFO("(Command system) Could not call the service /gobot_scan/stopExploration");
             return false;
         }
 
@@ -677,12 +679,15 @@ bool loopPath(const std::vector<std::string> command){
         if(std::stoi(command.at(1)) == 0){
             if(ros::service::call("/gobot_function/stopLoopPath", empty_srv)){
                 return true;
-            } else
+            } 
+            else
                 ROS_ERROR("(Command system) Could not call the service /gobot_function/stopLoopPath");
-        } else {
+        } 
+        else {
             if(ros::service::call("/gobot_function/startLoopPath", empty_srv)){
                 return true;
-            } else
+            } 
+            else
                 ROS_ERROR("(Command system) Could not call the service /gobot_function/startLoopPath");
         }
     }
@@ -700,7 +705,7 @@ bool sendMapAutomatically(const std::string ip){
     srv.request.data.push_back(ip);
 
     if (ros::service::call("/gobot_function/send_auto_map_sender", srv)) {
-        ROS_INFO("(Command system) /gobot_function/send_auto_map_sender service started");
+        //~ROS_INFO("(Command system) /gobot_function/send_auto_map_sender service started");
         return true;
     } else {
         ROS_ERROR("(Command system) Failed to call service /gobot_function/send_auto_map_sender");
@@ -715,9 +720,10 @@ bool stopSendingMapAutomatically(const std::string ip){
     srv.request.data.push_back(ip);
 
     if (ros::service::call("/gobot_function/stop_auto_map_sender", srv)) {
-        ROS_INFO("(Command system) /gobot_function/stop_auto_map_sender service started");
+        //~ROS_INFO("(Command system) /gobot_function/stop_auto_map_sender service started");
         return true;
-    } else {
+    } 
+    else {
         ROS_ERROR("(Command system) Failed to call service /gobot_function/stop_auto_map_sender");
         return false;
     }

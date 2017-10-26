@@ -5,7 +5,6 @@
 # New more complex footprint
 footprint: [[0.332, -0.3], [0.358, -0.29], [0.4, -0.234], [0.413, -0.164], [0.413, 0.164], [0.4, 0.234], [0.358, 0.29], [0.332, 0.3], [-0.1425, 0.3], [-0.199, 0.283], [-0.24, 0.2375], [-0.267, 0.161], [-0.267, -0.161], [-0.24, -0.2375], [-0.199, -0.283], [-0.1425, -0.3]]
 footprint_padding: 0.0001
-
 #plugins:
     # Add the data from the map to the costmap
     #- {name: static_map, type: "costmap_2d::StaticLayer"}

@@ -4,11 +4,16 @@
 #define HIGH_THRESHOLD 0.65*100
 #define LOW_THRESHOLD 0.196*100
 
+#define WHITE 255
+#define GREY 205
+#define BLACK 0
+
 using boost::asio::ip::tcp;
 
 double map_resolution = 0.02;
 double map_origin_x = -1;
 double map_origin_y = -1;
+
 
 struct session_object {
     bool sendingMapWhileScanning = false;
@@ -52,8 +57,6 @@ void getMap(const nav_msgs::OccupancyGrid::ConstPtr& msg){
 // algorithm to compress the map before sending it
 std::vector<uint8_t> compress(const std::vector<int8_t> map, const int map_width, const int map_height, const double map_resolution, const double _map_orixin_x, const double _map_orixin_y, const int who){
 	std::vector<uint8_t> my_map;
-	int last(205);
-	uint32_t count(0);
 
 	if(who == 0){
 		/// If we are scanning a new map, we send the published metadata with it
@@ -120,23 +123,26 @@ std::vector<uint8_t> compress(const std::vector<int8_t> map, const int map_width
 
 
 	int map_size = map_width * map_height;
+	int last = GREY;
+	uint32_t count=0;
+	int curr = 0;
     ROS_INFO("(Map::compress) Map size %d vs %lu", map_size, map.size());
 	for(size_t i = 0; i < map_size; i++){
-        int curr = 0;
+
         if(i >= map.size())
-            curr = 205;
+            curr = GREY;
         else
             curr = map.at(i);
 
 		if(who == 0){
 		    if(curr < 0)
-	            curr = 205;
+	            curr = GREY;
 	        else if(curr < LOW_THRESHOLD)
-	            curr = 255;
+	            curr = WHITE;
 	        else if(curr < HIGH_THRESHOLD)
-	            curr = 205;
+	            curr = GREY;
 	        else 
-	            curr = 0;
+	            curr = BLACK;
 	    }
 
 		if(curr != last){
@@ -216,7 +222,7 @@ bool sendOnceMap(gobot_msg_srv::SendMap::Request &req,
 
 	int who = req.who;	
 
-	std::vector<int8_t> my_map;
+	std::vector<int8_t> ori_map;
     std::string mapFileStr;
     ros::NodeHandle n;
     if(n.hasParam("map_image_used")){
@@ -250,11 +256,12 @@ bool sendOnceMap(gobot_msg_srv::SendMap::Request &req,
 
 		while(std::getline(mapFile, line))
 			for(int i = 0; i < line.size(); i++)
-				my_map.push_back(static_cast<int8_t>(line.at(i)));
+				ori_map.push_back(static_cast<int8_t>(line.at(i)));
 
 		mapFile.close();
-		ROS_INFO("(Map::sendOnceMap) Got the whole map from file, about to compress and send it %lu", my_map.size());
-		sendMap(req.ip, compress(my_map, width, height, map_resolution, map_origin_x, map_origin_y, who));
+		
+		ROS_INFO("(Map::sendOnceMap) Got the whole map from file, about to compress and send it %lu", ori_map.size());
+		sendMap(req.ip, compress(ori_map, width, height, map_resolution, map_origin_x, map_origin_y, who));
 
 		return true;
 		
@@ -296,7 +303,7 @@ void serverDisconnected(const std_msgs::String::ConstPtr& msg){
     if(sockets.count(msg->data)){
         sockets.at(msg->data)->close();
         sockets.erase(msg->data);
-		ROS_WARN("(Map::serverDisconnected) The ip %s just disconnected", msg->data.c_str());
+		//~ROS_WARN("(Map::serverDisconnected) The ip %s just disconnected", msg->data.c_str());
     }
     socketsMutex.unlock();
 }

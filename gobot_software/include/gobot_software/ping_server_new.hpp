@@ -26,9 +26,13 @@ using boost::asio::ip::tcp;
 
 std::string getDataToSend(void);
 
+bool updataStatusSrvCallback(std_srvs::Empty::Request &req, std_srvs::Empty::Response &res);
+
 void pingAllIPs(void);
 
-void pingIP(std::string ip, std::string dataToSend);
+void pingIP(std::string ip, std::string dataToSend, double sec);
+
+void pingIP2(std::string ip, std::string dataToSend, double sec);
 
 void checkNewServers(void);
 

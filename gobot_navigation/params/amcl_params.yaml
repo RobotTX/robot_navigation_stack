@@ -4,8 +4,8 @@
 min_particles: 200
 max_particles: 5000
 #Translational/Rotational movement required before performing a filter update
-update_min_d: 0.2  #0.2 meter
-update_min_a: 0.16 #10 degree
+update_min_d: 0.25  #0.2 meter
+update_min_a: 0.25 #15 degree
 #Number of filter updates required before resampling
 resample_interval: 2
 transform_tolerance: 0.5 #0.2

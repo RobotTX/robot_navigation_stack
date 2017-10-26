@@ -28,15 +28,9 @@ void sonarToCloud(double sonarData,pcl::PointCloud<pcl::PointXYZ> &cloudData){
 }
 
 void sonarFrontToCloud(double sonarR,double sonarL,pcl::PointCloud<pcl::PointXYZ> &cloudR,pcl::PointCloud<pcl::PointXYZ> &cloudL){
-    if(sonarR==0 && sonarL == 0){
-        //sth wrong with the sonar data, check stm32
-        sonarR=SONAR_MAX;
-        sonarL=SONAR_MAX;
-    }
-    else{
-        sonarR = sonarR>SONAR_THRESHOLD?SONAR_MAX:sonarR;
-        sonarL = sonarL>SONAR_THRESHOLD?SONAR_MAX:sonarL;
-    }
+
+    sonarR=(sonarR==0 || sonarR>SONAR_THRESHOLD) ? SONAR_MAX : sonarR;
+    sonarL=(sonarL==0 || sonarL>SONAR_THRESHOLD) ? SONAR_MAX : sonarL;
 
     if(sonarL==SONAR_MAX){
         for(double i=tan(SONAR_VIEW*1.5)*SONAR_MAX;i>tan(SONAR_VIEW)*SONAR_MAX;i=i-SONAR_RESOLUTION)

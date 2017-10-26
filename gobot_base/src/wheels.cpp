@@ -26,7 +26,7 @@ std::vector<uint8_t> writeAndRead(std::vector<uint8_t> toWrite, int bytesToRead)
     } 
     else {
         initSerial();
-        ROS_INFO("(wheels::writeAndRead) The serial connection is not opened, something is wrong");
+        ROS_WARN("(wheels::writeAndRead) The serial connection is not opened, something is wrong");
     }
 
     return buff;
@@ -76,8 +76,8 @@ bool getEncoders(gobot_msg_srv::GetEncoders::Request &req, gobot_msg_srv::GetEnc
         res.rightEncoder = (encoders.at(4) << 24) + (encoders.at(5) << 16) + (encoders.at(6) << 8) + encoders.at(7);
         return true;
     } 
-    else {
-        ROS_INFO("(wheels::getEncoders) Got the wrong number of encoders data : %lu", encoders.size());
+    else{
+        ROS_WARN("(wheels::getEncoders) Got the wrong number of encoders data : %lu", encoders.size());
         return false;
     }
 }
@@ -101,8 +101,9 @@ bool testEncoders(std_srvs::Empty::Request &req, std_srvs::Empty::Response &res)
                 int32_t leftEncoder = (encoders.at(0) << 24) + (encoders.at(1) << 16) + (encoders.at(2) << 8) + encoders.at(3);
                 int32_t rightEncoder = (encoders.at(4) << 24) + (encoders.at(5) << 16) + (encoders.at(6) << 8) + encoders.at(7);
                 ROS_INFO("(wheels::testEncoders) %d and %d", leftEncoder, rightEncoder);
-            } else
-                ROS_INFO("(wheels::testEncoders) Got the wrong number of encoders data : %lu", encoders.size());
+            } 
+            else
+                ROS_WARN("(wheels::testEncoders) Got the wrong number of encoders data : %lu", encoders.size());
         }
     }).detach();
 
