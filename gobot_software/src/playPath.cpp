@@ -105,9 +105,8 @@ void goalReached(){
 void checkGoalDelay(){
 	if(currentGoal.waitingTime != 0)
 	{
-		setGobotStatus(5,"WAITING");
-
 		if(currentGoal.waitingTime > 0){
+			setGobotStatus(5,"DELAY");
 			//ROS_INFO("(PlayPath::goalReached) goalReached going to sleep for %f seconds", currentGoal.waitingTime);
 			double dt=0.0;
 			ros::Time last_time=ros::Time::now();
@@ -118,6 +117,7 @@ void checkGoalDelay(){
 			}
 		}
 		else if(currentGoal.waitingTime == -1){
+			setGobotStatus(5,"WAITING");
 			ros::NodeHandle n;
 			//ROS_INFO("Goal reached. Waiting for human action.");
 			waitingForAction=true;

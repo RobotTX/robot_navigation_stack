@@ -12,10 +12,10 @@ TebLocalPlannerROS:
     exact_arc_length: True
     max_global_plan_lookahead_dist: 5.0
     feasibility_check_no_poses: 5
-    global_plan_viapoint_sep: 0.3 # -0.1
-    weight_viapoint: 50.0 # 1.0
+    global_plan_viapoint_sep: 0.5 # -0.1
+    weight_viapoint: 75.0 # 1.0
     shrink_horizon_min_duration: 10.0
-    allow_init_with_backwards_motion: False #True
+    allow_init_with_backwards_motion: False 
 
     # Robot
          
@@ -38,7 +38,7 @@ TebLocalPlannerROS:
 
     # Obstacles
 
-    min_obstacle_dist: 0.03
+    min_obstacle_dist: 0.02
     include_costmap_obstacles: True
     costmap_obstacles_behind_robot_dist: 3.0 # 1.0
     obstacle_poses_affected: 30
@@ -51,9 +51,9 @@ TebLocalPlannerROS:
     optimization_verbose: False
     penalty_epsilon: 0.08
     weight_max_vel_x: 2
-    weight_max_vel_theta: 10 # 1
+    weight_max_vel_theta: 2 #10 # 1
     weight_acc_lim_x: 1
-    weight_acc_lim_theta: 10 # 1
+    weight_acc_lim_theta: 1 # 1
     weight_kinematics_nh: 1000
     weight_kinematics_forward_drive: 50
     weight_kinematics_turning_radius: 1

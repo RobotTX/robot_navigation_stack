@@ -73,8 +73,8 @@ obstacles:
     }
 
     frontRight_sonar: {
-        obstacle_range: 1.5,
-        raytrace_range: 2.0,
+        obstacle_range: 1.0,
+        raytrace_range: 1.5,
         data_type: PointCloud2,
         topic:  /frontRight_sonar_pc,
         marking: true,
@@ -84,8 +84,8 @@ obstacles:
     }
 
     frontLeft_sonar: {
-        obstacle_range: 1.5,
-        raytrace_range: 2.0,
+        obstacle_range: 1.0,
+        raytrace_range: 1.5,
         data_type: PointCloud2,
         topic:  /frontLeft_sonar_pc,
         marking: true,

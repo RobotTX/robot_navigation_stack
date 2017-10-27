@@ -13,11 +13,12 @@ std::map<std::string, boost::shared_ptr<tcp::socket>> sockets;
 
 ros::Publisher map_pub;
 
+ros::Publisher disco_pub;
 
 void session(boost::shared_ptr<tcp::socket> sock){
 
     std::string ip = sock->remote_endpoint().address().to_string();
-    ROS_INFO("(New Map) session launched %s", ip.c_str());
+    //~ROS_INFO("(New Map) session launched %s", ip.c_str());
 
     ros::NodeHandle n;
     int gotMapData(0);
@@ -35,7 +36,7 @@ void session(boost::shared_ptr<tcp::socket> sock){
         boost::system::error_code error;
         size_t length = sock->read_some(boost::asio::buffer(data), error);
         if ((error == boost::asio::error::eof) || (error == boost::asio::error::connection_reset)){
-            ROS_INFO("(New Map) Connection closed");
+            //~ROS_INFO("(New Map) Connection closed");
             return;
         } else if (error) {
             throw boost::system::system_error(error); // Some other error.
@@ -286,9 +287,17 @@ void session(boost::shared_ptr<tcp::socket> sock){
                 ROS_INFO("(New Map) Error : %s", error.message().c_str());
             else 
                 ROS_INFO("(New Map) Message sent succesfully : %lu bytes sent", message.length());
-
-
             mapMutex.unlock();
+
+            //disconnect all other users to receive new map
+            ROS_INFO("(New Map) Disconnect other uses to update them new map.");
+            for (std::map<std::string, boost::shared_ptr<tcp::socket>>::iterator it=sockets.begin();it!=sockets.end();++it){
+                if (it->first!=ip){
+                    std_msgs::String msg;
+                    msg.data = it->first;
+                    disco_pub.publish(msg);
+                }
+            }
         }
     }
 }
@@ -307,7 +316,7 @@ void server(void){
 
         /// Got a new connection so we had it to our array of sockets
         std::string ip = sock->remote_endpoint().address().to_string();
-        ROS_INFO("(New Map) Command socket connected to %s", ip.c_str());
+        //~ROS_INFO("(New Map) Command socket connected to %s", ip.c_str());
         socketsMutex.lock();
         if(!sockets.count(ip))
             sockets.insert(std::pair<std::string, boost::shared_ptr<tcp::socket>>(ip, sock));
@@ -347,6 +356,8 @@ int main(int argc, char **argv){
 
     /// Advertise that we are going to publish to /map
     map_pub = n.advertise<nav_msgs::OccupancyGrid>("/map", 1000);
+
+    disco_pub = n.advertise<std_msgs::String>("/gobot_software/server_disconnected", 10);
 
     n.param<bool>("simulation", simulation, false);
     ROS_INFO("(New Map) simulation : %d", simulation);

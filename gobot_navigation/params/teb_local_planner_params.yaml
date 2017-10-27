@@ -29,7 +29,7 @@ TebLocalPlannerROS:
     global_plan_viapoint_sep: 0.5 # -0.1
     #Optimization weight for minimzing the distance to via-points
     #How close robot follows the via-points
-    weight_viapoint: 50.0 # 1.0
+    weight_viapoint: 75.0 # 1.0
     shrink_horizon_min_duration: 10.0
     #If true, underlying trajectories might be initialized with 
     #backwards motions in case the goal is behind the start within the local costmap
@@ -63,7 +63,7 @@ TebLocalPlannerROS:
     # Obstacles
 
     #Minimum desired separation from obstacles in meters 
-    min_obstacle_dist: 0.05
+    min_obstacle_dist: 0.02
     include_costmap_obstacles: True
     costmap_obstacles_behind_robot_dist: 3.0 # 1.0
     obstacle_poses_affected: 30
@@ -80,9 +80,9 @@ TebLocalPlannerROS:
     #Add a small safety margin to penalty functions for hard-constraint approximations 
     penalty_epsilon: 0.08
     weight_max_vel_x: 2
-    weight_max_vel_theta: 10 # 1
+    weight_max_vel_theta: 2 # 1
     weight_acc_lim_x: 1
-    weight_acc_lim_theta: 10 # 1
+    weight_acc_lim_theta: 1 # 1
     weight_kinematics_nh: 1000
     weight_kinematics_forward_drive: 50
     weight_kinematics_turning_radius: 1

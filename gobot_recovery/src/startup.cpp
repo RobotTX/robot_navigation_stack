@@ -47,7 +47,7 @@ void getButtonCallback(const std_msgs::Int8::ConstPtr& msg){
         ros::service::call("/gobot_command/play_path",empty_srv);
       }
       //pause path
-      else if(get_gobot_status.response.status==5 && get_gobot_status.response.text=="PLAY_PATH"){
+      else if(get_gobot_status.response.status==5 && get_gobot_status.response.text!="WAITING"){
         ROS_INFO("Pause robot path.");
         ros::service::call("/gobot_command/pause_path",empty_srv);
       }

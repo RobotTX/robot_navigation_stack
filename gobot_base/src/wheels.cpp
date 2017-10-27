@@ -12,14 +12,16 @@ std::vector<uint8_t> writeAndRead(std::vector<uint8_t> toWrite, int bytesToRead)
     if(serialConnection.isOpen()){
         /// Lock the mutex so no one can write at the same time
         serialMutex.lock();
+        try{
+            /// Send bytes to the MD49
+            size_t bytes_wrote = serialConnection.write(toWrite);
 
-        /// Send bytes to the MD49
-        size_t bytes_wrote = serialConnection.write(toWrite);
-
-        /// Read any byte that we are expecting
-        if(bytesToRead > 0)
-            serialConnection.read(buff, bytesToRead);
-        
+            /// Read any byte that we are expecting
+            if(bytesToRead > 0)
+                serialConnection.read(buff, bytesToRead);
+        } catch (std::exception& e) {
+		    ROS_ERROR("(Wheels) exception : %s", e.what());
+	    }
         /// Unlock the mutex
         serialMutex.unlock();
 
@@ -63,7 +65,8 @@ bool setSpeeds(gobot_msg_srv::SetSpeeds::Request &req, gobot_msg_srv::SetSpeeds:
         writeAndRead(std::vector<uint8_t>({0x00, 0x31, leftSpeed, 0x00, 0x32, rightSpeed}));
 
         return true;
-    } else 
+    } 
+    else 
         return false;
 }
 

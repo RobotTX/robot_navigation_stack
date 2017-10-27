@@ -23,23 +23,19 @@ void getButtonCallback(const std_msgs::Int8::ConstPtr& msg){
       //start exploration
       if(get_gobot_status.response.status==21){
         ROS_INFO("Continue robot exploration.");
-        hector_exploration_node::Exploration arg;
-        arg.request.backToStartWhenFinished = 0;
-        ros::service::call("/gobot_scan/startExploration",arg);
+        ros::service::call("/gobot_command/start_explore",empty_srv);
       }
       //stop exploring
       else if(get_gobot_status.response.status==25){
         ROS_INFO("Stop robot exploration.");
-        ros::service::call("/gobot_scan/stopExploration",empty_srv);
+        ros::service::call("/gobot_command/stop_explore",empty_srv);
       }
     }
     else if(dt>5.0 && dt<=10.0){
       //exploration
       if(get_gobot_status.response.status==20){
         ROS_INFO("Start robot exploration.");
-        hector_exploration_node::Exploration arg;
-        arg.request.backToStartWhenFinished = 0;
-        ros::service::call("/gobot_scan/startExploration",arg);
+        ros::service::call("/gobot_command/start_explore",empty_srv);
       }
       //save map
       else if(get_gobot_status.response.status==21){

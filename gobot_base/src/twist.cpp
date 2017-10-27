@@ -59,7 +59,7 @@ void newBumpersInfo(const gobot_msg_srv::BumperMsg::ConstPtr& bumpers){
                     std::thread([](){
                         ROS_WARN("(twist::newBumpersInfo) Launching thread to move away from the obstacle");
                         setSpeed('B', 5, 'B', 5);
-                        std::this_thread::sleep_for(std::chrono::milliseconds(2000));
+                        std::this_thread::sleep_for(std::chrono::milliseconds(2500));
                         setSpeed('F', 0, 'F', 0);
                         moving_from_collision = false;
                     }).detach();
@@ -67,7 +67,7 @@ void newBumpersInfo(const gobot_msg_srv::BumperMsg::ConstPtr& bumpers){
                     std::thread([](){
                         ROS_WARN("(twist::newBumpersInfo) Launching thread to move away from the obstacle");
                         setSpeed('F', 5, 'F', 5);
-                        std::this_thread::sleep_for(std::chrono::milliseconds(2000));
+                        std::this_thread::sleep_for(std::chrono::milliseconds(2500));
                         setSpeed('F', 0, 'F', 0);
                         moving_from_collision = false;
                     }).detach();

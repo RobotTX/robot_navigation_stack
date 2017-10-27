@@ -44,9 +44,9 @@ max_planning_retries: -1 #-1
 #Times of recovery will be tried before give up
 recovery_count_threshold: 6
 
-#Goal readched when distance between robot and goal is smaller than it after trying certain times of recovery
+#Goal readched when distance between robot and goal is smaller than it after trying recovery
 #default:0.5
-dis_to_goal_threshold_: 0.4
+dis_to_goal_threshold_: 0.5
 
 NavfnROS:
     # To tell the planner not to use the unknown space as free space
@@ -56,7 +56,7 @@ NavfnROS:
     allow_unknown: false
     # attempt to create a plan that is as close to the specified goal as possible 
     # but no further than default_tolerance away
-    default_tolerance: 1.0
+    default_tolerance: 0.6
     #planner_window_x: 10.0 
     #planner_window_y: 10.0
 

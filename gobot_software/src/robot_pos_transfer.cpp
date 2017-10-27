@@ -25,6 +25,7 @@ void sendRobotPos(const ros::TimerEvent&){
             }
         }
         socketsMutex.unlock();
+        
         //disconnect it
         for(int i=0;i<dis_ip.size();i++){
             std_msgs::String msg;

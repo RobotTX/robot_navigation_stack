@@ -1,5 +1,4 @@
 #!/bin/bash
-path=$(rospack find gobot_navigation | cut -d '/' -f1-3)
 var0=$(rosnode list | grep rosout)
 if [ $? -ne 0 ] 
 then
@@ -7,6 +6,9 @@ echo "start roscore"
 gnome-terminal -x bash -c "source /opt/ros/kinetic/setup.bash;roscore;exec bash;"
 sleep 5s
 fi
+
+path=$(rospack find gobot_navigation | cut -d '/' -f1-3)
+
 var0=$(rosnode list | grep battery_controller)
 if [ $? -ne 0 ]
 then

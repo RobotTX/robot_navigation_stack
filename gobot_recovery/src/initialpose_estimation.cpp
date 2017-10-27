@@ -28,11 +28,13 @@ bool evaluatePose(int type){
     //Evaluate Last pose compared to Home pose
     else if(type==1){
         if(home_pos_x!=0 || home_pos_y!=0 || home_ang_x!=0 || home_ang_y!=0 || home_ang_z!=0 || home_ang_w!=0)
-            if(std::abs(home_pos_x-last_pos_x)<0.5 && std::abs(home_pos_y-last_pos_y)<0.5 && std::abs(home_pos_yaw-last_pos_yaw)<PI*11/180)
+            if(std::abs(home_pos_x-last_pos_x)<0.5 && std::abs(home_pos_y-last_pos_y)<0.5 && std::abs(home_pos_yaw-last_pos_yaw)<PI*11/180){
+                ROS_INFO("Last recorded post near to charging station.");
                 return true;
-        
+            }
         return false;
     }
+    return false;
 }
 
 bool rotateFindPose(double rot_v,double rot_t){

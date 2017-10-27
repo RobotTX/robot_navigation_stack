@@ -48,13 +48,28 @@ sudo apt install fping
 #allow ssh [username]@ip
 sudo apt install openssh-server openssh-client
 
-#screen split (not necessary)
+### Optional Configuration ###
+
+#remote desktop control
+remmina remote desktop client
+protocol: VNC
+
+#screen split
 settings >> appearance >> behavior
 sudo apt install unity-tweak-tool
 
-#file transfer (not necessary)
-FileZilla
-https://filezilla-project.org/download.php?type=client
+#file transfer
+sudo apt install filezilla
+protocol: SFTP
+
+#Picture editor GIMP
+sudo apt install gimp
+
+#QT 5.8
+sudo ./qt.run
+
+#roboware studio
+sudo dpkg -i robotware.deb
 
 ###################################################
 

@@ -82,7 +82,7 @@ void teleop(const int8_t val){
 
 void session(boost::shared_ptr<tcp::socket> sock){
     std::string ip = sock->remote_endpoint().address().to_string();
-    ROS_INFO("(Teleop) session launched %s", ip.c_str());
+    //~ROS_INFO("(Teleop) session launched %s", ip.c_str());
 
     while(ros::ok() && sockets.count(ip)){
         char data[max_length];
@@ -90,7 +90,7 @@ void session(boost::shared_ptr<tcp::socket> sock){
         boost::system::error_code error;
         size_t length = sock->read_some(boost::asio::buffer(data), error);
         if ((error == boost::asio::error::eof) || (error == boost::asio::error::connection_reset)){
-            ROS_INFO("(Teleop) Connection closed");
+            //~ROS_INFO("(Teleop) Connection closed");
             return;
         } else if (error) {
             throw boost::system::system_error(error); // Some other error.
@@ -115,7 +115,7 @@ void server(void){
 
         /// Got a new connection so we had it to our array of sockets
         std::string ip = sock->remote_endpoint().address().to_string();
-        ROS_INFO("(Teleop) Command socket connected to %s", ip.c_str());
+        //~ROS_INFO("(Teleop) Command socket connected to %s", ip.c_str());
         socketsMutex.lock();
         if(!sockets.count(ip))
             sockets.insert(std::pair<std::string, boost::shared_ptr<tcp::socket>>(ip, sock));
@@ -136,7 +136,7 @@ void serverDisconnected(const std_msgs::String::ConstPtr& msg){
     if(sockets.count(msg->data)){
         sockets.at(msg->data)->close();
         sockets.erase(msg->data);
-        ROS_WARN("(Teleop) The ip %s just disconnected", msg->data.c_str());
+        //~ROS_WARN("(Teleop) The ip %s just disconnected", msg->data.c_str());
     }
     socketsMutex.unlock();
 }
