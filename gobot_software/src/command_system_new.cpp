@@ -9,6 +9,7 @@ int robot_pos_port = 4001;
 int map_port = 4002;
 int laser_port = 4003;
 int recovered_position_port = 4004;
+bool keyboardEnabled = false;
 
 /// Separator which is just a char(31) => unit separator in ASCII
 static const std::string sep = std::string(1, 31);
@@ -157,7 +158,7 @@ bool execCommand(const std::string ip, const std::vector<std::string> command){
         /// NOT USED NOW
         /// command to recover the robot's position
         case 'v':
-
+            status = keyboardControl(command);
         break;
 
         /// NOT USED NOW
@@ -653,7 +654,26 @@ bool stopScanning(const std::string ip, const std::vector<std::string> command){
 }
 
 /// First param = v
+bool keyboardControl(const std::vector<std::string> command){
+    ros::NodeHandle n;
+    std::string restart_sh;
+    if(command.size() == 1) {
+        std::string cmd;
+        ROS_INFO("(Command system) Activate keyboard control");
+        if(!keyboardEnabled){
+            cmd = "gnome-terminal -x bash -c \"source /opt/ros/kinetic/setup.bash;source /home/gtdollar/catkin_ws/devel/setup.bash;rosrun teleop_twist_keyboard teleop_twist_keyboard.py\"";
+            keyboardEnabled = true;
+        }
+        else{
+            cmd = "rosnode kill /teleop_twist_keyboard";
+            keyboardEnabled = false;
+        }
+        system(cmd.c_str());
+        return true;
+    }
 
+    return false;
+}
 
 /// First param = w
 
@@ -839,6 +859,7 @@ void checkCommand(char c){
         /// new charging station
         case 'n':
             getGobotStatusSrv.call(get_gobot_status);
+            //go to charging station
             if(get_gobot_status.response.status==15){
                 std::vector<std::string> command({"p"});
                 std::string commandStr = command.at(0) + sep;
@@ -851,6 +872,17 @@ void checkCommand(char c){
             getGobotStatusSrv.call(get_gobot_status);
             //WAITING OR PLAY PATH
             if(get_gobot_status.response.status==5){
+                std::vector<std::string> command({"d"});
+                std::string commandStr = command.at(0) + sep;
+                sendCommand("",command,commandStr);
+            }
+        break;
+
+        /// keyboard control
+        case 'v':
+            getGobotStatusSrv.call(get_gobot_status);
+            //WAITING OR PLAY PATH
+            if(get_gobot_status.response.status==5 && !keyboardEnabled){
                 std::vector<std::string> command({"d"});
                 std::string commandStr = command.at(0) + sep;
                 sendCommand("",command,commandStr);
@@ -967,8 +999,8 @@ void sendConnectionData(boost::shared_ptr<tcp::socket> sock){
     z_angle=std::stod(get_home.response.data[4]);
     w_angle=std::stod(get_home.response.data[5]);
     if(homeX=="0" && homeY=="0" && x_angle==0 && y_angle==0 && z_angle==0 && w_angle==0){
-        homeX = "-150";
-        homeY = "-150";
+        homeX = "-1";
+        homeY = "-1";
     }
     tf::Matrix3x3 matrix = tf::Matrix3x3(tf::Quaternion(x_angle , y_angle , z_angle, w_angle));
     matrix.getRPY(roll, pitch, yaw);
@@ -1004,9 +1036,9 @@ void sendConnectionData(boost::shared_ptr<tcp::socket> sock){
     if(mapDate.empty())
         mapDate = "1970-05-21-00-00-00";
     if(homeX.empty())
-        homeX = "-150";
+        homeX = "-1";
     if(homeY.empty())
-        homeY = "-150";
+        homeY = "-1";
 
     getGobotStatusSrv.call(get_gobot_status);
     gobot_msg_srv::GetInt get_loop;
@@ -1180,6 +1212,18 @@ void disconnect(const std::string ip){
     socketsMutex.unlock();
 }
 
+/*********************************** SHUT DOWN ***********************************/
+void mySigintHandler(int sig){ 
+    socketsMutex.lock();
+    for(auto const &elem : sockets){
+        elem.second->close();
+        sockets.erase(elem.first);
+    }
+    socketsMutex.unlock();
+
+    ros::shutdown();
+}
+
 /*********************************** MAIN ***********************************/
 
 int main(int argc, char* argv[]){
@@ -1187,6 +1231,7 @@ int main(int argc, char* argv[]){
     try{
         ros::init(argc, argv, "command_system");
         ros::NodeHandle n;
+        signal(SIGINT, mySigintHandler);
 
         n.param<bool>("simulation", simulation, false);
         ROS_INFO("(Command system) simulation : %d", simulation);

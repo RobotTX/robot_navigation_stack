@@ -70,26 +70,25 @@ bool updataStatusSrvCallback(std_srvs::Empty::Request &req, std_srvs::Empty::Res
  * Will ping all available IP addresses and send a message when we disconnect to one
  */
 void pingAllIPs(void){
-    /// Ping all servers every 5 secs
-    ros::Rate loop_rate(1/8.0);
+    /// Ping all servers every 8 secs
+    ros::Rate loop_rate(1/5.0);
 
     std::vector<std::thread> threads;
 
     while(ros::ok()){ 
         threads.clear();
         connectedIPs.clear();
-
-        /// Get the data to send to the Qt app
-        std::string dataToSend = getDataToSend();
-        //ROS_INFO("(ping_server) Data to send : %s", dataToSend.c_str());
         
         if(availableIPs.size()>0){
+            /// Get the data to send to the Qt app
+            std::string dataToSend = getDataToSend();
+            //ROS_INFO("(ping_server) Data to send : %s", dataToSend.c_str());
             /// We create threads to ping every IP adress
             /// => threads reduce the required time to ping from ~12 sec to 2 sec
             serverMutex.lock();
             //ROS_INFO("(ping_server) Trying to ping everyone %lu", availableIPs.size());
             for(int i = 0; i < availableIPs.size(); ++i)
-                threads.push_back(std::thread(pingIP, availableIPs.at(i), dataToSend, 6.0));
+                threads.push_back(std::thread(pingIP, availableIPs.at(i), dataToSend, 4.0));
             serverMutex.unlock();
 
             /// We join all the threads => we wait for all the threads to be done
@@ -245,6 +244,13 @@ void newBatteryInfo(const gobot_msg_srv::BatteryMsg::ConstPtr& batteryInfo){
 
 void mySigintHandler(int sig)
 {   
+    //disconnect all sockets when closed
+    for(int i=0;i<oldIPs.size();i++){
+        std_msgs::String msg;
+        msg.data = oldIPs.at(i).first;
+        disco_pub.publish(msg);
+    }
+
     while(scanIP){
         ros::Duration(0.5).sleep();
         ros::spinOnce();

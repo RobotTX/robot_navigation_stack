@@ -52,7 +52,7 @@ void getButtonCallback(const std_msgs::Int8::ConstPtr& msg){
         ros::service::call("/gobot_command/pause_path",empty_srv);
       }
       //if go docking, stop it
-      else if(get_gobot_status.response.status==15 && dt>1.0){
+      else if(get_gobot_status.response.status==15 && dt>1.5){
         ROS_INFO("Stop robot home.");
         ros::service::call("/gobot_command/stopGoDock",empty_srv);
       }

@@ -29,7 +29,7 @@ TebLocalPlannerROS:
     global_plan_viapoint_sep: 0.5 # -0.1
     #Optimization weight for minimzing the distance to via-points
     #How close robot follows the via-points
-    weight_viapoint: 75.0 # 1.0
+    weight_viapoint: 60.0 # 1.0
     shrink_horizon_min_duration: 10.0
     #If true, underlying trajectories might be initialized with 
     #backwards motions in case the goal is behind the start within the local costmap
@@ -46,7 +46,7 @@ TebLocalPlannerROS:
     #MAX_ACC_LINEAR=ACC_STEP*0.53m/s^2
     acc_lim_x: 0.5
     #MAX_ACC_ANGULAR=ACC_STEP*2.35rad/s^2
-    acc_lim_theta: 1.2
+    acc_lim_theta: 1.0
 
     #Minimum turning radius of a carlike robot (set to zero for a diff-drive robot). 
     min_turning_radius: 0.0
@@ -63,7 +63,7 @@ TebLocalPlannerROS:
     # Obstacles
 
     #Minimum desired separation from obstacles in meters 
-    min_obstacle_dist: 0.02
+    min_obstacle_dist: 0.05
     include_costmap_obstacles: True
     costmap_obstacles_behind_robot_dist: 3.0 # 1.0
     obstacle_poses_affected: 30
@@ -71,6 +71,7 @@ TebLocalPlannerROS:
     #Also refer to the weight weight_inflation. 
     inflation_dist: 0.6 #0.6
     dynamic_obstacle_inflation_dist: 0.6 #0.6
+
     # Optimization
 
     no_inner_iterations: 4

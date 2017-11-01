@@ -25,7 +25,7 @@ shutdown_costmaps: False # True
 controller_frequency: 10
 
 # Frequency of the global planner
-planner_frequency: 4
+planner_frequency: 3
 
 recovery_behavior_enabled: true
 
@@ -37,7 +37,7 @@ controller_patience: 10
 # A value of 0.0 corresponds to an infinite timeout.
 oscillation_timeout: 0.0 #0.0
 
-oscillation_distance: 0.5 #0.5
+oscillation_distance: 0.1 #0.5
 
 max_planning_retries: -1 #-1
 

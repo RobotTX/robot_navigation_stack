@@ -206,19 +206,19 @@ void newBumpersInfo(const gobot_msg_srv::BumperMsg::ConstPtr& bumpers){
             ROS_WARN("(auto_docking::newBumpersInfo) just got a new collision:%d,%d,%d,%d",bumpers->bumper5,bumpers->bumper6,bumpers->bumper7,bumpers->bumper8);
             //turn right
             if(bumpers->bumper8==0 && bumpers->bumper5==1 && bumpers->bumper6==1 && bumpers->bumper7==1)
-                setSpeed('B', 3, 'F', 3);
+                setSpeed('B', 4, 'F', 4);
             //turn left
             else if(bumpers->bumper5==0 && bumpers->bumper6==1 && bumpers->bumper7==1 && bumpers->bumper8==1)
-                setSpeed('F', 3, 'B', 3);
+                setSpeed('F', 4, 'B', 4);
             //turn a bit left
             else if(bumpers->bumper5==0 && bumpers->bumper6==0 && bumpers->bumper7==1 && bumpers->bumper8==1)
-                setSpeed('F', 3, 'F', 1);
+                setSpeed('F', 4, 'F', 2);
             //turn a bit right
             else if(bumpers->bumper7==0 && bumpers->bumper8==0 && bumpers->bumper5==1 && bumpers->bumper6==1)
-                setSpeed('F', 1, 'F', 3);
+                setSpeed('F', 2, 'F', 4);
             //forward
             else
-                setSpeed('F', 3, 'F', 3);
+                setSpeed('F', 4, 'F', 4);
                 
             std::thread([](){
                 ros::Duration(1.0).sleep();
@@ -358,6 +358,8 @@ void finishedDocking(){
     if(ros::service::call("/gobot_status/charging_status", arg) && arg.response.isCharging){
         set_dock_status.request.status = 1;
         setDockStatusSrv.call(set_dock_status);
+        //set current pose to be home
+        //ros::service::call("/gobot_recovery/initialize_home",empty_srv);
         ROS_INFO("(auto_docking::finishedDocking) Auto docking finished->SUCESSFUL.");
         stopDocking();
     }

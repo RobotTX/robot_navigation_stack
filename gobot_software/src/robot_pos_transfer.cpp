@@ -85,6 +85,18 @@ void disconnect(const std::string ip){
     socketsMutex.unlock();
 }
 
+/*********************************** SHUT DOWN ***********************************/
+void mySigintHandler(int sig){ 
+    socketsMutex.lock();
+    for(auto const &elem : sockets){
+        elem.second->close();
+        sockets.erase(elem.first);
+    }
+    socketsMutex.unlock();
+
+    ros::shutdown();
+}
+
 /*********************************** MAIN ***********************************/
 
 int main(int argc, char **argv){
@@ -93,7 +105,8 @@ int main(int argc, char **argv){
 	ROS_INFO("(Robot Pos) Ready to be launched.");
 
 	ros::NodeHandle n;
-	
+	signal(SIGINT, mySigintHandler);
+
     //Periodically send robot pose to connected clients
     ros::Timer timer = n.createTimer(ros::Duration(0.5), sendRobotPos);
 

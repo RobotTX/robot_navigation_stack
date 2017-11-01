@@ -205,49 +205,38 @@ void session(boost::shared_ptr<tcp::socket> sock){
                         /// Kill gobot move so that we'll restart it with the new map
                         std::string cmd = "rosnode kill /move_base";
                         system(cmd.c_str());
-
+                        sleep(3);
                         ROS_INFO("(New Map) We killed gobot_navigation");
 
+                        //#### delete old robot data ####
+                        /// We delete the old home
+                        gobot_msg_srv::SetString set_home;
+                        set_home.request.data.push_back("0");
+                        set_home.request.data.push_back("0");
+                        set_home.request.data.push_back("0");
+                        set_home.request.data.push_back("0");
+                        set_home.request.data.push_back("0");
+                        set_home.request.data.push_back("0");
+                        ros::service::call("/gobot_status/set_home",set_home);
+                        ROS_INFO("(New Map) Home deleted");
+                        
+                        /// We detele the loop
+                        gobot_msg_srv::SetInt set_loop;
+                        set_loop.request.data.push_back(0);
+                        ros::service::call("/gobot_status/set_loop",set_loop);
+                        ROS_INFO("(New Map) Loop deleted");
+
                         /// We delete the old path
-                        std::string pathFile;
-                        if(n.hasParam("path_file")){
-                            n.getParam("path_file", pathFile);
-                            ROS_INFO("read new map set path file to %s", pathFile.c_str());
-                        }
-                        ofs.open(pathFile, std::ofstream::out | std::ofstream::trunc);
-                        ofs.close();
+                        gobot_msg_srv::SetPath set_path;
+                        ros::service::call("/gobot_status/set_path", set_path);
                         ROS_INFO("(New Map) Path deleted");
 
                         /// We delete the old path stage
-                        std::string pathStageFile;
-                        if(n.hasParam("path_stage_file")){
-                            n.getParam("path_stage_file", pathStageFile);
-                            ROS_INFO("read new map set path stage file to %s", pathStageFile.c_str());
-                        }
-                        ofs.open(pathStageFile, std::ofstream::out | std::ofstream::trunc);
-                        ofs.close();
+                        gobot_msg_srv::SetStage set_stage;
+                        set_stage.request.stage = 0;
+                        ros::service::call("/gobot_status/set_stage", set_stage);
                         ROS_INFO("(New Map) Path stage deleted");
-
-                        /// We delete the old home
-                        std::string homeFile;
-                        if(n.hasParam("home_file")){
-                            n.getParam("home_file", homeFile);
-                            ROS_INFO("read new map home file to %s", homeFile.c_str());
-                        }
-                        ofs.open(homeFile, std::ofstream::out | std::ofstream::trunc);
-                        ofs.close();
-                        ROS_INFO("(New Map) Home deleted");
-
-                        /// We detele the loop
-                        std::string loopFile;
-                        if(n.hasParam("path_loop_file")){
-                            n.getParam("path_loop_file", loopFile);
-                            ROS_INFO("read new map loop file to %s", loopFile.c_str());
-                        }
-                        ofs.open(loopFile, std::ofstream::out | std::ofstream::trunc);
-                        ofs << 0;
-                        ofs.close();
-                        ROS_INFO("(New Map) Loop deleted");
+                        //#### delete old robot data ####
 
                         
                         /// Relaunch gobot_navigation
@@ -269,7 +258,8 @@ void session(boost::shared_ptr<tcp::socket> sock){
                     ROS_INFO("(New Map) Map id could not be updated : %s with date %s", mapId.c_str(), mapDate.c_str());
                     message = "failed";
                 }
-            } else {
+            } 
+            else{
                 message = "done 0";
             }
 
@@ -342,13 +332,26 @@ void serverDisconnected(const std_msgs::String::ConstPtr& msg){
     socketsMutex.unlock();
 }
 
+/*********************************** SHUT DOWN ***********************************/
+void mySigintHandler(int sig){ 
+    socketsMutex.lock();
+    for(auto const &elem : sockets){
+        elem.second->close();
+        sockets.erase(elem.first);
+    }
+    socketsMutex.unlock();
+
+    ros::shutdown();
+}
+
 /*********************************** MAIN ***********************************/
 
 int main(int argc, char **argv){
 
     ros::init(argc, argv, "read_new_map");
     ros::NodeHandle n;
-    
+    signal(SIGINT, mySigintHandler);
+
     ROS_INFO("(New Map) Ready to be launched.");
 
     /// Subscribe to know when we disconnected from the server

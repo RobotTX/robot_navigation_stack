@@ -308,6 +308,18 @@ void serverDisconnected(const std_msgs::String::ConstPtr& msg){
     socketsMutex.unlock();
 }
 
+/*********************************** SHUT DOWN ***********************************/
+void mySigintHandler(int sig){ 
+    socketsMutex.lock();
+    for(auto const &elem : sockets){
+        elem.second->close();
+        sockets.erase(elem.first);
+    }
+    socketsMutex.unlock();
+
+    ros::shutdown();
+}
+
 /*********************************** MAIN ***********************************/
 
 int main(int argc, char **argv){
@@ -316,6 +328,7 @@ int main(int argc, char **argv){
 	ROS_INFO("(Map::main) Ready to be launched.");
 
 	ros::NodeHandle n;
+	signal(SIGINT, mySigintHandler);
 
 	ros::ServiceServer send_once_service = n.advertiseService("/gobot_function/send_once_map_sender", sendOnceMap);
 	ros::ServiceServer send_auto_service = n.advertiseService("/gobot_function/send_auto_map_sender", sendAutoMap);

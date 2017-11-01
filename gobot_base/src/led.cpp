@@ -21,22 +21,22 @@
 
 /*
 -----LED Running-----
-green white - go to path point
+green white - go to path point/auto scan
 red white - bumper collision
 cyan white - charging battery 75%~100%
 yellow white - charging battery 25%~75%
 magenta white - charging battery 0%~25%
 cyan yellow - go to docking
-blue green - complete exploration 
 red blue - get lost
 
 -----LED Permanent-----
-green - reach path point/found initial pose/not get lost
+green - reach path point/found initial pose/complete auto scan
 red - abort path point/fail to docking/not found initial pose
 blue - cancel path point/cancel docking
 cyan - battery 75%~100%
 yellow - battery 25%~75%
 magenta - battery 0%~25%
+white - scan mode/find pose
 */
 
 ros::Time last_time;

@@ -91,7 +91,7 @@ void publishInitialpose(const double position_x, const double position_y, const 
         initialPose.pose.covariance[35] = cov2;
         
         // we wait for amcl to launch
-        ros::Duration(2.0).sleep();
+        ros::Duration(1.0).sleep();
 
         initial_pose_publisher.publish(initialPose);
         //ROS_INFO("(initial_pose_publisher) initialpose published.");
@@ -103,9 +103,26 @@ bool initializeHomeSrcCallback(std_srvs::Empty::Request &req, std_srvs::Empty::R
     gobot_msg_srv::IsCharging arg;
     ros::service::call("/gobot_status/charging_status",arg);
     if(arg.response.isCharging){
-        //get pose
-        getPose();
+        //get home pose
+        gobot_msg_srv::GetString get_home;
+        ros::service::waitForService("/gobot_status/get_home",ros::Duration(30.0));
+        if(ros::service::call("/gobot_status/get_home",get_home)){
+            home_pos_x=std::stod(get_home.response.data[0]);
+            home_pos_y=std::stod(get_home.response.data[1]);
+            home_ang_x=std::stod(get_home.response.data[2]);
+            home_ang_y=std::stod(get_home.response.data[3]);
+            home_ang_z=std::stod(get_home.response.data[4]);
+            home_ang_w=std::stod(get_home.response.data[5]);
+            double roll,pitch;
+            tf::Matrix3x3(tf::Quaternion(home_ang_x,home_ang_y,home_ang_z,home_ang_w)).getRPY(roll,pitch,home_pos_yaw);
+            ROS_INFO("Home: pos(%.2f,%.2f,%.2f),cov(%.2f,%.2f,%.2f).",home_pos_x,home_pos_y,home_pos_yaw,initial_cov_xy,initial_cov_xy,initial_cov_yaw);
+        }
+        else
+            ROS_ERROR("Could not find the param home_pose");
+
         publishInitialpose(home_pos_x,home_pos_y,home_ang_x,home_ang_y,home_ang_z,home_ang_w,initial_cov_xy,initial_cov_yaw);
+        //clear costmap before rotating
+        ros::service::call("/move_base/clear_costmaps",empty_srv);
         ROS_INFO("Robot is in the charing station");
         found_pose=true;
     }
@@ -144,6 +161,8 @@ bool initializePoseSrvCallback(std_srvs::Empty::Request &req, std_srvs::Empty::R
                         break;
 
                     case CHARGING_STAGE:
+                        //wait for battery update
+                        ros::Duration(1.5).sleep();
                         ros::service::call("/gobot_status/charging_status",arg);
                         //if robot is charging, it is in CS station 
                         if(arg.response.isCharging || evaluatePose(1)){
@@ -301,17 +320,25 @@ void getAmclPoseCallback(const geometry_msgs::PoseWithCovarianceStamped::ConstPt
     //Write lastest amcl_pose to file
     if(found_pose){
         std_msgs::Int8 lost;
-        if((cov_x > 20*initial_cov_xy && cov_y > 20*initial_cov_xy) || cov_yaw > 20*initial_cov_yaw){
-            gobot_msg_srv::IsCharging arg;
-            ROS_ERROR("Big covariance in the amcl pose");
+        if((cov_x > 25*initial_cov_xy && cov_y > 25*initial_cov_xy) || cov_yaw > 25*initial_cov_yaw){
+            /*gobot_msg_srv::IsCharging arg;
             if(ros::service::call("/gobot_status/charging_status", arg) && arg.response.isCharging){
                 ROS_ERROR("Found gobot is charging. Set its pose to home");
                 publishInitialpose(home_pos_x,home_pos_y,home_ang_x,home_ang_y,home_ang_z,home_ang_w,initial_cov_xy,initial_cov_yaw);
                 lost.data=0;
             }
             else{
-                lost.data = 1;         
-            }
+            if(cov_yaw > 25*initial_cov_yaw)
+                ROS_ERROR("Big yaw covariance in the amcl pose");
+            if(cov_x > 25*initial_cov_xy && cov_y > 25*initial_cov_xy)
+                ROS_ERROR("Big xy covariance in the amcl pose");
+            lost.data = 1;         
+            }*/
+            if(cov_yaw > 25*initial_cov_yaw)
+                ROS_ERROR("Big yaw covariance in the amcl pose");
+            if(cov_x > 25*initial_cov_xy && cov_y > 25*initial_cov_xy)
+                ROS_ERROR("Big xy covariance in the amcl pose");
+            lost.data = 1; 
         }
         else{
             lost.data=0;

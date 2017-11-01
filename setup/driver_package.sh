@@ -24,11 +24,8 @@ echo "installing teb-local-planner..."
 echo "y" | sudo apt install ros-kinetic-teb-local-planner
 echo "teb-local-planner installed!"
 sleep 2s
-echo "installing telop-twist-keyboard..."
-echo "y" | sudo apt install ros-kinetic-teleop-twist-keyboard
-echo "telop-twist-keyboard installed!"
-sleep 2s
 echo "installing urg-node..."
 echo "y" | sudo apt install ros-kinetic-urg-node
 echo "urg-node installed!"
 echo "all packages are installed!"
+sleep 5s

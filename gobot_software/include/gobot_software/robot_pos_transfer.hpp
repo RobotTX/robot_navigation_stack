@@ -32,6 +32,7 @@ void getRobotPos(const geometry_msgs::Pose::ConstPtr& msg);
 void server(void);
 
 /*********************************** DISCONNECTION FUNCTIONS ***********************************/
+void mySigintHandler(int sig);
 
 void serverDisconnected(const std_msgs::String::ConstPtr& msg);
 

@@ -108,7 +108,7 @@ bool startNewScan(const std::string ip, const std::vector<std::string> command);
 bool stopScanning(const std::string ip, const std::vector<std::string> command);
 
 /// v
-
+bool keyboardControl(const std::vector<std::string> command);
 /// w
 
 /// x
@@ -164,6 +164,7 @@ void session(boost::shared_ptr<tcp::socket> sock);
 void server(void);
 
 /*********************************** DISCONNECTION FUNCTIONS ***********************************/
+void mySigintHandler(int sig);
 
 void serverDisconnected(const std_msgs::String::ConstPtr& msg);
 

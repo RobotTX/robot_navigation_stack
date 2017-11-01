@@ -63,6 +63,7 @@ bool sendOnceMap(gobot_msg_srv::SendMap::Request &req,
 void server(void);
 
 /*********************************** DISCONNECTION FUNCTIONS ***********************************/
+void mySigintHandler(int sig);
 
 void serverDisconnected(const std_msgs::String::ConstPtr& msg);
 
