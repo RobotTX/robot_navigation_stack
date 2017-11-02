@@ -1,0 +1,37 @@
+<?xml version="1.0"?>
+
+<robot xmlns:xacro="http://ros.org/wiki/xacro">
+  
+  <xacro:include filename="$(find gobot_description)/urdf/cliff/cliff.gazebo.xacro" />
+
+  <xacro:macro name="cliff_sensor" params="name parent ros_topic update_rate min_range max_range field_of_view ray_count pos_x pos_y pos_z rotation_y gaussian_noise resolution">
+    <joint name="${name}_joint" type="fixed">
+      <origin xyz="${pos_x} ${pos_y} ${pos_z}" rpy="0 ${rotation_y} 0" />
+      <parent link="${parent}"/>
+      <child link="${name}_link"/>
+    </joint>
+
+    <link name="${name}_link">
+      <inertial>
+        <mass value="0.001" />
+        <origin xyz="0 0 0" rpy="0 0 0" />
+        <inertia ixx="0.000000017" ixy="0" ixz="0" iyy="0.000000017" iyz="0" izz="0.000000017" />
+      </inertial>
+      <visual>
+        <origin xyz="0 0 0" rpy="0 0 0" />
+        <geometry>
+          <!--<box size="0.01 0.01 0.01" /> -->
+          <mesh filename="package://hector_sensors_description/meshes/sonar_sensor/max_sonar_ez4.dae"/>
+        </geometry>
+      </visual>
+      <collision>
+        <origin xyz="0 0 0" rpy="0 0 0" />
+        <geometry>
+          <box size="0.01 0.01 0.01" />
+        </geometry>
+      </collision>
+    </link>
+
+    <cliff_sensor_gazebo name="${name}" ros_topic="${ros_topic}" update_rate="${update_rate}" min_range="${min_range}" max_range="${max_range}" field_of_view="${field_of_view}" ray_count="${ray_count}" gaussian_noise="${gaussian_noise}" resolution="${resolution}" />
+  </xacro:macro>
+</robot>

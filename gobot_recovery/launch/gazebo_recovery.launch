@@ -1,0 +1,10 @@
+<?xml version="1.0"?>
+<launch>     
+
+    <param name="home_file" type="string" value="$(find gobot_data)/data/home.txt"/>
+    <param name="last_pose" type="string" value="$(find gobot_data)/data/lastKnownPosition.txt"/>
+    <param name="restart_file" type="string" value="$(find gobot_data)/command/restart_robot.sh"/>
+
+    <node pkg="gobot_recovery" type="allow_teb_back" name="recovery_allow_teb_back" output="screen" respawn="true"/>
+
+</launch>

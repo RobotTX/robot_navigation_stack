@@ -1,0 +1,30 @@
+#http://wiki.ros.org/gmapping
+base_frame: base_link
+map_frame: map
+odom_frame: odom
+#Initial map size 
+xmin: -1.0
+ymin: -1.0
+xmax: 1.0
+ymax: 1.0
+#maxUrange < maximum range of the real sensor <= maxRange
+maxUrange: 4.5
+maxRange: 5.0
+#Minimum score for considering the outcome of the scan matching good. Can avoid jumping pose estimates in large open spaces when 
+#using laser scanners with limited range (e.g. 5m). Scores go up to 600+, try 50 for example when experiencing jumping estimate issues. 
+minimumScore: 250
+#Resolution of the map 
+delta: 0.02
+#Odometry error
+srr: 0.1
+srt: 0.2
+str: 0.1
+stt: 0.2
+#Process a scan each time the robot translates/rotates this far
+linearUpdate: 0.4 #0.5
+angularUpdate: 0.25 #0.436
+particles: 100 #50
+map_update_interval: 1
+iterations: 5
+use_footprint: true
+footprint: [[0.332, -0.3], [0.358, -0.29], [0.4, -0.234], [0.413, -0.164], [0.413, 0.164], [0.4, 0.234], [0.358, 0.29], [0.332, 0.3], [-0.1425, 0.3], [-0.199, 0.283], [-0.24, 0.2375], [-0.267, 0.161], [-0.267, -0.161], [-0.24, -0.2375], [-0.199, -0.283], [-0.1425, -0.3]]

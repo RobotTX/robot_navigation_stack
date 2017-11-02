@@ -1,0 +1,10 @@
+#udevadm info -a -p $(udevadm info -q path -n /dev/ttyUSB0)
+#sudo udevadm control --reload-rules && sudo service udev restart && sudo udevadm trigger
+#udevadm test $(udevadm info -q path -n /dev/ttyACM0)
+
+SUBSYSTEM=="tty", ACTION=="add", KERNEL=="ttyUSB0", KERNELS=="2-3.2:1.0", MODE="0666"
+
+SUBSYSTEM=="tty", ACTION=="add", KERNEL=="ttyUSB1", KERNELS=="2-3.2:1.1", MODE="0666"
+
+SUBSYSTEM=="tty", ACTION=="add", KERNEL=="ttyACM0", KERNELS=="2-2:1.0", MODE="0666"
+

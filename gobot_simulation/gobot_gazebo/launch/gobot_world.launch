@@ -1,0 +1,33 @@
+<?xml version="1.0"?>
+<launch>
+
+    <!-- Robot spawn pose -->
+    <arg name="x" default="0.073"/>
+    <arg name="y" default="0"/>
+    <arg name="z" default="0"/>
+    <arg name="roll" default="0"/>
+    <arg name="pitch" default="0"/>
+    <arg name="yaw" default="0"/>
+
+    <node pkg="tf" type="static_transform_publisher" name="base_link_to_laser" args="0.355 0 0.13275 0 0 0 /base_link /base_laser 50" required="true"/>
+
+    <include file="$(find gazebo_ros)/launch/empty_world.launch">       
+        <arg name="world_name" value="$(find gobot_gazebo)/worlds/gobot.world"/>
+        <arg name="gui" value="true"/> 
+        <arg name="paused" value="false"/>
+        <arg name="use_sim_time" value="true"/>
+        <arg name="headless" value="false"/>
+        <arg name="debug" value="false"/>   
+    </include>
+
+    <param name="robot_description" command="$(find xacro)/xacro --inorder '$(find gobot_description)/urdf/gobot.urdf.xacro'" />
+
+    <!-- push robot_description to factory and spawn robot in gazebo -->
+    <node name="gobot_spawn" pkg="gazebo_ros" type="spawn_model" output="screen"
+    args="-urdf -param robot_description -model gobot
+    -x $(arg x) -y $(arg y) -z $(arg z)
+    -R $(arg roll) -P $(arg pitch) -Y $(arg yaw)" />
+
+
+    <include file="$(find gobot_control)/launch/controller.launch"/>
+</launch>

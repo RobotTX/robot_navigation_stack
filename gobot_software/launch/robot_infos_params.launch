@@ -1,0 +1,17 @@
+<?xml version="1.0"?>
+<launch>
+		<param name="map_image_used" type="string" value="$(find gobot_data)/maps/used_map.pgm" />
+    <param name="map_config_used" type="string" value="$(find gobot_data)/maps/used_map.yaml" />
+    <param name="map_id_file" type="string" value="$(find gobot_data)/maps/mapId.txt" />
+    <param name="restart_file" type="string" value="$(find gobot_data)/command/restart_robot.sh" />
+    <param name="ping_file" type="string" value="$(find gobot_data)/IP/ping.sh" />
+    <param name="last_known_position_file" type="string" value="$(find gobot_data)/data/lastKnownPosition.txt" />
+    <param name="ips_file" type="string" value="$(find gobot_data)/IP/isAlive.txt" />
+    <param name="robot_position_file" type="string" value="$(find gobot_data)/data/robot_position.txt" />
+    <param name="path_file" type="string" value="$(find gobot_data)/data/path.txt" />
+    <param name="disconnected_file" type="string" value="$(find gobot_data)/data/disconnected.txt" />
+    <param name="path_stage_file" type="string" value="$(find gobot_data)/data/path_stage.txt" />
+    <param name="path_loop_file" type="string" value="$(find gobot_data)/data/loop.txt" />
+    <param name="home_file" type="string" value="$(find gobot_data)/data/home.txt" />
+    <param name="robot_name_file" type="string" value="$(find gobot_data)/data/name.txt" />
+</launch>

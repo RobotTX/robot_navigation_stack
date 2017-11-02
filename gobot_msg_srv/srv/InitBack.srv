@@ -1,0 +1,5 @@
+#Define the request
+int8 allow_time
+---
+
+#Define the response
