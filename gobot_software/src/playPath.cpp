@@ -71,6 +71,10 @@ void goalReached(){
 	stage++;
 	setStageInFile(stage);
 	if(stage >= path.size()){
+		gobot_msg_srv::SetInt sound_num;
+		sound_num.request.data.push_back(2);
+		ros::service::call("/gobot_base/setSound",sound_num);
+
 		if(looping && !dockAfterPath && path.size()>1){
 			//ROS_INFO("(PlayPath:: complete path but looping!!");
 			stage = 0;

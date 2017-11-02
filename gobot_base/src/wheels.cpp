@@ -19,6 +19,8 @@ std::vector<uint8_t> writeAndRead(std::vector<uint8_t> toWrite, int bytesToRead)
             /// Read any byte that we are expecting
             if(bytesToRead > 0)
                 serialConnection.read(buff, bytesToRead);
+
+            //serialConnection.flush();
         } catch (std::exception& e) {
 		    ROS_ERROR("(Wheels) exception : %s", e.what());
 	    }
@@ -54,7 +56,7 @@ std::string getStdoutFromCommand(std::string cmd) {
 /// Set the speed, 0 (full reverse)  128 (stop)   255 (full forward)
 //tx//('B',127)=0, ('F/B',0)=128,('F',127)=255
 bool setSpeeds(gobot_msg_srv::SetSpeeds::Request &req, gobot_msg_srv::SetSpeeds::Response &res){
-    if(req.velocityL <= 127 && req.velocityL <= 127){
+    if(req.velocityL <= 127 && req.velocityR <= 127){
         //x=condition?x1:x2   
         //condition=true,x=x1; condition=false,x=x2.
         uint8_t leftSpeed = req.directionL.compare("F") == 0 ? 128 - req.velocityL : 128 + req.velocityL;

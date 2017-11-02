@@ -999,8 +999,8 @@ void sendConnectionData(boost::shared_ptr<tcp::socket> sock){
     z_angle=std::stod(get_home.response.data[4]);
     w_angle=std::stod(get_home.response.data[5]);
     if(homeX=="0" && homeY=="0" && x_angle==0 && y_angle==0 && z_angle==0 && w_angle==0){
-        homeX = "-1";
-        homeY = "-1";
+        homeX = "-150";
+        homeY = "-150";
     }
     tf::Matrix3x3 matrix = tf::Matrix3x3(tf::Quaternion(x_angle , y_angle , z_angle, w_angle));
     matrix.getRPY(roll, pitch, yaw);
@@ -1107,12 +1107,19 @@ void session(boost::shared_ptr<tcp::socket> sock){
             size_t length = sock->read_some(boost::asio::buffer(data), error);
             if ((error == boost::asio::error::eof) || (error == boost::asio::error::connection_reset)){
                 ROS_WARN("(Command system) Connection closed %s", ip.c_str());
-                disconnect(ip);
+                //disconnect(ip);
+                std_msgs::String msg;
+                msg.data = ip;
+                disco_pub.publish(msg);
                 return;
             } 
             else if (error) {
-                disconnect(ip);
+                //disconnect(ip);
+                std_msgs::String msg;
+                msg.data = ip;
+                disco_pub.publish(msg);
                 throw boost::system::system_error(error); // Some other error.
+                return;
             }
 
             for(int i = 0; i < length; i++){

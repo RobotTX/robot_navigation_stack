@@ -29,7 +29,7 @@ planner_frequency: 3
 
 recovery_behavior_enabled: true
 
-planner_patience: 5
+planner_patience: 10
 
 controller_patience: 10
 

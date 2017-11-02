@@ -320,7 +320,7 @@ void getAmclPoseCallback(const geometry_msgs::PoseWithCovarianceStamped::ConstPt
     //Write lastest amcl_pose to file
     if(found_pose){
         std_msgs::Int8 lost;
-        if((cov_x > 25*initial_cov_xy && cov_y > 25*initial_cov_xy) || cov_yaw > 25*initial_cov_yaw){
+        if((cov_x > 50*initial_cov_xy && cov_y > 50*initial_cov_xy) || cov_yaw > 25*initial_cov_yaw){
             /*gobot_msg_srv::IsCharging arg;
             if(ros::service::call("/gobot_status/charging_status", arg) && arg.response.isCharging){
                 ROS_ERROR("Found gobot is charging. Set its pose to home");
@@ -336,7 +336,7 @@ void getAmclPoseCallback(const geometry_msgs::PoseWithCovarianceStamped::ConstPt
             }*/
             if(cov_yaw > 25*initial_cov_yaw)
                 ROS_ERROR("Big yaw covariance in the amcl pose");
-            if(cov_x > 25*initial_cov_xy && cov_y > 25*initial_cov_xy)
+            if(cov_x > 50*initial_cov_xy && cov_y > 50*initial_cov_xy)
                 ROS_ERROR("Big xy covariance in the amcl pose");
             lost.data = 1; 
         }

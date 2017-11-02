@@ -1,6 +1,6 @@
 #include "gobot_software/ping_server_new.hpp"
 
-#define PING_THRESHOLD 3
+#define PING_THRESHOLD 6
 
 static const std::string sep = std::string(1, 31);
 std::string pingFile;
@@ -70,7 +70,7 @@ bool updataStatusSrvCallback(std_srvs::Empty::Request &req, std_srvs::Empty::Res
  * Will ping all available IP addresses and send a message when we disconnect to one
  */
 void pingAllIPs(void){
-    /// Ping all servers every 8 secs
+    /// Ping all servers every 5 secs
     ros::Rate loop_rate(1/5.0);
 
     std::vector<std::thread> threads;

@@ -307,7 +307,7 @@ void timerCallback(const ros::TimerEvent&){
         setLedPermanent(color);
     }
     //Show battery status if no stage for certain period, show battery lvl
-    else if((ros::Time::now() - last_time).toSec()>180.0 && current_stage==FREE_STAGE){
+    else if((ros::Time::now() - last_time).toSec()>300.0 && current_stage==FREE_STAGE){
         switch (charging_state){
             case 1:
             color.push_back(YELLOW);

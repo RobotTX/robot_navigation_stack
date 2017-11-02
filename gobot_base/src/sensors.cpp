@@ -101,7 +101,7 @@ void publishSensors(void){
         bool error = false;
         bool error_bumper = false;
         connectionMutex.lock();
-        serialConnection.write(std::vector<uint8_t>({0x10, 0x01, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0xB1}));
+        serialConnection.write(std::vector<uint8_t>({0x10, 0x01, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x1B}));
 
         std::vector<uint8_t> buff;
         serialConnection.read(buff, 47);
@@ -304,12 +304,13 @@ void publishSensors(void){
 
 
 bool setLedSrvCallback(gobot_msg_srv::LedStrip::Request &req, gobot_msg_srv::LedStrip::Response &res){
-    ROS_INFO("Receive a LED change request.");
     if(serialConnection.isOpen()){
-        cmd={req.data[0],req.data[1],req.data[2],req.data[3],req.data[4],req.data[5],req.data[6],req.data[7],req.data[8],req.data[9],req.data[10]};
+        ROS_INFO("Receive a LED change request, and succeed to execute.");
+
+        std::vector<uint8_t> led_cmd={req.data[0],req.data[1],req.data[2],req.data[3],req.data[4],req.data[5],req.data[6],req.data[7],req.data[8],req.data[9],req.data[10]};
 
         connectionMutex.lock();
-        serialConnection.write(cmd);
+        serialConnection.write(led_cmd);
         std::vector<uint8_t> buff;
         serialConnection.read(buff,5);
         serialConnection.flush();
@@ -317,10 +318,31 @@ bool setLedSrvCallback(gobot_msg_srv::LedStrip::Request &req, gobot_msg_srv::Led
         return true;
     }
     else{
+        ROS_WARN("Receive a LED change request, but failed to execute.");
         return false;
     } 
 }
 
+bool setSoundSrvCallback(gobot_msg_srv::SetInt::Request &req, gobot_msg_srv::SetInt::Response &res){
+    if(serialConnection.isOpen()){
+        ROS_INFO("Receive a sound requestm, and succeed to execute.");
+        uint8_t n = req.data[0];
+
+        std::vector<uint8_t> sound_cmd({0xE0, 0x01, 0x05, n, 0x00, 0xC8, 0x00, 0x64, 0x00, 0x00, 0x1B});
+
+        connectionMutex.lock();
+        serialConnection.write(sound_cmd);
+        std::vector<uint8_t> buff;
+        serialConnection.read(buff,5);
+        serialConnection.flush();
+        connectionMutex.unlock();
+        return true;
+    }
+    else{
+        ROS_WARN("Receive a sound request, but failed to execute.");
+        return false;
+    } 
+}
 
 bool initSerial(void) {
     /// Get the port in which our device is connected
@@ -402,6 +424,7 @@ int main(int argc, char **argv) {
         ros::ServiceServer isChargingSrv = nh.advertiseService("/gobot_status/charging_status", isChargingService);
         
         ros::ServiceServer setLedSrv = nh.advertiseService("/gobot_base/setLed", setLedSrvCallback);
+        ros::ServiceServer setSoundSrv = nh.advertiseService("/gobot_base/setSound", setSoundSrvCallback);
         ros::ServiceServer displayDataSrv = nh.advertiseService("/gobot_base/displaySensorData", displaySensorData);
         ros::ServiceServer resetMotorSrv = nh.advertiseService("resetMotorDriver", resetMotorSrvCallback);
 

@@ -25,7 +25,8 @@ static_map:
     unknown_cost_value: -1
 
 obstacles:
-    observation_sources: laser_scan_sensor bumpers frontRight_sonar frontLeft_sonar 
+    observation_sources: laser_scan_sensor bumpers 
+    #frontRight_sonar frontLeft_sonar 
     #rear_sonar left_sonar right_sonar 
     #top_sonar mid_sonar
     #If false, each pixel has one of 2 states: lethal obstacle or free. 
@@ -97,4 +98,4 @@ obstacles:
 
 inflation_layer:
     inflation_radius: 0.6
-    cost_scaling_factor: 2.58
+    cost_scaling_factor: 6.0

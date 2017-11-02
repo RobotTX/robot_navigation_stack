@@ -206,10 +206,10 @@ void newBumpersInfo(const gobot_msg_srv::BumperMsg::ConstPtr& bumpers){
             ROS_WARN("(auto_docking::newBumpersInfo) just got a new collision:%d,%d,%d,%d",bumpers->bumper5,bumpers->bumper6,bumpers->bumper7,bumpers->bumper8);
             //turn right
             if(bumpers->bumper8==0 && bumpers->bumper5==1 && bumpers->bumper6==1 && bumpers->bumper7==1)
-                setSpeed('B', 4, 'F', 4);
+                setSpeed('B', 3, 'F', 4);
             //turn left
             else if(bumpers->bumper5==0 && bumpers->bumper6==1 && bumpers->bumper7==1 && bumpers->bumper8==1)
-                setSpeed('F', 4, 'B', 4);
+                setSpeed('F', 4, 'B', 3);
             //turn a bit left
             else if(bumpers->bumper5==0 && bumpers->bumper6==0 && bumpers->bumper7==1 && bumpers->bumper8==1)
                 setSpeed('F', 4, 'F', 2);
