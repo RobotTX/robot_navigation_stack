@@ -17,6 +17,7 @@
 #include <gobot_msg_srv/GetGobotStatus.h>
 #include <gobot_msg_srv/IsCharging.h>
 #include <gobot_msg_srv/SetSpeeds.h>
+#include <gobot_msg_srv/SetInt.h>
 
 /// Call a service to get the trajectory for exploration from the hector_exploration_planner and send the goal to move_base
 void doExploration(void);
@@ -38,4 +39,5 @@ bool getRobotPos(void);
 
 bool setSpeed(const char directionR, const int velocityR, const char directionL, const int velocityL);
     
+void timerCallback(const ros::TimerEvent&);
 #endif

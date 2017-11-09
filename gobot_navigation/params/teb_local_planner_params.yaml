@@ -66,7 +66,7 @@ TebLocalPlannerROS:
     #Also refer to the weight weight_inflation. 
     inflation_dist: 0.6 #0.6
     dynamic_obstacle_inflation_dist: 0.6 #0.6
-    include_dynamic_obstacles: True
+    include_dynamic_obstacles: false
 
     # Optimization
 
@@ -86,8 +86,8 @@ TebLocalPlannerROS:
     #How close robot follows the via-points
     weight_viapoint: 50.0 # 1.0
     weight_kinematics_forward_drive: 150
-    weight_obstacle: 50
-    weight_dynamic_obstacle: 50
+    weight_obstacle: 50.0
+    weight_dynamic_obstacle: 50.0
     ####Key params that affect motion####
 
     weight_kinematics_nh: 1000

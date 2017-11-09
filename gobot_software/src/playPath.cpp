@@ -21,6 +21,7 @@ ros::ServiceClient setGobotStatusSrv;
 ros::Time action_time;
 
 gobot_msg_srv::SetGobotStatus set_gobot_status;
+gobot_msg_srv::SetInt sound_num;
 
 bool setSpeed(const char directionR, const int velocityR, const char directionL, const int velocityL){
     ////ROS_INFO("(auto_docking::setSpeed) %c %d %c %d", directionR, velocityR, directionL, velocityL);
@@ -49,6 +50,12 @@ void goalResultCallback(const move_base_msgs::MoveBaseActionResult::ConstPtr& ms
 				setGobotStatus(0,"ABORTED_PATH");
 				//set the UI button
 				ros::service::call("/gobot_command/pause_path",empty_srv);
+
+				sound_num.request.data.clear();
+				sound_num.request.data.push_back(3);
+				sound_num.request.data.push_back(1);
+				ros::service::call("/gobot_base/setSound",sound_num);
+
 				break;
 			//REJECTED
 			case 5:
@@ -71,9 +78,11 @@ void goalReached(){
 	stage++;
 	setStageInFile(stage);
 	if(stage >= path.size()){
-		gobot_msg_srv::SetInt sound_num;
+
+		sound_num.request.data.clear();
 		sound_num.request.data.push_back(2);
-		ros::service::call("/gobot_base/setSound",sound_num);
+		sound_num.request.data.push_back(1);
+		ros::service::call("/gobot_base/setSound",sound_num); 
 
 		if(looping && !dockAfterPath && path.size()>1){
 			//ROS_INFO("(PlayPath:: complete path but looping!!");
@@ -99,6 +108,11 @@ void goalReached(){
 		}
 	} 
 	else {
+		sound_num.request.data.clear();
+		sound_num.request.data.push_back(1);
+		sound_num.request.data.push_back(1);
+		ros::service::call("/gobot_base/setSound",sound_num); 
+
 		// reached a normal/path goal so we sleep the given time
 		checkGoalDelay();
 		if(!stop_flag)

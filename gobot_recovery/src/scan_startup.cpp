@@ -31,7 +31,7 @@ void getButtonCallback(const std_msgs::Int8::ConstPtr& msg){
         ros::service::call("/gobot_command/stop_explore",empty_srv);
       }
     }
-    else if(dt>5.0 && dt<=10.0){
+    else if(dt>5.0){
       //exploration
       if(get_gobot_status.response.status==20){
         ROS_INFO("Start robot exploration.");
@@ -53,23 +53,6 @@ void getButtonCallback(const std_msgs::Int8::ConstPtr& msg){
             ofs.close();
             ROS_INFO("(startup) map id: %s.",mapId.c_str());
         }
-      }
-    }
-    else if(dt>10.0){
-      //save map
-      ROS_INFO("Save scaned map.");
-      std::string cmd = "rosrun map_server map_saver -f "+ map_path +" &";
-      system(cmd.c_str());
-
-      int n = std::rand() % 1000;
-      mapDate = "1990-12-05-00-00-00";
-      mapId = "{b09f0a3b-b0da-4c50-aa66-ff0b30807"+std::to_string(n)+"}";
-
-      std::ofstream ofs(map_id, std::ofstream::out | std::ofstream::trunc);
-      if(ofs){
-          ofs << mapId << std::endl << mapDate << std::endl;
-          ofs.close();
-          ROS_INFO("(startup) map id: %s.",mapId.c_str());
       }
     }
 	}
@@ -106,8 +89,10 @@ int main(int argc, char **argv) {
     
     ros::Subscriber button_sub = nh.subscribe("/gobot_base/button_topic",1,getButtonCallback);
     
-    ROS_INFO("Started Robot.");
+    ros::service::call("/gobot_base/show_Battery_LED",empty_srv);
 
+    ROS_INFO("Started Robot.");
+    
     ros::spin();
     return 0;
 }

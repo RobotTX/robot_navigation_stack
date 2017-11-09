@@ -112,21 +112,29 @@ void doExploration(void){
                         ac->sendGoal(goal);
                     else 
                         ROS_INFO("(Exploration) No action server or we stopped exploring already");
-                } else {
+                } 
+                else {
                     ROS_INFO("(Exploration) No frontiers left.");
                     noFrontiersLeft++;
                     /// After no_frontier_threshold attemps at finding a point to explore, we consider the scan finished
                     if(noFrontiersLeft >= no_frontier_threshold){
+                        if(exploring){
+                            std_msgs::Int8 result;
+                            result.data=1;
+                            exploration_pub.publish(result);
+
+                            set_gobot_status.request.status = 21;
+                            set_gobot_status.request.text = "COMPLETE_EXPLORING";
+                            ros::service::call("/gobot_status/set_gobot_status",set_gobot_status);
+                        }
                         std_srvs::Empty arg2;
                         stopExploration();
+
+                        ROS_INFO("(Exploration) Exploration finished");
 
                         /// if we want to go back to the starting position
                         if(back_to_start_when_finished)
                             backToStart();
-
-                        ROS_INFO("(Exploration) Calling service finished_auto_scan");
-                        /// Service to tell command_system in the gobot_software package that we finished scanning
-                        ros::service::call("finished_auto_scan", arg2);
                     }
                 }
 
@@ -138,15 +146,6 @@ void doExploration(void){
         ros::spinOnce();
         loop_rate.sleep();
     }
-    std_msgs::Int8 result;
-    result.data=1;
-    exploration_pub.publish(result);
-
-    set_gobot_status.request.status = 21;
-    set_gobot_status.request.text = "COMPLETE_EXPLORING";
-    ros::service::call("/gobot_status/set_gobot_status",set_gobot_status);
-
-    ROS_WARN("(Exploration) Exploration finished");
 }
 
 /// Called when the service startExploration is called, launches doExploration in a new thread
@@ -189,6 +188,15 @@ bool startExplorationSrv(hector_exploration_node::Exploration::Request &req, hec
 
 /// Service to stop the exploration
 bool stopExplorationSrv(std_srvs::Empty::Request &req, std_srvs::Empty::Response &res){
+    if(exploring){
+        std_msgs::Int8 result;
+        result.data=0;
+        exploration_pub.publish(result);
+
+        set_gobot_status.request.status = 21;
+        set_gobot_status.request.text = "STOP_EXPLORING";
+        ros::service::call("/gobot_status/set_gobot_status",set_gobot_status);
+    }
     return stopExploration();
 }
 
@@ -199,14 +207,6 @@ bool stopExploration(void){
         ROS_INFO("(Exploration) Stopped exploring");
         exploring = false;
         ac->cancelAllGoals();
-
-        std_msgs::Int8 result;
-        result.data=0;
-        exploration_pub.publish(result);
-
-        set_gobot_status.request.status = 21;
-        set_gobot_status.request.text = "STOP_EXPLORING";
-        ros::service::call("/gobot_status/set_gobot_status",set_gobot_status);
     } 
     else
         ROS_WARN("(Exploration) We were not exploring");
@@ -223,6 +223,15 @@ bool setSpeed(const char directionR, const int velocityR, const char directionL,
     speed.request.velocityL = velocityL;
 
     return ros::service::call("/gobot_motor/setSpeeds", speed);
+}
+
+void timerCallback(const ros::TimerEvent&){
+    if(set_gobot_status.request.status==25){
+        gobot_msg_srv::SetInt sound_num;
+        sound_num.request.data.push_back(2);
+        sound_num.request.data.push_back(1);
+        ros::service::call("/gobot_base/setSound",sound_num);
+    }
 }
 
 int main(int argc, char* argv[]){
@@ -257,11 +266,12 @@ int main(int argc, char* argv[]){
     //~ROS_INFO("(Exploration) no_frontier_threshold : %d", no_frontier_threshold);
 
     //Publish when exploration is complete
-    exploration_pub = nh.advertise<std_msgs::Int8>("exploration_result",10);
+    exploration_pub = nh.advertise<std_msgs::Int8>("/gobot_scan/exploration_result",10);
 
     /// Create an actionlibClient to be able to send and monitor goals
     ac = std::shared_ptr<actionlib::SimpleActionClient<move_base_msgs::MoveBaseAction>>(new actionlib::SimpleActionClient<move_base_msgs::MoveBaseAction>("move_base", true));
 
+    ros::Timer timer = nh.createTimer(ros::Duration(10), timerCallback);
     /// Launch service's servers
     //0-don't go back to starting point; 1-go back to charging station; 2-go back to normal staring point
     ros::ServiceServer startExploration = nh.advertiseService("/gobot_scan/startExploration", startExplorationSrv);

@@ -12,10 +12,12 @@
 #include <mutex>
 #include <thread>
 #include <boost/asio.hpp>
+#include <std_srvs/Empty.h>
 #include <gobot_msg_srv/SetString.h>
 #include <gobot_msg_srv/SetInt.h>
 #include <gobot_msg_srv/SetStage.h>
 #include <gobot_msg_srv/SetPath.h>
+#include <gobot_msg_srv/GetGobotStatus.h>
 
 using boost::asio::ip::tcp;
 

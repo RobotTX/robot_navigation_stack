@@ -6,6 +6,7 @@
 #include <fstream>
 #include <gobot_msg_srv/GetGobotStatus.h>
 #include <hector_exploration_node/Exploration.h>
+#include <gobot_msg_srv/SetInt.h>
 
 void getButtonCallback(const std_msgs::Int8::ConstPtr& msg);
 

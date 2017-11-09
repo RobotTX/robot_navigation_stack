@@ -12,6 +12,7 @@
     <param name="disconnected_file" type="string" value="$(find gobot_data)/data/disconnected.txt" />
     <param name="path_stage_file" type="string" value="$(find gobot_data)/data/path_stage.txt" />
     <param name="path_loop_file" type="string" value="$(find gobot_data)/data/loop.txt" />
+    <param name="mute_file" type="string" value="$(find gobot_data)/data/mute.txt" />
     <param name="home_file" type="string" value="$(find gobot_data)/data/home.txt" />
     <param name="robot_name_file" type="string" value="$(find gobot_data)/data/name.txt" />
 </launch>

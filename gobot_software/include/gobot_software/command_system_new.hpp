@@ -49,8 +49,8 @@ bool execCommand(const std::string ip, const std::vector<std::string> command);
 /// a
 bool renameRobot(const std::vector<std::string> command);
 
-/// NOT USED ANYMORE
 /// b
+bool previousPath(const std::vector<std::string> command);
 
 /// c
 bool newGoal(const std::vector<std::string> command);
@@ -62,7 +62,7 @@ bool pausePath(const std::vector<std::string> command);
 bool nextPath(const std::vector<std::string> command);
 
 /// f
-bool previousPath(const std::vector<std::string> command);
+bool pauseScan(const std::string ip, const std::vector<std::string> command);
 
 /// g
 bool startScanAndAutoExplore(const std::string ip, const std::vector<std::string> command);
@@ -110,8 +110,10 @@ bool stopScanning(const std::string ip, const std::vector<std::string> command);
 /// v
 bool keyboardControl(const std::vector<std::string> command);
 /// w
+bool muteOff(const std::vector<std::string> command);
 
 /// x
+bool muteOn(const std::vector<std::string> command);
 
 /// y
 

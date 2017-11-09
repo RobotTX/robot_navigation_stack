@@ -14,6 +14,8 @@ std::map<std::string, boost::shared_ptr<tcp::socket>> sockets;
 ros::Publisher map_pub;
 
 ros::Publisher disco_pub;
+std_srvs::Empty empty_srv;
+gobot_msg_srv::GetGobotStatus get_gobot_status;
 
 void session(boost::shared_ptr<tcp::socket> sock){
 
@@ -43,7 +45,19 @@ void session(boost::shared_ptr<tcp::socket> sock){
             return;
         }
 
-       /// Parse the data as we are supposed to receive : "mapId ; mapDate ; metadata ; map"
+        //stop the robot for reading new map
+        gobot_msg_srv::GetGobotStatus get_gobot_status;
+        ros::service::call("/gobot_status/get_gobot_status",get_gobot_status);
+        if(get_gobot_status.response.status==15){
+            ros::service::call("/gobot_command/stopGoDock",empty_srv);
+            ROS_INFO("(New Map) stop auto docking to read new map.");
+        }
+        else if(get_gobot_status.response.status==5){
+            ros::service::call("/gobot_command/stop_path",empty_srv);
+            ROS_INFO("(New Map) stop current path to read new map.");
+        }
+
+        // Parse the data as we are supposed to receive : "mapId ; mapDate ; metadata ; map"
         for(int i = 0; i < length; i++){
             if(data[i] == ';' && gotMapData <= 2){
                 /// The first ; means we got the mapId

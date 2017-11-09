@@ -4,6 +4,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <std_msgs/Int8.h>
+#include <std_srvs/Empty.h>
 #include <gobot_msg_srv/LedStrip.h>
 #include <actionlib_msgs/GoalStatusArray.h>
 #include <actionlib_msgs/GoalID.h>
@@ -12,6 +13,7 @@
 #include <gobot_msg_srv/GetGobotStatus.h>
 #include <gobot_msg_srv/BumperMsg.h>
 #include <gobot_msg_srv/BatteryMsg.h>
+#include <gobot_msg_srv/SetInt.h>
 
 
 void setLedPermanent(std::vector<uint8_t> &color);
@@ -34,5 +36,9 @@ void explorationCallback(const std_msgs::Int8::ConstPtr& msg);
 
 void lostCallback(const std_msgs::Int8::ConstPtr& msg);
  
+bool showBatteryLedsrvCallback(std_srvs::Empty::Request &req, std_srvs::Empty::Response &res);
+
+void batteryLed(void);
+
 void timerCallback(const ros::TimerEvent&);
 

@@ -3,7 +3,7 @@
     <param name="map_path" type="string" value="$(find gobot_data)/maps/used_map" />
     <param name="map_id_file" type="string" value="$(find gobot_data)/maps/mapId.txt" />
     
-    <node pkg="gmapping" type="slam_gmapping" name="slam_gmapping" output="screen" required="true">
+    <node pkg="gmapping" type="slam_gmapping" name="slam_gmapping" required="true">
         <rosparam file="$(find gobot_navigation)/params/gmapping_params.yaml" command="load" />
     </node>
     

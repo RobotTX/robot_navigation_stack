@@ -7,7 +7,7 @@ std::string pingFile;
 std::string ipsFile;
 
 bool simulation = false;
-bool chargingFlag = false;
+bool muteFlag = false;
 bool scanIP = false;
 int batteryLevel = 50;
 
@@ -25,7 +25,7 @@ gobot_msg_srv::GetGobotStatus get_gobot_status;
 std_srvs::Empty empty_srv;
 /**
  * Create the string with information to connect to the Qt app
- * hostname + sep + stage + sep + batteryLevel + sep + chargingFlag + sep + dockStatus
+ * hostname + sep + stage + sep + batteryLevel + sep + muteFlag + sep + dockStatus
  */
 std::string getDataToSend(void){
     /// Retrieves the hostname
@@ -40,9 +40,11 @@ std::string getDataToSend(void){
     gobot_msg_srv::GetStage get_stage;
     ros::service::call("/gobot_status/get_stage", get_stage);
     
-    chargingFlag=get_dock_status.response.status==1 ? 1 : 0;
+    gobot_msg_srv::GetInt get_mute;
+    ros::service::call("/gobot_status/get_mute",get_mute);
+    muteFlag=(get_mute.response.data[0]) ? "1" : "0";
     /// Form the string to send to the Qt app
-    return  get_name.response.data[0] + sep + std::to_string(get_stage.response.stage) + sep + std::to_string(batteryLevel) + sep + std::to_string(chargingFlag) + sep + std::to_string(get_dock_status.response.status);
+    return  get_name.response.data[0] + sep + std::to_string(get_stage.response.stage) + sep + std::to_string(batteryLevel) + sep + std::to_string(muteFlag) + sep + std::to_string(get_dock_status.response.status);
 }
 
 /**

@@ -18,6 +18,8 @@
 #include <gobot_msg_srv/GetStage.h>
 #include <gobot_msg_srv/SetString.h>
 #include <gobot_msg_srv/GetString.h>
+#include <gobot_msg_srv/GetInt.h>
+#include <gobot_msg_srv/SetInt.h>
 #include <gobot_software/timeout_blocking_tcp_client.h>
 #include <mutex>
 #include <thread>

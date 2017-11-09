@@ -20,8 +20,11 @@ DOCK STATUS
 -1 FAILED TO GO TO CHARGING
 */
 
-std::mutex gobotStatusMutex,dockStatusMutex,stageMutex,pathMutex,nameMutex,homeMutex,loopMutex;
+std::mutex gobotStatusMutex,dockStatusMutex,stageMutex,pathMutex,nameMutex,homeMutex,loopMutex,muteMutex;
 std_srvs::Empty empty_srv;
+
+std::string muteFile;
+int mute_ = 0;
 
 int gobot_status_=-99;
 std::string gobot_text_ = "FREE";
@@ -138,6 +141,29 @@ bool getPathSrvCallback(gobot_msg_srv::GetPath::Request &req, gobot_msg_srv::Get
 
 
 
+bool setMuteSrvCallback(gobot_msg_srv::SetInt::Request &req, gobot_msg_srv::SetInt::Response &res){
+    muteMutex.lock();
+    mute_ = req.data[0];
+    muteMutex.unlock();
+
+    std::ofstream ofsMute(muteFile, std::ofstream::out | std::ofstream::trunc);
+    if(ofsMute){
+        ofsMute << mute_;
+        ofsMute.close();
+    }
+
+    ROS_INFO("(Gobot_status) Set Gobot mute: %d",mute_);
+    return true;
+}
+
+bool getMuteSrvCallback(gobot_msg_srv::GetInt::Request &req, gobot_msg_srv::GetInt::Response &res){
+    muteMutex.lock();
+    res.data.push_back(mute_);
+    muteMutex.unlock();
+    return true;
+}
+
+
 bool setLoopSrvCallback(gobot_msg_srv::SetInt::Request &req, gobot_msg_srv::SetInt::Response &res){
     loopMutex.lock();
     loop_ = req.data[0];
@@ -240,6 +266,19 @@ void initialData(){
         } 
     }   
 
+    //read mute
+    if(n.hasParam("mute_file")){
+        n.getParam("mute_file", muteFile);
+
+        std::ifstream ifsMute(muteFile, std::ifstream::in);
+        if(ifsMute){
+            ifsMute >> mute_;
+            ifsMute.close();
+            ROS_INFO("(Gobot_status) Read Gobot mute: %d",mute_);
+        } 
+    } 
+
+
     //read loop
     if(n.hasParam("path_loop_file")){
         n.getParam("path_loop_file", pathLoopFile);
@@ -330,6 +369,9 @@ int main(int argc, char* argv[]){
 
         ros::ServiceServer setHomeSrv = n.advertiseService("/gobot_status/set_home", setHomeSrvCallback);
         ros::ServiceServer getHomeSrv = n.advertiseService("/gobot_status/get_home", getHomeSrvCallback);
+
+        ros::ServiceServer setMuteSrv = n.advertiseService("/gobot_status/set_mute", setMuteSrvCallback);
+        ros::ServiceServer getMuteSrv = n.advertiseService("/gobot_status/get_mute", getMuteSrvCallback);
 
         ros::ServiceServer disconnectedSrv = n.advertiseService("/gobot_test/disconnected", disconnectedSrvCallback);
 

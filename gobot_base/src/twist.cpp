@@ -47,13 +47,25 @@ void newBumpersInfo(const gobot_msg_srv::BumperMsg::ConstPtr& bumpers){
             collision = true;
             collisionTime = std::chrono::system_clock::now();
             setSpeed('F', 0, 'F', 0);
-        } else {
+
+            gobot_msg_srv::SetInt sound_num;
+            sound_num.request.data.push_back(3);
+            sound_num.request.data.push_back(1);
+            ros::service::call("/gobot_base/setSound",sound_num);
+        } 
+        else {
             /// if after 5 seconds, the obstacle is still there, we go to the opposite direction
             if(std::chrono::duration_cast<std::chrono::seconds>(std::chrono::system_clock::now() - collisionTime).count() > 5 
                 && !moved_away_from_collision){
                 moving_from_collision = true;
                 moved_away_from_collision = true;
-                bumper_pub.publish(*bumpers); 
+                bumper_pub.publish(*bumpers);
+
+                gobot_msg_srv::SetInt sound_num;
+                sound_num.request.data.push_back(1);
+                sound_num.request.data.push_back(4);
+                ros::service::call("/gobot_base/setSound",sound_num); 
+
                 /// We create a thread that will make the robot go into the opposite direction, then sleep for 2 seconds and make the robot stop
                 if(front && !back){  
                     std::thread([](){

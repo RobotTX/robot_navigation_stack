@@ -52,10 +52,9 @@ bool execCommand(const std::string ip, const std::vector<std::string> command){
             status = renameRobot(command);
         break;
 
-        /// NOT USED ANYMORE
-        /// Command to change the wifi of the robot
+        /// Command for the robot to move to the previous point
         case 'b':
-
+            status = previousPath(command);
         break;
         
         /// Command for the robot to move to a point
@@ -75,7 +74,7 @@ bool execCommand(const std::string ip, const std::vector<std::string> command){
 
         /// Command for the robot to move to the previous point
         case 'f':
-            status = previousPath(command);
+            status = pauseScan(ip, command);
         break;
 
         case 'g':
@@ -164,13 +163,13 @@ bool execCommand(const std::string ip, const std::vector<std::string> command){
         /// NOT USED NOW
         /// command to pause during the recovery of a robot's position
         case 'w':
-
+            status = muteOff(command);
         break;
 
         /// NOT USED NOW
         /// command to stop recovering the robot's position
         case 'x':
-
+            status = muteOn(command);
         break;
 
         /// NOT USED NOW
@@ -228,8 +227,17 @@ bool renameRobot(const std::vector<std::string> command){
     return false;
 }
 
-/// NOT USED ANYMORE
-/// Command : b, second param = new ssid, third param = password
+/// Command : b,
+bool previousPath(const std::vector<std::string> command){
+    if(command.size() == 1) {
+        gobot_msg_srv::SetInt previous_path;
+        previous_path.request.data.push_back(-1);
+        ros::service::call("/gobot_function/skip_path",previous_path);
+        return true;
+    }
+
+    return false;
+}
 
 /// First param = c, second param = goal pos x coordinate, third param = goal pos y coordinate
 bool newGoal(const std::vector<std::string> command){
@@ -313,14 +321,13 @@ bool nextPath(const std::vector<std::string> command){
     return false;
 }
 /// First param = f
-bool previousPath(const std::vector<std::string> command){
-    if(command.size() == 1) {
-        gobot_msg_srv::SetInt previous_path;
-        previous_path.request.data.push_back(-1);
-        ros::service::call("/gobot_function/skip_path",previous_path);
-        return true;
-    }
-
+bool pauseScan(const std::string ip, const std::vector<std::string> command){
+    if(command.size() == 1) {         
+        ROS_INFO("(Command system) Gobot pause the ongoing scan");         
+        std_srvs::Empty arg;         
+        ros::service::call("/gobot_scan/stopExploration", arg);         
+        return stopSendingMapAutomatically(ip);     
+    }     
     return false;
 }
 
@@ -676,10 +683,30 @@ bool keyboardControl(const std::vector<std::string> command){
 }
 
 /// First param = w
+bool muteOff(const std::vector<std::string> command){
+    if(command.size() == 1) {
+        ROS_INFO("(Command system) Disable mute");
+        gobot_msg_srv::SetInt set_mute;
+        set_mute.request.data[0]=0;
+        if(ros::service::call("/gobot_status/set_mute", set_mute))
+            return true;
+    }
 
+    return false;
+}
 
 /// First param = x
+bool muteOn(const std::vector<std::string> command){
+if(command.size() == 1) {
+        ROS_INFO("(Command system) Enable mute");
+        gobot_msg_srv::SetInt set_mute;
+        set_mute.request.data[0]=1;
+        if(ros::service::call("/gobot_status/set_mute", set_mute))
+            return true;
+    }
 
+    return false;
+}
 
 /// First param = y
 

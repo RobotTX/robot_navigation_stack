@@ -278,7 +278,8 @@ void newIrSignal(const gobot_msg_srv::IrMsg::ConstPtr& irSignal){
                     /// rear ir received signal 1, so robot turns left
                     setSpeed('F', 3, 'B', 3);
                 
-            } else if (irSignal->leftSignal != 0){
+            } 
+            else if (irSignal->leftSignal != 0){
                 /// received left signal
                 leftFlag = true;
                 if (irSignal->leftSignal == 3)
@@ -288,7 +289,8 @@ void newIrSignal(const gobot_msg_srv::IrMsg::ConstPtr& irSignal){
                 else if (irSignal->leftSignal == 1)
                     setSpeed('B', 10, 'F', 5);
 
-            } else if (irSignal->rightSignal != 0){
+            } 
+            else if (irSignal->rightSignal != 0){
                 /// received right signal
                 leftFlag = false;
                 if (irSignal->rightSignal == 3)
@@ -361,6 +363,12 @@ void finishedDocking(){
         //set current pose to be home
         //ros::service::call("/gobot_recovery/initialize_home",empty_srv);
         ROS_INFO("(auto_docking::finishedDocking) Auto docking finished->SUCESSFUL.");
+
+        gobot_msg_srv::SetInt sound_num;
+        sound_num.request.data.push_back(1);
+        sound_num.request.data.push_back(4);
+        ros::service::call("/gobot_base/setSound",sound_num);
+
         stopDocking();
     }
     else{
@@ -376,6 +384,12 @@ void finishedDocking(){
             ROS_WARN("(auto_docking::finishedDocking) Auto docking finished->FAILED.");
             setSpeed('F', 20, 'F', 20);
             ros::Duration(1.0).sleep();
+
+            gobot_msg_srv::SetInt sound_num;
+            sound_num.request.data.push_back(3);
+            sound_num.request.data.push_back(1);
+            ros::service::call("/gobot_base/setSound",sound_num);
+
             stopDocking();
         }
     }
@@ -431,6 +445,16 @@ bool startDockingService(std_srvs::Empty::Request &req, std_srvs::Empty::Respons
     return startDocking();
 }
 
+
+void timerCallback(const ros::TimerEvent&){
+    if(set_dock_status.request.status==3){
+        gobot_msg_srv::SetInt sound_num;
+        sound_num.request.data.push_back(2);
+        sound_num.request.data.push_back(1);
+        ros::service::call("/gobot_base/setSound",sound_num);
+    }
+}
+
 int main(int argc, char* argv[]){
     ros::init(argc, argv, "auto_docking");
     ros::NodeHandle nh;
@@ -441,6 +465,8 @@ int main(int argc, char* argv[]){
     ROS_INFO("(auto_docking::startDockingService) actionlib server ready!!");
 
     currentGoal.target_pose.header.frame_id = "map";
+
+    ros::Timer timer = nh.createTimer(ros::Duration(5), timerCallback);
 
     ros::ServiceServer startDockingSrv = nh.advertiseService("/gobot_function/startDocking", startDockingService);
     ros::ServiceServer stopDockingSrv = nh.advertiseService("/gobot_function/stopDocking", stopDockingService);

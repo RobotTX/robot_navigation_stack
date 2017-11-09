@@ -324,11 +324,24 @@ bool setLedSrvCallback(gobot_msg_srv::LedStrip::Request &req, gobot_msg_srv::Led
 }
 
 bool setSoundSrvCallback(gobot_msg_srv::SetInt::Request &req, gobot_msg_srv::SetInt::Response &res){
+    gobot_msg_srv::GetInt get_mute;
+    ros::service::call("/gobot_status/get_mute",get_mute);
+    //mute
+    if (get_mute.response.data[0])
+        return true;
+
+    //serial open and not mute
     if(serialConnection.isOpen()){
         ROS_INFO("Receive a sound requestm, and succeed to execute.");
         uint8_t n = req.data[0];
-
-        std::vector<uint8_t> sound_cmd({0xE0, 0x01, 0x05, n, 0x00, 0xC8, 0x00, 0x64, 0x00, 0x00, 0x1B});
+        uint8_t on_time = 0x01;
+        uint8_t off_time = 0x01;
+        on_time = req.data[1];
+        
+        if(req.data.size()==3 && req.data[2]!=0)
+            off_time = req.data[2];
+            
+        std::vector<uint8_t> sound_cmd({0xE0, 0x01, 0x05, n, on_time, 0x00, off_time, 0x00, 0x00, 0x00, 0x1B});
 
         connectionMutex.lock();
         serialConnection.write(sound_cmd);
@@ -375,6 +388,7 @@ void mySigintHandler(int sig)
     try{
         if(serialConnection.isOpen()){
             //Turn off LED when shut down node
+            //0x52 = Blue,0x47 = Red,0x42 = Green,0x4D = Magenta,0x43 = Cyan,0x59 = Yellow,0x57 = White, 0x00 = Off
             connectionMutex.lock();
             serialConnection.write(std::vector<uint8_t>({0xB0,0x03,0x01,0x57,0x00,0x00,0x00,0x00,0x03,0xE8,0x1B}));
             std::vector<uint8_t> buff;

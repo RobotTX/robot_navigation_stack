@@ -25,9 +25,6 @@ udevadm info -a -p $(udevadm info -q path -n /dev/ttyUSB0)
 sudo cp [rules_file] /etc/udev/rules.d/>
 sudo udevadm control --reload-rules && sudo service udev restart && sudo udevadm trigger
 
-#allow remote desktop
-configure "Desktop sharing" to allow "Remmina Remote Desktop Client"
-
 #log in without password
 all settings->user accounts->automatic login
 
@@ -35,7 +32,7 @@ all settings->user accounts->automatic login
 startup application->add "sudo sh /home/[username]/catkin_ws/src/gobot_navigation_stack/gobot_data/command/start_robot.sh"
 
 #configure .bashrc
-alias ls='ls -l --color'
+alias ls='sudo apt install gimpls -l --color'
 alias cat_make='cd ~/catkin_ws/ && catkin_make && source devel/setup.bash && . ~/catkin_ws/devel/setup.bash'
 alias shut='sudo shutdown -h now'
 source /opt/ros/kinetic/setup.bash
@@ -48,11 +45,12 @@ sudo apt install fping
 #allow ssh [username]@ip
 sudo apt install openssh-server openssh-client
 
-### Optional Configuration ###
-
 #remote desktop control
+configure "Desktop sharing" to allow "Remmina Remote Desktop Client"
 remmina remote desktop client
 protocol: VNC
+
+### Optional Configuration ###
 
 #screen split
 settings >> appearance >> behavior
@@ -81,7 +79,6 @@ sudo apt install ros-kinetic-robot-pose-publisher
 sudo apt install ros-kinetic-gmapping
 sudo apt install ros-kinetic-openslam-gmapping
 sudo apt install ros-kinetic-hector-nav-msgs
-sudo apt install ros-kinetic-teb-local-planner
 sudo apt install ros-kinetic-urg-node
 sudo apt install ros-kinetic-hector-sensors-description (gazebo)
 sudo apt install ros-kinetic-hector_gazebo-plugins (gazebo)

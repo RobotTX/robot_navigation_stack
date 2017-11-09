@@ -22,6 +22,7 @@
 #include <gobot_msg_srv/SetGobotStatus.h>
 #include <gobot_msg_srv/SetString.h>
 #include <gobot_msg_srv/GetString.h>
+#include <gobot_msg_srv/SetInt.h>
 #include <move_base_msgs/MoveBaseActionResult.h>
 #include <ctime>
 #include <chrono>

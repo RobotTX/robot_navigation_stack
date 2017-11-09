@@ -336,7 +336,7 @@ void getAmclPoseCallback(const geometry_msgs::PoseWithCovarianceStamped::ConstPt
             }*/
             if(cov_yaw > 25*initial_cov_yaw)
                 ROS_ERROR("Big yaw covariance in the amcl pose");
-            if(cov_x > 50*initial_cov_xy && cov_y > 50*initial_cov_xy)
+            if(cov_x > 100*initial_cov_xy && cov_y > 100*initial_cov_xy)
                 ROS_ERROR("Big xy covariance in the amcl pose");
             lost.data = 1; 
         }

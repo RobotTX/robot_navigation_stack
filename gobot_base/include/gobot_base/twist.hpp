@@ -8,6 +8,7 @@
 #include <gobot_msg_srv/BumperMsg.h>
 #include <gobot_msg_srv/SetSpeeds.h>
 #include <gobot_msg_srv/IsCharging.h>
+#include <gobot_msg_srv/SetInt.h>
 #include <chrono>
 #include <thread>
 
