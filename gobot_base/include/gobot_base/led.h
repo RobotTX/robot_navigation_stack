@@ -17,6 +17,7 @@
 
 
 void setLedPermanent(std::vector<uint8_t> &color);
+void setSound(int num,int time_on, int time_off=0);
 
 void setLedRunning(std::vector<uint8_t> &color);
 

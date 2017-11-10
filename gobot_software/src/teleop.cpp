@@ -15,7 +15,7 @@ std::map<std::string, boost::shared_ptr<tcp::socket>> sockets;
 void teleop(const int8_t val){
     ROS_INFO("(Teleop) got data %d", val);
     double speed = 0.2;
-    double turnSpeed = 1.0;
+    double turnSpeed = 0.5;
     // x == 1 -> forward       x == -1 -> backward
     // th == 1 -> left         th == -1 -> right
     int x(0), th(0);

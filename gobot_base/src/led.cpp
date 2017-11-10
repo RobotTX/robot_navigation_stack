@@ -47,8 +47,17 @@ int charging_state = -1, pre_charing_state=-1;
 gobot_msg_srv::GetGobotStatus get_gobot_status;
 ros::ServiceClient getGobotStatusSrv;
 
-void setLedPermanent(std::vector<uint8_t> &color)
-{
+void setSound(int num,int time_on, int time_off){
+    gobot_msg_srv::SetInt sound_num;
+    sound_num.request.data.push_back(num);
+    sound_num.request.data.push_back(time_on);
+    if(time_off!=0)
+        sound_num.request.data.push_back(time_off);
+
+    ros::service::call("/gobot_base/setSound",sound_num);
+}
+
+void setLedPermanent(std::vector<uint8_t> &color){
     gobot_msg_srv::LedStrip cmd;
     cmd.request.data[0]=0xB0;
     cmd.request.data[1]=0x03;
@@ -164,7 +173,6 @@ void goalCancelCallback(const actionlib_msgs::GoalID::ConstPtr& msg){
 
 void initialPoseResultCallback(const std_msgs::Int8::ConstPtr& msg){
     std::vector<uint8_t> color;
-    gobot_msg_srv::SetInt sound_num;
     if(current_stage<LOCALIZE_STAGE){
         switch(msg->data){
             //START
@@ -181,10 +189,7 @@ void initialPoseResultCallback(const std_msgs::Int8::ConstPtr& msg){
             //FOUND
                 current_stage=FREE_STAGE;
                 batteryLed();
-
-                sound_num.request.data.push_back(1);
-                sound_num.request.data.push_back(2);
-                ros::service::call("/gobot_base/setSound",sound_num);
+                setSound(1,2);
                 break;
             case 2:
             //CANCEL
@@ -271,9 +276,7 @@ void explorationCallback(const std_msgs::Int8::ConstPtr& msg){
             case 1:
                 color.push_back(GREEN);
                 setLedPermanent(color);
-                sound_num.request.data.push_back(1);
-                sound_num.request.data.push_back(4);
-                ros::service::call("/gobot_base/setSound",sound_num);
+                setSound(1,4);
                 break;
             //hector exploration stopped
             case 0:
@@ -311,10 +314,7 @@ void lostCallback(const std_msgs::Int8::ConstPtr& msg){
 
 bool showBatteryLedsrvCallback(std_srvs::Empty::Request &req, std_srvs::Empty::Response &res){
     batteryLed();
-    gobot_msg_srv::SetInt sound_num;
-    sound_num.request.data.push_back(1);
-    sound_num.request.data.push_back(2);
-    ros::service::call("/gobot_base/setSound",sound_num);
+    setSound(1,2);
     return true;
 }
 
@@ -357,11 +357,7 @@ void timerCallback(const ros::TimerEvent&){
 
         getGobotStatusSrv.call(get_gobot_status);
         if(get_gobot_status.response.status!=15){
-            gobot_msg_srv::SetInt sound_num;
-            sound_num.request.data.push_back(2);
-            sound_num.request.data.push_back(2);
-            sound_num.request.data.push_back(2);
-            ros::service::call("/gobot_base/setSound",sound_num);
+            setSound(2,2,2);
         }
     }
     //Show battery status if no stage for certain period, show battery lvl
