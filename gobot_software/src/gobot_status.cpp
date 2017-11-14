@@ -20,8 +20,11 @@ DOCK STATUS
 -1 FAILED TO GO TO CHARGING
 */
 
-std::mutex gobotStatusMutex,dockStatusMutex,stageMutex,pathMutex,nameMutex,homeMutex,loopMutex,muteMutex;
+std::mutex gobotStatusMutex,dockStatusMutex,stageMutex,pathMutex,nameMutex,homeMutex,loopMutex,muteMutex,wifiMutex;
 std_srvs::Empty empty_srv;
+
+std::string wifiFile, deleteWifi;
+std::vector<std::string> wifi_;
 
 std::string muteFile;
 int mute_ = 0;
@@ -59,6 +62,39 @@ bool disconnectedSrvCallback(std_srvs::Empty::Request &req, std_srvs::Empty::Res
 
     return true;
 }
+
+bool setWifiSrvCallback(gobot_msg_srv::SetString::Request &req, gobot_msg_srv::SetString::Response &res){
+    //delete previously connected wifi
+    const std::string deleteWIFI_script = "sudo sh " + deleteWifi + " " + wifiFile ;
+    system(deleteWIFI_script.c_str());
+
+    wifiMutex.lock();
+    wifi_.clear();
+    for(int i=0;i<req.data.size();i++)
+        wifi_.push_back(req.data[i]);
+    wifiMutex.unlock();
+
+    std::ofstream ofsWifi(wifiFile, std::ofstream::out | std::ofstream::trunc);
+    if(ofsWifi){
+        for(int i = 0; i < wifi_.size(); i++){
+            ofsWifi << wifi_.at(i) << "\n";
+        }
+        ofsWifi.close();
+    }
+    wifiMutex.unlock();
+    ROS_INFO("(Gobot_status) Set Gobot wifi: name:%s, password:%s",wifi_.at(0).c_str(),wifi_.at(1).c_str());
+
+    return true;
+}
+
+bool getWifiSrvCallback(gobot_msg_srv::GetString::Request &req, gobot_msg_srv::GetString::Response &res){
+    wifiMutex.lock();
+    for(int i=0;i<wifi_.size();i++)
+        res.data.push_back(wifi_.at(i));
+    wifiMutex.unlock();
+    return true;
+}
+
 
 bool setHomeSrvCallback(gobot_msg_srv::SetString::Request &req, gobot_msg_srv::SetString::Response &res){
     homeMutex.lock();
@@ -331,6 +367,26 @@ void initialData(){
         }
     }
 
+    //read wifi
+    if(n.hasParam("wifi_file")){
+        n.getParam("wifi_file", wifiFile);
+
+        std::ifstream ifsfile(wifiFile, std::ifstream::in);
+        if(ifsfile){
+            std::string line;
+            while(getline(ifsfile, line))
+                wifi_.push_back(line);
+                
+            ifsfile.close();
+            for(int i = 0; i < wifi_.size(); i++)
+                ROS_INFO("(Gobot_status) Read Gobot wifi: %s",wifi_.at(i).c_str());
+        }
+    }
+
+    if(n.hasParam("deleteWIFI")){
+        n.getParam("deleteWIFI", deleteWifi);
+    }
+
     if(n.hasParam("disconnected_file")){
         n.getParam("disconnected_file", disconnectedFile);
 
@@ -372,6 +428,9 @@ int main(int argc, char* argv[]){
 
         ros::ServiceServer setMuteSrv = n.advertiseService("/gobot_status/set_mute", setMuteSrvCallback);
         ros::ServiceServer getMuteSrv = n.advertiseService("/gobot_status/get_mute", getMuteSrvCallback);
+
+        ros::ServiceServer setWifiSrv = n.advertiseService("/gobot_status/set_wifi", setWifiSrvCallback);
+        ros::ServiceServer getWifiSrv = n.advertiseService("/gobot_status/get_wifi", getWifiSrvCallback);
 
         ros::ServiceServer disconnectedSrv = n.advertiseService("/gobot_test/disconnected", disconnectedSrvCallback);
 

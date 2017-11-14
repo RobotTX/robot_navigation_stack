@@ -42,6 +42,16 @@ bool getRobotPos(void){
             startingPose.position.z, startingPose.orientation.x,
             startingPose.orientation.y, startingPose.orientation.z,
             startingPose.orientation.w);
+        
+        gobot_msg_srv::SetString set_home;
+        set_home.request.data.push_back(std::to_string(startingPose.position.x));
+        set_home.request.data.push_back(std::to_string(startingPose.position.y));
+        set_home.request.data.push_back(std::to_string(startingPose.orientation.x));
+        set_home.request.data.push_back(std::to_string(startingPose.orientation.y));
+        set_home.request.data.push_back(std::to_string(startingPose.orientation.z));
+        set_home.request.data.push_back(std::to_string(startingPose.orientation.w));
+
+        //ros::service::call("/gobot_status/set_home",set_home);
 
     } catch (tf::TransformException &ex) {
         ROS_ERROR("(Exploration) Got a transform problem : %s", ex.what());
@@ -168,17 +178,10 @@ bool startExplorationSrv(hector_exploration_node::Exploration::Request &req, hec
         ros::service::call("/gobot_status/set_gobot_status",set_gobot_status);
         
         back_to_start_when_finished = req.backToStartWhenFinished;
-        /// if we want to go back to our starting position at the end of the scan, we need to save the starting position
-        if(back_to_start_when_finished != 0){
-            if(getRobotPos()){
-                std::thread(doExploration).detach();
-                return true;
-            } else 
-                return false;
-        } else {
-            std::thread(doExploration).detach();
-            return true;
-        }
+        getRobotPos();
+        std::thread(doExploration).detach();
+        return true;
+
     } 
     else
         ROS_WARN("(Exploration) We were already exploring");

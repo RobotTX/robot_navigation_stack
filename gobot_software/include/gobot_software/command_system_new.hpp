@@ -116,6 +116,7 @@ bool muteOff(const std::vector<std::string> command);
 bool muteOn(const std::vector<std::string> command);
 
 /// y
+bool setWifi(const std::vector<std::string> command);
 
 /// z
 bool restartEverything(const std::vector<std::string> command);

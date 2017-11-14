@@ -140,6 +140,7 @@ void goalGetCallback(const move_base_msgs::MoveBaseActionGoal::ConstPtr& msg){
             color.push_back(CYAN);
             color.push_back(YELLOW);
             setLedRunning(color);
+            pre_charing_state=-1;
         }
         else{
             //White Green LED Running

@@ -276,6 +276,7 @@ void server(void){
     tcp::acceptor a(io_service, tcp::endpoint(tcp::v4(), MAP_PORT));
     while(ros::ok()) {
 
+		bool error = false;
         boost::shared_ptr<tcp::socket> sock = boost::shared_ptr<tcp::socket>(new tcp::socket(io_service));
 
         /// We wait for someone to connect
@@ -289,25 +290,34 @@ void server(void){
             session_object session;
             sockets.insert(std::pair<std::string, boost::shared_ptr<tcp::socket>>(ip, sock));
             session_map.insert(std::pair<std::string, session_object>(ip, session));
-        } else
+        } 
+		else{
+			error = true;
             ROS_ERROR("(Map::server) the ip %s is already connected, this should not happen", ip.c_str());
+		}
         socketsMutex.unlock();
+		if(error){
+			disconnect(ip);
+		}
     }
 }
 
 /*********************************** DISCONNECTION FUNCTIONS ***********************************/
 
 void serverDisconnected(const std_msgs::String::ConstPtr& msg){
+    disconnect(msg->data);
+}
+
+void disconnect(const std::string ip){
     /// Close and remove the socket
     socketsMutex.lock();
-    if(sockets.count(msg->data)){
-        sockets.at(msg->data)->close();
-        sockets.erase(msg->data);
-		//~ROS_WARN("(Map::serverDisconnected) The ip %s just disconnected", msg->data.c_str());
+    if(sockets.count(ip)){
+        sockets.at(ip)->close();
+        sockets.erase(ip);
+        ROS_WARN("(Robot Pos) The ip %s just disconnected", ip.c_str());
     }
     socketsMutex.unlock();
 }
-
 /*********************************** SHUT DOWN ***********************************/
 void mySigintHandler(int sig){ 
     socketsMutex.lock();

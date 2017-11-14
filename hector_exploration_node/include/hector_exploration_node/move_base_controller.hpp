@@ -18,6 +18,7 @@
 #include <gobot_msg_srv/IsCharging.h>
 #include <gobot_msg_srv/SetSpeeds.h>
 #include <gobot_msg_srv/SetInt.h>
+#include <gobot_msg_srv/SetString.h>
 
 /// Call a service to get the trajectory for exploration from the hector_exploration_planner and send the goal to move_base
 void doExploration(void);

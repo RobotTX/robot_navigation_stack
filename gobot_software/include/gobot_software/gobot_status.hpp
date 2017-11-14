@@ -19,6 +19,9 @@
 
 bool disconnectedSrvCallback(std_srvs::Empty::Request &req, std_srvs::Empty::Response &res);
 
+bool setWifiSrvCallback(gobot_msg_srv::SetString::Request &req, gobot_msg_srv::SetString::Response &res);
+bool getWifiSrvCallback(gobot_msg_srv::GetString::Request &req, gobot_msg_srv::GetString::Response &res);
+
 bool setHomeSrvCallback(gobot_msg_srv::SetString::Request &req, gobot_msg_srv::SetString::Response &res);
 bool getHomeSrvCallback(gobot_msg_srv::GetString::Request &req, gobot_msg_srv::GetString::Response &res);
 

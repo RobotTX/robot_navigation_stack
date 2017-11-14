@@ -50,6 +50,12 @@ configure "Desktop sharing" to allow "Remmina Remote Desktop Client"
 remmina remote desktop client
 protocol: VNC
 
+#network manager
+sudo apt install network-manager
+
+#create hotspot
+nmcli d wifi hotspot ssid "GTrobotwifi" password "gt123456"
+
 ### Optional Configuration ###
 
 #screen split

@@ -172,9 +172,9 @@ bool execCommand(const std::string ip, const std::vector<std::string> command){
             status = muteOn(command);
         break;
 
-        /// NOT USED NOW
+        /// command to set wifi
         case 'y':
-
+            status = setWifi(command);
         break;
 
         case 'z':
@@ -709,7 +709,23 @@ if(command.size() == 1) {
 }
 
 /// First param = y
+bool setWifi(const std::vector<std::string> command){
+    ros::NodeHandle n;
+    //1=y, 2=wifi name, 3=wifi password
+    if(command.size() == 3){
+        ROS_INFO("(Command system) Wifi received %s %s", command.at(1).c_str(), command.at(2).c_str());
+        gobot_msg_srv::SetString set_wifi;
+        set_wifi.request.data.push_back(command.at(1));
+        set_wifi.request.data.push_back(command.at(2));
 
+        ros::service::call("/gobot_status/set_wifi",set_wifi);
+        return true;
+    } 
+    else
+        ROS_ERROR("(Command system) Not enough arguments, received %lu arguments, 4 arguments expected", command.size());
+
+    return false;
+}
 
 /// First param = z
 bool restartEverything(const std::vector<std::string> command){

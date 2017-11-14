@@ -4,7 +4,7 @@
 
 static const std::string sep = std::string(1, 31);
 std::string pingFile;
-std::string ipsFile;
+std::string ipsFile, wifiFile;
 
 bool simulation = false;
 bool muteFlag = false;
@@ -217,7 +217,7 @@ void checkNewServers(void){
         scanIP=true;
         //ROS_INFO("(ping_server) Refreshing the list of potential servers");
         /// Script which will check all the IP on the local network and put them in a file
-        const std::string ping_script = "sudo sh " + pingFile + " " + ipsFile ;
+        const std::string ping_script = "sudo sh " + pingFile + " " + ipsFile +" " +wifiFile;
         system(ping_script.c_str());
 
         /// Get the file with the available IP addresses
@@ -303,6 +303,14 @@ int main(int argc, char* argv[]){
         n.getParam("ping_file", pingFile);
     else {
         ROS_ERROR("(ping_server) The parameter <ping_file> does not exist");
+        return -1;
+    }
+
+    if(n.hasParam("wifi_file")){
+        n.getParam("wifi_file", wifiFile);
+    }
+    else {
+        ROS_ERROR("(ping_server) The parameter <wifi_file> does not exist");
         return -1;
     }
 
