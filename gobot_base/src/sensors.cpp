@@ -327,7 +327,7 @@ bool setSoundSrvCallback(gobot_msg_srv::SetInt::Request &req, gobot_msg_srv::Set
     gobot_msg_srv::GetInt get_mute;
     ros::service::call("/gobot_status/get_mute",get_mute);
     //mute
-    if (get_mute.response.data[0])
+    if(get_mute.response.data[0])
         return true;
 
     //serial open and not mute

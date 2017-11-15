@@ -205,6 +205,9 @@ void initialPoseResultCallback(const std_msgs::Int8::ConstPtr& msg){
                 break;
         }
     }
+    else if((current_stage == CHARGING_STAGE) && (msg->data==1)){
+        setSound(1,2);
+    }
 }
 
 void newBumpersInfo(const gobot_msg_srv::BumperMsg::ConstPtr& msg){

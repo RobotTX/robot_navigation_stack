@@ -1,6 +1,6 @@
 #include "gobot_software/ping_server_new.hpp"
 
-#define PING_THRESHOLD 6
+#define PING_THRESHOLD 3
 
 static const std::string sep = std::string(1, 31);
 std::string pingFile;
@@ -52,17 +52,19 @@ std::string getDataToSend(void){
  */
 bool updataStatusSrvCallback(std_srvs::Empty::Request &req, std_srvs::Empty::Response &res){
     std::thread([](){
-        std::string dataToSend = getDataToSend();
-        std::vector<std::thread> data_threads;
-        ipMutex.lock();
-        //ROS_INFO("(ping_server) Trying to ping everyone %lu", availableIPs.size());
-        for(int i = 0; i < oldIPs.size(); ++i)
-            data_threads.push_back(std::thread(pingIP2, oldIPs.at(i).first, dataToSend, 3.0));
-        ipMutex.unlock();
+        if(oldIPs.size()>0){
+            std::string dataToSend = getDataToSend();
+            std::vector<std::thread> data_threads;
+            ipMutex.lock();
+            //ROS_INFO("(ping_server) Trying to ping everyone %lu", availableIPs.size());
+            for(int i = 0; i < oldIPs.size(); ++i)
+                data_threads.push_back(std::thread(pingIP2, oldIPs.at(i).first, dataToSend, 3.0));
+            ipMutex.unlock();
 
-        ///we wait for all the threads to be done
-        for(int i = 0; i < data_threads.size(); ++i)
-            data_threads.at(i).join();
+            ///we wait for all the threads to be done
+            for(int i = 0; i < data_threads.size(); ++i)
+                data_threads.at(i).join();
+        }
     }).detach();
 
     return true;

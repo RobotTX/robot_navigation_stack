@@ -1,5 +1,4 @@
 #!/bin/bash
-IFS=$'\n'
 isAlive="$1"
 wififile="$2"
 defalutwifi="GTrobotWifi"
@@ -15,7 +14,7 @@ do
     fi 
     n=2
 done  < $wififile
-echo name:$wifiname password:$wifipassword
+#echo name:$wifiname password:$wifipassword
 if [ -z "$wifiname" ]  #if no assigned wifi, build hotspot
 then
     if [ -z "$(nmcli device status | grep Hotspot)" ]  #if no created hotspot, build one
@@ -33,20 +32,20 @@ then
     fi
 
 else      
-    if [ -z "$(nmcli device status | grep $wifiname)" ] #if has assigned wifi, but not connected
+    if [ -z "$(nmcli device status | grep "$wifiname")" ] #if has assigned wifi, but not connected
     then
-        if [ -z "$(nmcli connection show | grep $wifiname)" ]  #if not in the connection list, build new connection
+        if [ -z "$(nmcli connection show | grep "$wifiname")" ]  #if not in the connection list, build new connection
         then
             if [ -z "$(nmcli device status | grep wifi | grep disconnected)" ]
             then
                 nmcli device disconnect $wifi
-                echo "Delete current connected wifi"
+                echo "Disconnect current wifi"
                 sleep 5s
             fi
                 nmcli d wifi connect "$wifiname" password "$wifipassword"
                 echo "Robot build connection to assigned wifi named '$wifiname'"
         else
-            nmcli connection up $wifiname
+            nmcli connection up "$wifiname"
             echo "Robot connecting to assigned wifi named '$wifiname'"
         fi
     else
@@ -55,4 +54,4 @@ else
 fi
 var=$(ifconfig | grep -A 1 $wifi | grep inet | cut -d ':' -f2|cut -f -3 --delimiter='.')
 fping -r 0 -g "$var.0/24" 2>/dev/null | grep alive | cut -d ' ' -f1 > $isAlive
-sed -i "/$var.99/d" $isAlive
+sed -i "/$var.33/d" $isAlive

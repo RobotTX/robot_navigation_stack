@@ -135,44 +135,7 @@ void session(boost::shared_ptr<tcp::socket> sock){
                     /// We remove the 5 last bytes as they are only there to identify the end of the map
                     map.erase(map.end() - 5, map.end());
                     ROS_INFO("(New Map) Size of the map received : %lu", map.size());
-
-                    /*
-                    // if initPosX <= 100.0 it means we have just finished a scan and we have the position of the robot
-                    if(initPosX > -100.0){
-
-                        if(n.hasParam("robot_position_file")){
-                            std::string robotPositionFile;
-                            n.getParam("robot_position_file", robotPositionFile);
-                            ofs.open(robotPositionFile, std::ifstream::out | std::ofstream::trunc);
-                            ofs << 0;
-                            ofs.close();
-                        }
-
-                        std::string initialPoseFile;
-                        if(n.hasParam("last_known_position_file")){
-                            n.getParam("last_known_position_file", initialPoseFile);
-                            ROS_INFO("read_new_map set last known position file to %s", initialPoseFile.c_str());
-                        } 
-
-                        ofs.open(initialPoseFile, std::ofstream::out | std::ofstream::trunc);
-                        if(ofs.is_open()){
-                            /// We translate the rotation of the robot from degrees to a quaternion
-                            tf::Quaternion quaternion;
-                            quaternion.setEuler(0, 0, -orientation*3.14159/180);
-
-                            /// We write the inital position of the robot in its file
-                            ofs << initPosX << " " << initPosY << " " << quaternion.x() << " " << quaternion.y() << " " << quaternion.z() << " " << quaternion.w() << std::endl;
-
-                            ofs.close();
-
-                        } else {
-                            ROS_INFO("(New Map) Could not open the file to create a new initialPoseFile file %s", initialPoseFile.c_str());
-                            message = "failed";
-                        }
-                    }
-                    */ 
-
-
+                    
                     /// Update the config file
                     std::string mapConfig;
                     if(n.hasParam("map_config_used")){

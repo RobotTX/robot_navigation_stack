@@ -52,7 +52,7 @@ void getButtonCallback(const std_msgs::Int8::ConstPtr& msg){
         ros::service::call("/gobot_command/pause_path",empty_srv);
       }
       //if go docking, stop it
-      else if(get_gobot_status.response.status==15 && dt>1.5){
+      else if(get_gobot_status.response.status==15 && dt>1.2){
         ROS_INFO("Stop robot home.");
         ros::service::call("/gobot_command/stopGoDock",empty_srv);
       }
@@ -71,9 +71,18 @@ void getButtonCallback(const std_msgs::Int8::ConstPtr& msg){
       }
       
     }
-    else if(dt>10.0 && dt<=20.0){
+    else if(dt>10.0 && dt<=15.0){
       ROS_INFO("Send robot home.");
       ros::service::call("/gobot_command/goDock",empty_srv);
+		}
+    //reset wifi
+    else if(dt>15.0 && dt<=25.0){
+      ROS_INFO("Reset robot wifi.");
+      gobot_msg_srv::SetString set_wifi;
+      set_wifi.request.data.push_back("");
+      set_wifi.request.data.push_back("");
+
+      ros::service::call("/gobot_status/set_wifi",set_wifi);
 		}
     //These two cases are not considered now
     else if(dt>99.0 && dt<=999.0){
