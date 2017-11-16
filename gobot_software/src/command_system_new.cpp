@@ -687,7 +687,7 @@ bool muteOff(const std::vector<std::string> command){
     if(command.size() == 1) {
         ROS_INFO("(Command system) Disable mute");
         gobot_msg_srv::SetInt set_mute;
-        set_mute.request.data[0]=0;
+        set_mute.request.data.push_back(0);
         if(ros::service::call("/gobot_status/set_mute", set_mute))
             return true;
     }
@@ -700,7 +700,7 @@ bool muteOn(const std::vector<std::string> command){
 if(command.size() == 1) {
         ROS_INFO("(Command system) Enable mute");
         gobot_msg_srv::SetInt set_mute;
-        set_mute.request.data[0]=1;
+        set_mute.request.data.push_back(1);
         if(ros::service::call("/gobot_status/set_mute", set_mute))
             return true;
     }
@@ -718,7 +718,19 @@ bool setWifi(const std::vector<std::string> command){
         set_wifi.request.data.push_back(command.at(1));
         set_wifi.request.data.push_back(command.at(2));
 
-        ros::service::call("/gobot_status/set_wifi",set_wifi);
+        if(ros::service::call("/gobot_status/set_wifi",set_wifi)){
+            socketsMutex.lock();
+            std::vector<std::string> connected_ip;
+            for (std::map<std::string, boost::shared_ptr<tcp::socket>>::iterator it=sockets.begin();it!=sockets.end();++it){
+                connected_ip.push_back(it->first);
+            }
+            socketsMutex.unlock();
+            for(int i=0;i<connected_ip.size();i++){
+                std_msgs::String msg;
+                msg.data = connected_ip.at(i);
+                disco_pub.publish(msg); 
+            }
+        }
         return true;
     } 
     else
@@ -1041,7 +1053,7 @@ void sendConnectionData(boost::shared_ptr<tcp::socket> sock){
     y_angle=std::stod(get_home.response.data[3]);
     z_angle=std::stod(get_home.response.data[4]);
     w_angle=std::stod(get_home.response.data[5]);
-    if(homeX=="0" && homeY=="0" && x_angle==0 && y_angle==0 && z_angle==0 && w_angle==0){
+    if(homeX=="0" && homeY=="0" && x_angle==0 && y_angle==0){
         homeX = "-150";
         homeY = "-150";
     }

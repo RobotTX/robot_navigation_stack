@@ -64,6 +64,9 @@ bool disconnectedSrvCallback(std_srvs::Empty::Request &req, std_srvs::Empty::Res
 }
 
 bool setWifiSrvCallback(gobot_msg_srv::SetString::Request &req, gobot_msg_srv::SetString::Response &res){
+    if(wifi_.at(0)==req.data[0] && wifi_.at(1)==req.data[1]){
+        return false;
+    }
     //if previous wifi is not empty and receive a new wifi, we delete the previous wifi in the netowrk list
     if(wifi_.at(0)!="" && (wifi_.at(0)!=req.data[0] || wifi_.at(1)!=req.data[1]))
     {   

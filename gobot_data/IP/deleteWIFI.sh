@@ -12,11 +12,12 @@ do
     fi
     n=2 
 done  < $wififile
-if [ "$wifiname" ]
+if [ -z "$wifiname" ]
+then 
+    wifiname="Hotspot"
+fi
+if [ "$(nmcli connection show | grep "$wifiname")" ]
 then
-    if [ "$(nmcli connection show | grep "$wifiname")" ]
-    then
-        nmcli connection delete "$wifiname"
-        echo Deleted WIFIs name:$wifiname
-    fi
+    nmcli connection delete "$wifiname"
+    echo Deleted WIFIs name:$wifiname
 fi

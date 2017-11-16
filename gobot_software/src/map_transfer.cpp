@@ -296,9 +296,6 @@ void server(void){
             ROS_ERROR("(Map::server) the ip %s is already connected, this should not happen", ip.c_str());
 		}
         socketsMutex.unlock();
-		if(error){
-			disconnect(ip);
-		}
     }
 }
 

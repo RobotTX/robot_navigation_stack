@@ -77,11 +77,18 @@ void session(boost::shared_ptr<tcp::socket> sock){
             }
         }
 
+
         // when the last 5 bytes are 254 we know we have received a complete map
         if(map.size() > 4 && static_cast<int>(map.at(map.size()-5)) == 254 && static_cast<int>(map.at(map.size()-4)) == 254
              && static_cast<int>(map.at(map.size()-3)) == 254 && static_cast<int>(map.at(map.size()-2)) == 254 && static_cast<int>(map.at(map.size()-1)) == 254){
             ROS_INFO("(New Map) Last separator found");
 
+            std::string mapType = mapId.substr(0,4);
+            if(mapType == "EDIT" || mapType == "IMPT"){
+                mapId = mapId.substr(4);
+                ROS_INFO("(New Map) Map Type: %s", mapType.c_str());
+            }
+ 
 
             /// We check if we already have a map with the same id
             std::string mapIdFile;
@@ -185,35 +192,39 @@ void session(boost::shared_ptr<tcp::socket> sock){
                         sleep(3);
                         ROS_INFO("(New Map) We killed gobot_navigation");
 
-                        //#### delete old robot data ####
-                        /// We delete the old home
-                        gobot_msg_srv::SetString set_home;
-                        set_home.request.data.push_back("0");
-                        set_home.request.data.push_back("0");
-                        set_home.request.data.push_back("0");
-                        set_home.request.data.push_back("0");
-                        set_home.request.data.push_back("0");
-                        set_home.request.data.push_back("0");
-                        ros::service::call("/gobot_status/set_home",set_home);
-                        ROS_INFO("(New Map) Home deleted");
-                        
-                        /// We detele the loop
-                        gobot_msg_srv::SetInt set_loop;
-                        set_loop.request.data.push_back(0);
-                        ros::service::call("/gobot_status/set_loop",set_loop);
-                        ROS_INFO("(New Map) Loop deleted");
+                        if(mapType != "EDIT"){
+                            //#### delete old robot data ####
+                            if(mapType != "IMPT"){
+                                /// We delete the old home
+                                gobot_msg_srv::SetString set_home;
+                                set_home.request.data.push_back("0");
+                                set_home.request.data.push_back("0");
+                                set_home.request.data.push_back("0");
+                                set_home.request.data.push_back("0");
+                                set_home.request.data.push_back("0");
+                                set_home.request.data.push_back("0");
+                                ros::service::call("/gobot_status/set_home",set_home);
+                                ROS_INFO("(New Map) Home deleted");
+                            }
+                            
+                            /// We detele the loop
+                            gobot_msg_srv::SetInt set_loop;
+                            set_loop.request.data.push_back(0);
+                            ros::service::call("/gobot_status/set_loop",set_loop);
+                            ROS_INFO("(New Map) Loop deleted");
 
-                        /// We delete the old path
-                        gobot_msg_srv::SetPath set_path;
-                        ros::service::call("/gobot_status/set_path", set_path);
-                        ROS_INFO("(New Map) Path deleted");
+                            /// We delete the old path
+                            gobot_msg_srv::SetPath set_path;
+                            ros::service::call("/gobot_status/set_path", set_path);
+                            ROS_INFO("(New Map) Path deleted");
 
-                        /// We delete the old path stage
-                        gobot_msg_srv::SetStage set_stage;
-                        set_stage.request.stage = 0;
-                        ros::service::call("/gobot_status/set_stage", set_stage);
-                        ROS_INFO("(New Map) Path stage deleted");
-                        //#### delete old robot data ####
+                            /// We delete the old path stage
+                            gobot_msg_srv::SetStage set_stage;
+                            set_stage.request.stage = 0;
+                            ros::service::call("/gobot_status/set_stage", set_stage);
+                            ROS_INFO("(New Map) Path stage deleted");
+                            //#### delete old robot data ####
+                        }
 
                         
                         /// Relaunch gobot_navigation
@@ -258,12 +269,16 @@ void session(boost::shared_ptr<tcp::socket> sock){
 
             //disconnect all other users to receive new map
             ROS_INFO("(New Map) Disconnect other uses to update them new map.");
+            std::vector<std::string> connected_ip;
+            socketsMutex.lock();
             for (std::map<std::string, boost::shared_ptr<tcp::socket>>::iterator it=sockets.begin();it!=sockets.end();++it){
-                if (it->first!=ip){
-                    std_msgs::String msg;
-                    msg.data = it->first;
-                    disco_pub.publish(msg);
-                }
+                connected_ip.push_back(it->first);
+            }
+            socketsMutex.unlock();
+            for(int i=0;i<connected_ip.size();i++){
+                std_msgs::String msg;
+                msg.data = connected_ip.at(i);
+                disco_pub.publish(msg);
             }
         }
     }
