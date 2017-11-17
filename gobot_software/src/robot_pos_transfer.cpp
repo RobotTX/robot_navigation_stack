@@ -20,18 +20,20 @@ void sendRobotPos(const ros::TimerEvent&){
                 boost::asio::write(*(elem.second), boost::asio::buffer(robot_string, robot_string.length()));
             } catch (std::exception& e) {
                 //can not send pose to the ip
-                ROS_ERROR("(Robot Pos) Exception %s : %s", elem.first.c_str(), e.what());
-                dis_ip.push_back(elem.first);
+                //ROS_ERROR("(Robot Pos) Exception %s : %s", elem.first.c_str(), e.what());
+                //dis_ip.push_back(elem.first);
             }
         }
         socketsMutex.unlock();
         
+        /*
         //disconnect it
         for(int i=0;i<dis_ip.size();i++){
             std_msgs::String msg;
             msg.data = dis_ip.at(i);
             disco_pub.publish(msg);
         }
+        */
     }
 }
 

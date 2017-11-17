@@ -42,7 +42,7 @@ std::string getDataToSend(void){
     
     gobot_msg_srv::GetInt get_mute;
     ros::service::call("/gobot_status/get_mute",get_mute);
-    muteFlag=(get_mute.response.data[0]) ? "1" : "0";
+    muteFlag=(get_mute.response.data[0]) ? 1 : 0;
     /// Form the string to send to the Qt app
     return  get_name.response.data[0] + sep + std::to_string(get_stage.response.stage) + sep + std::to_string(batteryLevel) + sep + std::to_string(muteFlag) + sep + std::to_string(get_dock_status.response.status);
 }

@@ -347,13 +347,13 @@ bool startScanAndAutoExplore(const std::string ip, const std::vector<std::string
         
         /// Relaunch gobot_navigation
         if(simulation)
-            cmd = "gnome-terminal -x bash -c \"source /opt/ros/kinetic/setup.bash;source /home/gtdollar/catkin_ws/devel/setup.bash;roslaunch gobot_navigation gazebo_scan.launch\"";
+            cmd = "gnome-terminal -x bash -c \"source /opt/ros/kinetic/setup.bash;source /home/tx/catkin_ws/devel/setup.bash;roslaunch gobot_navigation gazebo_scan.launch\"";
         else
             cmd = "gnome-terminal -x bash -c \"source /opt/ros/kinetic/setup.bash;source /home/gtdollar/catkin_ws/devel/setup.bash;roslaunch gobot_navigation gobot_scan.launch\"";
         system(cmd.c_str());
         ROS_INFO("(New Map) We relaunched gobot_navigation");
 
-        sleep(5);
+        sleep(8);
 
         /// 0 : the robot doesn't go back to its starting point at the end of the scan
         /// 1 : robot goes back to its starting point which is its charging station
@@ -615,11 +615,11 @@ bool startNewScan(const std::string ip, const std::vector<std::string> command){
 
         /// Relaunch gobot_navigation
         if(simulation)
-            cmd = "gnome-terminal -x bash -c \"source /opt/ros/kinetic/setup.bash;source /home/gtdollar/catkin_ws/devel/setup.bash;roslaunch gobot_navigation gazebo_scan.launch\"";
+            cmd = "gnome-terminal -x bash -c \"source /opt/ros/kinetic/setup.bash;source /home/tx/catkin_ws/devel/setup.bash;roslaunch gobot_navigation gazebo_scan.launch\"";
         else
             cmd = "gnome-terminal -x bash -c \"source /opt/ros/kinetic/setup.bash;source /home/gtdollar/catkin_ws/devel/setup.bash;roslaunch gobot_navigation gobot_scan.launch\"";
         system(cmd.c_str());
-        sleep(5);
+        sleep(8);
         ROS_INFO("(Command system) We relaunched gobot_navigation");
 
         return sendMapAutomatically(ip);
@@ -646,11 +646,11 @@ bool stopScanning(const std::string ip, const std::vector<std::string> command){
 
             /// Relaunch gobot_navigation
             if(simulation)
-                cmd = "gnome-terminal -x bash -c \"source /opt/ros/kinetic/setup.bash;source /home/gtdollar/catkin_ws/devel/setup.bash;roslaunch gobot_navigation gazebo_slam.launch\"";
+                cmd = "gnome-terminal -x bash -c \"source /opt/ros/kinetic/setup.bash;source /home/tx/catkin_ws/devel/setup.bash;roslaunch gobot_navigation gazebo_slam.launch\"";
             else
                 cmd = "gnome-terminal -x bash -c \"source /opt/ros/kinetic/setup.bash;source /home/gtdollar/catkin_ws/devel/setup.bash;roslaunch gobot_navigation gobot_navigation.launch\"";
             system(cmd.c_str());
-            sleep(5);
+            sleep(8);
             ROS_INFO("(Command system) We relaunched gobot_navigation");
         }
 
@@ -1199,7 +1199,7 @@ void session(boost::shared_ptr<tcp::socket> sock){
                 if(finishedCmd){
                     checkCommand(commandStr.at(0));
                     sendCommand(ip,command,commandStr);
-
+                    
                     command.clear();
                     finishedCmd = 0;
                     commandStr = "";

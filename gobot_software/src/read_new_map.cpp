@@ -104,9 +104,6 @@ void session(boost::shared_ptr<tcp::socket> sock){
                 ifMap.close();
             }
 
-            if(mapIdFromFile.compare(mapId) == 0)
-                ROS_INFO("(New Map) SAME IDS ");
-
             mapMutex.lock();
             /// If we have a different map, we replace it
             if(mapIdFromFile.compare(mapId) != 0){
@@ -229,11 +226,11 @@ void session(boost::shared_ptr<tcp::socket> sock){
                         
                         /// Relaunch gobot_navigation
                         if(simulation)
-                            cmd = "gnome-terminal -x bash -c \"source /opt/ros/kinetic/setup.bash;source /home/gtdollar/catkin_ws/devel/setup.bash;roslaunch gobot_navigation gazebo_slam.launch\"";
+                            cmd = "gnome-terminal -x bash -c \"source /opt/ros/kinetic/setup.bash;source /home/tx/catkin_ws/devel/setup.bash;roslaunch gobot_navigation gazebo_slam.launch\"";
                         else
                             cmd = "gnome-terminal -x bash -c \"source /opt/ros/kinetic/setup.bash;source /home/gtdollar/catkin_ws/devel/setup.bash;roslaunch gobot_navigation gobot_navigation.launch\"";
-                        sleep(5);
                         system(cmd.c_str());
+                        sleep(8);
 
                         ROS_INFO("(New Map) We relaunched gobot_navigation");
                         message = "done 1";
@@ -267,6 +264,8 @@ void session(boost::shared_ptr<tcp::socket> sock){
                 ROS_INFO("(New Map) Message sent succesfully : %lu bytes sent", message.length());
             mapMutex.unlock();
 
+            if(mapIdFromFile.compare(mapId) == 0)
+                ROS_INFO("(New Map) SAME IDS ");
             //disconnect all other users to receive new map
             ROS_INFO("(New Map) Disconnect other uses to update them new map.");
             std::vector<std::string> connected_ip;

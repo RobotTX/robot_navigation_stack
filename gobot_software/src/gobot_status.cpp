@@ -86,9 +86,9 @@ bool setWifiSrvCallback(gobot_msg_srv::SetString::Request &req, gobot_msg_srv::S
             ofsWifi << wifi_.at(i) << "\n";
         }
         ofsWifi.close();
+        ROS_INFO("(Gobot_status) Set Gobot wifi: name:%s, password:%s",wifi_.at(0).c_str(),wifi_.at(1).c_str());
     }
     wifiMutex.unlock();
-    ROS_INFO("(Gobot_status) Set Gobot wifi: name:%s, password:%s",wifi_.at(0).c_str(),wifi_.at(1).c_str());
 
     return true;
 }
@@ -192,9 +192,10 @@ bool setMuteSrvCallback(gobot_msg_srv::SetInt::Request &req, gobot_msg_srv::SetI
     if(ofsMute){
         ofsMute << mute_;
         ofsMute.close();
+    ROS_INFO("(Gobot_status) Set Gobot mute: %d",mute_);
     }
 
-    ROS_INFO("(Gobot_status) Set Gobot mute: %d",mute_);
+    ros::service::call("/gobot_software/update_status",empty_srv);
     return true;
 }
 
@@ -215,9 +216,9 @@ bool setLoopSrvCallback(gobot_msg_srv::SetInt::Request &req, gobot_msg_srv::SetI
     if(ofsLoop){
         ofsLoop << loop_;
         ofsLoop.close();
+        ROS_INFO("(Gobot_status) Set Gobot loop: %d",loop_);
     }
 
-    ROS_INFO("(Gobot_status) Set Gobot loop: %d",loop_);
     return true;
 }
 
@@ -238,9 +239,9 @@ bool setStageSrvCallback(gobot_msg_srv::SetStage::Request &req, gobot_msg_srv::S
     if(ofsStage){
         ofsStage << stage_;
         ofsStage.close();
+        ROS_INFO("(Gobot_status) Set Gobot stage: %d",stage_);
     }
 
-    ROS_INFO("(Gobot_status) Set Gobot stage: %d",stage_);
     ros::service::call("/gobot_software/update_status",empty_srv);
 
     return true;
