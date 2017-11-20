@@ -20,10 +20,6 @@ echo "installing hector-nav-msgs..."
 echo "y" | sudo apt install ros-kinetic-hector-nav-msgs
 echo "hector-nav-msgs installed!"
 sleep 2s
-echo "installing teb-local-planner..."
-echo "y" | sudo apt install ros-kinetic-teb-local-planner
-echo "teb-local-planner installed!"
-sleep 2s
 echo "installing urg-node..."
 echo "y" | sudo apt install ros-kinetic-urg-node
 echo "urg-node installed!"
