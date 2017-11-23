@@ -12,10 +12,40 @@ std::mutex mapMutex;
 std::map<std::string, boost::shared_ptr<tcp::socket>> sockets;
 
 ros::Publisher map_pub;
+ros::Publisher initial_pose_publisher;
 
 ros::Publisher disco_pub;
 std_srvs::Empty empty_srv;
 gobot_msg_srv::GetGobotStatus get_gobot_status;
+
+
+
+void publishInitialpose(const double position_x, const double position_y, const double angle_x, const double angle_y, const double angle_z, const double angle_w,const double cov1,const double cov2){
+
+    if(position_x != 0 || position_y != 0 || angle_x != 0 || angle_y != 0 || angle_z != 0 || angle_w != 0){
+        geometry_msgs::PoseWithCovarianceStamped initialPose;
+        initialPose.header.frame_id = "map";
+        initialPose.header.stamp = ros::Time::now();
+        initialPose.pose.pose.position.x = position_x;
+        initialPose.pose.pose.position.y = position_y;
+        initialPose.pose.pose.orientation.x = angle_x;
+        initialPose.pose.pose.orientation.y = angle_y;
+        initialPose.pose.pose.orientation.z = angle_z;
+        initialPose.pose.pose.orientation.w = angle_w;
+        //x-x,y-y,yaw-yaw
+        initialPose.pose.covariance[0] = cov1;
+        initialPose.pose.covariance[7] = cov1;
+        initialPose.pose.covariance[35] = cov2;
+        
+        // we wait for amcl to launch
+        ros::Duration(1.0).sleep();
+
+        initial_pose_publisher.publish(initialPose);
+        //ROS_INFO("(initial_pose_publisher) initialpose published.");
+    } else
+        ROS_ERROR("(initial_pose_publisher) got a wrong position (robot probably got no home)");
+}
+
 
 void session(boost::shared_ptr<tcp::socket> sock){
 
@@ -84,7 +114,7 @@ void session(boost::shared_ptr<tcp::socket> sock){
             ROS_INFO("(New Map) Last separator found");
 
             std::string mapType = mapId.substr(0,4);
-            if(mapType == "EDIT" || mapType == "IMPT"){
+            if(mapType == "EDIT" || mapType == "IMPT" || mapType == "SCAN"){
                 mapId = mapId.substr(4);
                 ROS_INFO("(New Map) Map Type: %s", mapType.c_str());
             }
@@ -191,7 +221,7 @@ void session(boost::shared_ptr<tcp::socket> sock){
 
                         if(mapType != "EDIT"){
                             //#### delete old robot data ####
-                            if(mapType != "IMPT"){
+                            if(mapType != "IMPT" && mapType != "SCAN"){
                                 /// We delete the old home
                                 gobot_msg_srv::SetString set_home;
                                 set_home.request.data.push_back("0");
@@ -202,6 +232,22 @@ void session(boost::shared_ptr<tcp::socket> sock){
                                 set_home.request.data.push_back("0");
                                 ros::service::call("/gobot_status/set_home",set_home);
                                 ROS_INFO("(New Map) Home deleted");
+                            }
+
+                            if(mapType == "SCAN"){
+                                //Record last known pose in scanned map
+                                if(n.hasParam("last_known_position_file")){
+                                    std::string lastPoseFile;
+                                    n.getParam("last_known_position_file", lastPoseFile);
+                                    std::ofstream ofs(lastPoseFile, std::ofstream::out | std::ofstream::trunc);
+                                    gobot_msg_srv::GetString get_home;
+                                    ros::service::call("/gobot_status/get_home",get_home);
+                                    
+                                    if(ofs.is_open()){
+                                        ofs << get_home.response.data[0] << " " << get_home.response.data[1] << " " << get_home.response.data[2] << " " << get_home.response.data[3] << " " << get_home.response.data[4] << " "<< get_home.response.data[5];
+                                        ofs.close();
+                                    }
+                                }
                             }
                             
                             /// We detele the loop
@@ -230,8 +276,8 @@ void session(boost::shared_ptr<tcp::socket> sock){
                         else
                             cmd = "gnome-terminal -x bash -c \"source /opt/ros/kinetic/setup.bash;source /home/gtdollar/catkin_ws/devel/setup.bash;roslaunch gobot_navigation gobot_navigation.launch\"";
                         system(cmd.c_str());
-                        sleep(8);
-
+                        sleep(6);
+                            
                         ROS_INFO("(New Map) We relaunched gobot_navigation");
                         message = "done 1";
 
@@ -347,6 +393,7 @@ int main(int argc, char **argv){
 
     /// Subscribe to know when we disconnected from the server
     ros::Subscriber sub = n.subscribe("/gobot_software/server_disconnected", 1000, serverDisconnected);
+    initial_pose_publisher = n.advertise<geometry_msgs::PoseWithCovarianceStamped>("/initialpose", 1);
 
     /// Advertise that we are going to publish to /map
     map_pub = n.advertise<nav_msgs::OccupancyGrid>("/map", 1000);

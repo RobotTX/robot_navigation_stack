@@ -30,6 +30,7 @@
 #include <gobot_msg_srv/GetPath.h>
 #include <gobot_msg_srv/GetInt.h>
 #include <gobot_msg_srv/SetInt.h>
+#include <gobot_msg_srv/IsCharging.h>
 #include <hector_exploration_node/Exploration.h>
 #include <mutex>
 #include <thread>

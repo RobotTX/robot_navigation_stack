@@ -351,9 +351,8 @@ bool startScanAndAutoExplore(const std::string ip, const std::vector<std::string
         else
             cmd = "gnome-terminal -x bash -c \"source /opt/ros/kinetic/setup.bash;source /home/gtdollar/catkin_ws/devel/setup.bash;roslaunch gobot_navigation gobot_scan.launch\"";
         system(cmd.c_str());
+        sleep(6);
         ROS_INFO("(New Map) We relaunched gobot_navigation");
-
-        sleep(8);
 
         /// 0 : the robot doesn't go back to its starting point at the end of the scan
         /// 1 : robot goes back to its starting point which is its charging station
@@ -504,12 +503,23 @@ bool newChargingStation(const std::vector<std::string> command){
     if(command.size() == 4){
         // TODO send an angle from the application and convert it to store it in home.txt
         ROS_INFO("(Command system) Home received %s %s %s", command.at(1).c_str(), command.at(2).c_str(), command.at(3).c_str());
-        gobot_msg_srv::SetString set_home;
-        int orientation = std::stoi(command.at(3));
+        
+        //Check home from scanned map or new map
+        std::string homeX = command.at(1), homeY = command.at(2), homeOri = command.at(3);
+        int orientation = std::stoi(homeOri);
         tf::Quaternion quaternion;
         quaternion.setEuler(0, 0, -(orientation+90)*3.14159/180);
-        set_home.request.data.push_back(command.at(1));
-        set_home.request.data.push_back(command.at(2));
+
+        std::string mapType = homeX.substr(0,1);
+        if(mapType == "S"){
+            homeX = homeX.substr(1);
+            ROS_INFO("(Command System::New CS) Map Type: %s", mapType.c_str());
+            //We change the last known pose for localize Gobot in scanned map
+        }
+
+        gobot_msg_srv::SetString set_home;
+        set_home.request.data.push_back(homeX);
+        set_home.request.data.push_back(homeY);
         set_home.request.data.push_back(std::to_string(quaternion.x()));
         set_home.request.data.push_back(std::to_string(quaternion.y()));
         set_home.request.data.push_back(std::to_string(quaternion.z()));
@@ -619,7 +629,7 @@ bool startNewScan(const std::string ip, const std::vector<std::string> command){
         else
             cmd = "gnome-terminal -x bash -c \"source /opt/ros/kinetic/setup.bash;source /home/gtdollar/catkin_ws/devel/setup.bash;roslaunch gobot_navigation gobot_scan.launch\"";
         system(cmd.c_str());
-        sleep(8);
+        sleep(6);
         ROS_INFO("(Command system) We relaunched gobot_navigation");
 
         return sendMapAutomatically(ip);
@@ -650,7 +660,7 @@ bool stopScanning(const std::string ip, const std::vector<std::string> command){
             else
                 cmd = "gnome-terminal -x bash -c \"source /opt/ros/kinetic/setup.bash;source /home/gtdollar/catkin_ws/devel/setup.bash;roslaunch gobot_navigation gobot_navigation.launch\"";
             system(cmd.c_str());
-            sleep(8);
+            sleep(6);
             ROS_INFO("(Command system) We relaunched gobot_navigation");
         }
 
@@ -764,9 +774,15 @@ bool startAutoExplore(const std::vector<std::string> command){
         /// 0 : the robot doesn't go back to its starting point at the end of the scan
         /// 1 : robot goes back to its starting point which is its charging station
         /// 2 : robot goes back to its starting point which is not a charging station
-        hector_exploration_node::Exploration arg;
-        arg.request.backToStartWhenFinished = 0;
-        if(ros::service::call("/gobot_scan/startExploration", arg))
+        hector_exploration_node::Exploration exploration_srv;
+        gobot_msg_srv::IsCharging arg;
+        if(ros::service::call("/gobot_status/charging_status", arg) && arg.response.isCharging){
+            exploration_srv.request.backToStartWhenFinished = 1;
+        }
+        else{
+            exploration_srv.request.backToStartWhenFinished = 0;
+        }
+        if(ros::service::call("/gobot_scan/startExploration", exploration_srv))
             return true;
         else
             ROS_ERROR("(Command system) Could not call the service /gobot_scan/startExploration");
@@ -1303,7 +1319,7 @@ int main(int argc, char* argv[]){
         disco_pub = n.advertise<std_msgs::String>("/gobot_software/server_disconnected", 10);
         go_pub = n.advertise<geometry_msgs::PoseStamped>("/move_base_simple/goal", 1000);
         teleop_pub = n.advertise<geometry_msgs::Twist>("/cmd_vel", 1000);
-
+        
         ros::ServiceServer lowBatterySrv = n.advertiseService("/gobot_command/lowBattery", lowBatterySrvCallback);
         ros::ServiceServer goDockSrv = n.advertiseService("/gobot_command/goDock", goDockSrvCallback);
         ros::ServiceServer stopGoDockSrv = n.advertiseService("/gobot_command/stopGoDock", stopGoDockSrvCallback);
