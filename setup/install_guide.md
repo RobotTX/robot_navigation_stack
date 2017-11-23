@@ -78,6 +78,7 @@ sudo dpkg -i robotware.deb
 ###################################################
 
 ### To Install Driver Packages ###
+
 sudo sh /home/[username]/catkin_ws/src/gobot_navigation_stack/setup/driver_package.sh
 
 sudo apt install ros-kinetic-navigation
@@ -95,3 +96,14 @@ sudo apt install ros-kinetic-hector_gazebo-plugins (gazebo)
 
 gobot_navigation_stack
 Then catkin_make, then add the packages above to the src, then catkin_make again.
+
+#footprint & other parameters
+gobot_base.launch   wheel_separation    0.45
+                    wheel_radius        0.0725
+                    ticks_per_rotation  *819.2
+*costmap.yaml/gmapping.yaml/teb_local.yaml/bumpers2pc.yaml
+[[0,0.26],[0.1,0.255],[0.178,0.25],[0.222,0.225],[0.245,0.112],[0.25,0],[0.245,-0.112],[0.222,-0.225],[0.178,-0.25],[0.1,-0.255],[0,-0.26],[-0.1,-0.255],[-0.178,-0.25],[-0.222,-0.225],[-0.245,-0.112],[-0.25,0],[-0.245,0.112],[-0.222,0.225],[-0.178,0.25],[-0.1,0.255]]
+
+*costmap_common.yaml/teb_local_planner.yaml
+sqrt(0.25^2+0.26^2) = 0.36
+inflation_radius = 0.4/0.45/0.5

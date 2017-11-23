@@ -56,15 +56,12 @@ bool startDocking(void){
         oriW=std::stod(get_home.response.data[5]);
 
         if(x != 0 || y != 0 || oriX != 0 || oriY != 0 || oriZ != 0 || oriW != 0){
-
             //~ROS_INFO("(auto_docking::startDocking) home found : [%f, %f] [%f, %f, %f, %f]", x, y, oriX, oriY, oriZ, oriW);
 
             /// Got a quaternion and want an orientation in radian
             tf::Matrix3x3 matrix = tf::Matrix3x3(tf::Quaternion(oriX , oriY , oriZ, oriW));
 
-            tfScalar roll;
-            tfScalar pitch;
-            tfScalar yaw;
+            tfScalar roll,pitch,yaw;
 
             matrix.getRPY(roll, pitch, yaw);
             double homeOri = -(yaw*180/3.14159);//-(orientation+90)*3.14159/180);

@@ -10,6 +10,7 @@ int back_to_start_when_finished(0);
 geometry_msgs::Pose startingPose;
 std::string map_frame;
 std::string base_frame;
+std_srvs::Empty empty_srv;
 /// Simple Action client
 std::shared_ptr<actionlib::SimpleActionClient<move_base_msgs::MoveBaseAction>> ac;
 
@@ -38,10 +39,10 @@ bool getRobotPos(void){
         startingPose.position.z = transform.getOrigin().getZ();
 
         ROS_INFO("(Exploration) Robot position : (%f, %f, %f) - Robot orientation : (%f, %f, %f, %f)", 
-            startingPose.position.x, startingPose.position.y,
-            startingPose.position.z, startingPose.orientation.x,
-            startingPose.orientation.y, startingPose.orientation.z,
-            startingPose.orientation.w);
+        startingPose.position.x, startingPose.position.y,
+        startingPose.position.z, startingPose.orientation.x,
+        startingPose.orientation.y, startingPose.orientation.z,
+        startingPose.orientation.w);
         
         gobot_msg_srv::SetString set_home;
         set_home.request.data.push_back(std::to_string(startingPose.position.x));
@@ -51,7 +52,7 @@ bool getRobotPos(void){
         set_home.request.data.push_back(std::to_string(startingPose.orientation.z));
         set_home.request.data.push_back(std::to_string(startingPose.orientation.w));
 
-        //ros::service::call("/gobot_status/set_home",set_home);
+        ros::service::call("/gobot_status/set_home",set_home);
 
     } catch (tf::TransformException &ex) {
         ROS_ERROR("(Exploration) Got a transform problem : %s", ex.what());
@@ -64,20 +65,13 @@ bool getRobotPos(void){
 /// To make the robot go back to its starting position
 void backToStart(){
     ROS_INFO("(Exploration) Back to start launched...");
+    move_base_msgs::MoveBaseGoal goal;
     switch(back_to_start_when_finished){
         case 1:
-        {
-            std_srvs::Empty arg;
-            if(ros::service::call("/gobot_function/startDocking", arg))
-                ROS_INFO("(Exploration) Trying to go back to a charging station after mapping");
-            else 
-                ROS_ERROR("(Exploration) Couldn't call service /gobot_function/startDocking");
-        }
-        break;
+            ros::service::call("/gobot_command/goDock",empty_srv);
+            break;
         case 2:
-        {
             /// We go back to a normal point (not a charging station)
-            move_base_msgs::MoveBaseGoal goal;
             goal.target_pose.header.frame_id = "map";
             goal.target_pose.header.stamp = ros::Time::now();
             goal.target_pose.pose = startingPose;
@@ -85,13 +79,13 @@ void backToStart(){
             if(ac->isServerConnected()){
                 ac->sendGoalAndWait(goal, ros::Duration(0), ros::Duration(0));
                 ROS_INFO("(Exploration) Start position goal achieved");
-            } else 
+            } 
+            else 
                 ROS_ERROR("(Exploration) No action server to go back to start");
-        }
-        break;
+            break;
         default:
             ROS_ERROR("(Exploration) back_to_start_when_finished value not defined : %d", back_to_start_when_finished);
-        break;
+            break;
     }
 }
 
@@ -165,20 +159,21 @@ bool startExplorationSrv(hector_exploration_node::Exploration::Request &req, hec
         result.data=-1;
         exploration_pub.publish(result);
 
+        set_gobot_status.request.status = 25;
+        set_gobot_status.request.text = "EXPLORING";
+        ros::service::call("/gobot_status/set_gobot_status",set_gobot_status);
+        
+        back_to_start_when_finished = req.backToStartWhenFinished;
+
         gobot_msg_srv::IsCharging arg;
         if(ros::service::call("/gobot_status/charging_status", arg) && arg.response.isCharging){
+            getRobotPos();
             ROS_WARN("(Exploration) we are charging so we go straight to avoid bumping into the CS when turning");
             setSpeed('F', 25, 'F', 25);
             std::this_thread::sleep_for(std::chrono::milliseconds(2000));
             setSpeed('F', 0, 'F', 0);
         }
 
-        set_gobot_status.request.status = 25;
-        set_gobot_status.request.text = "EXPLORING";
-        ros::service::call("/gobot_status/set_gobot_status",set_gobot_status);
-        
-        back_to_start_when_finished = req.backToStartWhenFinished;
-        getRobotPos();
         std::thread(doExploration).detach();
         return true;
 

@@ -1,6 +1,6 @@
 #include "gobot_software/ping_server_new.hpp"
 
-#define PING_THRESHOLD 3
+#define PING_THRESHOLD 4
 
 static const std::string sep = std::string(1, 31);
 std::string pingFile;
@@ -92,7 +92,7 @@ void pingAllIPs(void){
             serverMutex.lock();
             //ROS_INFO("(ping_server) Trying to ping everyone %lu", availableIPs.size());
             for(int i = 0; i < availableIPs.size(); ++i)
-                threads.push_back(std::thread(pingIP, availableIPs.at(i), dataToSend, 4.0));
+                threads.push_back(std::thread(pingIP, availableIPs.at(i), dataToSend, 3.0));
             serverMutex.unlock();
 
             /// We join all the threads => we wait for all the threads to be done

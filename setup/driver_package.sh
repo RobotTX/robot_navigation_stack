@@ -23,5 +23,5 @@ sleep 2s
 echo "installing urg-node..."
 echo "y" | sudo apt install ros-kinetic-urg-node
 echo "urg-node installed!"
+sleep 2s
 echo "all packages are installed!"
-sleep 5s
