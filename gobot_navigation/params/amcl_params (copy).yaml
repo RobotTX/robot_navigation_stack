@@ -4,8 +4,8 @@
 min_particles: 150
 max_particles: 5000
 #Translational/Rotational movement required before performing a filter update
-update_min_d: 0.3 #0.25  #default:0.2 meter
-update_min_a: 0.25 #15 degree  #default:pi/6 radians
+update_min_d: 0.3 #0.25 #default:0.2 meter
+update_min_a: 0.25 #0.25 #15 degree  #default:pi/6 radians
 #Number of filter updates required before resampling
 resample_interval: 2
 transform_tolerance: 0.3 #0.2
@@ -20,8 +20,8 @@ kld_z: 0.99
 laser_min_range: -1.0
 laser_max_range: -1.0
 #How many evenly-spaced beams in each scan to be used when updating the filter
-#360 degree/ 72 = 5 degree
-laser_max_beams: 72 #30
+#240 degree/48 = 5 degree
+laser_max_beams: 48 #30
 
 # Odometry model parameters
 odom_model_type: diff-corrected

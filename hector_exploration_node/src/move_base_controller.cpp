@@ -132,7 +132,6 @@ void doExploration(void){
                             set_gobot_status.request.text = "COMPLETE_EXPLORING";
                             ros::service::call("/gobot_status/set_gobot_status",set_gobot_status);
                         }
-                        std_srvs::Empty arg2;
                         stopExploration();
 
                         /// if we want to go back to the starting position
@@ -169,10 +168,10 @@ bool startExplorationSrv(hector_exploration_node::Exploration::Request &req, hec
         if(back_to_start_when_finished==1){
             getRobotPos();
         }
-        gobot_msg_srv::IsCharging arg;
-        if(ros::service::call("/gobot_status/charging_status", arg) && arg.response.isCharging){
+        gobot_msg_srv::IsCharging isCharging;
+        if(ros::service::call("/gobot_status/charging_status", isCharging) && isCharging.response.isCharging){
             ROS_WARN("(Exploration) we are charging so we go straight to avoid bumping into the CS when turning");
-            setSpeed('F', 25, 'F', 25);
+            setSpeed('F', 30, 'F', 30);
             std::this_thread::sleep_for(std::chrono::milliseconds(3000));
             setSpeed('F', 0, 'F', 0);
         }

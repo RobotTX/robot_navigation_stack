@@ -6,6 +6,8 @@
 #include <gobot_msg_srv/GetGobotStatus.h>
 #include <std_srvs/Empty.h>
 
+std_srvs::Empty arg;
+
 int main(int argc, char** argv){
     ros::init(argc, argv, "odometry_publisher");
 
@@ -23,7 +25,6 @@ int main(int argc, char** argv){
     ROS_INFO("(Odom) MD49 is ready.");
     //Startup end
 
-    std_srvs::Empty arg;
     ros::service::waitForService("/gobot_motor/resetEncoders", ros::Duration(30));
     ros::service::call("/gobot_motor/resetEncoders", arg);
     /// The encoders should be reinitialized to 0 every time we launch odom
@@ -145,7 +146,11 @@ int main(int argc, char** argv){
         } 
         else {
             skipped++;
-            ROS_INFO("(odom) couldn't call service /gobot_motor/getEncoders, skipping this odom pub, total skipped : %d", skipped);
+            ROS_WARN("(odom) couldn't call service /gobot_motor/getEncoders, skipping this odom pub, total skipped : %d", skipped);
+            if(skipped==1){
+                ros::service::call("/gobot_recovery/initialize_home",arg);
+                ROS_WARN("(odom) first time happened. Check whether Gobot is home.");
+            }
         }
 
         r.sleep();

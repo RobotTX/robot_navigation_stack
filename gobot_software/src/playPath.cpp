@@ -255,8 +255,8 @@ bool playPathService(std_srvs::Empty::Request &req, std_srvs::Empty::Response &r
 	gobot_msg_srv::IsCharging arg;
 	if(ros::service::call("/gobot_status/charging_status", arg) && arg.response.isCharging){
 		ROS_WARN("(PlayPath::playPathService) we are charging so we go straight to avoid bumping into the CS when turning");
-		setSpeed('F', 25, 'F', 25);
-		std::this_thread::sleep_for(std::chrono::milliseconds(2000));
+		setSpeed('F', 20, 'F', 20);
+		std::this_thread::sleep_for(std::chrono::milliseconds(2500));
 		setSpeed('F', 0, 'F', 0);
 	}
 	goNextPoint();

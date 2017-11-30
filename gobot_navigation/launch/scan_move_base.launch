@@ -19,6 +19,9 @@
         <rosparam file="$(find gobot_navigation)/params/scan_global_costmap_params.yaml" command="load" />
         <rosparam file="$(find gobot_navigation)/params/scan_move_base_params.yaml" command="load" />
 
+        <!-- to use with the dwa local planner -->
+        <rosparam file="$(find gobot_navigation)/params/dwa_local_planner_params.yaml" command="load" />
+
         <!-- to use with the teb local planner -->
         <rosparam file="$(find gobot_navigation)/params/scan_teb_local_planner_params.yaml" command="load" />
         <rosparam file="$(find gobot_navigation)/params/costmap_converter_params.yaml" command="load" />

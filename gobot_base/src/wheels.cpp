@@ -154,9 +154,12 @@ bool stopTests(std_srvs::Empty::Request &req, std_srvs::Empty::Response &res){
 
 bool initSerial() {
     /// Get the port in which our device is connected
+    /*
     std::string deviceNode(MD49device);
     std::string output = getStdoutFromCommand("ls -l /sys/class/tty/ttyUSB*");
     std::string port = "/dev" + output.substr(output.find(deviceNode) + deviceNode.size(), 8);
+    */
+    std::string port = MD49device;
 
     ROS_INFO("(wheels::initSerial) MD49 port : %s", port.c_str());
 

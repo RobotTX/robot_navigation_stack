@@ -1,10 +1,12 @@
-#udevadm info -a -p $(udevadm info -q path -n /dev/ttyUSB0)
+#udevadm info -a -p $(udevadm info -q path -n /dev/ttyUSB0) | grep KERNELS | grep "-" | grep ":" | cut -d '"' -f2
 #sudo udevadm control --reload-rules && sudo service udev restart && sudo udevadm trigger
 #udevadm test $(udevadm info -q path -n /dev/ttyACM0)
 
-SUBSYSTEM=="tty", ACTION=="add", KERNEL=="ttyUSB0", KERNELS=="2-3.2:1.0", MODE="0666"
+SUBSYSTEM=="tty", ACTION=="add", KERNEL=="ttyUSB*", KERNELS=="x-x.x:x.x", MODE="0777", SYMLINK+="STM" 
 
-SUBSYSTEM=="tty", ACTION=="add", KERNEL=="ttyUSB1", KERNELS=="2-3.2:1.1", MODE="0666"
+SUBSYSTEM=="tty", ACTION=="add", KERNEL=="ttyUSB*", KERNELS=="x-x.x:x.x", MODE="0777", SYMLINK+="MD" 
 
-SUBSYSTEM=="tty", ACTION=="add", KERNEL=="ttyACM0", KERNELS=="2-2:1.0", MODE="0666"
+SUBSYSTEM=="tty", ACTION=="add", KERNEL=="ttyACM*", KERNELS=="2-2:1.0", MODE="0777"
+
+KERNEL=="ttyUSB*", ACTION=="add", ATTRS{idVendor}=="10c4", ATTRS{idProduct}=="ea60", MODE:="0777", SYMLINK+="rplidar" 
 

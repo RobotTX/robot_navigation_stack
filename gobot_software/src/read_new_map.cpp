@@ -8,7 +8,6 @@ const int max_length = 1024;
 bool simulation = false;
 
 std::mutex socketsMutex;
-std::mutex mapMutex;
 std::map<std::string, boost::shared_ptr<tcp::socket>> sockets;
 
 ros::Publisher map_pub;
@@ -22,7 +21,7 @@ gobot_msg_srv::GetGobotStatus get_gobot_status;
 
 void publishInitialpose(const double position_x, const double position_y, const double angle_x, const double angle_y, const double angle_z, const double angle_w,const double cov1,const double cov2){
 
-    if(position_x != 0 || position_y != 0 || angle_x != 0 || angle_y != 0 || angle_z != 0 || angle_w != 0){
+    if(position_x != 0 || position_y != 0 || angle_x != 0 || angle_y != 0 || angle_z != 0){
         geometry_msgs::PoseWithCovarianceStamped initialPose;
         initialPose.header.frame_id = "map";
         initialPose.header.stamp = ros::Time::now();
@@ -42,7 +41,8 @@ void publishInitialpose(const double position_x, const double position_y, const 
 
         initial_pose_publisher.publish(initialPose);
         //ROS_INFO("(initial_pose_publisher) initialpose published.");
-    } else
+    } 
+    else
         ROS_ERROR("(initial_pose_publisher) got a wrong position (robot probably got no home)");
 }
 
@@ -70,21 +70,10 @@ void session(boost::shared_ptr<tcp::socket> sock){
         if ((error == boost::asio::error::eof) || (error == boost::asio::error::connection_reset)){
             //~ROS_INFO("(New Map) Connection closed");
             return;
-        } else if (error) {
+        } 
+        else if (error) {
             throw boost::system::system_error(error); // Some other error.
             return;
-        }
-
-        //stop the robot for reading new map
-        gobot_msg_srv::GetGobotStatus get_gobot_status;
-        ros::service::call("/gobot_status/get_gobot_status",get_gobot_status);
-        if(get_gobot_status.response.status==15){
-            ros::service::call("/gobot_command/stopGoDock",empty_srv);
-            ROS_INFO("(New Map) stop auto docking to read new map.");
-        }
-        else if(get_gobot_status.response.status==5){
-            ros::service::call("/gobot_command/stop_path",empty_srv);
-            ROS_INFO("(New Map) stop current path to read new map.");
         }
 
         // Parse the data as we are supposed to receive : "mapId ; mapDate ; metadata ; map"
@@ -95,7 +84,8 @@ void session(boost::shared_ptr<tcp::socket> sock){
                 /// the third means we got the map date
                 ROS_INFO("(New Map) ';' found");
                 gotMapData++;
-            } else {
+            } 
+            else {
                 if(gotMapData > 2)
                     map.push_back((uint8_t) data[i]);
                 else if(gotMapData == 0)
@@ -107,16 +97,26 @@ void session(boost::shared_ptr<tcp::socket> sock){
             }
         }
 
-
         // when the last 5 bytes are 254 we know we have received a complete map
         if(map.size() > 4 && static_cast<int>(map.at(map.size()-5)) == 254 && static_cast<int>(map.at(map.size()-4)) == 254
              && static_cast<int>(map.at(map.size()-3)) == 254 && static_cast<int>(map.at(map.size()-2)) == 254 && static_cast<int>(map.at(map.size()-1)) == 254){
-            ROS_INFO("(New Map) Last separator found");
+            
+            //stop the robot for reading new map
+            gobot_msg_srv::GetGobotStatus get_gobot_status;
+            ros::service::call("/gobot_status/get_gobot_status",get_gobot_status);
+            if(get_gobot_status.response.status==15){
+                ros::service::call("/gobot_command/stopGoDock",empty_srv);
+                ROS_INFO("(New Map) stop auto docking to read new map.");
+            }
+            else if(get_gobot_status.response.status==5){
+                ros::service::call("/gobot_command/stop_path",empty_srv);
+                ROS_INFO("(New Map) stop current path to read new map.");
+            }
 
             std::string mapType = mapId.substr(0,4);
+            ROS_INFO("(New Map) Map Type: %s", mapType.c_str());
             if(mapType == "EDIT" || mapType == "IMPT" || mapType == "SCAN"){
                 mapId = mapId.substr(4);
-                ROS_INFO("(New Map) Map Type: %s", mapType.c_str());
             }
  
 
@@ -134,27 +134,16 @@ void session(boost::shared_ptr<tcp::socket> sock){
                 ifMap.close();
             }
 
-            mapMutex.lock();
             /// If we have a different map, we replace it
             if(mapIdFromFile.compare(mapId) != 0){
                 /// Save the id of the new map
-                ROS_INFO("(New Map) Id of the new map : %s", mapId.c_str());
-                ROS_INFO("(New Map) Date of the new map : %s", mapDate.c_str());
-
-                std::string mapIdFile;
-                if(n.hasParam("map_id_file")){
-                    n.getParam("map_id_file", mapIdFile);
-                    ROS_INFO("read_new_map set mapIdFile to %s", mapIdFile.c_str());
-                }
-
                 std::ofstream ofs(mapIdFile, std::ofstream::out | std::ofstream::trunc);
                 if(ofs){
                     ofs << mapId << std::endl << mapDate << std::endl;
                     ofs.close();
-                    ROS_INFO("(New Map) Map id updated : %s with date %s", mapId.c_str(), mapDate.c_str());
+                    ROS_INFO("(New Map) Update map id %s with date %s to mapIdFile %s", mapId.c_str(), mapDate.c_str(),mapIdFile.c_str());
 
                     /// Set the medatada of the new map
-                    ROS_INFO("(New Map) Map metadata before split : %s", mapMetadata.c_str());
                     int width(0);
                     int height(0);
                     double resolution(0.0f);
@@ -174,44 +163,39 @@ void session(boost::shared_ptr<tcp::socket> sock){
                     std::string mapConfig;
                     if(n.hasParam("map_config_used")){
                         n.getParam("map_config_used", mapConfig);
-                        ROS_INFO("read new map set map config to %s", mapConfig.c_str());
-                    } 
-                    ofs.open(mapConfig, std::ofstream::out | std::ofstream::trunc);
-                    if(ofs.is_open()){
-                        std::string resolutionStr = "resolution: " + std::to_string(resolution);
-                        std::string originStr = "origin: [" + std::to_string(initPosX) + ", " + std::to_string(initPosY) + ", 0.00]";
 
-                        ofs << "image: used_map.pgm" << std::endl << resolutionStr << std::endl << originStr << std::endl << "negate: 0" << std::endl << "occupied_thresh: 0.65" << std::endl << "free_thresh: 0.196";
-                        ofs.close(); 
+                        ofs.open(mapConfig, std::ofstream::out | std::ofstream::trunc);
+                        if(ofs.is_open()){
+                            std::string resolutionStr = "resolution: " + std::to_string(resolution);
+                            std::string originStr = "origin: [" + std::to_string(initPosX) + ", " + std::to_string(initPosY) + ", 0.00]";
+                            ofs << "image: used_map.pgm" << std::endl << resolutionStr << std::endl << originStr << std::endl << "negate: 0" << std::endl << "occupied_thresh: 0.65" << std::endl << "free_thresh: 0.196";
+                            ofs.close();
+                            ROS_INFO("(New Map) New map config file created in %s", mapConfig.c_str()); 
+                        }
                     }
 
-                    /// We save the file in a the pgm file used by amcl
+                    /// We save the file in a the pgm file for amcl navigation
                     std::string mapFile;
                     if(n.hasParam("map_image_used")){
                         n.getParam("map_image_used", mapFile);
-                        ROS_INFO("read new map set map file to %s", mapFile.c_str());
-                    } 
-                    ofs.open(mapFile, std::ofstream::out | std::ofstream::trunc);
-
-                    if(ofs.is_open()){
-                        /// pgm file header
-                        ofs << "P5" << std::endl << width << " " << height << std::endl << "255" << std::endl;
-
-                        /// writes every single pixel to the pgm file
-                        for(int i = 0; i < map.size(); i+=5){
-                            uint8_t color = static_cast<uint8_t> (map.at(i));
-
-                            uint32_t count2 = static_cast<uint32_t> (static_cast<uint8_t> (map.at(i+1)) << 24) + static_cast<uint32_t> (static_cast<uint8_t> (map.at(i+2)) << 16)
-                                            + static_cast<uint32_t> (static_cast<uint8_t> (map.at(i+3)) << 8) + static_cast<uint32_t> (static_cast<uint8_t> (map.at(i+4)));
-
-                            for(int j = 0; j < count2; j++)
-                                ofs << color;
+ 
+                        ofs.open(mapFile, std::ofstream::out | std::ofstream::trunc);
+                        if(ofs.is_open()){
+                            /// pgm file header
+                            ofs << "P5" << std::endl << width << " " << height << std::endl << "255" << std::endl;
+                            /// writes every single pixel to the pgm file
+                            for(int i = 0; i < map.size(); i+=5){
+                                uint8_t color = static_cast<uint8_t> (map.at(i));
+                                uint32_t count2 = static_cast<uint32_t> (static_cast<uint8_t> (map.at(i+1)) << 24) + static_cast<uint32_t> (static_cast<uint8_t> (map.at(i+2)) << 16)
+                                                + static_cast<uint32_t> (static_cast<uint8_t> (map.at(i+3)) << 8) + static_cast<uint32_t> (static_cast<uint8_t> (map.at(i+4)));
+             
+                                for(int j = 0; j < count2; j++)
+                                    ofs << color;
+                            }
+                            ofs << std::endl;
+                            ofs.close();
+                            ROS_INFO("(New Map) New map pgm file created in %s", mapFile.c_str());
                         }
-
-                        ofs << std::endl;
-                        ofs.close();
-
-                        ROS_INFO("(New Map) New map pgm file created in %s", mapFile.c_str());
 
                         /// Kill gobot move so that we'll restart it with the new map
                         std::string cmd = "rosnode kill /move_base";
@@ -247,6 +231,7 @@ void session(boost::shared_ptr<tcp::socket> sock){
                                         ofs << get_home.response.data[0] << " " << get_home.response.data[1] << " " << get_home.response.data[2] << " " << get_home.response.data[3] << " " << get_home.response.data[4] << " "<< get_home.response.data[5];
                                         ofs.close();
                                     }
+                                    ROS_INFO("(New Map) Robot pose recored in scanned map");
                                 }
                             }
                             
@@ -269,7 +254,6 @@ void session(boost::shared_ptr<tcp::socket> sock){
                             //#### delete old robot data ####
                         }
 
-                        
                         /// Relaunch gobot_navigation
                         if(simulation)
                             cmd = "gnome-terminal -x bash -c \"source /opt/ros/kinetic/setup.bash;source /home/tx/catkin_ws/devel/setup.bash;roslaunch gobot_navigation gazebo_slam.launch\"";
@@ -281,16 +265,19 @@ void session(boost::shared_ptr<tcp::socket> sock){
                         ROS_INFO("(New Map) We relaunched gobot_navigation");
                         message = "done 1";
 
-                    } else {
+                    } 
+                    else {
                         ROS_INFO("(New Map) Could not open the file to create a new pgm file %s", mapFile.c_str());
                         message = "failed";
                     }
-                } else {
+                } 
+                else {
                     ROS_INFO("(New Map) Map id could not be updated : %s with date %s", mapId.c_str(), mapDate.c_str());
                     message = "failed";
                 }
             } 
             else{
+                ROS_INFO("(New Map) SAME IDS ");
                 message = "done 0";
             }
 
@@ -308,10 +295,7 @@ void session(boost::shared_ptr<tcp::socket> sock){
                 ROS_INFO("(New Map) Error : %s", error.message().c_str());
             else 
                 ROS_INFO("(New Map) Message sent succesfully : %lu bytes sent", message.length());
-            mapMutex.unlock();
 
-            if(mapIdFromFile.compare(mapId) == 0)
-                ROS_INFO("(New Map) SAME IDS ");
             //disconnect all other users to receive new map
             ROS_INFO("(New Map) Disconnect other uses to update them new map.");
             std::vector<std::string> connected_ip;

@@ -36,7 +36,7 @@ TebLocalPlannerROS:
     # VELOCITY & ACCELERATION
 
     #MAX_VEL_LINEAR=1.1m/s     
-    max_vel_x: 0.35
+    max_vel_x: 0.3
     max_vel_x_backwards: 0.15
     #2*vel/wheel_sep(=0.45)
     max_vel_theta: 0.5

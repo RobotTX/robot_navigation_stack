@@ -359,10 +359,13 @@ bool setSoundSrvCallback(gobot_msg_srv::SetInt::Request &req, gobot_msg_srv::Set
 
 bool initSerial(void) {
     /// Get the port in which our device is connected
+    /*
     std::string deviceNode(STMdevice);
     std::string output = getStdoutFromCommand("ls -l /sys/class/tty/ttyUSB*");
     std::string port = "/dev" + output.substr(output.find(deviceNode) + deviceNode.size(), 8);
-
+    */
+    std::string port = STMdevice;
+    
     ROS_INFO("(sensors::initSerial) STM32 port : %s", port.c_str());
 
     // Set the serial port, baudrate and timeout in milliseconds
