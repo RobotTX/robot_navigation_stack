@@ -18,9 +18,9 @@ delta: 0.04
 #Odometry error
 #default:0.1,0.2,0.1,0.2
 srr: 0.01  
-srt: 0.01
+srt: 0.02
 str: 0.01
-stt: 0.01
+stt: 0.02
 #Process a scan each time the robot translates/rotates this far
 linearUpdate: 0.5 #0.5
 angularUpdate: 0.3 #17degree  #0.35 #20degree #0.436

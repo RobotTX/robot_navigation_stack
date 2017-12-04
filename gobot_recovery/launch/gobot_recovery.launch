@@ -7,8 +7,8 @@
 
     <node pkg="gobot_recovery" type="allow_teb_back" name="recovery_allow_teb_back" output="screen" respawn="true"/>
 
-    <node pkg="gobot_recovery" type="initialpose_estimation" name="recovery_initialpose_estimation" output="screen"/>
+    <node pkg="gobot_recovery" type="initialpose_estimation" name="recovery_initialpose_estimation" output="screen" respawn="true"/>
     
-    <node pkg="gobot_recovery" type="startup" name="recovery_startup" output="screen"/>
+    <node pkg="gobot_recovery" type="startup" name="recovery_startup" output="screen" required="true"/>
 
 </launch>

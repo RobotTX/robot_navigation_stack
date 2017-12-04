@@ -97,5 +97,5 @@ obstacles:
     }
 
 inflation_layer:
-    inflation_radius: 0.5
+    inflation_radius: 0.6
     cost_scaling_factor: 6.0

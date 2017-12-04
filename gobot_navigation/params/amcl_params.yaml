@@ -21,16 +21,17 @@ laser_min_range: -1.0
 laser_max_range: -1.0
 #How many evenly-spaced beams in each scan to be used when updating the filter
 #360 degree/ 72 = 5 degree
-laser_max_beams: 72 #30
+#240 degree/ 48 = 5 degree
+laser_max_beams: 48 #30
 
 # Odometry model parameters
 odom_model_type: diff-corrected
 #From online, depends on the odom model
 #r-r,r-t,t-t,t-r
 odom_alpha1: 0.01
-odom_alpha2: 0.01
+odom_alpha2: 0.02
 odom_alpha3: 0.01
-odom_alpha4: 0.01
+odom_alpha4: 0.02
 odom_alpha5: 0.003
 odom_frame_id: /odom
 base_frame_id: /base_link

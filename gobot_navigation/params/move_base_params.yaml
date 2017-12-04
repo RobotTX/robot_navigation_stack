@@ -22,7 +22,7 @@ recovery_behaviors: [
 shutdown_costmaps: False # True
 
 # Frequency of the control loop
-controller_frequency: 5
+controller_frequency: 8
 
 # Frequency of the global planner
 planner_frequency: 2
@@ -60,10 +60,20 @@ NavfnROS:
     #planner_window_x: 10.0 
     #planner_window_y: 10.0
 
+TrajectoryPlannerROS:
+    acc_lim_th: 0.6
+    max_rotational_vel: 0.5
+    min_in_place_rotational_vel: 0.4
+
+rotate_recovery:
+    #The distance in radians between checks for obstacles when checking if an in-place rotation is safe. Defaults to 1 degree
+    sim_granularity: 0.085 #0.017
+    frequency: 10
+
 conservative_reset:
     #The radius away from the robot in meters outside which obstacles will be removed from the costmaps when they are reverted to the static map. 
     #Related to the local costmap rolling window size
-    reset_distance: 2.0
+    reset_distance: 3.0
 
 aggressive_reset:
     reset_distance: 0.5

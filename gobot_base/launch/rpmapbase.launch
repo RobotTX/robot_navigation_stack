@@ -7,7 +7,7 @@
     <param name="MD49device" type="string" value="/dev/MD" />
 
     <!--laser to base tf frequency depends on the laser update rate-->
-    <node pkg="tf" type="static_transform_publisher" name="base_link_to_laser" args="0.335 0.1 0.13275 3.14 0 0 /base_link /base_laser 50" required="true"/>
+    <node pkg="tf" type="static_transform_publisher" name="base_link_to_laser" args="0.335 0.1 0.13275 0 0 0 /base_link /base_laser 50" required="true"/>
     
     <include file="$(find rplidar_ros)/launch/rplidar.launch" />
 
