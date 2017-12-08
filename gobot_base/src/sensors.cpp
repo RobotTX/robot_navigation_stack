@@ -114,8 +114,11 @@ void publishSensors(void){
 
         /// check if the 16 is useful
         if(buff.size() == 47){
-            /// First 3 bytes are the sensor address, the command and the data length so we can ignore it
-            /// Then comes sonars data
+            /// First 3 bytes are the sensor address, the command and the data length, so we can ignore it
+            //7 sonars, 8 bumpers, 3 IR, 2 distance, 4 cliff, 1 battery, 1 load
+
+
+            /// Sonars data = D3-D16
             gobot_msg_srv::SonarMsg sonar_data;
             sonar_data.distance1 = (buff.at(3) << 8) | buff.at(4);
             sonar_data.distance2 = (buff.at(5) << 8) | buff.at(6);
@@ -125,15 +128,8 @@ void publishSensors(void){
             sonar_data.distance6 = (buff.at(13) << 8) | buff.at(14);
             sonar_data.distance7 = (buff.at(15) << 8) | buff.at(16);
 
-            /*
-            if(sonar_data.distance1 == 0 && (sonar_data.distance2 == 0 || sonar_data.distance3 == 0)){
-                error = true;
-                ROS_ERROR("(sensors::publishSensors) Check sonars data : %d %d %d %d %d %d %d", sonar_data.distance1, sonar_data.distance2, sonar_data.distance3,
-                sonar_data.distance4, sonar_data.distance5, sonar_data.distance6, sonar_data.distance7);
-            }
-            */
 
-            /// Bumpers data
+            /// Bumpers data = D17
             gobot_msg_srv::BumperMsg bumper_data;
 
             if(buff.at(17)){
@@ -152,24 +148,28 @@ void publishSensors(void){
             }
 
 
-            /// Ir signals
+            /// Ir signals = D18 ~ D20
             gobot_msg_srv::IrMsg ir_data;
             ir_data.rearSignal = buff.at(18);
             ir_data.leftSignal = buff.at(19);
             ir_data.rightSignal = buff.at(20);
             //ROS_INFO("(sensors::publishSensors) Check IR data : %d %d %d", ir_data.rearSignal,ir_data.leftSignal,ir_data.rightSignal);
 
-            /// Proximity sensors
+
+            /// Proximity sensors = D21
             gobot_msg_srv::ProximityMsg proximity_data;
             proximity_data.signal1 = (buff.at(21) & 0b00000001) > 0;
             proximity_data.signal2 = (buff.at(21) & 0b00000010) > 0;
 
-            /// Cliff sensors
+
+            /// Cliff sensors = D22 ~ D29
             gobot_msg_srv::CliffMsg cliff_data;
             cliff_data.cliff1 = (buff.at(22) << 8) | buff.at(23);
             cliff_data.cliff2 = (buff.at(24) << 8) | buff.at(25);
             cliff_data.cliff3 = (buff.at(26) << 8) | buff.at(27);
             cliff_data.cliff4 = (buff.at(28) << 8) | buff.at(29);
+            //ROS_INFO("%d,%d,%d,%d",cliff_data.cliff1,cliff_data.cliff2,cliff_data.cliff3,cliff_data.cliff4);
+
 
             /// Battery data
             gobot_msg_srv::BatteryMsg battery_data;
@@ -229,14 +229,11 @@ void publishSensors(void){
             gobot_msg_srv::WeightMsg weight_data;
             weight_data.weightInfo = (buff.at(43) << 8) | buff.at(44);
 
+
             /// External button 1-No press; 0-press
             int32_t external_button = buff.at(45);
-            /// TODO do whatever we want with it
-            //ROS_INFO("External button:%d",external_button);
             std_msgs::Int8 button;
             button.data=external_button;
-            button_pub.publish(button);
-
 
             if(display_data){
                 std::cout << "Sonars : " << sonar_data.distance1 << " " << sonar_data.distance2 << " " << sonar_data.distance3 << " " << sonar_data.distance4 
@@ -254,18 +251,20 @@ void publishSensors(void){
 
             /// The last byte is the Frame Check Sum and is not used
             if(!error){
-            sonar_pub.publish(sonar_data);
-            ir_pub.publish(ir_data);
-            proximity_pub.publish(proximity_data);
-            cliff_pub.publish(cliff_data);
-            battery_pub.publish(battery_data);
-            weight_pub.publish(weight_data);
+                //If no error, publish sensor data
+                sonar_pub.publish(sonar_data);
+                ir_pub.publish(ir_data);
+                proximity_pub.publish(proximity_data);
+                cliff_pub.publish(cliff_data);
+                battery_pub.publish(battery_data);
+                weight_pub.publish(weight_data);
+                button_pub.publish(button);
                 if(!error_bumper)
                     bumper_pub.publish(bumper_data);
             }
         } 
         else {
-            //ROS_INFO("(sensors::publishSensors) Check buff size : %lu", buff.size());
+            ROS_ERROR("(sensors::publishSensors) Wrong buff size : %lu, error count: %d", buff.size(),error_count);
             error = true;
         }
 
@@ -305,7 +304,7 @@ void publishSensors(void){
 
 bool setLedSrvCallback(gobot_msg_srv::LedStrip::Request &req, gobot_msg_srv::LedStrip::Response &res){
     if(serialConnection.isOpen()){
-        ROS_INFO("Receive a LED change request, and succeed to execute.");
+        //ROS_INFO("Receive a LED change request, and succeed to execute.");
 
         std::vector<uint8_t> led_cmd={req.data[0],req.data[1],req.data[2],req.data[3],req.data[4],req.data[5],req.data[6],req.data[7],req.data[8],req.data[9],req.data[10]};
 
@@ -332,7 +331,7 @@ bool setSoundSrvCallback(gobot_msg_srv::SetInt::Request &req, gobot_msg_srv::Set
 
     //serial open and not mute
     if(serialConnection.isOpen()){
-        ROS_INFO("Receive a sound requestm, and succeed to execute.");
+        //ROS_INFO("Receive a sound requestm, and succeed to execute.");
         uint8_t n = req.data[0];
         uint8_t on_time = 0x01;
         uint8_t off_time = 0x01;
@@ -401,7 +400,7 @@ void mySigintHandler(int sig)
             connectionMutex.unlock();
         }
     } catch (std::exception& e) {
-		ROS_ERROR("(Sensors) exception : %s", e.what());
+		ROS_ERROR("(Sensors) Shutdown exception : %s", e.what());
 	}
 
     ros::shutdown();

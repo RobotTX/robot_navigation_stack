@@ -96,10 +96,9 @@ bool execCommand(const std::string ip, const std::vector<std::string> command){
             status = playPath(command);
         break;
 
-        /// NOT USED ANYMORE
         /// Command for the robot to delete the saved path
         case 'k':
-
+            status = playPoint(command);
         break;
 
         /// Command to stop the robot while following its path
@@ -403,7 +402,7 @@ bool newPath(const std::vector<std::string> command){
 
         if(ros::service::call("/gobot_status/set_path", set_path)){
             // reset the path stage in the file
-            if(ros::service::call("/gobot_function/stop_path", empty_srv))
+            if(ros::service::call("/gobot_function/update_path", empty_srv))
                 return true;
         } 
     } 
@@ -441,9 +440,54 @@ bool playPath(const std::vector<std::string> command){
     return false;
 }
 
-/// NOT USED ANYMORE
-/// First param = k
+/// First param = k, 2nd is point name, 3rd is x coordinate, 4th is y coordinate, 5th is orientation, 6th is home bool
+bool playPoint(const std::vector<std::string> command){
+    if(command.size() == 6) {
+        getGobotStatusSrv.call(get_gobot_status);
+        //Scanning
+        if(get_gobot_status.response.status<=25 && get_gobot_status.response.status>=20){
+            ROS_WARN("(Command system) Gobot is scanning.");
+            return false;
+        }
 
+        //if go docking, can not play
+        if(get_gobot_status.response.status==15){
+            ROS_WARN("(Command system) Gobot is going to dock");
+            return false;
+        }
+
+        //Assigned point is home, send robot home
+        if (command.at(5)=="1"){
+            getDockStatusSrv.call(get_dock_status);
+            //if go to charging or charging, ignore
+            if(get_dock_status.response.status==3 || get_dock_status.response.status==1){
+                ROS_INFO("(Command system) Gobot is charging or going to charging station.");
+            }
+            else{
+                if(ros::service::call("/gobot_function/startDocking", empty_srv)){
+                    ROS_INFO("(Command system) Sending the robot home");
+                    return true;
+                } 
+                else {
+                    ROS_ERROR("(Command system) Failed sending the robot home");
+                }
+            }
+        }
+        else {
+            gobot_msg_srv::SetString set_point;
+            set_point.request.data.push_back(command.at(1));
+            set_point.request.data.push_back(command.at(2));
+            set_point.request.data.push_back(command.at(3));
+            set_point.request.data.push_back(command.at(4));
+            if(ros::service::call("/gobot_function/play_point", set_point)){
+                ROS_INFO("(Command system) Play the point");
+                return true;
+            }
+        }
+    } 
+
+    return false;
+}
 
 /// First param = l
 bool stopPath(const std::vector<std::string> command){
@@ -486,7 +530,7 @@ bool stopAndDeletePath(const std::vector<std::string> command){
             gobot_msg_srv::SetPath set_path;
             if(ros::service::call("/gobot_status/set_path", set_path)){
                 // reset the path stage in the file
-                if(ros::service::call("/gobot_function/stop_path", empty_srv))
+                if(ros::service::call("/gobot_function/update_path", empty_srv))
                     return true;
             } 
         } 
@@ -895,7 +939,7 @@ void checkCommand(char c){
             }   
             */
         break;
-
+        
         /// stop path
         case 'l':
             getGobotStatusSrv.call(get_gobot_status);

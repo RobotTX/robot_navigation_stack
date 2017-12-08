@@ -5,6 +5,7 @@
 #include <fstream>
 #include <vector>
 #include <iostream>
+#include <signal.h>
 #include <geometry_msgs/PoseStamped.h>
 #include <boost/smart_ptr.hpp>
 #include <boost/thread.hpp>
@@ -30,6 +31,7 @@
 #include <gobot_msg_srv/GetPath.h>
 #include <gobot_msg_srv/GetInt.h>
 #include <gobot_msg_srv/SetInt.h>
+#include <gobot_msg_srv/SetString.h>
 #include <thread>
 
 typedef actionlib::SimpleActionClient<move_base_msgs::MoveBaseAction> MoveBaseClient;
@@ -41,19 +43,21 @@ struct Point {
 	double waitingTime;
     // whether or not this point is the charging point of the robot
     bool isHome;
-
     double yaw;
 };
 
 bool setSpeed(const char directionR, const int velocityR, const char directionL, const int velocityL);
 void goalResultCallback(const move_base_msgs::MoveBaseActionResult::ConstPtr& msg);
+bool updatePathService(std_srvs::Empty::Request &req, std_srvs::Empty::Response &res);
 bool stopPathService(std_srvs::Empty::Request &req, std_srvs::Empty::Response &res);
 bool pausePathService(std_srvs::Empty::Request &req, std_srvs::Empty::Response &res);
 bool startLoopPathService(std_srvs::Empty::Request &req, std_srvs::Empty::Response &res);
 bool stopLoopPathService(std_srvs::Empty::Request &req, std_srvs::Empty::Response &res);
 bool skipPathService(gobot_msg_srv::SetInt::Request &req, gobot_msg_srv::SetInt::Response &res);
 void goNextPoint(void);
+void goSpecificPoint(const Point _point);
 bool playPathService(std_srvs::Empty::Request &req, std_srvs::Empty::Response &res);
+bool playPointService(gobot_msg_srv::SetString::Request &req, gobot_msg_srv::SetString::Response &res);
 void goalReached(void);
 void setStageInFile(const int _stage);
 void setGobotStatus(int status,std::string text);

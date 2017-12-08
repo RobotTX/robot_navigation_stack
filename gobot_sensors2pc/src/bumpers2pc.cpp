@@ -257,12 +257,12 @@ int main(int argc, char* argv[]){
 
         ros::init(argc, argv, "bumpers2pc");
 
-        ros::NodeHandle nh("bumpers2pc");
+        ros::NodeHandle nh;
 
         if(initParams()){
 
             // the pointcloud publisher
-            pcPublisher = nh.advertise<pcl::PointCloud<pcl::PointXYZ> >("/bumpers_pc", 10);
+            pcPublisher = nh.advertise<pcl::PointCloud<pcl::PointXYZ> >("/gobot_pc/bumpers_pc", 10);
 
             // get the bumpers collision information
             ros::Subscriber pcSubscriber = nh.subscribe("/gobot_base/bumpers_collision", 1, newBumpersInfo);

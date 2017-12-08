@@ -158,6 +158,9 @@ add_executable(sonars2pc src/sonars2pc.cpp)
 target_link_libraries(sonars2pc ${catkin_LIBRARIES})
 add_dependencies(sonars2pc ${${gobot_msg_srv}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
 
+add_executable(cliffs2pc src/cliffs2pc.cpp)
+target_link_libraries(cliffs2pc ${catkin_LIBRARIES})
+add_dependencies(cliffs2pc ${${gobot_msg_srv}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
 
 #############
 ## Install ##

@@ -194,7 +194,7 @@ void mySigintHandler(int sig)
         writeAndRead(std::vector<uint8_t>({0x00, 0x31, 0x80, 0x00, 0x32, 0x80}));
         serialConnection.close();
 	} catch (std::exception& e) {
-		ROS_ERROR("(Wheels) exception : %s", e.what());
+		ROS_ERROR("(Wheels) Shutdown exception : %s", e.what());
 	}
     ros::shutdown();
 }

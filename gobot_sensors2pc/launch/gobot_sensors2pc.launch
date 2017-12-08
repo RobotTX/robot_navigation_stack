@@ -1,0 +1,26 @@
+<?xml version="1.0"?>
+<launch>
+    <!--laser to base tf frequency depends on the laser update rate-->
+    <node pkg="tf" type="static_transform_publisher" name="rear_sonar_to_base_link" args="-0.267 -0.065 0.2165 3.14159 0 0 /base_link /rear_sonar 50 " />
+    <node pkg="tf" type="static_transform_publisher" name="front_right_sonar_to_base_link" args="0.413 -0.168 0.2165 0 0 0 /base_link /front_right_sonar 50 "/>
+    <node pkg="tf" type="static_transform_publisher" name="front_left_sonar_to_base_link" args="0.413 0.168 0.2165 0 0 0 /base_link /front_left_sonar 50 "/>
+    <node pkg="tf" type="static_transform_publisher" name="left_sonar_to_base_link" args="-0.01 0.298 0.2165 1.5708 0 0 /base_link /left_sonar 50 "/>
+    <node pkg="tf" type="static_transform_publisher" name="right_sonar_to_base_link" args="-0.01 -0.298 0.2165 -1.5708 0 0 /base_link /right_sonar 50 "/>
+    <node pkg="tf" type="static_transform_publisher" name="top_sonar_to_base_link" args="0.413 0 0.88 0 0 0 /base_link /top_sonar 50" />
+    <node pkg="tf" type="static_transform_publisher" name="mid_sonar_to_base_link" args="0.413 0 0.48 0 0 0 /base_link /mid_sonar 50" />
+
+    <node pkg="tf" type="static_transform_publisher" name="front_right_cliff_to_base_link" args="0.413 0.168 0.35 0 0 0 /base_link /front_right_cliff 50" />
+    <node pkg="tf" type="static_transform_publisher" name="front_left_cliff_to_base_link" args="0.413 -0.168 0.35 0 0 0 /base_link /front_left_cliff 50" />
+    <node pkg="tf" type="static_transform_publisher" name="back_right_cliff_to_base_link" args="-0.267 -0.168 0.35 0 0 0 /base_link /back_right_cliff 50" />
+    <node pkg="tf" type="static_transform_publisher" name="back_left_cliff_to_base_link" args="-0.267 0.168 0.35 0 0 0 /base_link /back_left_cliff 50" />
+
+    <node pkg="gobot_sensors2pc" type="bumpers2pc" name="bumpers2pc" required="true">
+        <rosparam file="$(find gobot_sensors2pc)/params/bumpers2pc.yaml" command="load" />
+    </node>
+
+    <node pkg="gobot_sensors2pc" type="sonars2pc" name="sonars2pc" output="screen" required="true">
+    </node>
+
+    <node pkg="gobot_sensors2pc" type="cliffs2pc" name="cliffs2pc" output="screen" required="true">
+    </node>
+</launch>

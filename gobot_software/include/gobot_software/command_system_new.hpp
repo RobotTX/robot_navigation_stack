@@ -77,8 +77,8 @@ bool newPath(const std::vector<std::string> command);
 /// j
 bool playPath(const std::vector<std::string> command);
 
-/// NOT USED ANYMORE
 /// k
+bool playPoint(const std::vector<std::string> command);
 
 /// l
 bool stopPath(const std::vector<std::string> command);

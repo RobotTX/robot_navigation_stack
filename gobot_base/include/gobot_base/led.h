@@ -17,9 +17,12 @@
 
 
 void setLedPermanent(std::vector<uint8_t> &color);
+
 void setSound(int num,int time_on, int time_off=0);
 
 void setLedRunning(std::vector<uint8_t> &color);
+
+void setLedSlowRunning(std::vector<uint8_t> &color);
 
 void goalResultCallback(const move_base_msgs::MoveBaseActionResult::ConstPtr& msg);
 
@@ -38,6 +41,10 @@ void explorationCallback(const std_msgs::Int8::ConstPtr& msg);
 void lostCallback(const std_msgs::Int8::ConstPtr& msg);
  
 bool showBatteryLedsrvCallback(std_srvs::Empty::Request &req, std_srvs::Empty::Response &res);
+
+bool showSlowLEDsrvCallback(std_srvs::Empty::Request &req, std_srvs::Empty::Response &res);
+
+bool showBlueLEDsrvCallback(std_srvs::Empty::Request &req, std_srvs::Empty::Response &res);
 
 void batteryLed(void);
 

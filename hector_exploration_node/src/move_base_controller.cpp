@@ -171,8 +171,8 @@ bool startExplorationSrv(hector_exploration_node::Exploration::Request &req, hec
         gobot_msg_srv::IsCharging isCharging;
         if(ros::service::call("/gobot_status/charging_status", isCharging) && isCharging.response.isCharging){
             ROS_WARN("(Exploration) we are charging so we go straight to avoid bumping into the CS when turning");
-            setSpeed('F', 30, 'F', 30);
-            std::this_thread::sleep_for(std::chrono::milliseconds(3000));
+            setSpeed('F', 15, 'F', 15);
+		    std::this_thread::sleep_for(std::chrono::milliseconds(3500));
             setSpeed('F', 0, 'F', 0);
         }
 

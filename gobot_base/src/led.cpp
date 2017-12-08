@@ -91,7 +91,31 @@ void setLedRunning(std::vector<uint8_t> &color)
     cmd.request.data[6]=0x00;
     cmd.request.data[7]=0x00;
     cmd.request.data[8]=0x00;
-    cmd.request.data[9]=0x64;
+    cmd.request.data[9]=0x50;   //100 = 0x64
+    cmd.request.data[10]=0x1B;
+
+    cmd.request.data[2]=color.size();
+    for(int i=0;i<color.size();i++){
+        cmd.request.data[3+i]=color[i];
+    }
+    ros::service::call("/gobot_base/setLed",cmd);
+    last_time=ros::Time::now();
+}
+
+
+void setLedSlowRunning(std::vector<uint8_t> &color)
+{
+    gobot_msg_srv::LedStrip cmd;
+    cmd.request.data[0]=0xB0;
+    cmd.request.data[1]=0x01;
+    cmd.request.data[2]=0x00;
+    cmd.request.data[3]=0x00;
+    cmd.request.data[4]=0x00;
+    cmd.request.data[5]=0x00;
+    cmd.request.data[6]=0x00;
+    cmd.request.data[7]=0x00;
+    cmd.request.data[8]=0x01;
+    cmd.request.data[9]=0x90;
     cmd.request.data[10]=0x1B;
 
     cmd.request.data[2]=color.size();
@@ -322,6 +346,27 @@ bool showBatteryLedsrvCallback(std_srvs::Empty::Request &req, std_srvs::Empty::R
     return true;
 }
 
+bool showSlowLEDsrvCallback(std_srvs::Empty::Request &req, std_srvs::Empty::Response &res){
+    if(current_stage<COMPLETE_STAGE){
+        std::vector<uint8_t> color;
+        color.push_back(GREEN);
+        color.push_back(WHITE);
+        setLedSlowRunning(color);
+        current_stage=FREE_STAGE;
+    }
+    return true;
+}
+
+bool showBlueLEDsrvCallback(std_srvs::Empty::Request &req, std_srvs::Empty::Response &res){
+    if(current_stage<COMPLETE_STAGE){
+        std::vector<uint8_t> color;
+        color.push_back(BLUE);
+        setLedPermanent(color);
+        current_stage=FREE_STAGE;
+    }
+    return true;
+}
+
 void batteryLed(){
     std::vector<uint8_t> color;
     switch (charging_state){
@@ -365,11 +410,10 @@ void timerCallback(const ros::TimerEvent&){
         }
     }
     //Show battery status if no stage for certain period, show battery lvl
-    else if((ros::Time::now() - last_time).toSec()>300.0 && current_stage==FREE_STAGE){
+    else if(((ros::Time::now() - last_time).toSec()>300.0) && (current_stage==FREE_STAGE)){
         batteryLed();
     }   
 }
-
 
 int main(int argc, char **argv) {
     ros::init(argc, argv, "led");
@@ -386,6 +430,8 @@ int main(int argc, char **argv) {
     ros::Subscriber exploration = nh.subscribe("/gobot_scan/exploration_result",1,explorationCallback);
     ros::Subscriber lostRobot = nh.subscribe("/gobot_recovery/lost_robot",1,lostCallback);
 
+    ros::ServiceServer showSlowLedsSrv = nh.advertiseService("/gobot_base/show_slow_LED", showSlowLEDsrvCallback);
+    ros::ServiceServer showBlueLedsSrv = nh.advertiseService("/gobot_base/show_blue_LED", showBlueLEDsrvCallback);
     ros::ServiceServer showBatteryLed = nh.advertiseService("/gobot_base/show_Battery_LED", showBatteryLedsrvCallback);
 
     getGobotStatusSrv = nh.serviceClient<gobot_msg_srv::GetGobotStatus>("/gobot_status/get_gobot_status");

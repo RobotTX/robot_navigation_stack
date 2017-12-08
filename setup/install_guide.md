@@ -66,6 +66,9 @@ sqrt(0.25^2+0.26^2) = 0.36
 inflation_radius = 0.4/0.45/0.5
 
 #laser
+amcl.yaml
+costmap_common_params.yaml
+gmapping_params.yaml
 
 ###################################################
 

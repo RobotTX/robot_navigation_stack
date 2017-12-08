@@ -39,7 +39,7 @@ TebLocalPlannerROS:
     max_vel_x: 0.3
     max_vel_x_backwards: 0.15
     #2*vel/wheel_sep(=0.45)
-    max_vel_theta: 0.4
+    max_vel_theta: 0.5
     #MAX_ACC_LINEAR=ACC_STEP*0.53m/s^2
     acc_lim_x: 0.5
     #MAX_ACC_ANGULAR=ACC_STEP*2.35rad/s^2
@@ -53,20 +53,20 @@ TebLocalPlannerROS:
     xy_goal_tolerance: 0.1
     yaw_goal_tolerance: 0.15 #8.6 degrees
     #Remove the goal velocity constraint such that the robot can arrive at the goal with maximum speed 
-    free_goal_vel: True
+    free_goal_vel: False
 
     # Obstacles
 
     #Minimum desired separation from obstacles in meters 
-    min_obstacle_dist: 0.025
+    min_obstacle_dist: 0.05 #0.025
     include_costmap_obstacles: True
     costmap_obstacles_behind_robot_dist: 2.0 # 1.0
     obstacle_poses_affected: 30
     #Buffer zone around obstacles with non-zero penalty costs (should be larger than min_obstacle_dist in order to take effect). 
     #Also refer to the weight weight_inflation. 
-    inflation_dist: 0.5 #0.6
-    dynamic_obstacle_inflation_dist: 0.6 #0.6
-    include_dynamic_obstacles: false
+    inflation_dist: 0.6 #0.6
+    dynamic_obstacle_inflation_dist: 0.8 #0.6
+    include_dynamic_obstacles: true
 
     # Optimization
 
@@ -79,15 +79,15 @@ TebLocalPlannerROS:
 
     ####Key params that affect motion####
     weight_max_vel_x: 1.0 #default:2
-    weight_max_vel_theta: 4.0 #default:1
-    weight_acc_lim_x: 1.5 #default:1
-    weight_acc_lim_theta: 1.5 #default:1
+    weight_max_vel_theta: 3.0 #default:1
+    weight_acc_lim_x: 1.0 #default:1
+    weight_acc_lim_theta: 1.0 #default:1
     #Optimization weight for minimzing the distance to via-points
     #How close robot follows the via-points
     weight_viapoint: 60.0 # 1.0
     weight_kinematics_forward_drive: 150
-    weight_obstacle: 50
-    weight_dynamic_obstacle: 50
+    weight_obstacle: 50.0
+    weight_dynamic_obstacle: 50.0
     ####Key params that affect motion####
 
     weight_kinematics_nh: 1000

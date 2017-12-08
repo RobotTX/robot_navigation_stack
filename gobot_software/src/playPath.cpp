@@ -35,7 +35,7 @@ bool setSpeed(const char directionR, const int velocityR, const char directionL,
 }
 
 void goalResultCallback(const move_base_msgs::MoveBaseActionResult::ConstPtr& msg){
-	if(set_gobot_status.request.status==5 && set_gobot_status.request.text=="PLAY_PATH"){
+	if(set_gobot_status.request.status==5 && (set_gobot_status.request.text=="PLAY_PATH" || set_gobot_status.request.text=="PLAY_POINT")){
 		switch(msg->status.status){
 			//PREEMTED
 			case 2:
@@ -75,9 +75,11 @@ void goalResultCallback(const move_base_msgs::MoveBaseActionResult::ConstPtr& ms
 // called when the last goal has been reached
 void goalReached(){
 	//ROS_INFO("(PlayPath::goalReached) path point reached");
-	stage++;
+	if(set_gobot_status.request.text=="PLAY_PATH"){
+		stage++;
+	}
 	setStageInFile(stage);
-	if(stage >= path.size()){
+	if(stage >= path.size() && set_gobot_status.request.text!="PLAY_POINT"){
 
 		sound_num.request.data.clear();
 		sound_num.request.data.push_back(2);
@@ -91,6 +93,8 @@ void goalReached(){
 			checkGoalDelay();
 			if(!stop_flag)
 				goNextPoint();
+			else
+				stop_flag = false;
 		}
 		else{
 			//ROS_INFO("(PlayPath:: complete path!");
@@ -117,12 +121,16 @@ void goalReached(){
 		checkGoalDelay();
 		if(!stop_flag)
 			goNextPoint();
+		else
+			stop_flag = false;
 	}
 }
 
 void checkGoalDelay(){
 	if(currentGoal.waitingTime != 0)
 	{
+		ros::service::call("/gobot_base/show_slow_LED", empty_srv);
+		
 		if(currentGoal.waitingTime > 0){
 			setGobotStatus(5,"DELAY");
 			//ROS_INFO("(PlayPath::goalReached) goalReached going to sleep for %f seconds", currentGoal.waitingTime);
@@ -172,7 +180,29 @@ void goNextPoint(){
 	// get the next point in the path list and tell the robot to go there
 	//ROS_INFO("(PlayPath::goNextPoint) goNextPoint called %d [%f, %f, %f]", stage, currentGoal.x, currentGoal.y,currentGoal.yaw);
 
-	stop_flag=false;
+	// sends the next goal to the robot
+	move_base_msgs::MoveBaseGoal goal;
+	tf::Quaternion quaternion;
+	quaternion.setEuler(0, 0, -(currentGoal.yaw+90)*3.14159/180);
+
+	goal.target_pose.header.frame_id = "map";
+    goal.target_pose.header.stamp = ros::Time::now();
+    goal.target_pose.pose.position.x = currentGoal.x;
+    goal.target_pose.pose.position.y = currentGoal.y;
+    goal.target_pose.pose.orientation.x = quaternion.x();
+    goal.target_pose.pose.orientation.y = quaternion.y();
+    goal.target_pose.pose.orientation.z = quaternion.z();
+    goal.target_pose.pose.orientation.w = quaternion.w();
+
+	if(ac->isServerConnected()) 
+		ac->sendGoal(goal);
+	else 
+		ROS_ERROR("(PlayPath::goNextPoint) no action server");
+}
+
+void goSpecificPoint(const Point _point){
+	currentGoal = _point;
+	setGobotStatus(5,"PLAY_POINT");
 
 	// sends the next goal to the robot
 	move_base_msgs::MoveBaseGoal goal;
@@ -206,11 +236,36 @@ void setGobotStatus(int status,std::string text){
 	setGobotStatusSrv.call(set_gobot_status);
 }
 
+bool playPointService(gobot_msg_srv::SetString::Request &req, gobot_msg_srv::SetString::Response &res){
+	if (set_gobot_status.request.status==5 && (set_gobot_status.request.text=="DELAY" || set_gobot_status.request.text=="WAITING")){
+		stop_flag = true;
+	}
+	 
+	setStageInFile(-99);
+	gobot_msg_srv::IsCharging arg;
+	if(ros::service::call("/gobot_status/charging_status", arg) && arg.response.isCharging){
+		ROS_WARN("(PlayPath::playPathService) we are charging so we go straight to avoid bumping into the CS when turning");
+		setSpeed('F', 15, 'F', 15);
+		std::this_thread::sleep_for(std::chrono::milliseconds(3000));
+		setSpeed('F', 0, 'F', 0);
+	}
+
+	//request data: 0-name,1-x,2-y,3-orientation
+	Point p;
+	p.x = std::stod(req.data[1]);
+	p.y = std::stod(req.data[2]);
+	p.yaw = std::stod(req.data[3]);
+	p.isHome = false;
+	p.waitingTime = -1;
+	goSpecificPoint(p);
+	
+	return true;
+}
+
 bool playPathService(std_srvs::Empty::Request &req, std_srvs::Empty::Response &res){
 	//ROS_INFO("(PlayPath::playPathService) called while at stage : %d", stage);
 
 	path = std::vector<Point>();
-
 	gobot_msg_srv::GetPath get_path;
 	// we recreate the path to follow from the file
 	if(ros::service::call("/gobot_status/get_path", get_path)){
@@ -234,18 +289,11 @@ bool playPathService(std_srvs::Empty::Request &req, std_srvs::Empty::Response &r
         	}
 		}
 	} 
-	else{
-		ROS_ERROR("(PlayPath::playPathService) sorry could not find the path");
-		return false;
-	}
 
 	if(path.empty()){
 		ROS_ERROR("(PlayPath::playPathService) the path is empty, returning false to cmd system");
 		return false;
 	}
-
-	for(size_t i = 0; i < path.size(); i++)
-		//ROS_INFO("(PlayPath::playPathService) Stage %lu [%f, %f, %f], wait %f sec", i, path.at(i).x, path.at(i).y, path.at(i).yaw, path.at(i).waitingTime);
 
 	if(currentGoal.x == -1 || stage==path.size()){
 		stage = 0;
@@ -255,8 +303,8 @@ bool playPathService(std_srvs::Empty::Request &req, std_srvs::Empty::Response &r
 	gobot_msg_srv::IsCharging arg;
 	if(ros::service::call("/gobot_status/charging_status", arg) && arg.response.isCharging){
 		ROS_WARN("(PlayPath::playPathService) we are charging so we go straight to avoid bumping into the CS when turning");
-		setSpeed('F', 20, 'F', 20);
-		std::this_thread::sleep_for(std::chrono::milliseconds(2500));
+		setSpeed('F', 15, 'F', 15);
+		std::this_thread::sleep_for(std::chrono::milliseconds(3000));
 		setSpeed('F', 0, 'F', 0);
 	}
 	goNextPoint();
@@ -264,6 +312,38 @@ bool playPathService(std_srvs::Empty::Request &req, std_srvs::Empty::Response &r
 	return true;	
 }
 
+bool updatePathService(std_srvs::Empty::Request &req, std_srvs::Empty::Response &res){
+	setGobotStatus(1,"STOP_PATH");
+	stage = 0;
+	setStageInFile(stage);
+
+	path = std::vector<Point>();
+	gobot_msg_srv::GetPath get_path;
+	// we recreate the path to follow from the file
+	if(ros::service::call("/gobot_status/get_path", get_path)){
+		Point pathPoint;
+		for(int i=0;i<get_path.response.path.size();i++){
+			if(i!= 0 && (i-1)%5 != 0){
+        		if((i-1)%5 == 1){
+        			pathPoint.x=std::stod(get_path.response.path.at(i));
+        		} 
+				else if((i-1)%5 == 2){
+        			pathPoint.y=std::stod(get_path.response.path.at(i));
+        		} 
+				else if((i-1)%5 == 3){
+        			pathPoint.waitingTime=std::stod(get_path.response.path.at(i));
+		            pathPoint.isHome = false;
+        		} 
+				else if((i-1)%5 == 4){
+					pathPoint.yaw=std::stod(get_path.response.path.at(i));
+					path.push_back(pathPoint);
+				}
+        	}
+		}
+	}
+	
+	return true;
+}
 
 bool stopPathService(std_srvs::Empty::Request &req, std_srvs::Empty::Response &res){
 	//ROS_INFO("(PlayPath::stopPathService) stopPathService called");
@@ -271,7 +351,6 @@ bool stopPathService(std_srvs::Empty::Request &req, std_srvs::Empty::Response &r
 	setGobotStatus(1,"STOP_PATH");
 
 	ros::service::call("/move_base/clear_costmaps",empty_srv);
-	currentGoal.x = -1;
 	stage = 0;
 	setStageInFile(stage);
 	
@@ -290,10 +369,14 @@ bool pausePathService(std_srvs::Empty::Request &req, std_srvs::Empty::Response &
 	//~ROS_INFO("(PlayPath::pausePathService) pausePathService called");
 
 	setGobotStatus(4,"PAUSE_PATH");
-
 	stop_flag = true;
-	if(ac->isServerConnected())
+	setStageInFile(stage);
+	//ac->getState() == actionlib::SimpleClientGoalState::SUCCEEDED
+	if(ac->isServerConnected()){
+		if (ac->getState() == actionlib::SimpleClientGoalState::SUCCEEDED)
+			ros::service::call("/gobot_base/show_blue_LED", empty_srv);
 		ac->cancelAllGoals();
+	}
 
 	return true;
 }
@@ -353,6 +436,12 @@ bool skipPathService(gobot_msg_srv::SetInt::Request &req, gobot_msg_srv::SetInt:
 	return true;
 }
 
+void mySigintHandler(int sig)
+{   
+    setStageInFile(stage);
+    ros::shutdown();
+}
+
 int main(int argc, char* argv[]){
 
 	ROS_INFO("(PlayPath) play path main running...");
@@ -361,18 +450,24 @@ int main(int argc, char* argv[]){
 
 		ros::init(argc, argv, "play_path");
 		ros::NodeHandle n;
+
+		signal(SIGINT, mySigintHandler);
 		
 		currentGoal.x = 0;
 		currentGoal.y = -1;
 		currentGoal.waitingTime = -1;
 		currentGoal.isHome = false;
 
+		// service to play the robot's point
+		ros::ServiceServer _pointPathService = n.advertiseService("/gobot_function/play_point", playPointService);
 		// service to play the robot's path
 		ros::ServiceServer _playPathService = n.advertiseService("/gobot_function/play_path", playPathService);
 		// service to pause the robot's path
 		ros::ServiceServer _pausePathService = n.advertiseService("/gobot_function/pause_path", pausePathService);
 		// service to stop the robot's path
 		ros::ServiceServer _stopPathService = n.advertiseService("/gobot_function/stop_path", stopPathService);
+		// service to delete path
+		ros::ServiceServer _updatePathService = n.advertiseService("/gobot_function/update_path", updatePathService);
 		// service to skip the path point
         ros::ServiceServer _skipPath = n.advertiseService("/gobot_function/skip_path", skipPathService);
         // service to make the path loop

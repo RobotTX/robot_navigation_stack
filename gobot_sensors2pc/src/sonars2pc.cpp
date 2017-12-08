@@ -174,17 +174,17 @@ bool initParams(void){
 
 int main(int argc, char* argv[]){
     ros::init(argc, argv, "sonars2pc");
-    ros::NodeHandle nh("sonars2pc");
+    ros::NodeHandle nh;
 
     if(initParams()){
 
-        rearPublisher = nh.advertise<pcl::PointCloud<pcl::PointXYZ> >("/rear_sonar_pc", 10);
-        frontLeftPublisher = nh.advertise<pcl::PointCloud<pcl::PointXYZ> >("/frontLeft_sonar_pc", 10);
-        frontRightPublisher = nh.advertise<pcl::PointCloud<pcl::PointXYZ> >("/frontRight_sonar_pc", 10);
-        leftPublisher = nh.advertise<pcl::PointCloud<pcl::PointXYZ> >("/left_sonar_pc", 10);
-        rightPublisher = nh.advertise<pcl::PointCloud<pcl::PointXYZ> >("/right_sonar_pc", 10);
-        midPublisher = nh.advertise<pcl::PointCloud<pcl::PointXYZ> >("/mid_sonar_pc", 10);
-        topPublisher = nh.advertise<pcl::PointCloud<pcl::PointXYZ> >("/top_sonar_pc", 10);
+        rearPublisher = nh.advertise<pcl::PointCloud<pcl::PointXYZ> >("/gobot_pc/rear_sonar_pc", 10);
+        frontLeftPublisher = nh.advertise<pcl::PointCloud<pcl::PointXYZ> >("/gobot_pc/frontLeft_sonar_pc", 10);
+        frontRightPublisher = nh.advertise<pcl::PointCloud<pcl::PointXYZ> >("/gobot_pc/frontRight_sonar_pc", 10);
+        leftPublisher = nh.advertise<pcl::PointCloud<pcl::PointXYZ> >("/gobot_pc/left_sonar_pc", 10);
+        rightPublisher = nh.advertise<pcl::PointCloud<pcl::PointXYZ> >("/gobot_pc/right_sonar_pc", 10);
+        midPublisher = nh.advertise<pcl::PointCloud<pcl::PointXYZ> >("/gobot_pc/mid_sonar_pc", 10);
+        topPublisher = nh.advertise<pcl::PointCloud<pcl::PointXYZ> >("/gobot_pc/top_sonar_pc", 10);
 
         // get the sonars information
         ros::Subscriber sonarSub = nh.subscribe("/gobot_base/sonar_topic", 1, newSonarsInfo);

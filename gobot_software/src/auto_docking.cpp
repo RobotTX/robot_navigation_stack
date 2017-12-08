@@ -67,8 +67,8 @@ bool startDocking(void){
             double homeOri = -(yaw*180/3.14159);//-(orientation+90)*3.14159/180);
 
             /// We want to go 1 metre in front of the charging station
-            double landingPointX = x + 0.8 * std::cos(yaw);
-            double landingPointY = y + 0.8 * std::sin(yaw);
+            double landingPointX = x + 0.65 * std::cos(yaw);
+            double landingPointY = y + 0.65 * std::sin(yaw);
             //~ROS_INFO("(auto_docking::startDocking) landing point : [%f, %f, %f]", landingPointX, landingPointY, homeOri);
 
             /// Create the goal
@@ -380,7 +380,7 @@ void finishedDocking(){
             setDockStatusSrv.call(set_dock_status);
             ROS_WARN("(auto_docking::finishedDocking) Auto docking finished->FAILED.");
             setSpeed('F', 20, 'F', 20);
-            ros::Duration(1.0).sleep();
+            ros::Duration(2.0).sleep();
 
             gobot_msg_srv::SetInt sound_num;
             sound_num.request.data.push_back(3);

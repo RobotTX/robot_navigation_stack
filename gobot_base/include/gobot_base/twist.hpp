@@ -9,6 +9,7 @@
 #include <gobot_msg_srv/SetSpeeds.h>
 #include <gobot_msg_srv/IsCharging.h>
 #include <gobot_msg_srv/SetInt.h>
+#include "gobot_msg_srv/CliffMsg.h"
 #include <chrono>
 #include <thread>
 
@@ -21,6 +22,8 @@ bool setSpeed(const char directionR, const int velocityR, const char directionL,
 
 /// Callback of the subscriber on bumper infoso that if we bump into something, the robot top
 void newBumpersInfo(const gobot_msg_srv::BumperMsg::ConstPtr& bumpers);
+
+void cliffCallback(const gobot_msg_srv::CliffMsg::ConstPtr& cliff);
 
 /// Callback of the subscriber on velocity commands
 void newCmdVel(const geometry_msgs::Twist::ConstPtr& twist);
