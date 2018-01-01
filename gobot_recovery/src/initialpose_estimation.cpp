@@ -75,7 +75,9 @@ void findPoseResult(int status){
 
 void publishInitialpose(const double position_x, const double position_y, const double angle_x, const double angle_y, const double angle_z, const double angle_w,const double cov1,const double cov2){
 
-    if(position_x != 0 || position_y != 0 || angle_x != 0 || angle_y != 0 || angle_z != 0){
+    if(position_x == 0 && position_y == 0 && angle_x == 0 && angle_y == 0 && angle_z == 0){
+        ROS_ERROR("(initial_pose_publisher) Robot probably got no home, set it position to map origin");
+    }
         geometry_msgs::PoseWithCovarianceStamped initialPose;
         initialPose.header.frame_id = "map";
         initialPose.header.stamp = ros::Time::now();
@@ -95,8 +97,6 @@ void publishInitialpose(const double position_x, const double position_y, const 
 
         initial_pose_publisher.publish(initialPose);
         //ROS_INFO("(initial_pose_publisher) initialpose published.");
-    } else
-        ROS_ERROR("(initial_pose_publisher) got a wrong position (robot probably got no home)");
 }
 
 bool initializeHomeSrcCallback(std_srvs::Empty::Request &req, std_srvs::Empty::Response &res){
@@ -320,7 +320,7 @@ void getAmclPoseCallback(const geometry_msgs::PoseWithCovarianceStamped::ConstPt
     //Write lastest amcl_pose to file
     if(found_pose){
         std_msgs::Int8 lost;
-        if((cov_x > 50*initial_cov_xy && cov_y > 50*initial_cov_xy) || cov_yaw > 25*initial_cov_yaw){
+        if((cov_x > 100*initial_cov_xy && cov_y > 100*initial_cov_xy) || cov_yaw > 50*initial_cov_yaw){
             /*gobot_msg_srv::IsCharging arg;
             if(ros::service::call("/gobot_status/charging_status", arg) && arg.response.isCharging){
                 ROS_ERROR("Found gobot is charging. Set its pose to home");
@@ -334,7 +334,7 @@ void getAmclPoseCallback(const geometry_msgs::PoseWithCovarianceStamped::ConstPt
                 ROS_ERROR("Big xy covariance in the amcl pose");
             lost.data = 1;         
             }*/
-            if(cov_yaw > 25*initial_cov_yaw)
+            if(cov_yaw > 50*initial_cov_yaw)
                 ROS_ERROR("Big yaw covariance in the amcl pose");
             if(cov_x > 100*initial_cov_xy && cov_y > 100*initial_cov_xy)
                 ROS_ERROR("Big xy covariance in the amcl pose");

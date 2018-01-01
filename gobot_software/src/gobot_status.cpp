@@ -20,7 +20,7 @@ DOCK STATUS
 -1 FAILED TO GO TO CHARGING
 */
 
-std::mutex gobotStatusMutex,dockStatusMutex,stageMutex,pathMutex,nameMutex,homeMutex,loopMutex,muteMutex,wifiMutex;
+std::mutex gobotStatusMutex,dockStatusMutex,stageMutex,pathMutex,nameMutex,homeMutex,loopMutex,muteMutex,wifiMutex,batteryMutex;
 std_srvs::Empty empty_srv;
 
 std::string wifiFile, deleteWifi;
@@ -40,6 +40,9 @@ int stage_ = 0;
 
 std::string pathLoopFile;
 int loop_ = 0;
+
+std::string lowBatteryFile;
+std::string low_battery_="0.0";
 
 std::string pathFile;
 std::vector<std::string> path_;
@@ -64,6 +67,15 @@ bool disconnectedSrvCallback(std_srvs::Empty::Request &req, std_srvs::Empty::Res
 }
 
 bool setWifiSrvCallback(gobot_msg_srv::SetString::Request &req, gobot_msg_srv::SetString::Response &res){
+    if(req.data[0]=="" && req.data[1]==""){
+        std::thread([](){
+            gobot_msg_srv::SetInt sound_num;
+            sound_num.request.data.push_back(1);
+            sound_num.request.data.push_back(2);
+            ros::service::call("/gobot_base/setSound",sound_num);
+        }).detach();
+    }
+    
     if(wifi_.at(0)==req.data[0] && wifi_.at(1)==req.data[1]){
         return false;
     }
@@ -128,6 +140,28 @@ bool getHomeSrvCallback(gobot_msg_srv::GetString::Request &req, gobot_msg_srv::G
 }
 
 
+bool setBatterySrvCallback(gobot_msg_srv::SetString::Request &req, gobot_msg_srv::SetString::Response &res){
+    batteryMutex.lock();
+    low_battery_=req.data[0];
+    batteryMutex.unlock();
+
+    std::ofstream ofsBattery(lowBatteryFile, std::ofstream::out | std::ofstream::trunc);
+    if(ofsBattery){
+        ofsBattery << low_battery_;
+        ofsBattery.close();
+        ROS_INFO("(Gobot_status) set Gobot battery: %.2f", std::stod(low_battery_));
+    }
+
+    return true;
+}
+
+bool getBatterySrvCallback(gobot_msg_srv::GetString::Request &req, gobot_msg_srv::GetString::Response &res){
+    batteryMutex.lock();
+    res.data.push_back(low_battery_);
+    batteryMutex.unlock();
+    return true;
+}
+
 bool setNameSrvCallback(gobot_msg_srv::SetString::Request &req, gobot_msg_srv::SetString::Response &res){
     nameMutex.lock();
     hostname_=req.data[0];
@@ -163,10 +197,12 @@ bool setPathSrvCallback(gobot_msg_srv::SetPath::Request &req, gobot_msg_srv::Set
 
     std::ofstream ofsPath(pathFile, std::ofstream::out | std::ofstream::trunc);
     if(ofsPath){
+        std::string path_info;
         for(int i = 0; i < path_.size(); i++){
             ofsPath << path_.at(i) << "\n";
-            ROS_INFO("(Gobot_status) Set Gobot path %d: %s",i,path_.at(i).c_str());
+            path_info = path_info+path_.at(i)+", ";
         }
+        ROS_INFO("(Gobot_status) Set Gobot path: %s",path_info.c_str());
         ofsPath.close();
     }
 
@@ -263,6 +299,11 @@ bool setDockStatusSrvCallback(gobot_msg_srv::SetDockStatus::Request &req, gobot_
     dockStatusMutex.unlock();
     ROS_INFO("(Gobot_status) Set Dock status: %d", dock_status_);
     ros::service::call("/gobot_software/update_status",empty_srv);
+    if(dock_status_ == 1){
+        std::thread([](){
+            ros::service::call("/gobot_recovery/initialize_home",empty_srv);
+        }).detach();
+    }
     
     return true;
 }
@@ -298,125 +339,109 @@ bool getGobotStatusSrvCallback(gobot_msg_srv::GetGobotStatus::Request &req, gobo
 void initialData(){
     ros::NodeHandle n;
     //read stage
-    if(n.hasParam("path_stage_file")){
-        n.getParam("path_stage_file", pathStageFile);
-
-        std::ifstream ifsStage(pathStageFile, std::ifstream::in);
-        if(ifsStage){
-            ifsStage >> stage_;
-            ifsStage.close();
-            ROS_INFO("(Gobot_status) Read Gobot path stage: %d",stage_);
+    n.getParam("path_stage_file", pathStageFile);
+    std::ifstream ifsStage(pathStageFile, std::ifstream::in);
+    if(ifsStage){
+        ifsStage >> stage_;
+        ifsStage.close();
+        ROS_INFO("(Gobot_status) Read Gobot path stage: %d",stage_);
+    }
+    
+    if(stage_==-99 || stage_==-100){
+        stage_=0;
+        std::ofstream ofsStage(pathStageFile, std::ofstream::out | std::ofstream::trunc);
+        if(ofsStage){
+            ofsStage << stage_;
+            ofsStage.close();
+            ROS_INFO("(Gobot_status) Set Gobot stage: %d",stage_);
         }
-        
-        if(stage_==-99){
-            stage_=0;
-            std::ofstream ofsStage(pathStageFile, std::ofstream::out | std::ofstream::trunc);
-            if(ofsStage){
-                ofsStage << stage_;
-                ofsStage.close();
-                ROS_INFO("(Gobot_status) Set Gobot stage: %d",stage_);
-            }
-        } 
-    }   
+    }    
 
     //read mute
-    if(n.hasParam("mute_file")){
-        n.getParam("mute_file", muteFile);
-
-        std::ifstream ifsMute(muteFile, std::ifstream::in);
-        if(ifsMute){
-            ifsMute >> mute_;
-            ifsMute.close();
-            ROS_INFO("(Gobot_status) Read Gobot mute: %d",mute_);
-        } 
+    n.getParam("mute_file", muteFile);
+    std::ifstream ifsMute(muteFile, std::ifstream::in);
+    if(ifsMute){
+        ifsMute >> mute_;
+        ifsMute.close();
+        ROS_INFO("(Gobot_status) Read Gobot mute: %d",mute_);
     } 
 
-
     //read loop
-    if(n.hasParam("path_loop_file")){
-        n.getParam("path_loop_file", pathLoopFile);
-
-        std::ifstream ifsLoop(pathLoopFile, std::ifstream::in);
-        if(ifsLoop){
-            ifsLoop >> loop_;
-            ifsLoop.close();
-            ROS_INFO("(Gobot_status) Read Gobot path loop: %d",loop_);
-        } 
+    n.getParam("path_loop_file", pathLoopFile);
+    std::ifstream ifsLoop(pathLoopFile, std::ifstream::in);
+    if(ifsLoop){
+        ifsLoop >> loop_;
+        ifsLoop.close();
+        ROS_INFO("(Gobot_status) Read Gobot path loop: %d",loop_);
     } 
 
     //read path
-    if(n.hasParam("path_file")){
-        n.getParam("path_file", pathFile);
-
-        std::ifstream ifsfile(pathFile, std::ifstream::in);
-        if(ifsfile){
-            std::string line;
-            while(getline(ifsfile, line))
-                path_.push_back(line);
-                
-            ifsfile.close();
-            for(int i = 0; i < path_.size(); i++)
-                ROS_INFO("(Gobot_status) Read Gobot path %d: %s",i,path_.at(i).c_str());
-        }
+    n.getParam("path_file", pathFile);
+    std::ifstream ifPath(pathFile, std::ifstream::in);
+    if(ifPath){
+        std::string line;
+        while(getline(ifPath, line))
+            path_.push_back(line); 
+        ifPath.close();
+        std::string path_info;
+        for(int i = 0; i < path_.size(); i++)
+            path_info = path_info+path_.at(i)+", ";
+        ROS_INFO("(Gobot_status) Read Gobot path: %s",path_info.c_str());
     }
 
     //read name
-    if(n.hasParam("robot_name_file")){
-        n.getParam("robot_name_file", nameFile);
-
-        std::ifstream ifsName(nameFile, std::ifstream::in);
-        if(ifsName){
-            ifsName >> hostname_;
-            ifsName.close();
-            ROS_INFO("(Gobot_status) Read Gobot name: %s",hostname_.c_str());
-        }
+    n.getParam("robot_name_file", nameFile);
+    std::ifstream ifsName(nameFile, std::ifstream::in);
+    if(ifsName){
+        ifsName >> hostname_;
+        ifsName.close();
+        ROS_INFO("(Gobot_status) Read Gobot name: %s",hostname_.c_str());
     }
 
     //read home
-    if(n.hasParam("home_file")){
-        n.getParam("home_file", homeFile);
+    n.getParam("home_file", homeFile);
+    std::ifstream ifsHome(homeFile, std::ifstream::in);
+    if(ifsHome){
+        ifsHome >> home_.at(0) >> home_.at(1) >> home_.at(2) >> home_.at(3) >> home_.at(4) >> home_.at(5);
+        ifsHome.close();
+        ROS_INFO("(Gobot_status) Read Gobot home: [%.2f, %.2f] [%.2f, %.2f, %.2f, %.2f]", std::stod(home_.at(0)),std::stod(home_.at(1)),std::stod(home_.at(2)),std::stod(home_.at(3)),std::stod(home_.at(4)),std::stod(home_.at(5)));
+    }
 
-        std::ifstream ifsHome(homeFile, std::ifstream::in);
-        if(ifsHome){
-            ifsHome >> home_.at(0) >> home_.at(1) >> home_.at(2) >> home_.at(3) >> home_.at(4) >> home_.at(5);
-            ifsHome.close();
-            ROS_INFO("(Gobot_status) Read Gobot home: [%.2f, %.2f] [%.2f, %.2f, %.2f, %.2f]", std::stod(home_.at(0)),std::stod(home_.at(1)),std::stod(home_.at(2)),std::stod(home_.at(3)),std::stod(home_.at(4)),std::stod(home_.at(5)));
-        }
+    //read low battery
+    n.getParam("low_battery_file", lowBatteryFile);
+    std::ifstream ifsBattery(lowBatteryFile, std::ifstream::in);
+    if(ifsBattery){
+        ifsBattery >> low_battery_;
+        ifsBattery.close();
+        ROS_INFO("(Gobot_status) Read Gobot battery: %.2f", std::stod(low_battery_));
     }
 
     //read wifi
-    if(n.hasParam("wifi_file")){
-        n.getParam("wifi_file", wifiFile);
-
-        std::ifstream ifsfile(wifiFile, std::ifstream::in);
-        if(ifsfile){
-            std::string line;
-            while(getline(ifsfile, line))
-                wifi_.push_back(line);
-                
-            ifsfile.close();
-        }
-        if(wifi_.size()<1){
-            wifi_.push_back("");
-            wifi_.push_back("");
-        }
-        else if(wifi_.size()<2){
-            wifi_.push_back("");
-        }
-        ROS_INFO("(Gobot_status) Read Gobot wifi: name:%s, password:%s",wifi_.at(0).c_str(),wifi_.at(1).c_str());
+    n.getParam("wifi_file", wifiFile);
+    std::ifstream ifWifi(wifiFile, std::ifstream::in);
+    if(ifWifi){
+        std::string line;
+        while(getline(ifWifi, line))
+            wifi_.push_back(line);
+            
+        ifWifi.close();
     }
-
-    if(n.hasParam("deleteWIFI")){
-        n.getParam("deleteWIFI", deleteWifi);
+    if(wifi_.size()<1){
+        wifi_.push_back("");
+        wifi_.push_back("");
     }
+    else if(wifi_.size()<2){
+        wifi_.push_back("");
+    }
+    ROS_INFO("(Gobot_status) Read Gobot wifi: name:%s, password:%s",wifi_.at(0).c_str(),wifi_.at(1).c_str());
 
-    if(n.hasParam("disconnected_file")){
-        n.getParam("disconnected_file", disconnectedFile);
+    n.getParam("deleteWIFI", deleteWifi);
 
-        std::ofstream ofsDisconnected(disconnectedFile, std::ofstream::out | std::ofstream::trunc);
-        if(ofsDisconnected){
-            ofsDisconnected << disconnected;
-        }
+    //record disconnect times
+    n.getParam("disconnected_file", disconnectedFile);
+    std::ofstream ofsDisconnected(disconnectedFile, std::ofstream::out | std::ofstream::trunc);
+    if(ofsDisconnected){
+        ofsDisconnected << disconnected;
     }
 }
 
@@ -448,6 +473,9 @@ int main(int argc, char* argv[]){
 
         ros::ServiceServer setHomeSrv = n.advertiseService("/gobot_status/set_home", setHomeSrvCallback);
         ros::ServiceServer getHomeSrv = n.advertiseService("/gobot_status/get_home", getHomeSrvCallback);
+
+        ros::ServiceServer setBatterySrv = n.advertiseService("/gobot_status/set_battery", setBatterySrvCallback);
+        ros::ServiceServer getBatterySrv = n.advertiseService("/gobot_status/get_battery", getBatterySrvCallback);
 
         ros::ServiceServer setMuteSrv = n.advertiseService("/gobot_status/set_mute", setMuteSrvCallback);
         ros::ServiceServer getMuteSrv = n.advertiseService("/gobot_status/get_mute", getMuteSrvCallback);

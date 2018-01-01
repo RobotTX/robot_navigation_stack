@@ -262,70 +262,59 @@ void mySigintHandler(int sig)
     ros::shutdown();
 }
 
+bool initParams(){
+    ros::NodeHandle nh;
+    if(nh.hasParam("simulation")){
+        nh.getParam("simulation", simulation);
+        ROS_INFO("(ping_server) simulation : %d", simulation);
+    }
+    nh.getParam("ips_file", ipsFile);
+    nh.getParam("ping_file", pingFile);
+    nh.getParam("wifi_file", wifiFile);
+
+    return true;
+}
+
 int main(int argc, char* argv[]){
 
     ros::init(argc, argv, "ping_server");
     ros::NodeHandle n;
-
     signal(SIGINT, mySigintHandler);
     
-    n.param<bool>("simulation", simulation, false);
-    ROS_INFO("(Command system) simulation : %d", simulation);
-
-    getGobotStatusSrv = n.serviceClient<gobot_msg_srv::GetGobotStatus>("/gobot_status/get_gobot_status");
-    
-    getGobotStatusSrv.waitForExistence(ros::Duration(30.0));
-    if(!simulation){
-        //Startup begin
-        ROS_INFO("(ping_server) Waiting for Robot finding initial pose...");
-        getGobotStatusSrv.call(get_gobot_status);
-        while((get_gobot_status.response.status!=-1 || get_gobot_status.response.text!="FOUND_POSE") && ros::ok()){
+    if (initParams()){
+        getGobotStatusSrv = n.serviceClient<gobot_msg_srv::GetGobotStatus>("/gobot_status/get_gobot_status");
+        
+        getGobotStatusSrv.waitForExistence(ros::Duration(30.0));
+        if(!simulation){
+            //Startup begin
+            ROS_INFO("(ping_server) Waiting for Robot finding initial pose...");
             getGobotStatusSrv.call(get_gobot_status);
-            ros::Duration(0.2).sleep();
+            while((get_gobot_status.response.status!=-1 || get_gobot_status.response.text!="FOUND_POSE") && ros::ok()){
+                getGobotStatusSrv.call(get_gobot_status);
+                ros::Duration(0.2).sleep();
+            }
+            ROS_INFO("(ping_server) Robot finding initial pose is ready.");
         }
-        ROS_INFO("(ping_server) Robot finding initial pose is ready.");
+
+        //Startup end
+
+        disco_pub = n.advertise<std_msgs::String>("/gobot_software/server_disconnected", 10);
+        ros::Subscriber batterySub = n.subscribe("/battery_topic", 1, newBatteryInfo);
+        ros::ServiceServer updataStatusSrv = n.advertiseService("/gobot_software/update_status", updataStatusSrvCallback);
+
+        ROS_INFO("(ping_server) Ready to be launched.");
+
+        /// Thread which will get an array of potential servers
+        std::thread t1(checkNewServers);
+
+        ROS_INFO("(ping_server) checkNewServers thread launched");
+
+        /// We try to ping all the available IPs
+        std::thread t2(pingAllIPs);
+
+        ROS_INFO("(ping_server) pingAllIPs thread launched");
+        ros::spin();
     }
-
-    //Startup end
-
-    disco_pub = n.advertise<std_msgs::String>("/gobot_software/server_disconnected", 10);
-    ros::Subscriber batterySub = n.subscribe("/battery_topic", 1, newBatteryInfo);
-    ros::ServiceServer updataStatusSrv = n.advertiseService("/gobot_software/update_status", updataStatusSrvCallback);
-
-    /// We get the path to the file with all the ips
-    if(n.hasParam("ips_file"))
-        n.getParam("ips_file", ipsFile);
-    else {
-        ROS_ERROR("(ping_server) The parameter <ips_file> does not exist");
-        return -1;
-    }
-
-    /// We get the path to the script to retrieve all the ips
-    if(n.hasParam("ping_file"))
-        n.getParam("ping_file", pingFile);
-    else {
-        ROS_ERROR("(ping_server) The parameter <ping_file> does not exist");
-        return -1;
-    }
-
-    if(n.hasParam("wifi_file")){
-        n.getParam("wifi_file", wifiFile);
-    }
-    else {
-        ROS_ERROR("(ping_server) The parameter <wifi_file> does not exist");
-        return -1;
-    }
-
-    /// Thread which will get an array of potential servers
-    std::thread t1(checkNewServers);
-
-    ROS_INFO("(ping_server) checkNewServers thread launched");
-
-    /// We try to ping all the available IPs
-    std::thread t2(pingAllIPs);
-
-    ROS_INFO("(ping_server) pingAllIPs thread launched");
-    ros::spin();
 
     return 0;
 }

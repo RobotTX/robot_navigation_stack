@@ -4,18 +4,17 @@ std::mutex serialMutex;
 std::string MD49device;
 serial::Serial serialConnection;
 bool test = false;
+int leftSpeed_=128, rightSpeed_=128;
 
 /// Write and read informations on the serial port
 std::vector<uint8_t> writeAndRead(std::vector<uint8_t> toWrite, int bytesToRead){
     std::vector<uint8_t> buff;
-
     if(serialConnection.isOpen()){
         /// Lock the mutex so no one can write at the same time
         serialMutex.lock();
         try{
             /// Send bytes to the MD49
             size_t bytes_wrote = serialConnection.write(toWrite);
-
             /// Read any byte that we are expecting
             if(bytesToRead > 0)
                 serialConnection.read(buff, bytesToRead);
@@ -26,7 +25,6 @@ std::vector<uint8_t> writeAndRead(std::vector<uint8_t> toWrite, int bytesToRead)
 	    }
         /// Unlock the mutex
         serialMutex.unlock();
-
     } 
     else {
         initSerial();
@@ -53,15 +51,29 @@ std::string getStdoutFromCommand(std::string cmd) {
     return data;
 }
 
+bool getSpeeds(gobot_msg_srv::GetInt::Request &req, gobot_msg_srv::GetInt::Response &res){
+    res.data.push_back(leftSpeed_);
+    res.data.push_back(rightSpeed_);
+    
+    return true;
+}
+
+
 /// Set the speed, 0 (full reverse)  128 (stop)   255 (full forward)
 //tx//('B',127)=0, ('F/B',0)=128,('F',127)=255
 bool setSpeeds(gobot_msg_srv::SetSpeeds::Request &req, gobot_msg_srv::SetSpeeds::Response &res){
     if(req.velocityL <= 127 && req.velocityR <= 127){
         //x=condition?x1:x2   
         //condition=true,x=x1; condition=false,x=x2.
-        uint8_t leftSpeed = req.directionL.compare("F") == 0 ? 128 - req.velocityL : 128 + req.velocityL;
-        uint8_t rightSpeed = req.directionR.compare("F") == 0 ? 128 - req.velocityR : 128 + req.velocityR;
+        //for larger dimension gobot
+        //uint8_t leftSpeed = req.directionL.compare("F") == 0 ? 128 - req.velocityL : 128 + req.velocityL;
+        //uint8_t rightSpeed = req.directionR.compare("F") == 0 ? 128 - req.velocityR : 128 + req.velocityR;
 
+        uint8_t leftSpeed = req.directionL.compare("F") == 0 ? 128 + req.velocityL : 128 - req.velocityL;
+        uint8_t rightSpeed = req.directionR.compare("F") == 0 ? 128 + req.velocityR : 128 - req.velocityR;
+
+        leftSpeed_ = leftSpeed;
+        rightSpeed_ = rightSpeed;
         //ROS_INFO("(wheels::setSpeeds) Data : %s %d %s %d", req.directionL.c_str(), (int) req.velocityL, req.directionR.c_str(), (int) req.velocityR);
         
         writeAndRead(std::vector<uint8_t>({0x00, 0x31, leftSpeed, 0x00, 0x32, rightSpeed}));
@@ -177,7 +189,7 @@ bool initSerial() {
         /// First 3 bytes : set the mode (see MD49 documentation)
         /// then 2 bytes to disable the 2 sec timeout
         /// then 3 bytes to set the acceleration steps (1-10)
-        writeAndRead(std::vector<uint8_t>({0x00, 0x34, 0x00,0x00,0x38,0x00, 0x33, 0x01}));
+        writeAndRead(std::vector<uint8_t>({0x00, 0x34, 0x00, 0x00, 0x38, 0x00, 0x33, 0x01}));
 
         ROS_INFO("(wheels::initSerial) Established connection to MD49.");
         return true;
@@ -207,6 +219,7 @@ int main(int argc, char **argv) {
     nh.getParam("MD49device", MD49device);
 
     if(initSerial()){
+        ros::ServiceServer getSpeedsSrv = nh.advertiseService("/gobot_motor/getSpeeds", getSpeeds);
         ros::ServiceServer setSpeedsSrv = nh.advertiseService("/gobot_motor/setSpeeds", setSpeeds);
         ros::ServiceServer getEncodersSrv = nh.advertiseService("/gobot_motor/getEncoders", getEncoders);
         ros::ServiceServer resetEncodersSrv = nh.advertiseService("/gobot_motor/resetEncoders", resetEncoders);

@@ -15,9 +15,11 @@ std_srvs::Empty empty_srv;
 std::shared_ptr<actionlib::SimpleActionClient<move_base_msgs::MoveBaseAction>> ac;
 
 ros::Publisher exploration_pub;
+ros::ServiceClient getGobotStatusSrv;
+ros::Timer sound_timer;
 gobot_msg_srv::SetGobotStatus set_gobot_status;
 gobot_msg_srv::GetGobotStatus get_gobot_status;
-ros::ServiceClient getGobotStatusSrv;
+
 /// To get the starting position
 bool getRobotPos(void){
     try {
@@ -131,6 +133,7 @@ void doExploration(void){
                             set_gobot_status.request.status = 21;
                             set_gobot_status.request.text = "COMPLETE_EXPLORING";
                             ros::service::call("/gobot_status/set_gobot_status",set_gobot_status);
+                            sound_timer.stop();
                         }
                         stopExploration();
 
@@ -162,7 +165,8 @@ bool startExplorationSrv(hector_exploration_node::Exploration::Request &req, hec
         set_gobot_status.request.status = 25;
         set_gobot_status.request.text = "EXPLORING";
         ros::service::call("/gobot_status/set_gobot_status",set_gobot_status);
-        
+        sound_timer.start();
+
         back_to_start_when_finished = req.backToStartWhenFinished;
 
         if(back_to_start_when_finished==1){
@@ -172,7 +176,7 @@ bool startExplorationSrv(hector_exploration_node::Exploration::Request &req, hec
         if(ros::service::call("/gobot_status/charging_status", isCharging) && isCharging.response.isCharging){
             ROS_WARN("(Exploration) we are charging so we go straight to avoid bumping into the CS when turning");
             setSpeed('F', 15, 'F', 15);
-		    std::this_thread::sleep_for(std::chrono::milliseconds(3500));
+		    std::this_thread::sleep_for(std::chrono::milliseconds(3000));
             setSpeed('F', 0, 'F', 0);
         }
 
@@ -196,6 +200,7 @@ bool stopExplorationSrv(std_srvs::Empty::Request &req, std_srvs::Empty::Response
         set_gobot_status.request.status = 21;
         set_gobot_status.request.text = "STOP_EXPLORING";
         ros::service::call("/gobot_status/set_gobot_status",set_gobot_status);
+        sound_timer.stop();
     }
     return stopExploration();
 }
@@ -270,8 +275,10 @@ int main(int argc, char* argv[]){
 
     /// Create an actionlibClient to be able to send and monitor goals
     ac = std::shared_ptr<actionlib::SimpleActionClient<move_base_msgs::MoveBaseAction>>(new actionlib::SimpleActionClient<move_base_msgs::MoveBaseAction>("move_base", true));
+    
+    sound_timer = nh.createTimer(ros::Duration(10), timerCallback);
+    sound_timer.stop();
 
-    ros::Timer timer = nh.createTimer(ros::Duration(10), timerCallback);
     /// Launch service's servers
     //0-don't go back to starting point; 1-go back to charging station; 2-go back to normal staring point
     ros::ServiceServer startExploration = nh.advertiseService("/gobot_scan/startExploration", startExplorationSrv);

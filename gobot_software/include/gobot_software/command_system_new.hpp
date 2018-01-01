@@ -109,7 +109,9 @@ bool startNewScan(const std::string ip, const std::vector<std::string> command);
 bool stopScanning(const std::string ip, const std::vector<std::string> command);
 
 /// v
+bool shutdownRobot(const std::vector<std::string> command);
 bool keyboardControl(const std::vector<std::string> command);
+
 /// w
 bool muteOff(const std::vector<std::string> command);
 

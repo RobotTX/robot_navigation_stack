@@ -60,6 +60,11 @@ include_directories(
     ${catkin_INCLUDE_DIRS}
 )
 
+
+add_library(set_status_class src/set_status_class.cpp)
+target_link_libraries(set_status_class ${catkin_LIBRARIES} ${gobot_software} ${Boost_FILESYSTEM_LIBRARY} ${Boost_SYSTEM_LIBRARY} )
+add_dependencies(set_status_class ${${gobot_msg_srv}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
+
 add_executable(gobot_status src/gobot_status.cpp)
 target_link_libraries(gobot_status ${catkin_LIBRARIES} ${gobot_software} ${Boost_FILESYSTEM_LIBRARY} ${Boost_SYSTEM_LIBRARY} )
 add_dependencies(gobot_status ${${gobot_msg_srv}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
@@ -83,11 +88,9 @@ add_executable(teleop src/teleop.cpp)
 target_link_libraries(teleop ${catkin_LIBRARIES} ${gobot_software} ${Boost_FILESYSTEM_LIBRARY} ${Boost_SYSTEM_LIBRARY} )
 add_dependencies(teleop ${${gobot_msg_srv}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
 
-
-add_executable(play_path src/playPath.cpp)
-target_link_libraries(play_path ${catkin_LIBRARIES} ${gobot_software} ${Boost_FILESYSTEM_LIBRARY} ${Boost_SYSTEM_LIBRARY} )
-add_dependencies(play_path ${${gobot_msg_srv}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
-
+add_executable(move_it src/move_it.cpp)
+target_link_libraries(move_it ${catkin_LIBRARIES} ${gobot_software} ${Boost_FILESYSTEM_LIBRARY} ${Boost_SYSTEM_LIBRARY} )
+add_dependencies(move_it ${${gobot_msg_srv}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
 
 add_executable(send_laser_data src/laser.cpp)
 target_link_libraries(send_laser_data ${catkin_LIBRARIES} ${gobot_software} ${Boost_FILESYSTEM_LIBRARY} ${Boost_SYSTEM_LIBRARY} )
@@ -100,7 +103,7 @@ add_dependencies(recover_position ${${gobot_msg_srv}_EXPORTED_TARGETS} ${catkin_
 
 
 add_executable(auto_docking src/auto_docking.cpp)
-target_link_libraries(auto_docking ${catkin_LIBRARIES} ${gobot_software} ${Boost_FILESYSTEM_LIBRARY} ${Boost_SYSTEM_LIBRARY} )
+target_link_libraries(auto_docking ${catkin_LIBRARIES} ${gobot_software} ${Boost_FILESYSTEM_LIBRARY} ${Boost_SYSTEM_LIBRARY} set_status_class)
 add_dependencies(auto_docking ${${gobot_msg_srv}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
 
 
@@ -117,6 +120,4 @@ add_dependencies(ping_server_new ${${gobot_msg_srv}_EXPORTED_TARGETS} ${catkin_E
 add_executable(command_system_new src/command_system_new.cpp)
 target_link_libraries(command_system_new ${catkin_LIBRARIES} ${gobot_software} ${Boost_FILESYSTEM_LIBRARY} ${Boost_SYSTEM_LIBRARY} )
 add_dependencies(command_system_new ${${gobot_msg_srv}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
-
-
 #add_library(ThreadPool include/gobot_software/ThreadPool.h)

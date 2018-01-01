@@ -7,6 +7,7 @@
 #include <string>
 #include <gobot_msg_srv/BatteryMsg.h>
 #include <gobot_msg_srv/SetBattery.h>
+#include <gobot_msg_srv/GetString.h>
 
 bool testAutoDocking(gobot_msg_srv::SetBattery::Request &req, gobot_msg_srv::SetBattery::Response &res);
 

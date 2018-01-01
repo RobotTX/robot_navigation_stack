@@ -15,7 +15,7 @@ ros::Publisher cliff_pub;
 ros::Publisher button_pub;
 serial::Serial serialConnection;
 
-int last_charging_current = -1;
+int last_charging_current = 0;
 bool charging = false;
 int error_count = 0;
 std::vector<uint8_t> cmd;
@@ -24,6 +24,29 @@ bool display_data = false;
 std::string STMdevice;
 gobot_msg_srv::GetGobotStatus get_gobot_status;
 ros::ServiceClient getGobotStatusSrv;
+
+int STM_CHECK_NUM=0, STM_RATE=5;
+
+
+std::vector<uint8_t> writeAndRead(std::vector<uint8_t> toWrite, int bytesToRead){
+    std::vector<uint8_t> buff;
+    connectionMutex.lock();
+    try{
+        /// Send bytes to the MD49
+        size_t bytes_wrote = serialConnection.write(toWrite);
+        /// Read any byte that we are expecting
+        if(bytesToRead > 0)
+            serialConnection.read(buff, bytesToRead);
+
+        //serialConnection.flush();
+    } catch (std::exception& e) {
+        ROS_ERROR("(Sensors) exception : %s", e.what());
+    }
+    /// Unlock the mutex
+    connectionMutex.unlock();
+
+    return buff;
+}
 
 bool setSpeed(const char directionR, const int velocityR, const char directionL, const int velocityL){
     //ROS_INFO("(auto_docking::setSpeed) %c %d %c %d", directionR , velocityR, directionL, velocityL);
@@ -38,12 +61,7 @@ bool setSpeed(const char directionR, const int velocityR, const char directionL,
 
 bool resetMotorSrvCallback(std_srvs::Empty::Request &req, std_srvs::Empty::Response &res){
     if(serialConnection.isOpen()){
-        connectionMutex.lock();
-        serialConnection.write(std::vector<uint8_t>({0xC0, 0x01, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x1B}));
-        std::vector<uint8_t> buff;
-        serialConnection.read(buff, 40);
-        serialConnection.flush();
-        connectionMutex.unlock();
+        std::vector<uint8_t> buff = writeAndRead({0xC0, 0x01, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x1B},40);
         ROS_WARN("(sensors::publishSensors) Reseted MD49 Motor Driver. Received %lu bytes", buff.size());
     } else 
         ROS_ERROR("(sensors::publishSensors) Check serial connection 1");
@@ -57,16 +75,8 @@ bool displaySensorData(gobot_msg_srv::SetBattery::Request &req, gobot_msg_srv::S
 
 void resetStm(void){
     if(serialConnection.isOpen()){
-        connectionMutex.lock();
-        serialConnection.write(std::vector<uint8_t>({0xD0, 0x01, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x1B}));
-
-        std::vector<uint8_t> buff;
-        serialConnection.read(buff, 40);
-        serialConnection.flush();
-        connectionMutex.unlock();
-
+        std::vector<uint8_t> buff = writeAndRead({0xD0, 0x01, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x1B},5);
         ROS_WARN("(sensors::publishSensors WARN) Reseted STM32. Received %lu bytes", buff.size());
-
     } 
     else 
         ROS_ERROR("(sensors::publishSensors ERROR) Check serial connection 1");
@@ -96,29 +106,35 @@ std::string getStdoutFromCommand(std::string cmd) {
     return data;
 }
 
+
+/*    
+       B5 B6 B7 B8     
+          IR_R
+       S3 P1 P2 S4
+        ---BB---
+        |      |
+  IR_R  |      | IR_L
+        |__FF__|
+        S2    S1
+
+       B4 B3 B2 B1
+*/
+
 void publishSensors(void){
     if(serialConnection.isOpen()){
         bool error = false;
         bool error_bumper = false;
-        connectionMutex.lock();
-        serialConnection.write(std::vector<uint8_t>({0x10, 0x01, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x1B}));
-
-        std::vector<uint8_t> buff;
-        serialConnection.read(buff, 47);
-
-        serialConnection.flush();
-
-        connectionMutex.unlock();
+        std::vector<uint8_t> buff = writeAndRead({0x10, 0x01, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x1B},49);
 
         //ROS_INFO("(sensors::publishSensors) Info : %lu %d %d %d", buff.size(), (int) buff.at(0), (int) buff.at(1), (int) buff.at(2));
-
         /// check if the 16 is useful
-        if(buff.size() == 47){
+        if(buff.size() == 49){
             /// First 3 bytes are the sensor address, the command and the data length, so we can ignore it
             //7 sonars, 8 bumpers, 3 IR, 2 distance, 4 cliff, 1 battery, 1 load
 
 
             /// Sonars data = D3-D16
+            //1->front_right,2->front_left,3->back_left,4->back_right
             gobot_msg_srv::SonarMsg sonar_data;
             sonar_data.distance1 = (buff.at(3) << 8) | buff.at(4);
             sonar_data.distance2 = (buff.at(5) << 8) | buff.at(6);
@@ -133,6 +149,7 @@ void publishSensors(void){
             gobot_msg_srv::BumperMsg bumper_data;
 
             if(buff.at(17)){
+                /*for old gobot
                 bumper_data.bumper1 = (buff.at(17) & 0b00000001) > 0;
                 bumper_data.bumper2 = (buff.at(17) & 0b00000010) > 0;
                 bumper_data.bumper3 = (buff.at(17) & 0b00000100) > 0;
@@ -141,9 +158,17 @@ void publishSensors(void){
                 bumper_data.bumper6 = (buff.at(17) & 0b00100000) > 0;
                 bumper_data.bumper7 = (buff.at(17) & 0b01000000) > 0;
                 bumper_data.bumper8 = (buff.at(17) & 0b10000000) > 0;
+                */
+                bumper_data.bumper6 = (buff.at(17) & 0b00000001) > 0;
+                bumper_data.bumper3 = (buff.at(17) & 0b00000010) > 0;
+                bumper_data.bumper4 = (buff.at(17) & 0b00000100) > 0;
+                bumper_data.bumper1 = (buff.at(17) & 0b00001000) > 0;
+                bumper_data.bumper5 = (buff.at(17) & 0b00010000) > 0;
+                bumper_data.bumper2 = (buff.at(17) & 0b00100000) > 0;
+                bumper_data.bumper7 = (buff.at(17) & 0b01000000) > 0;
+                bumper_data.bumper8 = (buff.at(17) & 0b10000000) > 0;
             } 
             else{
-                ROS_ERROR("(sensors::publishSensors ERROR) All bumpers got a collision");
                 error_bumper = true;
             }
 
@@ -168,6 +193,10 @@ void publishSensors(void){
             cliff_data.cliff2 = (buff.at(24) << 8) | buff.at(25);
             cliff_data.cliff3 = (buff.at(26) << 8) | buff.at(27);
             cliff_data.cliff4 = (buff.at(28) << 8) | buff.at(29);
+            cliff_data.cliff1 = (cliff_data.cliff1>1000) ? 1 : cliff_data.cliff1;
+            cliff_data.cliff2 = (cliff_data.cliff2>1000) ? 1 : cliff_data.cliff2;
+            cliff_data.cliff3 = (cliff_data.cliff3>1000) ? 1 : cliff_data.cliff3;
+            cliff_data.cliff4 = (cliff_data.cliff4>1000) ? 1 : cliff_data.cliff4;
             //ROS_INFO("%d,%d,%d,%d",cliff_data.cliff1,cliff_data.cliff2,cliff_data.cliff3,cliff_data.cliff4);
 
 
@@ -180,8 +209,9 @@ void publishSensors(void){
             battery_data.RemainCapacity = ((buff.at(38) << 8) | buff.at(39))/100;
             battery_data.FullCapacity = ((buff.at(40) << 8) | buff.at(41))/100;
 
-            double percentage = battery_data.BatteryVoltage;
-            percentage=(percentage-BATTERY_MIN)/(BATTERY_MAX-BATTERY_MIN); 
+            //double percentage = battery_data.BatteryVoltage;
+            //percentage=(percentage-BATTERY_MIN)/(BATTERY_MAX-BATTERY_MIN); 
+            double percentage = battery_data.BatteryStatus/100.0;
             if(percentage>1.0)
                 battery_data.Percentage=1.0;
             else if(percentage<0.0)
@@ -189,25 +219,37 @@ void publishSensors(void){
             else
                 battery_data.Percentage=percentage;
 
-            if(battery_data.BatteryVoltage == 0 || battery_data.Temperature < 0){
+            if(battery_data.BatteryVoltage == 0 || battery_data.Temperature <= 0){
                 error = true;
-                ROS_ERROR("(sensors::publishSensors ERROR) Check battery data : %d %d %d %d", (int) battery_data.BatteryVoltage, battery_data.ChargingCurrent,
-                battery_data.FullCapacity, battery_data.Temperature);
+                ROS_ERROR("(sensors::publishSensors ERROR) Check battery data : Status:%d, Voltage:%d, ChargingCurrent:%d, Temperature:%d", 
+                battery_data.BatteryStatus,(int) battery_data.BatteryVoltage, battery_data.ChargingCurrent, battery_data.Temperature);
             } 
             else {
-                if(battery_data.ChargingCurrent != last_charging_current){
-                    if(battery_data.ChargingCurrent < 2000 && (battery_data.ChargingCurrent - last_charging_current < -60))
-                        battery_data.ChargingFlag = false;
-                    else if(battery_data.ChargingCurrent > 1500 || (battery_data.ChargingCurrent > 1000 && (battery_data.ChargingCurrent - last_charging_current > 60)))
-                        battery_data.ChargingFlag = true;
-                    else
-                        battery_data.ChargingFlag = false;
-                } 
-                else {
-                    battery_data.ChargingFlag = charging;
+                //battery data update slower than requesting rate
+                if(abs(battery_data.ChargingCurrent-last_charging_current) > 5){
+                    int current_diff = battery_data.ChargingCurrent - last_charging_current;
+                    if (battery_data.ChargingCurrent < 0){
+                        if(current_diff > 100)
+                            battery_data.ChargingFlag = true;
+                        else
+                            battery_data.ChargingFlag = false;
+                    }
+                    else if (battery_data.ChargingCurrent >1500){
+                        if(current_diff < -100)
+                            battery_data.ChargingFlag = false;
+                        else
+                            battery_data.ChargingFlag = true;
+                    }
+                    else{
+                        if(current_diff > 50)
+                            battery_data.ChargingFlag = true;
+                        else
+                            battery_data.ChargingFlag = false;
+                    }
                 }
-
-                last_charging_current = battery_data.ChargingCurrent;
+                else{
+                    battery_data.ChargingFlag = charging;
+                } 
 
                 if(charging != battery_data.ChargingFlag){
                     charging = battery_data.ChargingFlag;
@@ -222,6 +264,8 @@ void publishSensors(void){
                     }
                     ros::service::call("/gobot_status/set_dock_status",set_dock_status);
                 }
+
+                last_charging_current = battery_data.ChargingCurrent;
             }
 
 
@@ -235,6 +279,13 @@ void publishSensors(void){
             std_msgs::Int8 button;
             button.data=external_button;
 
+            /// Reset wifi button (double click power button)
+            int32_t engage_point = buff.at(46);
+
+            /// Reset wifi button (double click power button)
+            int32_t resetwifi_button = buff.at(47);
+
+
             if(display_data){
                 std::cout << "Sonars : " << sonar_data.distance1 << " " << sonar_data.distance2 << " " << sonar_data.distance3 << " " << sonar_data.distance4 
                 << " " << sonar_data.distance5 << " " << sonar_data.distance6 << " " << sonar_data.distance7 <<
@@ -245,22 +296,39 @@ void publishSensors(void){
                 "\nCliff : " << cliff_data.cliff1 << " " << cliff_data.cliff2 << " " << cliff_data.cliff3 << " " << cliff_data.cliff4 <<
                 "\nBattery : " << battery_data.BatteryStatus << " " << battery_data.BatteryVoltage << " " << battery_data.ChargingCurrent << " " << battery_data.Temperature 
                 << " " << battery_data.RemainCapacity << " " << battery_data.FullCapacity << " " << battery_data.ChargingFlag <<
-                "\nWeight : " << weight_data.weightInfo <<
-                "\nExternal button : " << external_button << std::endl;
+                "\nWeight : " << weight_data.weightInfo << " " <<
+                "\nExternal button : " << external_button << " " <<
+                "\nResetwifi button : " << resetwifi_button << " " << 
+                "\nengage point : " << engage_point << " " << 
+                std::endl;
             }
 
+            if(!error && !error_bumper)
+                STM_CHECK_NUM++;
             /// The last byte is the Frame Check Sum and is not used
-            if(!error){
+            if(!error && STM_CHECK_NUM>=3){
                 //If no error, publish sensor data
                 sonar_pub.publish(sonar_data);
                 ir_pub.publish(ir_data);
                 proximity_pub.publish(proximity_data);
-                cliff_pub.publish(cliff_data);
-                battery_pub.publish(battery_data);
                 weight_pub.publish(weight_data);
                 button_pub.publish(button);
+                battery_pub.publish(battery_data);
+
+                if (!battery_data.ChargingFlag)
+                    cliff_pub.publish(cliff_data);
+                    
                 if(!error_bumper)
                     bumper_pub.publish(bumper_data);
+                else
+                    ROS_ERROR("(sensors::publishSensors ERROR) All bumpers got a collision");
+            
+                if(resetwifi_button){
+                    gobot_msg_srv::SetString set_wifi;
+                    set_wifi.request.data.push_back("");
+                    set_wifi.request.data.push_back("");
+                    ros::service::call("/gobot_status/set_wifi",set_wifi);
+                }
             }
         } 
         else {
@@ -275,15 +343,19 @@ void publishSensors(void){
             error_count++;
         }
 
-        /// If we got more than <ERROR_THRESHOLD> errors in a row, we send a command to reset the stm32
         if(error_count > ERROR_THRESHOLD){
+        /// If we got more than <ERROR_THRESHOLD> errors in a row, we send a command to reset the stm32
             setSpeed('F', 0, 'F', 0);
             resetStm();
+            ros::Duration(1.0).sleep();
             //error may be caused by touching the power supply 
             getGobotStatusSrv.call(get_gobot_status);
             //go to docking state
             if(get_gobot_status.response.status==15){
                 gobot_msg_srv::BatteryMsg battery_data;
+                battery_data.BatteryStatus  = 50;
+                battery_data.BatteryVoltage = 23000;
+                battery_data.Percentage = battery_data.BatteryStatus/100.0;
                 battery_data.ChargingFlag = true;
                 battery_data.Temperature=-1;
                 charging = battery_data.ChargingFlag;
@@ -292,7 +364,6 @@ void publishSensors(void){
             }
             error_count = 0;
         }
-            
     } 
     else{
         //Try reopen STM32 serial
@@ -305,15 +376,8 @@ void publishSensors(void){
 bool setLedSrvCallback(gobot_msg_srv::LedStrip::Request &req, gobot_msg_srv::LedStrip::Response &res){
     if(serialConnection.isOpen()){
         //ROS_INFO("Receive a LED change request, and succeed to execute.");
-
         std::vector<uint8_t> led_cmd={req.data[0],req.data[1],req.data[2],req.data[3],req.data[4],req.data[5],req.data[6],req.data[7],req.data[8],req.data[9],req.data[10]};
-
-        connectionMutex.lock();
-        serialConnection.write(led_cmd);
-        std::vector<uint8_t> buff;
-        serialConnection.read(buff,5);
-        serialConnection.flush();
-        connectionMutex.unlock();
+        std::vector<uint8_t> buff = writeAndRead(led_cmd,5);
         return true;
     }
     else{
@@ -333,21 +397,24 @@ bool setSoundSrvCallback(gobot_msg_srv::SetInt::Request &req, gobot_msg_srv::Set
     if(serialConnection.isOpen()){
         //ROS_INFO("Receive a sound requestm, and succeed to execute.");
         uint8_t n = req.data[0];
-        uint8_t on_time = 0x01;
-        uint8_t off_time = 0x01;
-        on_time = req.data[1];
-        
-        if(req.data.size()==3 && req.data[2]!=0)
-            off_time = req.data[2];
-            
-        std::vector<uint8_t> sound_cmd({0xE0, 0x01, 0x05, n, on_time, 0x00, off_time, 0x00, 0x00, 0x00, 0x1B});
+        uint8_t time_off = (n==1) ? 0x00 : 0x96;
+        std::vector<uint8_t> sound_cmd;
+        switch (req.data[1]){
+            //100ms
+            case 1:
+                sound_cmd={0xE0, 0x01, 0x05, n, 0x00, 0x64, 0X00, time_off, 0X00, 0X00, 0x1B};
+                break;
+            //400ms
+            case 2:
+                sound_cmd={0xE0, 0x01, 0x05, n, 0x01, 0x90, 0X00, time_off, 0X00, 0X00, 0x1B};
+                break;
+            //800ms
+            default:
+                sound_cmd={0xE0, 0x01, 0x05, n, 0x03, 0x20, 0X00, time_off, 0X00, 0X00, 0x1B};
+                break;
+        }
 
-        connectionMutex.lock();
-        serialConnection.write(sound_cmd);
-        std::vector<uint8_t> buff;
-        serialConnection.read(buff,5);
-        serialConnection.flush();
-        connectionMutex.unlock();
+        std::vector<uint8_t> buff = writeAndRead(sound_cmd,5);
         return true;
     }
     else{
@@ -356,13 +423,27 @@ bool setSoundSrvCallback(gobot_msg_srv::SetInt::Request &req, gobot_msg_srv::Set
     } 
 }
 
+
+bool shutdownSrvCallback(std_srvs::Empty::Request &req, std_srvs::Empty::Response &res){
+    if(serialConnection.isOpen()){
+        //ROS_INFO("Receive a LED change request, and succeed to execute.");
+        setSpeed('F', 0, 'F', 0);
+        //shutdown command
+        std::vector<uint8_t> buff = writeAndRead({0xF0,0x01,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x1B},5);
+
+        //turn led white
+        buff.clear();
+        buff = writeAndRead({0xB0,0x03,0x01,0x57,0x00,0x00,0x00,0x00,0x03,0xE8,0x1B},5);
+        return true;
+    }
+    else{
+        ROS_WARN("Receive a shutdown request, but failed to execute.");
+        return false;
+    } 
+
+}
+
 bool initSerial(void) {
-    /// Get the port in which our device is connected
-    /*
-    std::string deviceNode(STMdevice);
-    std::string output = getStdoutFromCommand("ls -l /sys/class/tty/ttyUSB*");
-    std::string port = "/dev" + output.substr(output.find(deviceNode) + deviceNode.size(), 8);
-    */
     std::string port = STMdevice;
     
     ROS_INFO("(sensors::initSerial) STM32 port : %s", port.c_str());
@@ -377,7 +458,8 @@ bool initSerial(void) {
     serialConnection.open();
 
     if(serialConnection.isOpen()){
-        
+        resetStm();
+        ros::Duration(1.0).sleep();
         ROS_INFO("Established connection to STM32.");
         return true;
     }
@@ -391,13 +473,7 @@ void mySigintHandler(int sig)
         if(serialConnection.isOpen()){
             //Turn off LED when shut down node
             //0x52 = Blue,0x47 = Red,0x42 = Green,0x4D = Magenta,0x43 = Cyan,0x59 = Yellow,0x57 = White, 0x00 = Off
-            connectionMutex.lock();
-            serialConnection.write(std::vector<uint8_t>({0xB0,0x03,0x01,0x57,0x00,0x00,0x00,0x00,0x03,0xE8,0x1B}));
-            std::vector<uint8_t> buff;
-            serialConnection.read(buff,5);
-            serialConnection.flush();
-            serialConnection.close();
-            connectionMutex.unlock();
+            writeAndRead({0xB0,0x03,0x01,0x57,0x00,0x00,0x00,0x00,0x03,0xE8,0x1B},5);
         }
     } catch (std::exception& e) {
 		ROS_ERROR("(Sensors) Shutdown exception : %s", e.what());
@@ -408,7 +484,6 @@ void mySigintHandler(int sig)
 
 int main(int argc, char **argv) {
     ros::init(argc, argv, "sensors");
-
     ros::NodeHandle nh;
     signal(SIGINT, mySigintHandler);
 
@@ -426,9 +501,10 @@ int main(int argc, char **argv) {
     //Startup end
 
     nh.getParam("STMdevice", STMdevice);
+    nh.getParam("STM_RATE", STM_RATE);
 
     if(initSerial()){
-        bumper_pub = nh.advertise<gobot_msg_srv::BumperMsg>("/gobot_base/bumpers_topic", 50);
+        bumper_pub = nh.advertise<gobot_msg_srv::BumperMsg>("/gobot_base/bumpers_raw_topic", 50);
         ir_pub = nh.advertise<gobot_msg_srv::IrMsg>("/gobot_base/ir_topic", 50);
         proximity_pub = nh.advertise<gobot_msg_srv::ProximityMsg>("/gobot_base/proximity_topic", 50);
         sonar_pub = nh.advertise<gobot_msg_srv::SonarMsg>("/gobot_base/sonar_topic", 50);
@@ -438,24 +514,25 @@ int main(int argc, char **argv) {
         button_pub = nh.advertise<std_msgs::Int8>("/gobot_base/button_topic",50);
 
         ros::ServiceServer isChargingSrv = nh.advertiseService("/gobot_status/charging_status", isChargingService);
-        
+        ros::ServiceServer shutdownSrv = nh.advertiseService("/gobot_base/shutdown_robot", shutdownSrvCallback);
         ros::ServiceServer setLedSrv = nh.advertiseService("/gobot_base/setLed", setLedSrvCallback);
         ros::ServiceServer setSoundSrv = nh.advertiseService("/gobot_base/setSound", setSoundSrvCallback);
         ros::ServiceServer displayDataSrv = nh.advertiseService("/gobot_base/displaySensorData", displaySensorData);
         ros::ServiceServer resetMotorSrv = nh.advertiseService("resetMotorDriver", resetMotorSrvCallback);
 
-        //Startup begin
-        gobot_msg_srv::SetGobotStatus set_gobot_status;
-        set_gobot_status.request.status = -1;
-        set_gobot_status.request.text ="STM32_READY";
-        ros::service::call("/gobot_status/set_gobot_status",set_gobot_status);
-        //Startup end
-
-        ros::Rate r(5);
+        ros::Rate r(STM_RATE);
         while(ros::ok()){
             ros::spinOnce();
             publishSensors();
-
+            //Startup begin
+            if (STM_CHECK_NUM==3)
+            {
+                gobot_msg_srv::SetGobotStatus set_gobot_status;
+                set_gobot_status.request.status = -1;
+                set_gobot_status.request.text ="STM32_READY";
+                ros::service::call("/gobot_status/set_gobot_status",set_gobot_status);
+                //Startup end
+            }
             r.sleep();
         }
     }

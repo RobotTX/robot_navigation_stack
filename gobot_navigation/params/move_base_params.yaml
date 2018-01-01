@@ -22,10 +22,10 @@ recovery_behaviors: [
 shutdown_costmaps: False # True
 
 # Frequency of the control loop
-controller_frequency: 6
+controller_frequency: 8
 
 # Frequency of the global planner
-planner_frequency: 3
+planner_frequency: 4
 
 recovery_behavior_enabled: true
 
@@ -35,9 +35,9 @@ controller_patience: 10
 
 # How long in seconds to allow for oscillation before executing recovery behaviors. 
 # A value of 0.0 corresponds to an infinite timeout.
-oscillation_timeout: 0.0 #0.0
+oscillation_timeout: 10 #0.0
 
-oscillation_distance: 0.1 #0.5
+oscillation_distance: 0.25 #0.5
 
 max_planning_retries: -1 #-1
 
@@ -57,12 +57,10 @@ NavfnROS:
     # attempt to create a plan that is as close to the specified goal as possible 
     # but no further than default_tolerance away
     default_tolerance: 0.6
-    #planner_window_x: 10.0 
-    #planner_window_y: 10.0
 
 TrajectoryPlannerROS:
-    acc_lim_th: 0.7
-    max_rotational_vel: 0.6
+    acc_lim_th: 0.8
+    max_rotational_vel: 0.7
     min_in_place_rotational_vel: 0.4
 
 rotate_recovery:
@@ -76,7 +74,7 @@ conservative_reset:
     reset_distance: 3.0
 
 aggressive_reset:
-    reset_distance: 0.5
+    reset_distance: 0.4
 
 move_slow_and_clear:
     clearing_distance: 0.5

@@ -265,7 +265,8 @@ bool sendOnceMap(gobot_msg_srv::SendMap::Request &req,
 
 		return true;
 		
-	} else
+	} 
+	else
 		return false;
 }
 

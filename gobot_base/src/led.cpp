@@ -91,7 +91,7 @@ void setLedRunning(std::vector<uint8_t> &color)
     cmd.request.data[6]=0x00;
     cmd.request.data[7]=0x00;
     cmd.request.data[8]=0x00;
-    cmd.request.data[9]=0x50;   //100 = 0x64
+    cmd.request.data[9]=0x96;   //150 = 0x64
     cmd.request.data[10]=0x1B;
 
     cmd.request.data[2]=color.size();
@@ -115,7 +115,7 @@ void setLedSlowRunning(std::vector<uint8_t> &color)
     cmd.request.data[6]=0x00;
     cmd.request.data[7]=0x00;
     cmd.request.data[8]=0x01;
-    cmd.request.data[9]=0x90;
+    cmd.request.data[9]=0xF4;
     cmd.request.data[10]=0x1B;
 
     cmd.request.data[2]=color.size();
@@ -138,11 +138,13 @@ void goalResultCallback(const move_base_msgs::MoveBaseActionResult::ConstPtr& ms
                 //ROS_INFO("Goal SUCCEED and disable teb_local_planner allow_init_with_backwards_motion.");
                 color.push_back(GREEN);
                 setLedPermanent(color);
+                setSound(1,2);
                 break;
             case 4:
                 //ROS_INFO("Goal ABORTED and disable teb_local_planner allow_init_with_backwards_motion.");
                 color.push_back(RED);
                 setLedPermanent(color);
+                setSound(3,2);
                 break;
             default:
                 //ROS_ERROR("Unknown goal status %d and disable teb_local_planner allow_init_with_backwards_motion.",msg->status.status);
@@ -236,17 +238,22 @@ void initialPoseResultCallback(const std_msgs::Int8::ConstPtr& msg){
 
 void newBumpersInfo(const gobot_msg_srv::BumperMsg::ConstPtr& msg){
     int n = msg->bumper1+msg->bumper2+msg->bumper3+msg->bumper4+msg->bumper5+msg->bumper6+msg->bumper7+msg->bumper8;
-    //if(n<8 && current_stage<BUMPER_STAGE && current_stage!=CHARGING_STAGE){
+
     if(n<8 && current_stage<BUMPER_STAGE){
-        current_stage = BUMPER_STAGE;
-        //White Red LED Running
-        std::vector<uint8_t> color;
-        color.push_back(RED);
-        color.push_back(WHITE);
-        setLedRunning(color);
+        getGobotStatusSrv.call(get_gobot_status);
+        if(get_gobot_status.response.status!=15){
+            current_stage = BUMPER_STAGE;
+            //White Red LED Running
+            std::vector<uint8_t> color;
+            color.push_back(RED);
+            color.push_back(WHITE);
+            setLedRunning(color);
+            setSound(3,1);
+        }
     }
     else if(n==8 && current_stage==BUMPER_STAGE){
         current_stage = FREE_STAGE;
+        setSound(1,1);
     }
 }
 
@@ -304,7 +311,7 @@ void explorationCallback(const std_msgs::Int8::ConstPtr& msg){
             case 1:
                 color.push_back(GREEN);
                 setLedPermanent(color);
-                setSound(1,4);
+                setSound(1,2);
                 break;
             //hector exploration stopped
             case 0:
@@ -406,7 +413,7 @@ void timerCallback(const ros::TimerEvent&){
 
         getGobotStatusSrv.call(get_gobot_status);
         if(get_gobot_status.response.status!=15){
-            setSound(2,2,2);
+            setSound(3,2);
         }
     }
     //Show battery status if no stage for certain period, show battery lvl

@@ -51,10 +51,12 @@ int main(int argc, char** argv){
     n.getParam("wheel_radius", wheel_radius);
     double ticks_per_rotation;
     n.getParam("ticks_per_rotation", ticks_per_rotation);
+    int ODOM_RATE=10;
+    n.getParam("ODOM_RATE", ODOM_RATE);
 
     double pi = 3.14159;
 
-    ros::Rate r(10); //20
+    ros::Rate r(ODOM_RATE); //20
     ros::service::waitForService("/gobot_motor/getEncoders",ros::Duration(30));
     while(n.ok()){
 
@@ -68,9 +70,11 @@ int main(int argc, char** argv){
             double dt = (current_time - last_time).toSec();
 
             // difference of ticks compared to last time
-            int64_t delta_left_encoder = encoders.response.leftEncoder - last_left_encoder;
-            int64_t delta_right_encoder = encoders.response.rightEncoder - last_right_encoder;
+            //122rpm, 2 rotation/sec, 980ticks/sec, 1 time update (0.1s) can not bigger than 200
+            int64_t delta_left_encoder = abs(encoders.response.leftEncoder - last_left_encoder)<400 ? (encoders.response.leftEncoder - last_left_encoder) : 0;
+            int64_t delta_right_encoder = abs(encoders.response.rightEncoder - last_right_encoder)<400 ? (encoders.response.rightEncoder - last_right_encoder) : 0;
 
+            //ROS_INFO("right:%zu, left:%zu",delta_right_encoder,delta_left_encoder);
             last_left_encoder = encoders.response.leftEncoder;
             last_right_encoder = encoders.response.rightEncoder;
 
@@ -96,7 +100,7 @@ int main(int argc, char** argv){
             x += delta_x;
             y += delta_y;
             th += delta_th;
-
+            
             //since all odometry is 6DOF we'll need a quaternion created from yaw
             geometry_msgs::Quaternion odom_quat = tf::createQuaternionMsgFromYaw(th);
 

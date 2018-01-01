@@ -345,7 +345,7 @@ bool TebLocalPlannerROS::computeVelocityCommands(geometry_msgs::Twist& cmd_vel)
    
     // now we reset everything to start again with the initialization of new trajectories.
     planner_->clearPlanner();
-    if((ros::Time::now()-time_last_infeasible_plan_).toSec()>1.0)
+    if((ros::Time::now()-time_last_infeasible_plan_).toSec()>2.0)
       ROS_WARN("TebLocalPlannerROS: trajectory is not feasible. Resetting planner...");
     
     ++no_infeasible_plans_; // increase number of infeasible solutions in a row

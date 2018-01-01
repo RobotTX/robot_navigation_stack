@@ -1,11 +1,5 @@
 <launch>
+  <include file="$(find gobot_base)/launch/robot_sensors_params.launch"/>
   <node name="rplidarNode"          pkg="rplidar_ros"  type="rplidarNode" output="screen">
-  <param name="serial_port"         type="string" value="/dev/rplidar"/>  
-  <param name="serial_baudrate"     type="int"    value="115200"/>
-  <param name="frame_id"            type="string" value="base_laser"/>
-  <param name="inverted"            type="bool"   value="false"/>
-  <param name="angle_compensate"    type="bool"   value="true"/>
-  <param name="angle_min"           type="double"  value="-120.0" />
-  <param name="angle_max"           type="double"  value="120.0" />
   </node>
 </launch>
