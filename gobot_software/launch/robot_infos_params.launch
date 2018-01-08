@@ -3,6 +3,8 @@
     <!--COMMON PARAMETERS -->
     <param name="simulation" type="bool" value="false" />
 	  <param name="user_name" type="string" value="gtdollar" />
+    <param name="status_update" type="double" value="5.0" />
+    <param name="ip_update" type="double" value="20.0" />
     <!-- MAP RELATED -->
 		<param name="map_image_used" type="string" value="$(find gobot_data)/maps/used_map.pgm" />
     <param name="map_config_used" type="string" value="$(find gobot_data)/maps/used_map.yaml" />

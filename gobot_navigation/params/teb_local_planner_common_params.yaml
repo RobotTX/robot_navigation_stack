@@ -22,6 +22,12 @@ weight_kinematics_nh: 1000.0
 weight_optimaltime: 1 #2
 selection_alternative_time_cost: False # not in use yet
 
+# GoalTolerance
+xy_goal_tolerance: 0.1
+yaw_goal_tolerance: 0.15 #8.6 degrees
+#Remove the goal velocity constraint such that the robot can arrive at the goal with maximum speed 
+free_goal_vel: False
+
 # Trajectory
 teb_autosize: True
 dt_ref: 0.3
@@ -50,14 +56,7 @@ footprint_model: # types: "point", "circular", "two_circles", "line", "polygon"
     type: "polygon"
     vertices: [[0.250,0],[0.250,-0.0835],[0.245,-0.167],[0.225,-0.225],[0.195,-0.245],[0.0893,-0.250],[0,-0.250],[-0.0893,-0.250],[-0.1786,-0.245],[-0.225,-0.225],[-0.245,-0.167],[-0.250,-0.0835],[-0.250,0],[-0.250,0.0835],[-0.245,0.167],[-0.225,0.225],[-0.1786,0.245],[-0.0893,0.250],[0,0.250],[0.0893,0.250],[0.1786,0.245],[0.225,0.225],[0.245,0.167],[0.250,0.0835]]
 
-# GoalTolerance
-xy_goal_tolerance: 0.1
-yaw_goal_tolerance: 0.15 #8.6 degrees
-#Remove the goal velocity constraint such that the robot can arrive at the goal with maximum speed 
-free_goal_vel: False
-
 # Obstacles
-
 #Minimum desired separation from obstacles in meters 
 min_obstacle_dist: 0.05
 include_costmap_obstacles: True

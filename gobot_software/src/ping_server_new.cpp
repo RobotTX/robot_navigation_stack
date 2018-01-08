@@ -10,6 +10,7 @@ bool simulation = false;
 bool muteFlag = false;
 bool scanIP = false;
 int batteryLevel = 50;
+double STATUS_UPDATE=5.0, IP_UPDATE=20.0;
 
 std::vector<std::string> availableIPs;
 std::vector<std::string> connectedIPs;
@@ -75,7 +76,7 @@ bool updataStatusSrvCallback(std_srvs::Empty::Request &req, std_srvs::Empty::Res
  */
 void pingAllIPs(void){
     /// Ping all servers every 5 secs
-    ros::Rate loop_rate(1/5.0);
+    ros::Rate loop_rate(1/STATUS_UPDATE);
 
     std::vector<std::thread> threads;
 
@@ -159,7 +160,6 @@ void updateIP(){
  */
 void pingIP(std::string ip, std::string dataToSend, double sec){
     //ROS_INFO("(ping_server) Called pingIP : %s", ip.c_str());
-
     timeout::tcp::Client client;
     try {
         /// Try to connect to the remote Qt app
@@ -185,7 +185,6 @@ void pingIP(std::string ip, std::string dataToSend, double sec){
 
 void pingIP2(std::string ip, std::string dataToSend, double sec){
     //ROS_INFO("(ping_server) Called pingIP : %s", ip.c_str());
-
     timeout::tcp::Client client;
     try {
         /// Try to connect to the remote Qt app
@@ -212,7 +211,7 @@ void pingIP2(std::string ip, std::string dataToSend, double sec){
  */
 void checkNewServers(void){
     /// We check for new IP addresses every 30 secs
-    ros::Rate loop_rate(1/20.0);
+    ros::Rate loop_rate(1/IP_UPDATE);
 
     while(ros::ok()){ 
         ros::spinOnce();
@@ -271,6 +270,8 @@ bool initParams(){
     nh.getParam("ips_file", ipsFile);
     nh.getParam("ping_file", pingFile);
     nh.getParam("wifi_file", wifiFile);
+    nh.getParam("status_update", STATUS_UPDATE);
+    nh.getParam("ip_update", IP_UPDATE);
 
     return true;
 }
@@ -301,8 +302,6 @@ int main(int argc, char* argv[]){
         disco_pub = n.advertise<std_msgs::String>("/gobot_software/server_disconnected", 10);
         ros::Subscriber batterySub = n.subscribe("/battery_topic", 1, newBatteryInfo);
         ros::ServiceServer updataStatusSrv = n.advertiseService("/gobot_software/update_status", updataStatusSrvCallback);
-
-        ROS_INFO("(ping_server) Ready to be launched.");
 
         /// Thread which will get an array of potential servers
         std::thread t1(checkNewServers);
