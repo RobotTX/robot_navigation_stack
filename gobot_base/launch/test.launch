@@ -1,0 +1,17 @@
+<?xml version="1.0"?>
+<launch>     
+    <include file="$(find gobot_software)/launch/robot_infos_params.launch"/>
+    <include file="$(find gobot_base)/launch/robot_sensors_params.launch"/>
+    
+	<node pkg="gobot_software" type="gobot_status" name="software_gobot_status" output="screen" respawn="true" />
+
+    <!--laser to base tf frequency depends on the laser update rate-->
+    <node pkg="tf" type="static_transform_publisher" name="base_link_to_laser" args="0.2 0.0 0.21 0 0 0 /base_link /base_laser 50" required="true"/>
+
+    <node pkg="rplidar_ros" type="rplidarNode" name="rplidarNode" output="screen" required="true"/>
+    <node pkg="gobot_base" type="sensors" name="base_sensors" output="screen" required="true"/>
+    <node pkg="gobot_base" type="wheels" name="motor_wheels" output="screen" required="true"/>
+    <node pkg="gobot_base" type="odom" name="motor_odometry" output="screen" required="true"/>
+    <node pkg="gobot_base" type="twist" name="motor_twist" output="screen" required="true"/>
+    <node pkg="gobot_base" type="led" name="base_led" output="screen" required="true"/>
+</launch>

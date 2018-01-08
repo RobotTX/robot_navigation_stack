@@ -1,9 +1,18 @@
 <?xml version="1.0"?>
 <launch>
+    <!--COMMON PARAMETERS -->
+    <param name="simulation" type="bool" value="false" />
+	  <param name="user_name" type="string" value="gtdollar" />
+    <param name="status_update" type="double" value="5.0" />
+    <param name="ip_update" type="double" value="20.0" />
+    <!-- MAP RELATED -->
 		<param name="map_image_used" type="string" value="$(find gobot_data)/maps/used_map.pgm" />
     <param name="map_config_used" type="string" value="$(find gobot_data)/maps/used_map.yaml" />
     <param name="map_id_file" type="string" value="$(find gobot_data)/maps/mapId.txt" />
+    <!--COMMAND RELATED -->
     <param name="restart_file" type="string" value="$(find gobot_data)/command/restart_robot.sh" />
+    <param name="shutdown_file" type="string" value="$(find gobot_data)/command/shutdown.sh" />
+    <!--ROBOT DATA RELATED-->
     <param name="last_known_position_file" type="string" value="$(find gobot_data)/data/lastKnownPosition.txt" />
     <param name="path_file" type="string" value="$(find gobot_data)/data/path.txt" />
     <param name="disconnected_file" type="string" value="$(find gobot_data)/data/disconnected.txt" />
@@ -12,6 +21,8 @@
     <param name="mute_file" type="string" value="$(find gobot_data)/data/mute.txt" />
     <param name="home_file" type="string" value="$(find gobot_data)/data/home.txt" />
     <param name="robot_name_file" type="string" value="$(find gobot_data)/data/name.txt" />
+    <param name="low_battery_file" type="string" value="$(find gobot_data)/data/low_battery.txt" />
+    <!--WIFI RELATED -->
     <param name="ping_file" type="string" value="$(find gobot_data)/IP/ping.sh" />
     <param name="wifi_file" type="string" value="$(find gobot_data)/IP/wifi.txt" />
     <param name="deleteWIFI" type="string" value="$(find gobot_data)/IP/deleteWIFI.sh" />

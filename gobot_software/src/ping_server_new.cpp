@@ -10,6 +10,7 @@ bool simulation = false;
 bool muteFlag = false;
 bool scanIP = false;
 int batteryLevel = 50;
+double STATUS_UPDATE=5.0, IP_UPDATE=20.0;
 
 std::vector<std::string> availableIPs;
 std::vector<std::string> connectedIPs;
@@ -75,7 +76,7 @@ bool updataStatusSrvCallback(std_srvs::Empty::Request &req, std_srvs::Empty::Res
  */
 void pingAllIPs(void){
     /// Ping all servers every 5 secs
-    ros::Rate loop_rate(1/5.0);
+    ros::Rate loop_rate(1/STATUS_UPDATE);
 
     std::vector<std::thread> threads;
 
@@ -159,7 +160,6 @@ void updateIP(){
  */
 void pingIP(std::string ip, std::string dataToSend, double sec){
     //ROS_INFO("(ping_server) Called pingIP : %s", ip.c_str());
-
     timeout::tcp::Client client;
     try {
         /// Try to connect to the remote Qt app
@@ -185,7 +185,6 @@ void pingIP(std::string ip, std::string dataToSend, double sec){
 
 void pingIP2(std::string ip, std::string dataToSend, double sec){
     //ROS_INFO("(ping_server) Called pingIP : %s", ip.c_str());
-
     timeout::tcp::Client client;
     try {
         /// Try to connect to the remote Qt app
@@ -212,7 +211,7 @@ void pingIP2(std::string ip, std::string dataToSend, double sec){
  */
 void checkNewServers(void){
     /// We check for new IP addresses every 30 secs
-    ros::Rate loop_rate(1/20.0);
+    ros::Rate loop_rate(1/IP_UPDATE);
 
     while(ros::ok()){ 
         ros::spinOnce();
@@ -262,70 +261,59 @@ void mySigintHandler(int sig)
     ros::shutdown();
 }
 
+bool initParams(){
+    ros::NodeHandle nh;
+    if(nh.hasParam("simulation")){
+        nh.getParam("simulation", simulation);
+        ROS_INFO("(ping_server) simulation : %d", simulation);
+    }
+    nh.getParam("ips_file", ipsFile);
+    nh.getParam("ping_file", pingFile);
+    nh.getParam("wifi_file", wifiFile);
+    nh.getParam("status_update", STATUS_UPDATE);
+    nh.getParam("ip_update", IP_UPDATE);
+
+    return true;
+}
+
 int main(int argc, char* argv[]){
 
     ros::init(argc, argv, "ping_server");
     ros::NodeHandle n;
-
     signal(SIGINT, mySigintHandler);
     
-    n.param<bool>("simulation", simulation, false);
-    ROS_INFO("(Command system) simulation : %d", simulation);
-
-    getGobotStatusSrv = n.serviceClient<gobot_msg_srv::GetGobotStatus>("/gobot_status/get_gobot_status");
-    
-    getGobotStatusSrv.waitForExistence(ros::Duration(30.0));
-    if(!simulation){
-        //Startup begin
-        ROS_INFO("(ping_server) Waiting for Robot finding initial pose...");
-        getGobotStatusSrv.call(get_gobot_status);
-        while((get_gobot_status.response.status!=-1 || get_gobot_status.response.text!="FOUND_POSE") && ros::ok()){
+    if (initParams()){
+        getGobotStatusSrv = n.serviceClient<gobot_msg_srv::GetGobotStatus>("/gobot_status/get_gobot_status");
+        
+        getGobotStatusSrv.waitForExistence(ros::Duration(30.0));
+        if(!simulation){
+            //Startup begin
+            ROS_INFO("(ping_server) Waiting for Robot finding initial pose...");
             getGobotStatusSrv.call(get_gobot_status);
-            ros::Duration(0.2).sleep();
+            while((get_gobot_status.response.status!=-1 || get_gobot_status.response.text!="FOUND_POSE") && ros::ok()){
+                getGobotStatusSrv.call(get_gobot_status);
+                ros::Duration(0.2).sleep();
+            }
+            ROS_INFO("(ping_server) Robot finding initial pose is ready.");
         }
-        ROS_INFO("(ping_server) Robot finding initial pose is ready.");
+
+        //Startup end
+
+        disco_pub = n.advertise<std_msgs::String>("/gobot_software/server_disconnected", 10);
+        ros::Subscriber batterySub = n.subscribe("/battery_topic", 1, newBatteryInfo);
+        ros::ServiceServer updataStatusSrv = n.advertiseService("/gobot_software/update_status", updataStatusSrvCallback);
+
+        /// Thread which will get an array of potential servers
+        std::thread t1(checkNewServers);
+
+        ROS_INFO("(ping_server) checkNewServers thread launched");
+
+        /// We try to ping all the available IPs
+        std::thread t2(pingAllIPs);
+
+        ROS_INFO("(ping_server) pingAllIPs thread launched");
+        ros::spin();
     }
-
-    //Startup end
-
-    disco_pub = n.advertise<std_msgs::String>("/gobot_software/server_disconnected", 10);
-    ros::Subscriber batterySub = n.subscribe("/battery_topic", 1, newBatteryInfo);
-    ros::ServiceServer updataStatusSrv = n.advertiseService("/gobot_software/update_status", updataStatusSrvCallback);
-
-    /// We get the path to the file with all the ips
-    if(n.hasParam("ips_file"))
-        n.getParam("ips_file", ipsFile);
-    else {
-        ROS_ERROR("(ping_server) The parameter <ips_file> does not exist");
-        return -1;
-    }
-
-    /// We get the path to the script to retrieve all the ips
-    if(n.hasParam("ping_file"))
-        n.getParam("ping_file", pingFile);
-    else {
-        ROS_ERROR("(ping_server) The parameter <ping_file> does not exist");
-        return -1;
-    }
-
-    if(n.hasParam("wifi_file")){
-        n.getParam("wifi_file", wifiFile);
-    }
-    else {
-        ROS_ERROR("(ping_server) The parameter <wifi_file> does not exist");
-        return -1;
-    }
-
-    /// Thread which will get an array of potential servers
-    std::thread t1(checkNewServers);
-
-    ROS_INFO("(ping_server) checkNewServers thread launched");
-
-    /// We try to ping all the available IPs
-    std::thread t2(pingAllIPs);
-
-    ROS_INFO("(ping_server) pingAllIPs thread launched");
-    ros::spin();
 
     return 0;
 }

@@ -17,35 +17,7 @@ ros::Publisher disco_pub;
 std_srvs::Empty empty_srv;
 gobot_msg_srv::GetGobotStatus get_gobot_status;
 
-
-
-void publishInitialpose(const double position_x, const double position_y, const double angle_x, const double angle_y, const double angle_z, const double angle_w,const double cov1,const double cov2){
-
-    if(position_x != 0 || position_y != 0 || angle_x != 0 || angle_y != 0 || angle_z != 0){
-        geometry_msgs::PoseWithCovarianceStamped initialPose;
-        initialPose.header.frame_id = "map";
-        initialPose.header.stamp = ros::Time::now();
-        initialPose.pose.pose.position.x = position_x;
-        initialPose.pose.pose.position.y = position_y;
-        initialPose.pose.pose.orientation.x = angle_x;
-        initialPose.pose.pose.orientation.y = angle_y;
-        initialPose.pose.pose.orientation.z = angle_z;
-        initialPose.pose.pose.orientation.w = angle_w;
-        //x-x,y-y,yaw-yaw
-        initialPose.pose.covariance[0] = cov1;
-        initialPose.pose.covariance[7] = cov1;
-        initialPose.pose.covariance[35] = cov2;
-        
-        // we wait for amcl to launch
-        ros::Duration(1.0).sleep();
-
-        initial_pose_publisher.publish(initialPose);
-        //ROS_INFO("(initial_pose_publisher) initialpose published.");
-    } 
-    else
-        ROS_ERROR("(initial_pose_publisher) got a wrong position (robot probably got no home)");
-}
-
+std::string user_name;
 
 void session(boost::shared_ptr<tcp::socket> sock){
 
@@ -109,8 +81,8 @@ void session(boost::shared_ptr<tcp::socket> sock){
                 ROS_INFO("(New Map) stop auto docking to read new map.");
             }
             else if(get_gobot_status.response.status==5){
-                ros::service::call("/gobot_command/stop_path",empty_srv);
-                ROS_INFO("(New Map) stop current path to read new map.");
+                ros::service::call("/gobot_command/pause_path",empty_srv);
+                ROS_INFO("(New Map) stop gobot to read new map.");
             }
 
             std::string mapType = mapId.substr(0,4);
@@ -244,6 +216,8 @@ void session(boost::shared_ptr<tcp::socket> sock){
                             /// We delete the old path
                             gobot_msg_srv::SetPath set_path;
                             ros::service::call("/gobot_status/set_path", set_path);
+                            // reset the path stage in the file
+                            ros::service::call("/gobot_function/update_path", empty_srv);
                             ROS_INFO("(New Map) Path deleted");
 
                             /// We delete the old path stage
@@ -258,7 +232,7 @@ void session(boost::shared_ptr<tcp::socket> sock){
                         if(simulation)
                             cmd = "gnome-terminal -x bash -c \"source /opt/ros/kinetic/setup.bash;source /home/tx/catkin_ws/devel/setup.bash;roslaunch gobot_navigation gazebo_slam.launch\"";
                         else
-                            cmd = "gnome-terminal -x bash -c \"source /opt/ros/kinetic/setup.bash;source /home/gtdollar/catkin_ws/devel/setup.bash;roslaunch gobot_navigation gobot_navigation.launch\"";
+                            cmd = "gnome-terminal -x bash -c \"source /opt/ros/kinetic/setup.bash;source /home/"+ user_name + "/catkin_ws/devel/setup.bash;roslaunch gobot_navigation gobot_navigation.launch\"";
                         system(cmd.c_str());
                         sleep(6);
                             
@@ -373,7 +347,14 @@ int main(int argc, char **argv){
     ros::NodeHandle n;
     signal(SIGINT, mySigintHandler);
 
-    ROS_INFO("(New Map) Ready to be launched.");
+    if(n.hasParam("simulation")){
+        n.getParam("simulation", simulation);
+        ROS_INFO("(New Map) simulation : %d", simulation);
+    }
+    if(n.hasParam("user_name")){
+        n.getParam("user_name", user_name);
+        ROS_INFO("(New Map) user name : %s", user_name.c_str());
+    }
 
     /// Subscribe to know when we disconnected from the server
     ros::Subscriber sub = n.subscribe("/gobot_software/server_disconnected", 1000, serverDisconnected);
@@ -381,11 +362,9 @@ int main(int argc, char **argv){
 
     /// Advertise that we are going to publish to /map
     map_pub = n.advertise<nav_msgs::OccupancyGrid>("/map", 1000);
-
     disco_pub = n.advertise<std_msgs::String>("/gobot_software/server_disconnected", 10);
 
-    n.param<bool>("simulation", simulation, false);
-    ROS_INFO("(New Map) simulation : %d", simulation);
+    ROS_INFO("(New Map) Ready to be launched.");
 
     std::thread t(server);
 

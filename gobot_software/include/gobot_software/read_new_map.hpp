@@ -23,8 +23,6 @@
 
 using boost::asio::ip::tcp;
 
-void publishInitialpose(const double position_x, const double position_y, const double angle_x, const double angle_y, const double angle_z, const double angle_w,const double cov1,const double cov2);
-
 void session(boost::shared_ptr<tcp::socket> sock);
 
 /*********************************** CONNECTION FUNCTIONS ***********************************/

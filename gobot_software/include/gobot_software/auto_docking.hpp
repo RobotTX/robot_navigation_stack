@@ -18,8 +18,6 @@
 #include <gobot_msg_srv/IrMsg.h>
 #include <gobot_msg_srv/IsCharging.h>
 #include <gobot_msg_srv/ProximityMsg.h>
-#include <gobot_msg_srv/SetDockStatus.h>
-#include <gobot_msg_srv/SetGobotStatus.h>
 #include <gobot_msg_srv/SetString.h>
 #include <gobot_msg_srv/GetString.h>
 #include <gobot_msg_srv/SetInt.h>
@@ -27,9 +25,9 @@
 #include <ctime>
 #include <chrono>
 #include <thread>
+#include <gobot_software/set_status_class.h>
 
 typedef actionlib::SimpleActionClient<move_base_msgs::MoveBaseAction> MoveBaseClient;
-
 bool startDocking(void);
 void findChargingStation(void);
 bool setSpeed(const char directionR, const int velocityR, const char directionL, const int velocityL);
@@ -43,5 +41,5 @@ void stopDocking(void);
 bool stopDockingService(std_srvs::Empty::Request &req, std_srvs::Empty::Response &res);
 bool startDockingService(std_srvs::Empty::Request &req, std_srvs::Empty::Response &res);
 void goalResultCallback(const move_base_msgs::MoveBaseActionResult::ConstPtr& msg);
-
+void timerCallback(const ros::TimerEvent&);
 #endif

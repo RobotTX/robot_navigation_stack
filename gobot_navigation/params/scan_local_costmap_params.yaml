@@ -6,8 +6,8 @@ local_costmap:
     publish_frequency: 1.0
     static_map: false
     rolling_window: true
-    width: 5.0
-    height: 5.0
+    width: 4.0
+    height: 4.0
     plugins:
         # Track the obstacle from the sensors and add them to the costmap
         - {name: obstacles, type: "costmap_2d::VoxelLayer"} # 3D costmap

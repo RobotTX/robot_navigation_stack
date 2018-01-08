@@ -9,9 +9,13 @@
 #include <gobot_msg_srv/SetSpeeds.h>
 #include <gobot_msg_srv/IsCharging.h>
 #include <gobot_msg_srv/SetInt.h>
+#include <gobot_msg_srv/GetInt.h>
 #include "gobot_msg_srv/CliffMsg.h"
 #include <chrono>
 #include <thread>
+
+
+void setSound(int num,int time_on, int time_off=1);
 
 bool continueRobotSrvCallback(std_srvs::Empty::Request &req, std_srvs::Empty::Response &res);
 
@@ -27,3 +31,5 @@ void cliffCallback(const gobot_msg_srv::CliffMsg::ConstPtr& cliff);
 
 /// Callback of the subscriber on velocity commands
 void newCmdVel(const geometry_msgs::Twist::ConstPtr& twist);
+
+bool initParams(void);

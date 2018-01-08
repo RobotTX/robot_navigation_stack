@@ -10,7 +10,7 @@ if [ -z "$(rosnode list | grep rosout)" ]
 then
 echo "start roscore"
     gnome-terminal -x bash -c "source /opt/ros/kinetic/setup.bash;roscore;exec bash;"
-sleep 5s
+sleep 3s
 fi
 if [ -z "$(rosnode list | grep move_base)" ]
 then

@@ -45,15 +45,16 @@ echo "[network-manager] installed!"
 echo "#################################"
 echo "All tools are installed!"
 sleep 2s
-if [ -z "$(grep "alias cat_make=" ~/.bashrc)" ]
-then
-    echo "[.bashrc] configuring..."
-    echo "alias cat_make='cd ~/catkin_ws/ && catkin_make && source devel/setup.bash && . ~/catkin_ws/devel/setup.bash'" >> ~/.bashrc
-    echo "source /opt/ros/kinetic/setup.bash" >> ~/.bashrc
-    echo "source /home/gtdollar/catkin_ws/devel/setup.bash" >> ~/.bashrc
-    echo "export ROS_PACKAGE_PATH=$ROS_PACKAGE_PATH:/home/gtdollar/catkin_ws/src" >> ~/.bashrc
-    echo "[.bashrc] configured!"
-else
-    echo "[.bashrc] configured!"
-fi
+#if [ -z "$(grep "alias cat_make=" ~/.bashrc)" ]
+#then
+#    echo "[.bashrc] configuring..."
+#    echo "alias cat_make='cd ~/catkin_ws/ && catkin_make && source devel/setup.bash && . ~/catkin_ws/devel/setup.bash'" >> ~/.bashrc
+#    echo "source /opt/ros/kinetic/setup.bash" >> ~/.bashrc
+#    echo "source /home/gtdollar/catkin_ws/devel/setup.bash" >> ~/.bashrc
+#    echo "export ROS_PACKAGE_PATH=$ROS_PACKAGE_PATH:/home/gtdollar/catkin_ws/src" >> ~/.bashrc
+#    source ~/.bashrc
+#    echo "[.bashrc] configured!"
+#else
+#    echo "[.bashrc] configured!"
+#fi
 echo "#################################"

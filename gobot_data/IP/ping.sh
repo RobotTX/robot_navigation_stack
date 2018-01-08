@@ -1,7 +1,7 @@
 #!/bin/bash
 isAlive="$1"
 wififile="$2"
-defalutwifi="GTrobotWifi"
+defalutwifi="Robot_Hotspot_"
 wifi=$(nmcli device status | grep wifi |cut -d ' ' -f1)
 n=1
 while read line
@@ -21,7 +21,7 @@ then
     then
         if [ -z "$(nmcli connection show | grep Hotspot)" ]
         then
-            nmcli d wifi hotspot ssid "$defalutwifi" password "gt123456"
+            nmcli d wifi hotspot ssid "$defalutwifi" password "robotchangeworld"
             echo "Robot build its own wifi named '$defalutwifi'"
         else
             nmcli connection up "Hotspot"

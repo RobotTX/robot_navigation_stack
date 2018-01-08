@@ -45,8 +45,7 @@
 
 using namespace rp::standalone::rplidar;
 
-float angle_min_=-179.0,angle_max_=180.0;
-int angle_offset_ = 0;
+float angle_min_=-180.0,angle_max_=180.0;
 
 RPlidarDriver * drv = NULL;
 
@@ -83,19 +82,21 @@ void publish_scan(ros::Publisher *pub,
     scan_msg.intensities.resize(node_count);
     scan_msg.ranges.resize(node_count);
 
-    int j = 0, i_offset = 0;
-    if(node_count>2*angle_offset_){
-        scan_msg.angle_min = angle_min_;
-        scan_msg.angle_max = angle_max_;
-        j = angle_offset_;
-        scan_msg.intensities.resize(node_count-2*j);
-        scan_msg.ranges.resize(node_count-2*j);
+    sensor_msgs::LaserScan scan_msg_new = scan_msg;
+    int new_size_ = angle_max_+abs(angle_min_);
+    if(node_count>=new_size_){
+        scan_msg_new.angle_min = DEG2RAD(angle_min_);
+        scan_msg_new.angle_max = DEG2RAD(angle_max_);
+        scan_msg_new.intensities.resize(new_size_);
+        scan_msg_new.ranges.resize(new_size_);
     }
 
     bool reverse_data = (!inverted && reversed) || (inverted && !reversed);
 
+    //nodes[end] is the center
+
     if (!reverse_data) {
-        /*Origin
+        /*//Origin
         for (size_t i = 0; i < node_count; i++) {
             float read_value = (float) nodes[i].distance_q2/4.0f/1000;
             if (read_value == 0.0)
@@ -104,28 +105,31 @@ void publish_scan(ros::Publisher *pub,
                 scan_msg.ranges[i] = read_value;
             scan_msg.intensities[i] = (float) (nodes[i].sync_quality >> 2);
         }
+        ROS_INFO("TEST");
         */
-        i_offset = node_count/2-j;
-        for (size_t i = 0; i < node_count/2-j; i++) {
-            float read_value = (float) nodes[i].distance_q2/4.0f/1000;
+        
+        int start_pos = node_count-1-abs(angle_min_);
+        for (size_t i = 0; i<abs(angle_min_); i++){
+            float read_value = (float) nodes[start_pos+i].distance_q2/4.0f/1000;
             if (read_value == 0.0)
-                scan_msg.ranges[i_offset+i] = std::numeric_limits<float>::infinity();
+                scan_msg_new.ranges[i] = std::numeric_limits<float>::infinity();
             else
-                scan_msg.ranges[i_offset+i] = read_value;
-            scan_msg.intensities[i_offset+i] = (float) (nodes[i].sync_quality >> 2);
+                scan_msg_new.ranges[i] = read_value;
+            scan_msg_new.intensities[i] = (float) (nodes[abs(angle_min)+i].sync_quality >> 2);
         }
-        i_offset = -node_count/2-j;
-        for (size_t i = node_count/2+j; i < node_count; i++) {
-            float read_value = (float) nodes[i].distance_q2/4.0f/1000;
+
+        start_pos = -abs(angle_min_);
+        for (size_t i = abs(angle_min_); i<=new_size_; i++){
+            float read_value = (float) nodes[i+start_pos].distance_q2/4.0f/1000;
             if (read_value == 0.0)
-                scan_msg.ranges[i_offset+i] = std::numeric_limits<float>::infinity();
+                scan_msg_new.ranges[i] = std::numeric_limits<float>::infinity();
             else
-                scan_msg.ranges[i_offset+i] = read_value;
-            scan_msg.intensities[i_offset+i] = (float) (nodes[i].sync_quality >> 2);
+                scan_msg_new.ranges[i] = read_value;
+            scan_msg_new.intensities[i] = (float) (nodes[i+start_pos].sync_quality >> 2);
         }
     } 
     else {
-        /*Origin
+        /*//Origin
         for (size_t i = 0; i < node_count; i++) {
             float read_value = (float)nodes[i].distance_q2/4.0f/1000;
             if (read_value == 0.0)
@@ -135,28 +139,29 @@ void publish_scan(ros::Publisher *pub,
             scan_msg.intensities[node_count-1-i] = (float) (nodes[i].sync_quality >> 2);
         }
         */
-        i_offset = node_count/2-j;
-        for (size_t i = 0; i < node_count/2-j; i++) {
-            float read_value = (float)nodes[i].distance_q2/4.0f/1000;
+        
+        int start_pos = abs(angle_min_);
+        for (size_t i = 0; i<=abs(angle_min_); i++){
+            float read_value = (float)nodes[start_pos-i].distance_q2/4.0f/1000;
             if (read_value == 0.0)
-                scan_msg.ranges[i_offset-i] = std::numeric_limits<float>::infinity();
+                scan_msg_new.ranges[i] = std::numeric_limits<float>::infinity();
             else
-                scan_msg.ranges[i_offset-i] = read_value;
-            scan_msg.intensities[i_offset-i] = (float) (nodes[i].sync_quality >> 2);
+                scan_msg_new.ranges[i] = read_value;
+            scan_msg_new.intensities[i] = (float) (nodes[start_pos-i].sync_quality >> 2);
         }
 
-        i_offset = 3*node_count/2-j;
-        for (size_t i = node_count/2+j; i < node_count; i++) {
-            float read_value = (float)nodes[i].distance_q2/4.0f/1000;
+        start_pos = node_count+abs(angle_min_);
+        for (size_t i = abs(angle_min_)+1; i<=new_size_; i++){
+            float read_value = (float)nodes[start_pos-i].distance_q2/4.0f/1000;
             if (read_value == 0.0)
-                scan_msg.ranges[i_offset-i] = std::numeric_limits<float>::infinity();
+                scan_msg_new.ranges[i] = std::numeric_limits<float>::infinity();
             else
-                scan_msg.ranges[i_offset-i] = read_value;
-            scan_msg.intensities[i_offset-i] = (float) (nodes[i].sync_quality >> 2);
+                scan_msg_new.ranges[i] = read_value;
+            scan_msg_new.intensities[i] = (float) (nodes[start_pos-i].sync_quality >> 2);
         }
     }
 
-    pub->publish(scan_msg);
+    pub->publish(scan_msg_new);
 }
 
 bool getRPLIDARDeviceInfo(RPlidarDriver * drv)
@@ -248,18 +253,24 @@ int main(int argc, char * argv[]) {
     ros::NodeHandle nh;
     ros::Publisher scan_pub = nh.advertise<sensor_msgs::LaserScan>("scan", 1000);
     ros::NodeHandle nh_private("~");
+    /*
     nh_private.param<std::string>("serial_port", serial_port, "/dev/ttyUSB0"); 
     nh_private.param<int>("serial_baudrate", serial_baudrate, 115200); 
     nh_private.param<std::string>("frame_id", frame_id, "laser_frame");
     nh_private.param<bool>("inverted", inverted, false);
     nh_private.param<bool>("angle_compensate", angle_compensate, true);
-    nh_private.param<float>("angle_min", angle_min_, -179.0);
+    nh_private.param<float>("angle_min", angle_min_, -180.0);
     nh_private.param<float>("angle_max", angle_max_, 180.0);
+    */
+    nh.getParam("serial_port", serial_port);
+    nh.getParam("serial_baudrate", serial_baudrate);
+    nh.getParam("frame_id", frame_id);
+    nh.getParam("inverted", inverted);
+    nh.getParam("angle_compensate", angle_compensate);
+    nh.getParam("angle_min", angle_min_);
+    nh.getParam("angle_max", angle_max_);
 
-    angle_offset_ = 180-angle_max_;
-    ROS_INFO("RPLIDAR angle min:%f, max:%f, offset:%d",angle_min_,angle_max_,angle_offset_);
-    angle_min_ = DEG2RAD(angle_min_);
-    angle_max_ = DEG2RAD(angle_max_);
+    ROS_INFO("RPLIDAR angle min:%f, max:%f",angle_min_,angle_max_);
 
     printf("RPLIDAR running on ROS package rplidar_ros\n"
            "SDK Version: "RPLIDAR_SDK_VERSION"\n");

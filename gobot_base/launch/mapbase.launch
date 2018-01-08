@@ -1,13 +1,13 @@
 <?xml version="1.0"?>
 <launch>     
-    <param name="wheel_separation" value="0.45" />
-    <param name="wheel_radius" value="0.0725" />
-    <param name="ticks_per_rotation" value="819.2" />
+    <param name="wheel_separation" value="0.353" />
+    <param name="wheel_radius" value="0.075" />
+    <param name="ticks_per_rotation" value="980" />
     <param name="STMdevice" type="string" value="/dev/STM" />
     <param name="MD49device" type="string" value="/dev/MD" />
 
     <!--laser to base tf frequency depends on the laser update rate-->
-    <node pkg="tf" type="static_transform_publisher" name="base_link_to_laser" args="0.355 0 0.13275 0 0 0 /base_link /base_laser 50" required="true"/>
+    <node pkg="tf" type="static_transform_publisher" name="base_link_to_laser" args="0.2 0.0 0.21 0 0 0 /base_link /base_laser 50" required="true"/>
 
     <node pkg="urg_node" type="urg_node" name="hokuyo" output="screen" required="true">
         <param name="frame_id" value="base_laser" />

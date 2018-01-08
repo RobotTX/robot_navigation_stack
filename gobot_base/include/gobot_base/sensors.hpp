@@ -25,13 +25,16 @@
 #include <thread>
 #include <gobot_msg_srv/SetBattery.h>
 #include <gobot_msg_srv/SetSpeeds.h>
+#include <gobot_msg_srv/SetString.h>
 #include "serial/serial.h"
 #include <mutex>
+
+
+std::vector<uint8_t> writeAndRead(std::vector<uint8_t> toWrite, int bytesToRead = 0);
 
 bool setSpeed(const char directionR, const int velocityR, const char directionL, const int velocityL);
 
 bool displaySensorData(gobot_msg_srv::SetBattery::Request &req, gobot_msg_srv::SetBattery::Response &res);
-
 
 /// Send a command to reset the stm32
 void resetStm(void);
@@ -47,6 +50,8 @@ void publishSensors(void);
 
 /// Initialize he serial connection
 bool initSerial(void);
+
+bool shutdownSrvCallback(std_srvs::Empty::Request &req, std_srvs::Empty::Response &res);
 
 bool setLedSrvCallback(gobot_msg_srv::LedStrip::Request &req, gobot_msg_srv::LedStrip::Response &res);
 

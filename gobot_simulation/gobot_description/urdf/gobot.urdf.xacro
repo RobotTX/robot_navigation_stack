@@ -26,8 +26,8 @@
     <xacro:include filename="$(find gobot_description)/urdf/battery/battery.urdf.xacro" />
 
     <!-- Base -->
-    <xacro:property name="base_width" value="0.648" />
-    <xacro:property name="base_length" value="0.599" />
+    <xacro:property name="base_width" value="0.50" />
+    <xacro:property name="base_length" value="0.550" />
     <xacro:property name="base_height" value="0.185" />
     <xacro:property name="lower_base_height" value="0.04" />
     <xacro:property name="base_space_height" value="0.05" />

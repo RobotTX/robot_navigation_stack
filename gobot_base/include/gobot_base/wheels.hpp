@@ -11,6 +11,7 @@
 #include <gobot_msg_srv/GetEncoders.h>
 #include <gobot_msg_srv/SetSpeeds.h>
 #include <gobot_msg_srv/SetGobotStatus.h>
+#include <gobot_msg_srv/GetInt.h>
 #include <serial/serial.h>
 
 
@@ -22,6 +23,8 @@ std::string getStdoutFromCommand(std::string cmd);
 
 /// Initialize the serial connection
 bool initSerial(void);
+
+bool getSpeeds(gobot_msg_srv::GetInt::Request &req, gobot_msg_srv::GetInt::Response &res);
 
 /// Set the speed, 0 (full reverse)  128 (stop)   255 (full forward)
 bool setSpeeds(gobot_msg_srv::SetSpeeds::Request &req, gobot_msg_srv::SetSpeeds::Response &res);

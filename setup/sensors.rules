@@ -2,9 +2,9 @@
 #sudo udevadm control --reload-rules && sudo service udev restart && sudo udevadm trigger
 #udevadm test $(udevadm info -q path -n /dev/ttyACM0)
 
-SUBSYSTEM=="tty", ACTION=="add", KERNEL=="ttyUSB*", KERNELS=="x-x.x:x.x", MODE="0777", SYMLINK+="STM" 
+SUBSYSTEM=="tty", ACTION=="add", KERNEL=="ttyUSB*", KERNELS=="x-x.x:x.0", MODE="0777", SYMLINK+="STM" 
 
-SUBSYSTEM=="tty", ACTION=="add", KERNEL=="ttyUSB*", KERNELS=="x-x.x:x.x", MODE="0777", SYMLINK+="MD" 
+SUBSYSTEM=="tty", ACTION=="add", KERNEL=="ttyUSB*", KERNELS=="x-x.x:x.1", MODE="0777", SYMLINK+="MD" 
 
 SUBSYSTEM=="tty", ACTION=="add", KERNEL=="ttyACM*", KERNELS=="2-2:1.0", MODE="0777"
 

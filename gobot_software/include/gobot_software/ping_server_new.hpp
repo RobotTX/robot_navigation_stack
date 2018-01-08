@@ -40,6 +40,7 @@ void checkNewServers(void);
 
 void updateIP(void);
 
-void mySigintHandler(int sig);
+bool initParams(void);
 
+void mySigintHandler(int sig);
 #endif

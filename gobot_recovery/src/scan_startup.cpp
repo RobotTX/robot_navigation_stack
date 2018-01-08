@@ -81,6 +81,10 @@ int main(int argc, char **argv) {
         ros::Duration(0.2).sleep();
     }
     ROS_INFO("(startup) Robot setting hardware is ready.");
+    gobot_msg_srv::SetGobotStatus set_gobot_status;
+    set_gobot_status.request.status = -1;
+    set_gobot_status.request.text ="FOUND_POSE";
+    ros::service::call("/gobot_status/set_gobot_status",set_gobot_status);
     //Startup end
     nh.getParam("map_path", map_path);
     ROS_INFO("(startup) map_path: %s.",map_path.c_str());
