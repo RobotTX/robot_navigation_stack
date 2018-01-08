@@ -1,114 +1,21 @@
-# Gobot's catkin_ws sources
+###Update of new version robot specification
 
-Contain all the custom packaged to run Gobot
+#change username#
+username_script.sh
 
-## Getting Started
+#footprint & other parameters
+gobot_base.launch   wheel_separation    middle:0.351  outside:0.402
+                    wheel_radius        0.0725 -> 0.075
+                    ticks_per_rotation  819.2 -> 980
+*costmap.yaml/gmapping.yaml/teb_local.yaml
+[[0.2495,0],[0.2478,-0.0835],[0.242,-0.167],[0.2203,-0.2164],[0.1786,-0.2411],[0.0893,-0.2484],[0,-0.25],[-0.0893,-0.2484],[-0.1786,-0.2411],[-0.2203,-0.2164],[-0.242,-0.167],[-0.2478,-0.0835],[-0.2495,0],[-0.2478,0.0835],[-0.242,0.167],[-0.2203,0.2164],[-0.1786,0.2411],[-0.0893,0.2484],[0,0.25],[0.0893,0.2484],[0.1786,0.2411],[0.2203,0.2164],[0.242,0.167],[0.2478,0.0835]]
 
-### Prerequisites
+*TF
+-sonar z=0.3-0.4 front_right:0.243,0.12; front_left:0.243,-0.12; back_right:-0.246,0.112; back_left:-0.246,-0.112
+-laser z=0.2-0.3 200,0
+-cliff z=0-0.1 front_right:0.215,0.18; front_left:0.215,-0.18; back_right:-0.215,0.18; back_left:-0.215,-0.18
+-bumpers z=0.1-0.2 [0.125,0.225] [0.01,0.125] [-0.125,-0.01] [-0.225,-0.125]
 
-### Installing
-
-
-# Description of the packages :
-
-## gmapping
-
-Package to create a map, based on the ros gmapping package, modified to add the robot's footprint to the published map.
-
-## gobot_base
-
-Contains the basic nodes to make the robot move, get sensors data and the laser data.
-
-### sensors
-
-Node to get the sensors data and publish them on their respective topics :
-* bumpers => bumpers_topic,
-* infrared sensors => ir_topic,
-* proximity sensors => proximity_topic,
-* sonars => sonar_topic,
-* load cells => weight_topic,
-* battery  => battery_topic,
-* cliff sensors => cliff_topic.
-
-### wheels
-
-Communicate with the stm32 to get the encoders data of the wheels and to send the velocity commands.
-
-### twist
-
-Subscrive to the cmd_vel topic to translate the twist messages into actual usable velocity commands to send to the wheels
-
-### odom
-
-Publish the odometry of the robot => the position of the robot based on the wheels velocity
-
-## gobot_navigation
-
-Contains the launch file + param files for amcl, move_base, gmapping and hector_exploration
-
-## gobot_sensors2pc
-
-Contains 2 nodes to translate the bumpers and sonars data into pointclouds to be used by the costmap
-
-## gobot_simulation
-
-Contains everything to simulate the robot with gazebo
-
-### gobot_control
-
-Publish the sensors data to their respective topic (see above)
-
-### gobot_description
-
-The urdf files which describe the robot
-
-### gobot_gazebo
-
-Contains the launch file + the world file
-
-## gobot_software
-
-Contains all the nodes to communicate with the Gobot application on another computer
-
-## hector_exploration_node
-
-Create a wrapper around the hector_exploration_planner
-The package is supposed to be used with the hector navigation stack so it also contains a node, move_base_controller, to translate the data from the planner into goal that move_base can use
-
-## hector_exploration_planner
-
-Package to explore the map while scanning, only contains classes to be used by another node => hector_exploration_node
-
-## serial
-
-Contains classes to easily communicate through serials connections with a pyton-like interface
-
-## urg_node
-
-Package to receive the laser data
-Modified to make it works like the previous package, hokuyo_node, so that when data are received with a special status because the space in front of the robot is empty, we receive +inf values instead of NaN values.
-
-# README #
-
-GoBot core code using ROS.
-This repo is for GoBot. Include all GoBot functions.
-
-### What is this repository for? ###
-
-* GoBot core code
-* Version 1.0
-
-### How do I get set up? ###
-
-* Summary of set up
-* Configuration
-* Dependencies
-* Database configuration
-* How to run tests
-* Deployment instructions
-
-### Who do I talk to? ###
-
-* Repo owner or admin
-* Other community or team contact
-
+*costmap_common.yaml/teb_local_planner.yaml
+sqrt(0.255^2+0.25^2) = 0.357  
+inflation_radius = 0.45     0.4/0.45/0.5  
