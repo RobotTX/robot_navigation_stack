@@ -7,23 +7,23 @@ map_frame: map
 
 ####Key params that affect motion####
 weight_max_vel_x: 1.0 #default:2
-weight_max_vel_theta: 1.0 #default:1
+weight_max_vel_theta: 2.0 #default:1
 weight_acc_lim_x: 1.0 #default:1
-weight_acc_lim_theta: 2.0 #default:1
+weight_acc_lim_theta: 1.0 #default:1
 
 #Optimization weight for minimzing the distance to via-points
 #How close robot follows the via-points
-weight_viapoint: 60.0 # 1.0
+weight_viapoint: 75.0 # 1.0
 weight_kinematics_forward_drive: 200.0
-weight_obstacle: 100.0
-weight_dynamic_obstacle: 100.0
+weight_obstacle: 50.0
+weight_dynamic_obstacle: 50.0
 ####Key params that affect motion####
 weight_kinematics_nh: 1000.0
 weight_optimaltime: 1 #2
 selection_alternative_time_cost: False # not in use yet
-
+min_turning_radius: 0.0
 # GoalTolerance
-xy_goal_tolerance: 0.1
+xy_goal_tolerance: 0.15
 yaw_goal_tolerance: 0.15 #8.6 degrees
 #Remove the goal velocity constraint such that the robot can arrive at the goal with maximum speed 
 free_goal_vel: False
@@ -40,7 +40,7 @@ global_plan_overwrite_orientation: True
 exact_arc_length: True
 #Specify the maximum length (cumulative Euclidean distances) of the subset of the global plan taken into account for optimization
 #Constrinted by the local costmap size (rolling window)
-max_global_plan_lookahead_dist: 3.0
+max_global_plan_lookahead_dist: 5.0
 #Specify up to which pose on the predicted plan the feasibility should be checked each sampling interval. 
 feasibility_check_no_poses: 5
 #If positive, via-points are extrected from the global plan (path-following mode)
@@ -54,19 +54,18 @@ allow_init_with_backwards_motion: False
 
 footprint_model: # types: "point", "circular", "two_circles", "line", "polygon"
     type: "polygon"
-    vertices: [[0.250,0],[0.250,-0.0835],[0.245,-0.167],[0.225,-0.225],[0.195,-0.245],[0.0893,-0.250],[0,-0.250],[-0.0893,-0.250],[-0.1786,-0.245],[-0.225,-0.225],[-0.245,-0.167],[-0.250,-0.0835],[-0.250,0],[-0.250,0.0835],[-0.245,0.167],[-0.225,0.225],[-0.1786,0.245],[-0.0893,0.250],[0,0.250],[0.0893,0.250],[0.1786,0.245],[0.225,0.225],[0.245,0.167],[0.250,0.0835]]
-
+    vertices: [[0.250,0],[0.245,-0.167],[0.225,-0.225],[0.195,-0.245],[0.0893,-0.250],[0,-0.250],[-0.1786,-0.245],[-0.225,-0.225],[-0.245,-0.167],[-0.250,-0.0835],[-0.250,0],[-0.245,0.167],[-0.225,0.225],[-0.1786,0.245],[-0.0893,0.250],[0,0.250],[0.1786,0.245],[0.225,0.225],[0.245,0.167],[0.250,0.0835]]
 # Obstacles
 #Minimum desired separation from obstacles in meters 
 min_obstacle_dist: 0.05
-include_costmap_obstacles: True
+include_costmap_obstacles: true
 costmap_obstacles_behind_robot_dist: 1.0
-obstacle_poses_affected: 15
+obstacle_poses_affected: 30
 #Buffer zone around obstacles with non-zero penalty costs (should be larger than min_obstacle_dist in order to take effect). 
 #Also refer to the weight weight_inflation. 
 inflation_dist: 0.5
-dynamic_obstacle_inflation_dist: 0.6
-include_dynamic_obstacles: true
+dynamic_obstacle_inflation_dist: 0.5
+include_dynamic_obstacles: false
 
 # Optimization
 
@@ -75,7 +74,7 @@ no_outer_iterations: 3
 optimization_activate: True
 optimization_verbose: False
 #Add a small safety margin to penalty functions for hard-constraint approximations 
-penalty_epsilon: 0.1
+penalty_epsilon: 0.099
 
 # Homotopy Class Planner
 #Activate parallel planning in distinctive topologies

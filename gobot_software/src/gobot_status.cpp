@@ -299,7 +299,8 @@ bool setDockStatusSrvCallback(gobot_msg_srv::SetDockStatus::Request &req, gobot_
     dockStatusMutex.unlock();
     ROS_INFO("(Gobot_status) Set Dock status: %d", dock_status_);
     ros::service::call("/gobot_software/update_status",empty_srv);
-    if(dock_status_ == 1){
+
+    if(dock_status_ == 1 && (gobot_status_!=5 || gobot_text_=="WAITING")){
         std::thread([](){
             ros::service::call("/gobot_recovery/initialize_home",empty_srv);
         }).detach();

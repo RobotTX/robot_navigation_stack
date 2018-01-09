@@ -21,7 +21,7 @@ then
     then
         if [ -z "$(nmcli connection show | grep Hotspot)" ]
         then
-            nmcli d wifi hotspot ssid "$defalutwifi" password "robotchangeworld"
+            nmcli d wifi hotspot ssid "$defalutwifi" password "robotics"
             echo "Robot build its own wifi named '$defalutwifi'"
         else
             nmcli connection up "Hotspot"

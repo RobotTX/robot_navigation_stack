@@ -129,9 +129,9 @@ bool execCommand(const std::string ip, const std::vector<std::string> command){
         break;
 
         /// NOT USED ANYMORE
-        /// Command to send the laser data to the Qt app
+        /// Command to receive stored points
         case 'q':
-
+            status = savePoints(command);
         break;
 
         /// NOT USED ANYMORE
@@ -554,7 +554,11 @@ bool goToChargingStation(const std::vector<std::string> command){
         }
         
         //if go to charging or charging, ignore
-        if(get_dock_status.response.status==3 || get_dock_status.response.status==1){
+        if(get_dock_status.response.status==1){
+            ros::service::call("/gobot_recovery/initialize_home",empty_srv);
+            return true;
+        }
+        else if(get_dock_status.response.status==3){
             ROS_INFO("(Command system) Gobot is charging or going to charging station.");
         }
         else{
@@ -582,7 +586,30 @@ bool stopGoingToChargingStation(const std::vector<std::string> command){
 }
 
 /// First param = q
+bool savePoints(const std::vector<std::string> command){
+    if(command.size() == 7) {
+        getGobotStatusSrv.call(get_gobot_status);
+        //Scanning
+        if(get_gobot_status.response.status<=25 && get_gobot_status.response.status>=20){
+            ROS_WARN("(Command system) Gobot is scanning.");
+            return false;
+        }
 
+        //name.x.y.ori.home.action
+        gobot_msg_srv::SetString set_point;    
+        set_point.request.data.push_back(command.at(1));
+        set_point.request.data.push_back(command.at(2));
+        set_point.request.data.push_back(command.at(3));
+        set_point.request.data.push_back(command.at(4));
+        set_point.request.data.push_back(command.at(5));
+        set_point.request.data.push_back(command.at(6));
+        if(ros::service::call("/gobot_function/save_point", set_point)){
+            ROS_INFO("(Command system) Save the point");
+            return true;
+        }
+    } 
+    return false;
+}
 
 /// First param = r
 

@@ -96,6 +96,7 @@ bool goToChargingStation(const std::vector<std::string> command);
 bool stopGoingToChargingStation(const std::vector<std::string> command);
 
 /// q
+bool savePoints(const std::vector<std::string> command);
 
 /// r
 

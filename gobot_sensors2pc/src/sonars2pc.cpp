@@ -10,7 +10,7 @@ ros::Publisher midPublisher;
 ros::Publisher topPublisher;
 
 std::string rear_right_frame, rear_left_frame, front_right_frame, front_left_frame, left_frame, right_frame, top_frame, mid_frame;
-double SONAR_THRESHOLD=0.8, SONAR_OUTRANGE=0, SONAR_MAX=1.2, SONAR_VIEW=0.2, SONAR_RESOLUTION=50.0;
+double SONAR_THRESHOLD=1.0, SONAR_OUTRANGE=0, SONAR_MAX=1.5, SONAR_VIEW=0.2, SONAR_RESOLUTION=50.0;
 
 void sonarToCloud(double sonarData,pcl::PointCloud<pcl::PointXYZ> &cloudData){
     sonarData = sonarData>SONAR_THRESHOLD?SONAR_MAX:sonarData;
@@ -20,18 +20,18 @@ void sonarToCloud(double sonarData,pcl::PointCloud<pcl::PointXYZ> &cloudData){
     cloudData.push_back(pcl::PointXYZ(sonarData, 0, 0));
 }
 
-void sonarFrontToCloud(double sonarR,double sonarL,pcl::PointCloud<pcl::PointXYZ> &cloudR,pcl::PointCloud<pcl::PointXYZ> &cloudL, double y){
+void sonarFrontToCloud(double sonarR,double sonarL,pcl::PointCloud<pcl::PointXYZ> &cloudR,pcl::PointCloud<pcl::PointXYZ> &cloudL, double y, double factor){
 
     sonarR=(sonarR==SONAR_OUTRANGE || sonarR>SONAR_THRESHOLD) ? SONAR_MAX : sonarR;
     sonarL=(sonarL==SONAR_OUTRANGE || sonarL>SONAR_THRESHOLD) ? SONAR_MAX : sonarL;
 
-    for(double i=SONAR_VIEW;i>-y;i=i-SONAR_VIEW/SONAR_RESOLUTION)
-        cloudR.push_back(pcl::PointXYZ(SONAR_MAX, i, 0));
+    for(double i=factor*SONAR_VIEW;i>-y;i=i-SONAR_VIEW/SONAR_RESOLUTION)
+        cloudR.push_back(pcl::PointXYZ(SONAR_MAX*factor, i, 0));
 
-    for(double i=-SONAR_VIEW;i<y;i=i+SONAR_VIEW/SONAR_RESOLUTION)
-        cloudL.push_back(pcl::PointXYZ(SONAR_MAX, i, 0));
+    for(double i=-factor*SONAR_VIEW;i<y;i=i+SONAR_VIEW/SONAR_RESOLUTION)
+        cloudL.push_back(pcl::PointXYZ(SONAR_MAX*factor, i, 0));
 
-    if(std::abs(sonarR-sonarL)>0.1 && (sonarR>0.4 || sonarL>0.4)){
+    if(std::abs(sonarR-sonarL)>0.1 && (sonarR>0.5 || sonarL>0.5)){
         cloudR.push_back(pcl::PointXYZ(sonarR, 0, 0));
         cloudL.push_back(pcl::PointXYZ(sonarL, 0, 0));
     }
@@ -57,8 +57,8 @@ void newSonarsInfo(const gobot_msg_srv::SonarMsg::ConstPtr& sonars){
     sonarToCloud(sonars->distance4/100.0,rearRightCloud);
     sonarToCloud(sonars->distance3/100.0,rearLeftCloud);
 */
-    sonarFrontToCloud(sonars->distance1/100.0,sonars->distance2/100.0,frontRightCloud,frontLeftCloud,0.12);
-    sonarFrontToCloud(sonars->distance3/100.0,sonars->distance4/100.0,rearLeftCloud,rearRightCloud,0.11);
+    sonarFrontToCloud(sonars->distance1/100.0,sonars->distance2/100.0,frontRightCloud,frontLeftCloud,0.12,1);
+    sonarFrontToCloud(sonars->distance3/100.0,sonars->distance4/100.0,rearLeftCloud,rearRightCloud,0.11,2);
 
     frontRightPublisher.publish(frontRightCloud);
     frontLeftPublisher.publish(frontLeftCloud);

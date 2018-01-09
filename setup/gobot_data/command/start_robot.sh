@@ -1,8 +1,8 @@
 #!/bin/bash
 sleep 10s
 path=$(pwd | cut -d '/' -f1-3)
-var=$(rosclean check | cut -d 'M' -f1 | cut -d 'K' -f1)
-if [ "$var" -gt 1025 ] 
+var=$(rosclean check | grep 'G')
+if [ ! -z "$var" ] 
 then
     echo "y" | rosclean purge
     echo "Cleaned ros log data:"$var"M"

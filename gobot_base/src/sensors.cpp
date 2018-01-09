@@ -15,17 +15,17 @@ ros::Publisher cliff_pub;
 ros::Publisher button_pub;
 serial::Serial serialConnection;
 
-int last_charging_current = 0;
-bool charging = false;
-int error_count = 0;
 std::vector<uint8_t> cmd;
 std::mutex connectionMutex;
-bool display_data = false;
 std::string STMdevice;
 gobot_msg_srv::GetGobotStatus get_gobot_status;
 ros::ServiceClient getGobotStatusSrv;
-
+int last_charging_current = 0;
+bool charging = false;
+int error_count = 0;
+bool display_data = false;
 int STM_CHECK_NUM=0, STM_RATE=5;
+bool USE_BUMPER=true,USE_SONAR=true,USE_CLIFF=true;
 
 
 std::vector<uint8_t> writeAndRead(std::vector<uint8_t> toWrite, int bytesToRead){
@@ -308,19 +308,21 @@ void publishSensors(void){
             /// The last byte is the Frame Check Sum and is not used
             if(!error && STM_CHECK_NUM>=3){
                 //If no error, publish sensor data
-                sonar_pub.publish(sonar_data);
                 ir_pub.publish(ir_data);
                 proximity_pub.publish(proximity_data);
                 weight_pub.publish(weight_data);
                 button_pub.publish(button);
                 battery_pub.publish(battery_data);
 
-                if (!battery_data.ChargingFlag)
+                if (USE_SONAR)
+                    sonar_pub.publish(sonar_data);
+
+                if (USE_CLIFF && !battery_data.ChargingFlag)
                     cliff_pub.publish(cliff_data);
                     
-                if(!error_bumper)
+                if(USE_BUMPER && !error_bumper)
                     bumper_pub.publish(bumper_data);
-                else
+                else if(error_bumper)
                     ROS_ERROR("(sensors::publishSensors ERROR) All bumpers got a collision");
             
                 if(resetwifi_button){
@@ -502,6 +504,9 @@ int main(int argc, char **argv) {
 
     nh.getParam("STMdevice", STMdevice);
     nh.getParam("STM_RATE", STM_RATE);
+    nh.getParam("USE_BUMPER", USE_BUMPER);
+    nh.getParam("USE_SONAR", USE_SONAR);
+    nh.getParam("USE_CLIFF", USE_CLIFF);
 
     if(initSerial()){
         bumper_pub = nh.advertise<gobot_msg_srv::BumperMsg>("/gobot_base/bumpers_raw_topic", 50);

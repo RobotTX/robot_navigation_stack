@@ -193,8 +193,8 @@ void newCmdVel(const geometry_msgs::Twist::ConstPtr& twist){
             /// based on tests, the linear regression from the velocity in m/s to the ticks/sec is approx : y=15.606962627075x-2.2598795680051
             //tx// ticks_per_m/s=2086, ticks_per_setspeed = 15.46
             //tx// setspeed = velocity*ticks_per_m/ticks_per_setspeed
-            double a = 15.606962627075;
-            double b = -2.2598795680051;
+            double a = 15.55; //15.606962627075;
+            double b = -2.26; //-2.2598795680051;
 
             /// calculate the real value we need to give the MD49
             double right_vel_speed = ((right_vel_m_per_sec * ticks_per_rotation) / (2 * pi * wheel_radius) - b ) / a;

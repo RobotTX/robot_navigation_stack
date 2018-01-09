@@ -297,6 +297,7 @@ void batteryCallback(const gobot_msg_srv::BatteryMsg::ConstPtr& msg){
         }
     }
     else if(!msg->ChargingFlag && current_stage==CHARGING_STAGE){
+        batteryLed();
         current_stage = FREE_STAGE;
         pre_charing_state = -1;
     }

@@ -78,6 +78,7 @@ void goalResultCallback(const move_base_msgs::MoveBaseActionResult::ConstPtr& ms
 	}
 }
 
+
 // called when the last goal has been reached
 void goalReached(){
 	//ROS_INFO("(PlayPath::goalReached) path point reached");
@@ -180,6 +181,11 @@ void goNextPoint(const Point _point){
 		ac->sendGoal(goal);
 	else 
 		ROS_ERROR("(PlayPath::goNextPoint) no action server");
+}
+
+bool savePointService(gobot_msg_srv::SetString::Request &req, gobot_msg_srv::SetString::Response &res){
+	
+	return true;
 }
 
 bool playPointService(gobot_msg_srv::SetString::Request &req, gobot_msg_srv::SetString::Response &res){
@@ -444,6 +450,8 @@ int main(int argc, char* argv[]){
 		currentGoal.waitingTime = -1;
 		currentGoal.isHome = false;
 
+		// service to save the robot's point
+		ros::ServiceServer _savePointPathService = n.advertiseService("/gobot_function/save_point", savePointService);
 		// service to play the robot's point
 		ros::ServiceServer _pointPathService = n.advertiseService("/gobot_function/play_point", playPointService);
 		// service to play the robot's path
