@@ -10,7 +10,6 @@ int32_t chargingCurrent = 200;
 int16_t temperature = 3000;
 int32_t fullCapacity = 120;
 int32_t remainCapacity = 120;
-double batteryPercentage = 1.0;
 bool chargingFlagLeft = false;
 bool chargingFlagRight = false;
 int nb = 20;
@@ -50,7 +49,6 @@ void newRightBattery(const gazebo_msgs::ContactsState::ConstPtr& msg){
 bool setBattery(gobot_msg_srv::SetBattery::Request &req, gobot_msg_srv::SetBattery::Response &res){
     std::cout << "(battery_controller) Service setBattery called" << std::endl;
     batteryVoltage = req.voltage;
-    batteryPercentage = req.percentage;
     return true;
 }
 
@@ -62,9 +60,9 @@ int main(int argc, char **argv){
     ros::NodeHandle n;
     
     ros::ServiceServer setBatteryService = n.advertiseService("setBattery", setBattery);
-    ros::ServiceServer isChargingSrv = n.advertiseService("/gobot_status/charging_status", isChargingService);
+    ros::ServiceServer isChargingSrv = n.advertiseService("isCharging", isChargingService);
 
-    ros::Publisher batteryPublisher = n.advertise<gobot_msg_srv::BatteryMsg>("/gobot_base/battery_topic", 50);
+    ros::Publisher batteryPublisher = n.advertise<gobot_msg_srv::BatteryMsg>("battery_topic", 50);
 
     sub_leftBattery = n.subscribe("left_battery", 1, newLeftBattery);
     sub_rightBattery = n.subscribe("right_battery", 1, newRightBattery);
@@ -82,7 +80,6 @@ int main(int argc, char **argv){
 
     while(ros::ok()){
         msg.BatteryVoltage = batteryVoltage;
-        msg.Percentage = batteryPercentage;
         msg.ChargingFlag = (chargingFlagLeft & chargingFlagRight);
         batteryPublisher.publish(msg);
 

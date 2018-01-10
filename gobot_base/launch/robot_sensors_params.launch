@@ -1,7 +1,7 @@
 <?xml version="1.0"?>
 <launch>
     <!-- MD49 AND STM32 RELATED -->
-    <param name="wheel_separation" type="double" value="0.352" />
+    <param name="wheel_separation" type="double" value="0.35" />
     <param name="wheel_radius" type="double" value="0.075" />
     <param name="ticks_per_rotation" type="double" value="980" />
     <param name="collision_threshold" type="double" value="5.0" />
@@ -20,15 +20,15 @@
     <param name="angle_max" type="double" value="105.0" />
     <!--SENSORS ON/OFF -->
     <param name="USE_BUMPER" type="bool" value="true" />
-    <param name="USE_SONAR" type="bool" value="true" />
-    <param name="USE_CLIFF" type="bool" value="false" />
+    <param name="USE_SONAR" type="bool" value="false" />
+    <param name="USE_CLIFF" type="bool" value="true" />
     <!--BUMPER CLOUD RELATED -->
     <param name="dimension_x" type="double" value="0.255" />
     <param name="dimension_y" type="double" value="0.25" />
     <param name="bumpers_height" type="double" value="0.11" />
     <param name="pc_frame" type="string" value="base_link" />
     <!-- SONAR CLOUD RELATED -->
-    <param name="SONAR_THRESHOLD" type="double" value="1.0" />
+    <param name="SONAR_THRESHOLD" type="double" value="0.6" />
     <param name="SONAR_OUTRANGE" type="double" value="0.0" />
     <param name="SONAR_MAX" type="double" value="1.5" />
     <param name="SONAR_VIEW" type="double" value="0.15" />

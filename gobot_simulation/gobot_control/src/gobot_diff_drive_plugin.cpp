@@ -26,7 +26,7 @@ namespace gazebo {
         GazeboRosDiffDrive::Load(_model, _sdf);
 
         ros::NodeHandle nh;
-        this->speedService = nh.advertiseService("/gobot_motor/setSpeeds", &GobotDiffDrivePlugin::setSpeeds, this);
+        this->speedService = nh.advertiseService("setSpeeds", &GobotDiffDrivePlugin::setSpeeds, this);
         this->speedPublisher = nh.advertise<geometry_msgs::Twist>("/cmd_vel", 1000);
 
         wheel_separation_ = std::stod(_sdf->GetElement("wheelSeparation")->GetValue()->GetAsString());

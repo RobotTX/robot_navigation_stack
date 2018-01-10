@@ -6,12 +6,8 @@ TebLocalPlannerROS:
     # Robot
     # VELOCITY & ACCELERATION    
     max_vel_x: 0.4 #0.5 
-    max_vel_x_backwards: 0.2
-    max_vel_theta: 0.8 #0.6
-    #MAX_ACC_LINEAR=ACC_STEP*0.45m/s^2
-    acc_lim_x: 0.1
-    #MAX_ACC_ANGULAR=ACC_STEP*2.35rad/s^2
-    acc_lim_theta: 0.2  #0.8
+    max_vel_x_backwards: 0.1
+    max_vel_theta: 0.7 #0.6
 
     
     #acc_x + acc_the*r_seperation<=motor_max_acc -> acc_x+acc_the*0.172<=0.459

@@ -31,7 +31,7 @@ int main(int argc, char **argv){
     std::cout << "(proximity_controller) launched." << std::endl;
 
 
-    ros::Publisher proximityPublisher = n.advertise<gobot_msg_srv::ProximityMsg>("/gobot_base/proximity_topic", 50);
+    ros::Publisher proximityPublisher = n.advertise<gobot_msg_srv::ProximityMsg>("proximity_topic", 50);
     gobot_msg_srv::ProximityMsg msg;
 
     ros::Rate loop_rate(10);

@@ -85,12 +85,12 @@ int main(int argc, char** argv){
             // velocity of each wheel
             double left_vel = left_dist / dt;
             double right_vel = right_dist / dt;
-            //ROS_INFO("Left vel:%.3f, Right vel:%.3f",left_vel,right_vel);
             //compute odometry in a typical way given the velocities of the robot
             double vel = (right_vel + left_vel) / 2.0;
             double vx = vel * cos(th);
             double vy = vel * sin(th);
             double vth = (right_vel - left_vel) / wheel_separation;
+            //ROS_INFO("Linear vel:%.3f, Angular vel:%.3f",vel,vth);
 
             double delta_x = vx * dt;
             double delta_y = vy * dt;

@@ -142,7 +142,7 @@ int main(int argc, char **argv){
     sub_rightSignal_1 = n.subscribe("/right_1_camera/rgb/image_raw", 1, newRightSignal_1);
     sub_rightSignal_2 = n.subscribe("/right_2_camera/rgb/image_raw", 1, newRightSignal_2);
 
-    ros::Publisher irPublisher = n.advertise<gobot_msg_srv::IrMsg>("/gobot_base/ir_topic", 50);
+    ros::Publisher irPublisher = n.advertise<gobot_msg_srv::IrMsg>("ir_topic", 50);
     gobot_msg_srv::IrMsg msg;
 
     std::cout << "(ir_controller) launched." << std::endl;

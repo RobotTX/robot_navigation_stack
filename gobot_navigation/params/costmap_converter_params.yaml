@@ -3,6 +3,7 @@
 TebLocalPlannerROS:
 
     ## Costmap converter plugin   
+    #costmap_converter_plugin: ""
     costmap_converter_plugin: "costmap_converter::CostmapToPolygonsDBSMCCH"
     #costmap_converter_plugin: "costmap_converter::CostmapToLinesDBSRANSAC"
     #costmap_converter_plugin: "costmap_converter::CostmapToLinesDBSMCCH"
@@ -19,11 +20,11 @@ TebLocalPlannerROS:
     #1.Clusters are determined using the DBSCAN Algorithm
     #2.In the subsequent stage, clusters are converted into convex polgons.
     costmap_converter/CostmapToPolygonsDBSMCCH:
-        cluster_max_distance: 0.4
+        cluster_max_distance: 0.5
         cluster_min_pts: 2
         cluster_max_pts: 50
         #Clear keypoints/vertices of the convex polygon that are close to each other
-        convex_hull_min_pt_separation: 0.05
+        convex_hull_min_pt_separation: 0.1
 
     ## The parameters must be added for each plugin separately
     costmap_converter/CostmapToLinesDBSRANSAC:

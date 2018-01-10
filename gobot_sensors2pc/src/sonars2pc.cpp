@@ -35,10 +35,10 @@ void sonarFrontToCloud(double sonarR,double sonarL,pcl::PointCloud<pcl::PointXYZ
         cloudR.push_back(pcl::PointXYZ(sonarR, 0, 0));
         cloudL.push_back(pcl::PointXYZ(sonarL, 0, 0));
     }
-    else if (sonarR>sonarL){
+    else if ((sonarR>sonarL) && (sonarL!=SONAR_MAX)){
         cloudL.push_back(pcl::PointXYZ(sonarL, 0, 0));
     }
-    else {
+    else if(sonarR!=SONAR_MAX){
         cloudR.push_back(pcl::PointXYZ(sonarR, 0, 0));
     }
 }

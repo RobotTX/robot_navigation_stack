@@ -25,7 +25,7 @@ shutdown_costmaps: False # True
 controller_frequency: 5
 
 # Frequency of the global planner
-planner_frequency: 2
+planner_frequency: 3
 
 recovery_behavior_enabled: true
 
@@ -73,7 +73,7 @@ rotate_recovery:
 conservative_reset:
     #The radius away from the robot in meters outside which obstacles will be removed from the costmaps when they are reverted to the static map. 
     #Related to the local costmap rolling window size
-    reset_distance: 3.0
+    reset_distance: 2.0
 
 aggressive_reset:
     reset_distance: 0.4

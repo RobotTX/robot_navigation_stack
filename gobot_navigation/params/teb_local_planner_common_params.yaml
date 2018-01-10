@@ -5,15 +5,20 @@
 odom_topic: odom
 map_frame: map
 
+#MAX_ACC_LINEAR=ACC_STEP*0.45m/s^2
+acc_lim_x: 0.2
+#MAX_ACC_ANGULAR=ACC_STEP*2.35rad/s^2
+acc_lim_theta: 0.5  #0.8
+
 ####Key params that affect motion####
-weight_max_vel_x: 1.0 #default:2
-weight_max_vel_theta: 2.0 #default:1
+weight_max_vel_x: 2.0 #default:2
+weight_max_vel_theta: 1.0 #default:1
 weight_acc_lim_x: 1.0 #default:1
 weight_acc_lim_theta: 1.0 #default:1
 
 #Optimization weight for minimzing the distance to via-points
 #How close robot follows the via-points
-weight_viapoint: 75.0 # 1.0
+weight_viapoint: 100.0 # 1.0
 weight_kinematics_forward_drive: 200.0
 weight_obstacle: 50.0
 weight_dynamic_obstacle: 50.0
@@ -33,11 +38,11 @@ teb_autosize: True
 dt_ref: 0.3
 dt_hysteresis: 0.1
 #Overwrite orientation of local subgoals provided by the global planner
-global_plan_overwrite_orientation: True
+global_plan_overwrite_orientation: true
 #If true, the planner uses the exact arc length in velocity, acceleration and turning rate computations (-> increased cpu time), 
 #otherwise the Euclidean approximation is used. 
 #default:false
-exact_arc_length: True
+exact_arc_length: false
 #Specify the maximum length (cumulative Euclidean distances) of the subset of the global plan taken into account for optimization
 #Constrinted by the local costmap size (rolling window)
 max_global_plan_lookahead_dist: 5.0
@@ -57,7 +62,7 @@ footprint_model: # types: "point", "circular", "two_circles", "line", "polygon"
     vertices: [[0.250,0],[0.245,-0.167],[0.225,-0.225],[0.195,-0.245],[0.0893,-0.250],[0,-0.250],[-0.1786,-0.245],[-0.225,-0.225],[-0.245,-0.167],[-0.250,-0.0835],[-0.250,0],[-0.245,0.167],[-0.225,0.225],[-0.1786,0.245],[-0.0893,0.250],[0,0.250],[0.1786,0.245],[0.225,0.225],[0.245,0.167],[0.250,0.0835]]
 # Obstacles
 #Minimum desired separation from obstacles in meters 
-min_obstacle_dist: 0.05
+min_obstacle_dist: 0.03
 include_costmap_obstacles: true
 costmap_obstacles_behind_robot_dist: 1.0
 obstacle_poses_affected: 30
@@ -74,7 +79,7 @@ no_outer_iterations: 3
 optimization_activate: True
 optimization_verbose: False
 #Add a small safety margin to penalty functions for hard-constraint approximations 
-penalty_epsilon: 0.099
+penalty_epsilon: 0.05
 
 # Homotopy Class Planner
 #Activate parallel planning in distinctive topologies
