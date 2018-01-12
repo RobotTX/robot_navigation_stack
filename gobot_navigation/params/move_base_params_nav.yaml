@@ -1,0 +1,18 @@
+#http://wiki.ros.org/move_base
+
+#Times of recovery will be tried before give up
+recovery_count_threshold: 6
+
+#Goal readched when distance between robot and goal is smaller than it after trying recovery
+#default:0.5
+dis_to_goal_threshold_: 0.5
+
+NavfnROS:
+    # To tell the planner not to use the unknown space as free space
+    #you must also set the track_unknown_space param for that layer to be true, 
+    #or it will convert all your unknown space to free space
+    #default:true
+    allow_unknown: false
+    # attempt to create a plan that is as close to the specified goal as possible 
+    # but no further than default_tolerance away
+    default_tolerance: 0.6

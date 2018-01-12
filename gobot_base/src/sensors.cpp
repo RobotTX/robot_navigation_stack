@@ -107,16 +107,17 @@ std::string getStdoutFromCommand(std::string cmd) {
 }
 
 
-/*    
+/*     
        B5 B6 B7 B8     
-          IR_R
-       S3 P1 P2 S4
+          IR_B
+       C3       C4
+       S3 P2 P1 S4
         ---BB---
         |      |
   IR_R  |      | IR_L
         |__FF__|
         S2    S1
-
+        C2    C1
        B4 B3 B2 B1
 */
 

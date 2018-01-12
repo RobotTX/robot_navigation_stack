@@ -11,7 +11,7 @@ acc_lim_x: 0.2
 acc_lim_theta: 0.5  #0.8
 
 ####Key params that affect motion####
-weight_max_vel_x: 2.0 #default:2
+weight_max_vel_x: 1.0 #default:2
 weight_max_vel_theta: 1.0 #default:1
 weight_acc_lim_x: 1.0 #default:1
 weight_acc_lim_theta: 1.0 #default:1
@@ -19,14 +19,15 @@ weight_acc_lim_theta: 1.0 #default:1
 #Optimization weight for minimzing the distance to via-points
 #How close robot follows the via-points
 weight_viapoint: 100.0 # 1.0
-weight_kinematics_forward_drive: 200.0
+weight_kinematics_forward_drive: 400.0
 weight_obstacle: 50.0
 weight_dynamic_obstacle: 50.0
 ####Key params that affect motion####
 weight_kinematics_nh: 1000.0
-weight_optimaltime: 1 #2
+weight_optimaltime: 4.0 #2
 selection_alternative_time_cost: False # not in use yet
 min_turning_radius: 0.0
+wheelbase: 0.0
 # GoalTolerance
 xy_goal_tolerance: 0.15
 yaw_goal_tolerance: 0.15 #8.6 degrees
@@ -42,10 +43,10 @@ global_plan_overwrite_orientation: true
 #If true, the planner uses the exact arc length in velocity, acceleration and turning rate computations (-> increased cpu time), 
 #otherwise the Euclidean approximation is used. 
 #default:false
-exact_arc_length: false
+exact_arc_length: true
 #Specify the maximum length (cumulative Euclidean distances) of the subset of the global plan taken into account for optimization
 #Constrinted by the local costmap size (rolling window)
-max_global_plan_lookahead_dist: 5.0
+max_global_plan_lookahead_dist: 3.0
 #Specify up to which pose on the predicted plan the feasibility should be checked each sampling interval. 
 feasibility_check_no_poses: 5
 #If positive, via-points are extrected from the global plan (path-following mode)
@@ -62,7 +63,7 @@ footprint_model: # types: "point", "circular", "two_circles", "line", "polygon"
     vertices: [[0.250,0],[0.245,-0.167],[0.225,-0.225],[0.195,-0.245],[0.0893,-0.250],[0,-0.250],[-0.1786,-0.245],[-0.225,-0.225],[-0.245,-0.167],[-0.250,-0.0835],[-0.250,0],[-0.245,0.167],[-0.225,0.225],[-0.1786,0.245],[-0.0893,0.250],[0,0.250],[0.1786,0.245],[0.225,0.225],[0.245,0.167],[0.250,0.0835]]
 # Obstacles
 #Minimum desired separation from obstacles in meters 
-min_obstacle_dist: 0.03
+min_obstacle_dist: 0.04
 include_costmap_obstacles: true
 costmap_obstacles_behind_robot_dist: 1.0
 obstacle_poses_affected: 30

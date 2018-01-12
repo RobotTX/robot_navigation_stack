@@ -66,8 +66,8 @@ bool startDocking(void){
             double homeOri = -(yaw*180/3.14159);//-(orientation+90)*3.14159/180);
 
             /// We want to go 1 metre in front of the charging station
-            double landingPointX = x + 0.5 * std::cos(yaw);
-            double landingPointY = y + 0.5 * std::sin(yaw);
+            double landingPointX = x + 0.4 * std::cos(yaw);
+            double landingPointY = y + 0.4 * std::sin(yaw);
             //~ROS_INFO("(auto_docking::startDocking) landing point : [%f, %f, %f]", landingPointX, landingPointY, homeOri);
 
             /// Create the goal
@@ -148,6 +148,7 @@ void findChargingStation(void){
     bumperSub = nh.subscribe("/gobot_base/bumpers_topic", 1, newBumpersInfo);
 
     /// Pid control with the ir signal
+    lastIrSignalTime = std::chrono::system_clock::now();
     irSub = nh.subscribe("/gobot_base/ir_topic", 1, newIrSignal);
 }
 
@@ -202,15 +203,13 @@ void newBumpersInfo(const gobot_msg_srv::BumperMsg::ConstPtr& bumpers){
         else
             setSpeed('F', 3, 'F', 3);
             
-        std::thread([](){
-            ros::Duration(0.7).sleep();
-            setSpeed('F', 0, 'F', 0);
-            collision = false;
-        }).detach();
+        ros::Duration(0.7).sleep();
+        setSpeed('F', 0, 'F', 0);
+        collision = false;
     }
     else if(!back && docking && !move_away_collision && !collision){
         move_away_collision = true;
-        //~ROS_INFO("(auto_docking::newBumpersInfo) move away from collision");
+        ROS_INFO("(auto_docking::newBumpersInfo) move away from collision");
         if(!charging){
             //~ROS_INFO("(auto_docking::bumper) Checking the alignment");
             alignWithCS();
@@ -293,7 +292,7 @@ void newIrSignal(const gobot_msg_srv::IrMsg::ConstPtr& irSignal){
 
 void alignWithCS(void){
     charging = true;
-
+    ROS_INFO("(auto_docking::bumper) Checking the alignment");
     std::thread([](){
         //check collision in these 5 seconds
         ros::Time last_time=ros::Time::now();
@@ -315,6 +314,7 @@ void alignWithCS(void){
 }
 
 void newProximityInfo(const gobot_msg_srv::ProximityMsg::ConstPtr& proximitySignal){
+    /*
     if(docking && !collision){
         //~ROS_INFO("(auto_docking::newProximityInfo) new proximity signal : %d %d", proximitySignal->signal1, proximitySignal->signal2);
         /// signal1 = leftSensor
@@ -340,6 +340,7 @@ void newProximityInfo(const gobot_msg_srv::ProximityMsg::ConstPtr& proximitySign
             finishedDocking();
         }
     }
+    */
 }
 
 void finishedDocking(){
@@ -348,8 +349,6 @@ void finishedDocking(){
     if(ros::service::call("/gobot_status/charging_status", arg) && arg.response.isCharging){
         dock_status = 1;
         set_status_class.setDockStatus(dock_status);
-        //set current pose to be home
-        //ros::service::call("/gobot_recovery/initialize_home",empty_srv);
         ROS_INFO("(auto_docking::finishedDocking) Auto docking finished->SUCESSFUL.");
 
         set_status_class.setSound(1,2);
@@ -374,7 +373,7 @@ void finishedDocking(){
                 ac->sendGoal(currentGoal);
             }
 
-            setSpeed('F', 10, 'F', 10);
+            setSpeed('F', 15, 'F', 15);
             ros::Duration(1.0).sleep();
             setSpeed('F', 0, 'F', 0);
 
@@ -383,7 +382,7 @@ void finishedDocking(){
             dock_status = -1;
             set_status_class.setDockStatus(dock_status);
             ROS_WARN("(auto_docking::finishedDocking) Auto docking finished->FAILED.");
-            setSpeed('F', 10, 'F', 10);
+            setSpeed('F', 15, 'F', 15);
             ros::Duration(1.0).sleep();
 
             set_status_class.setSound(3,2);

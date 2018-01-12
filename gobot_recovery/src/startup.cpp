@@ -84,6 +84,7 @@ void getButtonCallback(const std_msgs::Int8::ConstPtr& msg){
 
       ros::service::call("/gobot_status/set_wifi",set_wifi);
 		}
+    /*
     //These two cases are not considered now
     else if(dt>99.0 && dt<=999.0){
       ROS_INFO("Globalize robot.");
@@ -95,6 +96,7 @@ void getButtonCallback(const std_msgs::Int8::ConstPtr& msg){
 			const std::string restart_script = "sh " + restart_sh + " &";
       system(restart_script.c_str());
 		}
+    */
 	}
 }
 

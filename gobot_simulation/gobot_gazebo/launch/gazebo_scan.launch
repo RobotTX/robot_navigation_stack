@@ -1,7 +1,7 @@
 <?xml version="1.0"?>
 <launch>
     <include file="$(find gobot_navigation)/launch/gmapping.launch"/>
-    <include file="$(find gobot_navigation)/launch/scan_move_base.launch"/>
+    <include file="$(find gobot_navigation)/launch/move_base_scan.launch"/>
     <include file="$(find gobot_navigation)/launch/hector_explore.launch"/>
     <include file="$(find gobot_software)/launch/gobot_function.launch"/>
 	<include file="$(find gobot_software)/launch/robot_infos_params.launch"/>

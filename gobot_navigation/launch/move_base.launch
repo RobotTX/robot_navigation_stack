@@ -5,15 +5,16 @@
 
     <node pkg="move_base" type="move_base" respawn="false" name="move_base" output="screen" required="true">
 
-        <rosparam file="$(find gobot_navigation)/params/costmap_common_params.yaml" command="load" ns="global_costmap" />
-        <rosparam file="$(find gobot_navigation)/params/costmap_common_params.yaml" command="load" ns="local_costmap" />
-        <rosparam file="$(find gobot_navigation)/params/local_costmap_params.yaml" command="load" />
-        <rosparam file="$(find gobot_navigation)/params/global_costmap_params.yaml" command="load" />
-        <rosparam file="$(find gobot_navigation)/params/move_base_params.yaml" command="load" />
+        <rosparam file="$(find gobot_navigation)/params/costmap_params_common.yaml" command="load" ns="global_costmap" />
+        <rosparam file="$(find gobot_navigation)/params/costmap_params_common.yaml" command="load" ns="local_costmap" />
+        <rosparam file="$(find gobot_navigation)/params/local_costmap_params_nav.yaml" command="load" />
+        <rosparam file="$(find gobot_navigation)/params/global_costmap_params_nav.yaml" command="load" />
+        <rosparam file="$(find gobot_navigation)/params/move_base_params_nav.yaml" command="load" />
+        <rosparam file="$(find gobot_navigation)/params/move_base_params_common.yaml" command="load" />
         
         <!-- to use with the teb local planner -->
-        <rosparam file="$(find gobot_navigation)/params/teb_local_planner_common_params.yaml" command="load" ns="TebLocalPlannerROS" />
-        <rosparam file="$(find gobot_navigation)/params/teb_local_planner_params.yaml" command="load" />
+        <rosparam file="$(find gobot_navigation)/params/teb_local_planner_params_common.yaml" command="load" ns="TebLocalPlannerROS" />
+        <rosparam file="$(find gobot_navigation)/params/teb_local_planner_params_nav.yaml" command="load" />
         <rosparam file="$(find gobot_navigation)/params/costmap_converter_params.yaml" command="load" />
     </node>
 </launch>

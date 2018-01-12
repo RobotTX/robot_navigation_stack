@@ -612,7 +612,7 @@ namespace move_base {
         lock.lock();
         planning_retries_++;
         if(runPlanner_ &&
-           (ros::Time::now() > attempt_end || planning_retries_ > uint32_t(max_planning_retries_))){
+           (ros::Time::now() > attempt_end)){ //|| planning_retries_ > uint32_t(max_planning_retries_))){
           //we'll move into our obstacle clearing mode
           state_ = CLEARING;
           runPlanner_ = false;  // proper solution for issue #523
@@ -621,6 +621,15 @@ namespace move_base {
         }
 
         lock.unlock();
+      }
+      //tx//if not find path and controlling, reset state to be PLANNING
+      else{
+        planning_retries_++;
+        if (planning_retries_ > uint32_t(max_planning_retries_)){
+          state_ = PLANNING;
+          publishZeroVelocity();
+          ROS_WARN("move_base failed to find a path and state is not planning, reset state to PLANNING");
+        }
       }
 
       //take the mutex for the next iteration
@@ -705,6 +714,22 @@ namespace move_base {
           //publish the goal point to the visualizer
           ROS_DEBUG_NAMED("move_base","move_base has received a goal of x: %.2f, y: %.2f", goal.pose.position.x, goal.pose.position.y);
           current_goal_pub_.publish(goal);
+          //tx//if received goal is invaild, stop robot
+          //get the starting pose of the robot
+          tf::Stamped<tf::Pose> global_pose;
+          if(!planner_costmap_ros_->getRobotPose(global_pose)) {
+            publishZeroVelocity();
+          }
+          else{
+            geometry_msgs::PoseStamped start;
+            tf::poseStampedTFToMsg(global_pose, start);
+            std::vector<geometry_msgs::PoseStamped> global_plan;
+            //if the planner fails or returns a zero length plan, planning failed
+            if(!planner_->makePlan(start, goal, global_plan) || global_plan.empty()){
+              publishZeroVelocity();
+              ROS_WARN("move_base 1st time failed to find path to goal of x: %.2f, y: %.2f", goal.pose.position.x, goal.pose.position.y);
+            }
+          }
 
           //make sure to reset our timeouts and counters
           last_valid_control_ = ros::Time::now();

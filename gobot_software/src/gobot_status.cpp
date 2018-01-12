@@ -348,13 +348,18 @@ void initialData(){
         ROS_INFO("(Gobot_status) Read Gobot path stage: %d",stage_);
     }
     
-    if(stage_==-99 || stage_==-100){
-        stage_=0;
+    if(stage_<0){
+        if(stage_==-99 || stage_==-100){
+            stage_=0;
+        }
+        else{
+            stage_=-stage_-1;
+        }
         std::ofstream ofsStage(pathStageFile, std::ofstream::out | std::ofstream::trunc);
-        if(ofsStage){
-            ofsStage << stage_;
-            ofsStage.close();
-            ROS_INFO("(Gobot_status) Set Gobot stage: %d",stage_);
+            if(ofsStage){
+                ofsStage << stage_;
+                ofsStage.close();
+                ROS_INFO("(Gobot_status) Set Gobot stage: %d",stage_);
         }
     }    
 

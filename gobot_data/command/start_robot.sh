@@ -5,7 +5,6 @@ var=$(rosclean check | grep 'G')
 if [ ! -z "$var" ] 
 then
     echo "y" | rosclean purge
-    echo "Cleaned ros log data:"$var"M"
 fi
 sleep 5s
 gnome-terminal -x bash -c "source /opt/ros/kinetic/setup.bash;roscore;exec bash;"
