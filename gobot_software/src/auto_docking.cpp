@@ -13,8 +13,7 @@ bool leftFlag = false;
 bool charging = false;
 bool move_from_collision = true;
 
-std::chrono::system_clock::time_point collisionTime;
-std::chrono::system_clock::time_point lastIrSignalTime;
+ros::Time lastIrSignalTime;
 
 ros::Subscriber goalStatusSub;
 ros::Subscriber bumperSub;
@@ -132,7 +131,7 @@ void findChargingStation(void){
     bumperSub = nh.subscribe("/gobot_base/bumpers_topic", 1, newBumpersInfo);
 
     /// Pid control with the ir signal
-    lastIrSignalTime = std::chrono::system_clock::now();
+    lastIrSignalTime = ros::Time::now();
     irSub = nh.subscribe("/gobot_base/ir_topic", 1, newIrSignal);
 }
 
@@ -196,14 +195,50 @@ void newBumpersInfo(const gobot_msg_srv::BumperMsg::ConstPtr& bumpers){
 void newIrSignal(const gobot_msg_srv::IrMsg::ConstPtr& irSignal){
     /// if we are charging
     if(docking && !collision){
-        //ROS_INFO("(auto_docking::newIrSignal) new ir signal : %d %d %d", irSignal->leftSignal, irSignal->rearSignal, irSignal->rightSignal);
-        /// if we got no signal
-        if(irSignal->rearSignal == 0 && irSignal->leftSignal == 0 && irSignal->rightSignal == 0){
-            /// if we just lost the ir signal, we start the timer
+        if (irSignal->rearSignal != 0){
+            lostIrSignal = false;
+            /// rear ir received 1 and 2 signal, so robot goes backward
+            if (irSignal->rearSignal == 3)
+                setSpeed('B', 5, 'B', 5);
+            else if (irSignal->rearSignal == 2)
+                /// rear ir received signal 2, so robot turns right
+                setSpeed('B', 3, 'F', 3);
+            else if (irSignal->rearSignal == 1)
+                /// rear ir received signal 1, so robot turns left
+                setSpeed('F', 3, 'B', 3);
+            
+        }
+        else if (irSignal->leftSignal != 0){
+            /// received left signal
+            leftFlag = true;
+            if (irSignal->leftSignal == 3)
+                setSpeed('B', 5, 'F', 5);
+            else if (irSignal->leftSignal == 2)
+                setSpeed('B', 5, 'F',10);
+                /*
+            else if (irSignal->leftSignal == 1)
+                setSpeed('B', 10, 'F', 5);
+                */
+
+        } 
+        else if (irSignal->rightSignal != 0){
+            /// received right signal
+            leftFlag = false;
+            if (irSignal->rightSignal == 3)
+                setSpeed('F', 5, 'B', 5);
+            else if (irSignal->rightSignal == 2)
+                setSpeed('F', 5, 'B', 10);
+                /*
+            else if (irSignal->rightSignal == 1)
+                setSpeed('F',10, 'B', 5);
+                */
+        }
+
+        if (irSignal->rearSignal == 0){
             if(!lostIrSignal){
                 //ROS_WARN("(auto_docking::newIrSignal) just lost the ir signal");
                 lostIrSignal = true;
-                lastIrSignalTime = std::chrono::system_clock::now();
+                lastIrSignalTime = ros::Time::now();
                 /// make the robot turn on itself
                 if(leftFlag)
                     //if the left sensor is the last which saw the ir signal
@@ -212,55 +247,12 @@ void newIrSignal(const gobot_msg_srv::IrMsg::ConstPtr& irSignal){
                     setSpeed('F', 5, 'B', 5);
             } 
             else{
-                /// if we lost the signal for more than 20 seconds, we failed docking, else, the robot should still be turning on itself
-                if(std::chrono::duration_cast<std::chrono::seconds>(std::chrono::system_clock::now() - lastIrSignalTime).count() > 20.0)
+                /// if we lost the signal for more than 30 seconds, we failed docking, else, the robot should still be turning on itself
+                if((ros::Time::now() - lastIrSignalTime).toSec() > 30.0){
+                    setSpeed('F', 0, 'F', 0);
                     finishedDocking();
-            }
-        } 
-        else {
-            /// we got an ir signal; 
-            if(lostIrSignal){
-                //~ROS_INFO("(auto_docking::newIrSignal) just retrieved the ir signal after %f seconds", (double) (std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now() - lastIrSignalTime).count() / 1000));
-                lostIrSignal = false;
-            }
-
-            if (irSignal->rearSignal != 0){
-                /// rear ir received 1 and 2 signal, so robot goes backward
-                if (irSignal->rearSignal == 3)
-                    setSpeed('B', 5, 'B', 5);
-                else if (irSignal->rearSignal == 2)
-                    /// rear ir received signal 2, so robot turns right
-                    setSpeed('B', 3, 'F', 3);
-                else if (irSignal->rearSignal == 1)
-                    /// rear ir received signal 1, so robot turns left
-                    setSpeed('F', 3, 'B', 3);
-                
+                }
             } 
-            else if (irSignal->leftSignal != 0){
-                /// received left signal
-                leftFlag = true;
-                if (irSignal->leftSignal == 3)
-                    setSpeed('B', 5, 'F', 5);
-                else if (irSignal->leftSignal == 2)
-                    setSpeed('B', 5, 'F',10);
-                    /*
-                else if (irSignal->leftSignal == 1)
-                    setSpeed('B', 10, 'F', 5);
-                    */
-
-            } 
-            else if (irSignal->rightSignal != 0){
-                /// received right signal
-                leftFlag = false;
-                if (irSignal->rightSignal == 3)
-                    setSpeed('F', 5, 'B', 5);
-                else if (irSignal->rightSignal == 2)
-                    setSpeed('F', 5, 'B', 10);
-                    /*
-                else if (irSignal->rightSignal == 1)
-                    setSpeed('F',10, 'B', 5);
-                    */
-            }
         }
     }
 }
@@ -303,6 +295,7 @@ void finishedDocking(){
     resetDockingParams();
     ros::Duration(2.0).sleep();
     if(ros::service::call("/gobot_status/charging_status", arg) && arg.response.isCharging){
+        dock_status = 1;
         set_status_class.setGobotStatus(11,"STOP_DOCKING");
         ROS_INFO("(auto_docking::finishedDocking) Auto docking finished->SUCESSFUL.");
         set_status_class.setSound(1,2);

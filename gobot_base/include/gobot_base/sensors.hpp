@@ -55,6 +55,6 @@ bool shutdownSrvCallback(std_srvs::Empty::Request &req, std_srvs::Empty::Respons
 
 bool setLedSrvCallback(gobot_msg_srv::LedStrip::Request &req, gobot_msg_srv::LedStrip::Response &res);
 
-bool resetMotorSrvCallback(std_srvs::Empty::Request &req, std_srvs::Empty::Response &res);
+bool resetSTMSrvCallback(std_srvs::Empty::Request &req, std_srvs::Empty::Response &res);
 
 void mySigintHandler(int sig);

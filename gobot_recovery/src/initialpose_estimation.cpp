@@ -414,32 +414,9 @@ void getPose(){
         ROS_ERROR("Could not find the param last_pose");
 }
 
-void getRobotPos(const geometry_msgs::Pose::ConstPtr& msg){
-    if(found_pose){
-        last_pos_x = msg->position.x;
-        last_pos_y = msg->position.y;
-        last_ang_x = msg->orientation.x;
-        last_ang_y = msg->orientation.y;
-        last_ang_z = msg->orientation.z;
-        last_ang_w = msg->orientation.w;
-    }
-}
-
-void saveRobotPos(const ros::TimerEvent&){
-    if(found_pose){
-        std::ofstream ofs(lastPoseFile, std::ofstream::out | std::ofstream::trunc);
-        if(ofs.is_open()){
-            ofs << last_pos_x << " " << last_pos_y << " " << last_ang_x <<" "<< last_ang_y <<" "<< last_ang_z <<" "<< last_ang_w;
-            ofs.close();
-        } 
-    }
-}
-
 int main(int argc, char **argv) {
     ros::init(argc, argv, "initialpose_estimation");
     ros::NodeHandle nh;
-
-    ros::Timer timer = nh.createTimer(ros::Duration(1.0), saveRobotPos);
 
     vel_pub = nh.advertise<geometry_msgs::Twist>("/cmd_vel",10);
     initial_pose_publisher = nh.advertise<geometry_msgs::PoseWithCovarianceStamped>("/initialpose", 1);
@@ -448,7 +425,6 @@ int main(int argc, char **argv) {
     lost_pub = nh.advertise<std_msgs::Int8>("/gobot_recovery/lost_robot",1);
 
     ros::Subscriber initialPose = nh.subscribe("/amcl_pose",1,getAmclPoseCallback);
-    ros::Subscriber sub_robot = nh.subscribe("/robot_pose", 1, getRobotPos);
     ros::ServiceServer initializeHome = nh.advertiseService("/gobot_recovery/initialize_home",initializeHomeSrcCallback);
     ros::ServiceServer initializePose = nh.advertiseService("/gobot_recovery/initialize_pose",initializePoseSrvCallback);
     ros::ServiceServer globalizePose = nh.advertiseService("/gobot_recovery/globalize_pose",globalizePoseSrvCallback);

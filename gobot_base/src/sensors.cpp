@@ -24,7 +24,7 @@ int last_charging_current = 0;
 bool charging = false;
 int error_count = 0;
 bool display_data = false;
-int STM_CHECK_NUM=0, STM_RATE=5;
+int STM_RATE=5;
 bool USE_BUMPER=true,USE_SONAR=true,USE_CLIFF=true;
 
 
@@ -59,14 +59,7 @@ bool setSpeed(const char directionR, const int velocityR, const char directionL,
     return ros::service::call("/gobot_motor/setSpeeds", speed);
 }
 
-bool resetMotorSrvCallback(std_srvs::Empty::Request &req, std_srvs::Empty::Response &res){
-    /*
-    if(serialConnection.isOpen()){
-        std::vector<uint8_t> buff = writeAndRead({0xC0, 0x01, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x1B},40);
-        ROS_WARN("(sensors::publishSensors) Reseted MD49 Motor Driver. Received %lu bytes", buff.size());
-    } else 
-        ROS_ERROR("(sensors::publishSensors) Check serial connection 1");
-    */
+bool resetSTMSrvCallback(std_srvs::Empty::Request &req, std_srvs::Empty::Response &res){
     resetStm();
 
     return true;
@@ -289,14 +282,7 @@ void publishSensors(void){
                 if(charging != battery_data.ChargingFlag){
                     charging = battery_data.ChargingFlag;
                     gobot_msg_srv::SetDockStatus set_dock_status;
-                    if(charging){
-                        set_dock_status.request.status = 1;
-                        //~ROS_INFO("Gobot is charging");
-                    }
-                    else{
-                        set_dock_status.request.status = 0;
-                        //~ROS_INFO("Gobot is not charging");
-                    }
+                    set_dock_status.request.status = charging ? 1 : 0;
                     ros::service::call("/gobot_status/set_dock_status",set_dock_status);
                 }
 
@@ -312,7 +298,7 @@ void publishSensors(void){
             /// External button 1-No press; 0-press
             int32_t external_button = buff.at(45);
             std_msgs::Int8 button;
-            button.data=external_button==1 ? 0 : 1;
+            button.data = !external_button;
 
             int32_t engage_point = buff.at(46);
 
@@ -337,10 +323,8 @@ void publishSensors(void){
                 std::endl;
             }
 
-            if(!error && !error_bumper)
-                STM_CHECK_NUM++;
             /// The last byte is the Frame Check Sum and is not used
-            if(!error && STM_CHECK_NUM>=3){
+            if(!error){
                 //If no error, publish sensor data
                 ir_pub.publish(ir_data);
                 proximity_pub.publish(proximity_data);
@@ -372,17 +356,14 @@ void publishSensors(void){
             error = true;
         }
 
-        if(!error){
-            error_count = 0;
-        }
-        else{
-            error_count++;
-        }
+        error_count = error ? error_count+1 : 0;
 
         if(error_count > ERROR_THRESHOLD){
         /// If we got more than <ERROR_THRESHOLD> errors in a row, we send a command to reset the stm32
-            setSpeed('F', 0, 'F', 0);
+            //setSpeed('F', 0, 'F', 0);
             resetStm();
+            error_count = 0;
+            /*no more this problem with new battery
             //error may be caused by touching the power supply 
             getGobotStatusSrv.call(get_gobot_status);
             //go to docking state
@@ -397,7 +378,7 @@ void publishSensors(void){
                 battery_pub.publish(battery_data);
                 ROS_WARN("(sensors::publishSensors WARN) Error caused by charging battery at the moment.");
             }
-            error_count = 0;
+            */
         }
     } 
     else{
@@ -555,21 +536,19 @@ int main(int argc, char **argv) {
         ros::ServiceServer setLedSrv = nh.advertiseService("/gobot_base/setLed", setLedSrvCallback);
         ros::ServiceServer setSoundSrv = nh.advertiseService("/gobot_base/setSound", setSoundSrvCallback);
         ros::ServiceServer displayDataSrv = nh.advertiseService("/gobot_base/displaySensorData", displaySensorData);
-        ros::ServiceServer resetMotorSrv = nh.advertiseService("resetMotorDriver", resetMotorSrvCallback);
+        ros::ServiceServer resetSTMSrv = nh.advertiseService("/gobot_base/reset_STM", resetSTMSrvCallback);
+
+        //Startup begin
+        gobot_msg_srv::SetGobotStatus set_gobot_status;
+        set_gobot_status.request.status = -1;
+        set_gobot_status.request.text ="STM32_READY";
+        ros::service::call("/gobot_status/set_gobot_status",set_gobot_status);
+        //Startup end
 
         ros::Rate r(STM_RATE);
         while(ros::ok()){
             ros::spinOnce();
             publishSensors();
-            //Startup begin
-            if (STM_CHECK_NUM==3)
-            {
-                gobot_msg_srv::SetGobotStatus set_gobot_status;
-                set_gobot_status.request.status = -1;
-                set_gobot_status.request.text ="STM32_READY";
-                ros::service::call("/gobot_status/set_gobot_status",set_gobot_status);
-                //Startup end
-            }
             r.sleep();
         }
     }

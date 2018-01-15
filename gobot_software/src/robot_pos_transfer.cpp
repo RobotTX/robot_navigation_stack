@@ -7,8 +7,11 @@ using boost::asio::ip::tcp;
 std::mutex socketsMutex;
 std::map<std::string, boost::shared_ptr<tcp::socket>> sockets;
 std::string robot_string;
-
+std::string lastPoseFile;
 ros::Publisher disco_pub;
+bool simulation = false;
+
+double last_pos_x=0.0,last_pos_y=0.0,last_pos_yaw=0.0,last_ang_x=0.0,last_ang_y=0.0,last_ang_z=0.0,last_ang_w=0.0;
 
 void sendRobotPos(const ros::TimerEvent&){
     if(sockets.size() > 0){
@@ -26,14 +29,12 @@ void sendRobotPos(const ros::TimerEvent&){
         }
         socketsMutex.unlock();
         
-        /*
-        //disconnect it
-        for(int i=0;i<dis_ip.size();i++){
-            std_msgs::String msg;
-            msg.data = dis_ip.at(i);
-            disco_pub.publish(msg);
-        }
-        */
+        //save pose to local file
+        std::ofstream ofs(lastPoseFile, std::ofstream::out | std::ofstream::trunc);
+        if(ofs.is_open()){
+            ofs << last_pos_x << " " << last_pos_y << " " << last_ang_x <<" "<< last_ang_y <<" "<< last_ang_z <<" "<< last_ang_w;
+            ofs.close();
+        } 
     }
 }
 
@@ -45,6 +46,12 @@ void getRobotPos(const geometry_msgs::Pose::ConstPtr& msg){
     tfScalar yaw;
     matrix.getRPY(roll, pitch, yaw);
     robot_string = std::to_string(msg->position.x) + " " + std::to_string(msg->position.y) + " " + std::to_string(yaw) + " ";
+    last_pos_x = msg->position.x;
+    last_pos_y = msg->position.y;
+    last_ang_x = msg->orientation.x;
+    last_ang_y = msg->orientation.y;
+    last_ang_z = msg->orientation.z;
+    last_ang_w = msg->orientation.w;
 }
 
 /*********************************** CONNECTION FUNCTIONS ***********************************/
@@ -101,26 +108,51 @@ void mySigintHandler(int sig){
 
 /*********************************** MAIN ***********************************/
 
+bool initParams(){
+    ros::NodeHandle nh;
+    if(nh.hasParam("simulation")){
+        nh.getParam("simulation", simulation);
+    }
+    nh.getParam("last_known_position_file", lastPoseFile);
+
+    return true;
+}
+
 int main(int argc, char **argv){
 
 	ros::init(argc, argv, "robot_pos_transfer");
-	ROS_INFO("(Robot Pos) Ready to be launched.");
-
 	ros::NodeHandle n;
 	signal(SIGINT, mySigintHandler);
 
-    //Periodically send robot pose to connected clients
-    ros::Timer timer = n.createTimer(ros::Duration(0.5), sendRobotPos);
+    if (initParams()){
+        ros::ServiceClient getGobotStatusSrv = n.serviceClient<gobot_msg_srv::GetGobotStatus>("/gobot_status/get_gobot_status");
+        gobot_msg_srv::GetGobotStatus get_gobot_status;
+        getGobotStatusSrv.waitForExistence(ros::Duration(30.0));
+        if(!simulation){
+            //Startup begin
+            ROS_INFO("(Robot Pos) Waiting for Robot finding initial pose...");
+            getGobotStatusSrv.call(get_gobot_status);
+            while((get_gobot_status.response.status!=-1 || get_gobot_status.response.text!="FOUND_POSE") && ros::ok()){
+                getGobotStatusSrv.call(get_gobot_status);
+                ros::Duration(0.2).sleep();
+            }
+            ROS_INFO("(Robot Pos) Robot finding initial pose is ready.");
+        }
 
-    disco_pub = n.advertise<std_msgs::String>("/gobot_software/server_disconnected", 10);
-    
-    ros::Subscriber sub = n.subscribe("/gobot_software/server_disconnected", 1000, serverDisconnected);
+        disco_pub = n.advertise<std_msgs::String>("/gobot_software/server_disconnected", 10);
+        
+        ros::Subscriber sub = n.subscribe("/gobot_software/server_disconnected", 1000, serverDisconnected);
 
-    ros::Subscriber sub_robot = n.subscribe("/robot_pose", 1, getRobotPos);
+        ros::Subscriber sub_robot = n.subscribe("/robot_pose", 1, getRobotPos);
 
-    std::thread t(server);
+        //Periodically send robot pose to connected clients
+        ros::Timer timer = n.createTimer(ros::Duration(1.0), sendRobotPos);
 
-    ros::spin();
+        std::thread t(server);
+        ROS_INFO("(Robot Pos) Ready to be launched.");
+
+        ros::spin();
+    }
 
 	return 0;
 }

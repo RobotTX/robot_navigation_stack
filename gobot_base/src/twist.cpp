@@ -166,8 +166,6 @@ void newBumpersInfo(const gobot_msg_srv::BumperMsg::ConstPtr& bumpers){
                     moved_from_collision = true;
                 }).detach();
             }
-        /// TODO check if the obstacle is still there after moving away from it
-        /// probably means we got a bumper problem => send a message to the user  
         }
     } 
     else if(collision && moved_from_collision){

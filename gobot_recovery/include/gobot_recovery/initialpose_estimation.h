@@ -45,10 +45,6 @@
 
 bool evaluatePose(int type);
 
-void getRobotPos(const geometry_msgs::Pose::ConstPtr& msg);
-
-void saveRobotPos(const ros::TimerEvent&);
-
 bool rotateFindPose(double rot_v,double rot_t);
 
 void findPoseResult(int status);

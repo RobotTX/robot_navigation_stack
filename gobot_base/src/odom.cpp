@@ -54,7 +54,7 @@ int main(int argc, char** argv){
     int ODOM_RATE=10;
     n.getParam("ODOM_RATE", ODOM_RATE);
 
-    double pi = 3.14159;
+    double pi = 3.1415926;
 
     ros::Rate r(ODOM_RATE); //20
     ros::service::waitForService("/gobot_motor/getEncoders",ros::Duration(30));

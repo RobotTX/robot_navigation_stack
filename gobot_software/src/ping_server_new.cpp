@@ -310,12 +310,10 @@ int main(int argc, char* argv[]){
 
         /// Thread which will get an array of potential servers
         std::thread t1(checkNewServers);
-
         ROS_INFO("(ping_server) checkNewServers thread launched");
 
         /// We try to ping all the available IPs
         std::thread t2(pingAllIPs);
-
         ROS_INFO("(ping_server) pingAllIPs thread launched");
         ros::spin();
     }
