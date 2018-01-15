@@ -34,12 +34,12 @@ bool setSpeed(const char directionR, const int velocityR, const char directionL,
 void newBumpersInfo(const gobot_msg_srv::BumperMsg::ConstPtr& bumpers);
 void newBatteryInfo(const gobot_msg_srv::BatteryMsg::ConstPtr& batteryInfo);
 void newIrSignal(const gobot_msg_srv::IrMsg::ConstPtr& irSignal);
-void alignWithCS(void);
 void newProximityInfo(const gobot_msg_srv::ProximityMsg::ConstPtr& proximitySignal);
 void finishedDocking(void);
-void stopDocking(void);
 bool stopDockingService(std_srvs::Empty::Request &req, std_srvs::Empty::Response &res);
 bool startDockingService(std_srvs::Empty::Request &req, std_srvs::Empty::Response &res);
 void goalResultCallback(const move_base_msgs::MoveBaseActionResult::ConstPtr& msg);
 void timerCallback(const ros::TimerEvent&);
+void resetDockingParams(void);
+void startDockingParams(void);
 #endif

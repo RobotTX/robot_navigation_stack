@@ -1,6 +1,6 @@
 #include <gobot_base/sensors.hpp>
 
-#define ERROR_THRESHOLD 1
+#define ERROR_THRESHOLD 2
 
 #define BATTERY_MAX 23000
 #define BATTERY_MIN 21500
@@ -60,11 +60,16 @@ bool setSpeed(const char directionR, const int velocityR, const char directionL,
 }
 
 bool resetMotorSrvCallback(std_srvs::Empty::Request &req, std_srvs::Empty::Response &res){
+    /*
     if(serialConnection.isOpen()){
         std::vector<uint8_t> buff = writeAndRead({0xC0, 0x01, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x1B},40);
         ROS_WARN("(sensors::publishSensors) Reseted MD49 Motor Driver. Received %lu bytes", buff.size());
     } else 
         ROS_ERROR("(sensors::publishSensors) Check serial connection 1");
+    */
+    resetStm();
+
+    return true;
 }
 
 bool displaySensorData(gobot_msg_srv::SetBattery::Request &req, gobot_msg_srv::SetBattery::Response &res){
@@ -75,7 +80,20 @@ bool displaySensorData(gobot_msg_srv::SetBattery::Request &req, gobot_msg_srv::S
 
 void resetStm(void){
     if(serialConnection.isOpen()){
-        std::vector<uint8_t> buff = writeAndRead({0xD0, 0x01, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x1B},5);
+        std::vector<uint8_t> buff;
+        std::vector<uint8_t> toWrite = {0xD0, 0x01, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x1B};
+        connectionMutex.lock();
+        try{
+            /// Send bytes to the MD49
+            size_t bytes_wrote = serialConnection.write(toWrite);
+            /// Read any byte that we are expecting
+            serialConnection.read(buff, 5);
+        } catch (std::exception& e) {
+            ROS_ERROR("(Sensors) exception : %s", e.what());
+        }
+        /// Unlock the mutex
+        ros::Duration(1.0).sleep();
+        connectionMutex.unlock();
         ROS_WARN("(sensors::publishSensors WARN) Reseted STM32. Received %lu bytes", buff.size());
     } 
     else 
@@ -229,23 +247,39 @@ void publishSensors(void){
                 //battery data update slower than requesting rate
                 if(abs(battery_data.ChargingCurrent-last_charging_current) > 5){
                     int current_diff = battery_data.ChargingCurrent - last_charging_current;
-                    if (battery_data.ChargingCurrent < 0){
-                        if(current_diff > 100)
-                            battery_data.ChargingFlag = true;
-                        else
-                            battery_data.ChargingFlag = false;
-                    }
-                    else if (battery_data.ChargingCurrent >1500){
-                        if(current_diff < -100)
-                            battery_data.ChargingFlag = false;
-                        else
-                            battery_data.ChargingFlag = true;
+                    if(battery_data.BatteryStatus<100){
+                        if (battery_data.ChargingCurrent < 0){
+                            if(current_diff > 100)
+                                battery_data.ChargingFlag = true;
+                            else
+                                battery_data.ChargingFlag = false;
+                        }
+                        else if (battery_data.ChargingCurrent >1500){
+                            if(current_diff < -100)
+                                battery_data.ChargingFlag = false;
+                            else
+                                battery_data.ChargingFlag = true;
+                        }
+                        else{
+                            if(current_diff > 50)
+                                battery_data.ChargingFlag = true;
+                            else
+                                battery_data.ChargingFlag = false;
+                        }
                     }
                     else{
-                        if(current_diff > 50)
-                            battery_data.ChargingFlag = true;
-                        else
-                            battery_data.ChargingFlag = false;
+                        if (battery_data.ChargingCurrent > 0){
+                            if(current_diff < -50)
+                                battery_data.ChargingFlag = false;
+                            else
+                                battery_data.ChargingFlag = true;
+                        }
+                        else{
+                            if(current_diff > 100)
+                                battery_data.ChargingFlag = true;
+                            else
+                                battery_data.ChargingFlag = false;
+                        }
                     }
                 }
                 else{
@@ -278,9 +312,8 @@ void publishSensors(void){
             /// External button 1-No press; 0-press
             int32_t external_button = buff.at(45);
             std_msgs::Int8 button;
-            button.data=external_button;
+            button.data=external_button==1 ? 0 : 1;
 
-            /// Reset wifi button (double click power button)
             int32_t engage_point = buff.at(46);
 
             /// Reset wifi button (double click power button)
@@ -326,7 +359,7 @@ void publishSensors(void){
                 else if(error_bumper)
                     ROS_ERROR("(sensors::publishSensors ERROR) All bumpers got a collision");
             
-                if(resetwifi_button){
+                if(resetwifi_button==1){
                     gobot_msg_srv::SetString set_wifi;
                     set_wifi.request.data.push_back("");
                     set_wifi.request.data.push_back("");
@@ -350,7 +383,6 @@ void publishSensors(void){
         /// If we got more than <ERROR_THRESHOLD> errors in a row, we send a command to reset the stm32
             setSpeed('F', 0, 'F', 0);
             resetStm();
-            ros::Duration(1.0).sleep();
             //error may be caused by touching the power supply 
             getGobotStatusSrv.call(get_gobot_status);
             //go to docking state
@@ -462,7 +494,6 @@ bool initSerial(void) {
 
     if(serialConnection.isOpen()){
         resetStm();
-        ros::Duration(1.0).sleep();
         ROS_INFO("Established connection to STM32.");
         return true;
     }

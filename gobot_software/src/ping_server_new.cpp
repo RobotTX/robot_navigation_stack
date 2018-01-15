@@ -240,8 +240,13 @@ void checkNewServers(void){
 
 /**  * Update the battery informations we need to send to the Qt app  */ 
 void newBatteryInfo(const gobot_msg_srv::BatteryMsg::ConstPtr& batteryInfo){         
-    if(batteryInfo->FullCapacity != 0)         
-        batteryLevel = batteryInfo->BatteryStatus; 
+    if(batteryInfo->Temperature > 0) 
+        if (batteryInfo->BatteryStatus < 0){
+            batteryLevel = 10;
+        }    
+        else{
+            batteryLevel = batteryInfo->BatteryStatus>100 ? 100 : batteryInfo->BatteryStatus;
+        }    
 }
 
 
@@ -300,7 +305,7 @@ int main(int argc, char* argv[]){
         //Startup end
 
         disco_pub = n.advertise<std_msgs::String>("/gobot_software/server_disconnected", 10);
-        ros::Subscriber batterySub = n.subscribe("/battery_topic", 1, newBatteryInfo);
+        ros::Subscriber batterySub = n.subscribe("/gobot_base/battery_topic", 1, newBatteryInfo);
         ros::ServiceServer updataStatusSrv = n.advertiseService("/gobot_software/update_status", updataStatusSrvCallback);
 
         /// Thread which will get an array of potential servers

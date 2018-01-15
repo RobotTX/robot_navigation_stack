@@ -23,6 +23,7 @@
 #include <gobot_msg_srv/GetString.h>
 #include <gobot_msg_srv/GetGobotStatus.h>
 #include <gobot_msg_srv/IsCharging.h>
+#include <geometry_msgs/Pose.h>
 
 #define PI 3.1415926
 
@@ -43,6 +44,10 @@
 
 
 bool evaluatePose(int type);
+
+void getRobotPos(const geometry_msgs::Pose::ConstPtr& msg);
+
+void saveRobotPos(const ros::TimerEvent&);
 
 bool rotateFindPose(double rot_v,double rot_t);
 

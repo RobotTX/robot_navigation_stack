@@ -321,19 +321,6 @@ void getAmclPoseCallback(const geometry_msgs::PoseWithCovarianceStamped::ConstPt
     if(found_pose){
         std_msgs::Int8 lost;
         if((cov_x > 100*initial_cov_xy && cov_y > 100*initial_cov_xy) || cov_yaw > 50*initial_cov_yaw){
-            /*gobot_msg_srv::IsCharging arg;
-            if(ros::service::call("/gobot_status/charging_status", arg) && arg.response.isCharging){
-                ROS_ERROR("Found gobot is charging. Set its pose to home");
-                publishInitialpose(home_pos_x,home_pos_y,home_ang_x,home_ang_y,home_ang_z,home_ang_w,initial_cov_xy,initial_cov_yaw);
-                lost.data=0;
-            }
-            else{
-            if(cov_yaw > 25*initial_cov_yaw)
-                ROS_ERROR("Big yaw covariance in the amcl pose");
-            if(cov_x > 25*initial_cov_xy && cov_y > 25*initial_cov_xy)
-                ROS_ERROR("Big xy covariance in the amcl pose");
-            lost.data = 1;         
-            }*/
             if(cov_yaw > 50*initial_cov_yaw)
                 ROS_ERROR("Big yaw covariance in the amcl pose");
             if(cov_x > 100*initial_cov_xy && cov_y > 100*initial_cov_xy)
@@ -342,13 +329,6 @@ void getAmclPoseCallback(const geometry_msgs::PoseWithCovarianceStamped::ConstPt
         }
         else{
             lost.data=0;
-            std::ofstream ofs(lastPoseFile, std::ofstream::out | std::ofstream::trunc);
-            if(ofs.is_open()){
-                ofs << msg->pose.pose.position.x << " " << msg->pose.pose.position.y << " " << msg->pose.pose.orientation.x<<" "<< msg->pose.pose.orientation.y<<" "<< msg->pose.pose.orientation.z<<" "<< msg->pose.pose.orientation.w;
-                ofs.close();
-            } 
-            else
-                ROS_ERROR("Could not open the file %s", lastPoseFile.c_str());
         }
         lost_pub.publish(lost);
     }
@@ -434,11 +414,32 @@ void getPose(){
         ROS_ERROR("Could not find the param last_pose");
 }
 
+void getRobotPos(const geometry_msgs::Pose::ConstPtr& msg){
+    if(found_pose){
+        last_pos_x = msg->position.x;
+        last_pos_y = msg->position.y;
+        last_ang_x = msg->orientation.x;
+        last_ang_y = msg->orientation.y;
+        last_ang_z = msg->orientation.z;
+        last_ang_w = msg->orientation.w;
+    }
+}
+
+void saveRobotPos(const ros::TimerEvent&){
+    if(found_pose){
+        std::ofstream ofs(lastPoseFile, std::ofstream::out | std::ofstream::trunc);
+        if(ofs.is_open()){
+            ofs << last_pos_x << " " << last_pos_y << " " << last_ang_x <<" "<< last_ang_y <<" "<< last_ang_z <<" "<< last_ang_w;
+            ofs.close();
+        } 
+    }
+}
 
 int main(int argc, char **argv) {
     ros::init(argc, argv, "initialpose_estimation");
     ros::NodeHandle nh;
-    
+
+    ros::Timer timer = nh.createTimer(ros::Duration(1.0), saveRobotPos);
 
     vel_pub = nh.advertise<geometry_msgs::Twist>("/cmd_vel",10);
     initial_pose_publisher = nh.advertise<geometry_msgs::PoseWithCovarianceStamped>("/initialpose", 1);
@@ -447,6 +448,7 @@ int main(int argc, char **argv) {
     lost_pub = nh.advertise<std_msgs::Int8>("/gobot_recovery/lost_robot",1);
 
     ros::Subscriber initialPose = nh.subscribe("/amcl_pose",1,getAmclPoseCallback);
+    ros::Subscriber sub_robot = nh.subscribe("/robot_pose", 1, getRobotPos);
     ros::ServiceServer initializeHome = nh.advertiseService("/gobot_recovery/initialize_home",initializeHomeSrcCallback);
     ros::ServiceServer initializePose = nh.advertiseService("/gobot_recovery/initialize_pose",initializePoseSrvCallback);
     ros::ServiceServer globalizePose = nh.advertiseService("/gobot_recovery/globalize_pose",globalizePoseSrvCallback);

@@ -8,10 +8,10 @@ std::shared_ptr<MoveBaseClient> ac(0);
 int attempt = 0;
 bool docking = false;
 bool collision = false;
-bool charging = false;
 bool lostIrSignal = false;
 bool leftFlag = false;
-bool move_away_collision = true;
+bool charging = false;
+bool move_from_collision = true;
 
 std::chrono::system_clock::time_point collisionTime;
 std::chrono::system_clock::time_point lastIrSignalTime;
@@ -25,28 +25,33 @@ ros::Timer sound_timer;
 
 std_srvs::Empty empty_srv;
 
-int dock_status = 0;
+tfScalar x, y, oriX, oriY, oriZ, oriW;
+tfScalar roll,pitch,yaw;
+double landingPointX, landingPointY;
 
+int dock_status = 0;
 SetStatus set_status_class;
 /****************************************** STEP 1 : Go 1.5 meters in front of the charging station *********************************************************/
+bool setSpeed(const char directionR, const int velocityR, const char directionL, const int velocityL){
+    //ROS_INFO("(auto_docking::setSpeed) %c %d %c %d", directionR, velocityR, directionL, velocityL);
+    gobot_msg_srv::SetSpeeds speed; 
+    speed.request.directionR = std::string(1, directionR);
+    speed.request.velocityR = velocityR;
+    speed.request.directionL = std::string(1, directionL);
+    speed.request.velocityL = velocityL;
+
+    return ros::service::call("/gobot_motor/setSpeeds", speed);
+}
 
 /// Service to start docking
 bool startDocking(void){
     ros::NodeHandle nh;
-
-    docking = false;
-    collision = false;
-    charging = false;
-    lostIrSignal = false;
-    move_away_collision = true;
-    leftFlag = false;
 
     ros::spinOnce();
 
     /// Get the charging station position from the home file
     gobot_msg_srv::GetString get_home;
     if(ros::service::call("/gobot_status/get_home",get_home)){
-        tfScalar x, y, oriX, oriY, oriZ, oriW;
         x=std::stod(get_home.response.data[0]);
         y=std::stod(get_home.response.data[1]);
         oriX=std::stod(get_home.response.data[2]);
@@ -60,17 +65,16 @@ bool startDocking(void){
             /// Got a quaternion and want an orientation in radian
             tf::Matrix3x3 matrix = tf::Matrix3x3(tf::Quaternion(oriX , oriY , oriZ, oriW));
 
-            tfScalar roll,pitch,yaw;
-
             matrix.getRPY(roll, pitch, yaw);
             double homeOri = -(yaw*180/3.14159);//-(orientation+90)*3.14159/180);
 
             /// We want to go 1 metre in front of the charging station
-            double landingPointX = x + 0.4 * std::cos(yaw);
-            double landingPointY = y + 0.4 * std::sin(yaw);
+            landingPointX = x + 0.4 * std::cos(yaw);
+            landingPointY = y + 0.4 * std::sin(yaw);
             //~ROS_INFO("(auto_docking::startDocking) landing point : [%f, %f, %f]", landingPointX, landingPointY, homeOri);
 
             /// Create the goal
+            currentGoal.target_pose.header.frame_id = "map";
             currentGoal.target_pose.header.stamp = ros::Time::now();
             currentGoal.target_pose.pose.position.x = landingPointX;
             currentGoal.target_pose.pose.position.y = landingPointY;
@@ -82,16 +86,8 @@ bool startDocking(void){
             
             /// send the goal
             if(ac->isServerConnected()) {
-                set_status_class.setGobotStatus(15,"DOCKING");
-
-                dock_status = 3;
-                set_status_class.setDockStatus(dock_status);
-
+                startDockingParams();
                 ac->sendGoal(currentGoal);
-                docking = true;
-                sound_timer.start();
-
-                //~ROS_INFO("(auto_docking::startDocking) service called successfully");
 
                 return true;
             }
@@ -111,26 +107,14 @@ void goalResultCallback(const move_base_msgs::MoveBaseActionResult::ConstPtr& ms
     if(docking){
         ROS_INFO("(auto_docking::newBumpersInfo) Goal status %d",msg->status.status);
         switch(msg->status.status){
-			//PREEMTED
-			case 2:
-				break;
 			//SUCCEED
 			case 3:
 				/// if we reached the goal for the fisrt time
                 findChargingStation();
 				break;
-			//ABORTED
-			case 4:
-				/// if the goal could not be reached
-                finishedDocking();
-                break;
-			//REJECTED
-			case 5:
-                finishedDocking();
-				break;
 			//OTHER CASE
 			default:
-				ROS_ERROR("Unknown goal status %d",msg->status.status);
+                finishedDocking();
 				break;
 		}
     }
@@ -140,7 +124,7 @@ void goalResultCallback(const move_base_msgs::MoveBaseActionResult::ConstPtr& ms
 void findChargingStation(void){
     //~ROS_INFO("(auto_docking::findChargingStation) start to find charging station");
     ros::NodeHandle nh;
-
+    goalStatusSub.shutdown();
     /// To check if we are charging
     batterySub = nh.subscribe("/gobot_base/battery_topic", 1, newBatteryInfo);
 
@@ -152,67 +136,58 @@ void findChargingStation(void){
     irSub = nh.subscribe("/gobot_base/ir_topic", 1, newIrSignal);
 }
 
-bool setSpeed(const char directionR, const int velocityR, const char directionL, const int velocityL){
-    //ROS_INFO("(auto_docking::setSpeed) %c %d %c %d", directionR, velocityR, directionL, velocityL);
-    gobot_msg_srv::SetSpeeds speed; 
-    speed.request.directionR = std::string(1, directionR);
-    speed.request.velocityR = velocityR;
-    speed.request.directionL = std::string(1, directionL);
-    speed.request.velocityL = velocityL;
-
-    return ros::service::call("/gobot_motor/setSpeeds", speed);
-}
-
 void newBatteryInfo(const gobot_msg_srv::BatteryMsg::ConstPtr& batteryInfo){
+    /*
     /// if we are charging
     if(docking && !charging && batteryInfo->ChargingFlag){
-        charging = true;
-        irSub.shutdown();
-        if(move_away_collision)
+        if(!collision){
+            charging = true;
+            irSub.shutdown();
             setSpeed('F', 0, 'F', 0);
-        //~ROS_INFO("(auto_docking::battery) Checking the alignment");
-        alignWithCS();
+            finishedDocking();
+        }
     }
+    */
 }
 
 void newBumpersInfo(const gobot_msg_srv::BumperMsg::ConstPtr& bumpers){
     /// 0 : collision; 1 : no collision
     //at least two has no collision we will check
-   bool back = !(bumpers->bumper5 && bumpers->bumper6 && bumpers->bumper7 && bumpers->bumper8);
-
-    /// check if we have a collision
-    if(back && docking && !collision){
-        collision = true;
-        move_away_collision=false;
-        irSub.shutdown();
-        setSpeed('F', 0, 'F', 0);
-        ROS_WARN("(auto_docking::newBumpersInfo) just got a new collision:%d,%d,%d,%d",bumpers->bumper5,bumpers->bumper6,bumpers->bumper7,bumpers->bumper8);
-        //turn right
-        if(bumpers->bumper8==0 && bumpers->bumper5==1 && bumpers->bumper6==1 && bumpers->bumper7==1)
-            setSpeed('B', 2, 'F', 3);
-        //turn left
-        else if(bumpers->bumper5==0 && bumpers->bumper6==1 && bumpers->bumper7==1 && bumpers->bumper8==1)
-            setSpeed('F', 3, 'B', 2);
-        //turn a bit left
-        else if(bumpers->bumper5==0 && bumpers->bumper6==0 && bumpers->bumper7==1 && bumpers->bumper8==1)
-            setSpeed('F', 3, 'F', 1);
-        //turn a bit right
-        else if(bumpers->bumper7==0 && bumpers->bumper8==0 && bumpers->bumper5==1 && bumpers->bumper6==1)
-            setSpeed('F', 1, 'F', 3);
-        //forward
-        else
-            setSpeed('F', 3, 'F', 3);
-            
-        ros::Duration(0.7).sleep();
-        setSpeed('F', 0, 'F', 0);
-        collision = false;
-    }
-    else if(!back && docking && !move_away_collision && !collision){
-        move_away_collision = true;
-        ROS_INFO("(auto_docking::newBumpersInfo) move away from collision");
-        if(!charging){
-            //~ROS_INFO("(auto_docking::bumper) Checking the alignment");
-            alignWithCS();
+    if(docking){
+        bool back = !(bumpers->bumper5 && bumpers->bumper6 && bumpers->bumper7 && bumpers->bumper8);
+        /// check if we have a collision
+        if(back){
+            if(!collision){
+                irSub.shutdown();
+                collision = true;
+                move_from_collision = false;
+                setSpeed('F', 0, 'F', 0);
+                ROS_WARN("(auto_docking::newBumpersInfo) just got a new collision:%d,%d,%d,%d",bumpers->bumper5,bumpers->bumper6,bumpers->bumper7,bumpers->bumper8);
+                //turn right
+                if(bumpers->bumper8==0 && bumpers->bumper5==1 && bumpers->bumper6==1 && bumpers->bumper7==1)
+                    setSpeed('B', 1, 'F', 3);
+                //turn left
+                else if(bumpers->bumper5==0 && bumpers->bumper6==1 && bumpers->bumper7==1 && bumpers->bumper8==1)
+                    setSpeed('F', 3, 'B', 1);
+                //turn a bit left
+                else if(bumpers->bumper5==0 && bumpers->bumper6==0 && bumpers->bumper7==1 && bumpers->bumper8==1)
+                    setSpeed('F', 3, 'F', 1);
+                //turn a bit right
+                else if(bumpers->bumper7==0 && bumpers->bumper8==0 && bumpers->bumper5==1 && bumpers->bumper6==1)
+                    setSpeed('F', 1, 'F', 3);
+                //forward
+                else
+                    setSpeed('F', 3, 'F', 3);
+            }
+        }
+        else{ 
+            if (!move_from_collision && collision){
+                if(!charging){
+                    move_from_collision = true;
+                    setSpeed('F', 0, 'F', 0);
+                    finishedDocking();
+                }
+            }
         }
     }
 }
@@ -235,10 +210,12 @@ void newIrSignal(const gobot_msg_srv::IrMsg::ConstPtr& irSignal){
                     setSpeed('B', 5, 'F', 5);
                 else
                     setSpeed('F', 5, 'B', 5);
-            } else
+            } 
+            else{
                 /// if we lost the signal for more than 20 seconds, we failed docking, else, the robot should still be turning on itself
                 if(std::chrono::duration_cast<std::chrono::seconds>(std::chrono::system_clock::now() - lastIrSignalTime).count() > 20.0)
                     finishedDocking();
+            }
         } 
         else {
             /// we got an ir signal; 
@@ -290,29 +267,6 @@ void newIrSignal(const gobot_msg_srv::IrMsg::ConstPtr& irSignal){
 
 /****************************************** STEP 3 : The robot is charging, so we align it with the charging station *********************************************************/
 
-void alignWithCS(void){
-    charging = true;
-    ROS_INFO("(auto_docking::bumper) Checking the alignment");
-    std::thread([](){
-        //check collision in these 5 seconds
-        ros::Time last_time=ros::Time::now();
-        double dt=0.0;
-        while(dt<5.0){
-            dt=(ros::Time::now()-last_time).toSec();
-            ros::Duration(0.2).sleep();
-            ros::spinOnce();
-        }
-        bumperSub.shutdown();
-        batterySub.shutdown();
-        setSpeed('F', 0, 'F', 0);
-        finishedDocking();
-        /*//proximity sensor not in use yet
-        ros::NodeHandle nh;
-        proximitySub = nh.subscribe("/gobot_base/proximity_topic", 1, newProximityInfo);
-        */
-    }).detach();
-}
-
 void newProximityInfo(const gobot_msg_srv::ProximityMsg::ConstPtr& proximitySignal){
     /*
     if(docking && !collision){
@@ -344,105 +298,106 @@ void newProximityInfo(const gobot_msg_srv::ProximityMsg::ConstPtr& proximitySign
 }
 
 void finishedDocking(){
-    sound_timer.stop();
+    ros::NodeHandle nh;
     gobot_msg_srv::IsCharging arg;
+    resetDockingParams();
+    ros::Duration(2.0).sleep();
     if(ros::service::call("/gobot_status/charging_status", arg) && arg.response.isCharging){
-        dock_status = 1;
-        set_status_class.setDockStatus(dock_status);
+        set_status_class.setGobotStatus(11,"STOP_DOCKING");
         ROS_INFO("(auto_docking::finishedDocking) Auto docking finished->SUCESSFUL.");
-
         set_status_class.setSound(1,2);
-
-        stopDocking();
     }
     else{
         attempt++;
         if(attempt <= 3){
             ROS_WARN("(auto_docking::finishedDocking) Failed docking %d time(s)", attempt);
-            
-            //try again
-            /// unsubscribe so we don't receive messages for nothing
-            bumperSub.shutdown();
-            irSub.shutdown();
-            batterySub.shutdown();
-            proximitySub.shutdown();
-
-            if(ac->isServerConnected()) {
-                dock_status = 3;
-                set_status_class.setDockStatus(dock_status);
-                ac->sendGoal(currentGoal);
-            }
-
             setSpeed('F', 15, 'F', 15);
             ros::Duration(1.0).sleep();
             setSpeed('F', 0, 'F', 0);
 
+            if(ac->isServerConnected()) {
+                startDockingParams();
+                if(attempt == 1){
+                    currentGoal.target_pose.header.stamp = ros::Time::now();
+                    currentGoal.target_pose.pose.position.x = landingPointX + 0.1*std::sin(yaw);
+                    currentGoal.target_pose.pose.position.y = landingPointY - 0.1*std::cos(yaw);
+                }
+                else if(attempt == 2){
+                    currentGoal.target_pose.header.stamp = ros::Time::now();
+                    currentGoal.target_pose.pose.position.x = landingPointX - 0.1*std::sin(yaw);
+                    currentGoal.target_pose.pose.position.y = landingPointY + 0.1*std::cos(yaw);
+                }
+                else {
+                    currentGoal.target_pose.header.stamp = ros::Time::now();
+                    currentGoal.target_pose.pose.position.x = landingPointX;
+                    currentGoal.target_pose.pose.position.y = landingPointY;
+                }
+                ac->sendGoal(currentGoal);
+            }
         }
         else{ 
             dock_status = -1;
             set_status_class.setDockStatus(dock_status);
+            set_status_class.setGobotStatus(11,"FAIL_DOCKING");
             ROS_WARN("(auto_docking::finishedDocking) Auto docking finished->FAILED.");
             setSpeed('F', 15, 'F', 15);
-            ros::Duration(1.0).sleep();
-
+            ros::Duration(2.0).sleep();
+            setSpeed('F', 0, 'F', 0);
             set_status_class.setSound(3,2);
-
-            stopDocking();
         }
     }
 }
 
 /***************************************************************************************************/
-
-void stopDocking(void){
-    if(dock_status!=3){
-        set_status_class.setGobotStatus(11,(dock_status==-1) ? "FAIL_DOCKING" : "STOP_DOCKING");
-    }
-
-    docking=false;
-    /// if action server is up -> cancel
-    if(ac->isServerConnected() && dock_status!=1 && dock_status!=3)
-        ac->cancelAllGoals();
-    
-    /// unsubscribe so we don't receive messages for nothing
-    bumperSub.shutdown();
-    irSub.shutdown();
-    batterySub.shutdown();
-    proximitySub.shutdown();
-
-    setSpeed('F', 0, 'F', 0);
-    //~ROS_INFO("(auto_docking::stopDocking) called");
-}
-
 bool stopDockingService(std_srvs::Empty::Request &req, std_srvs::Empty::Response &res){
-    gobot_msg_srv::IsCharging arg;
-    if(ros::service::call("/gobot_status/charging_status", arg) && arg.response.isCharging){
-        dock_status = 1;
-        //~ROS_INFO("(auto_docking::stopDockingService) service called, Gobot is charging");
+    if(dock_status==3){
+        resetDockingParams();
+        if(ac->isServerConnected())
+            ac->cancelAllGoals();
+        gobot_msg_srv::IsCharging arg;
+        dock_status=(ros::service::call("/gobot_status/charging_status", arg) && arg.response.isCharging) ? 1 : 0; 
+        set_status_class.setDockStatus(dock_status);
+        set_status_class.setGobotStatus(11,"STOP_DOCKING");
     }
-    else{
-        dock_status = 0;
-        //~ROS_INFO("(auto_docking::stopDockingService) service called, Gobot is not charging");
-    }
-    set_status_class.setDockStatus(dock_status);
-    attempt = 0;
-    stopDocking();
-
     return true;
 }
 
 bool startDockingService(std_srvs::Empty::Request &req, std_srvs::Empty::Response &res){
-    //~ROS_INFO("(auto_docking::startDockingService) service called");
+    resetDockingParams();
     attempt = 0;
-
     return startDocking();
 }
 
 
 void timerCallback(const ros::TimerEvent&){
-    if(dock_status==3){
+    if(docking){
         set_status_class.setSound(2,1);
     }
+}
+
+void resetDockingParams(){
+    setSpeed('F', 0, 'F', 0);
+    bumperSub.shutdown();
+    irSub.shutdown();
+    batterySub.shutdown();
+    goalStatusSub.shutdown();
+    charging = false;
+    docking = false;
+    collision = false;
+    lostIrSignal = false;
+    leftFlag = false;
+    move_from_collision = true;
+    sound_timer.stop();
+}
+
+void startDockingParams(){
+    ros::NodeHandle nh;
+    dock_status = 3;
+    set_status_class.setDockStatus(dock_status);
+    set_status_class.setGobotStatus(15,"DOCKING");
+    docking = true;
+    sound_timer.start();
+    goalStatusSub = nh.subscribe("/move_base/result",1,goalResultCallback);
 }
 
 int main(int argc, char* argv[]){
@@ -456,10 +411,6 @@ int main(int argc, char* argv[]){
     ac->waitForServer();
 
     ROS_INFO("(auto_docking::startDockingService) actionlib server ready!!");
-
-    currentGoal.target_pose.header.frame_id = "map";
-    /// will allow us to check that we arrived at our destination
-    goalStatusSub = nh.subscribe("/move_base/result",1,goalResultCallback);
 
     ros::ServiceServer startDockingSrv = nh.advertiseService("/gobot_function/startDocking", startDockingService);
     ros::ServiceServer stopDockingSrv = nh.advertiseService("/gobot_function/stopDocking", stopDockingService);
