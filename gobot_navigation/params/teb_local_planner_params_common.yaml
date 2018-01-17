@@ -18,8 +18,8 @@ weight_acc_lim_theta: 1.0 #default:1
 
 #Optimization weight for minimzing the distance to via-points
 #How close robot follows the via-points
-weight_viapoint: 100.0 # 1.0
-weight_kinematics_forward_drive: 400.0
+weight_viapoint: 50.0 # 1.0
+weight_kinematics_forward_drive: 250.0
 weight_obstacle: 50.0
 weight_dynamic_obstacle: 50.0
 ####Key params that affect motion####
@@ -29,8 +29,8 @@ selection_alternative_time_cost: False # not in use yet
 min_turning_radius: 0.0
 wheelbase: 0.0
 # GoalTolerance
-xy_goal_tolerance: 0.15
-yaw_goal_tolerance: 0.15 #8.6 degrees
+xy_goal_tolerance: 0.2
+yaw_goal_tolerance: 0.1 #8.6 degrees
 #Remove the goal velocity constraint such that the robot can arrive at the goal with maximum speed 
 free_goal_vel: False
 
@@ -52,7 +52,7 @@ feasibility_check_no_poses: 5
 #If positive, via-points are extrected from the global plan (path-following mode)
 #Value determines min. separation between each two consecutive via-points along the global plan
 #-0.1 (disabled)
-global_plan_viapoint_sep: 0.3 # -0.1
+global_plan_viapoint_sep: 0.25 # -0.1
 shrink_horizon_min_duration: 10.0
 #If true, underlying trajectories might be initialized with 
 #backwards motions in case the goal is behind the start within the local costmap
@@ -60,23 +60,26 @@ allow_init_with_backwards_motion: False
 
 footprint_model: # types: "point", "circular", "two_circles", "line", "polygon"
     type: "polygon"
-    vertices: [[0.250,0],[0.245,-0.167],[0.225,-0.225],[0.195,-0.245],[0.0893,-0.250],[0,-0.250],[-0.1786,-0.245],[-0.225,-0.225],[-0.245,-0.167],[-0.250,-0.0835],[-0.250,0],[-0.245,0.167],[-0.225,0.225],[-0.1786,0.245],[-0.0893,0.250],[0,0.250],[0.1786,0.245],[0.225,0.225],[0.245,0.167],[0.250,0.0835]]
+    vertices: [[0.250,0],[0.245,-0.167], [0.225,-0.225], [0.195,-0.245],
+              [0,-0.250],[-0.179,-0.245],[-0.225,-0.225],[-0.245,-0.167],
+              [-0.250,0],[-0.245,0.167], [-0.225,0.225], [-0.179,0.245],
+              [0,0.250], [0.179,0.245],  [0.225,0.225],  [0.245,0.167]]
 # Obstacles
 #Minimum desired separation from obstacles in meters 
-min_obstacle_dist: 0.04
+min_obstacle_dist: 0.1
 include_costmap_obstacles: true
 costmap_obstacles_behind_robot_dist: 1.0
 obstacle_poses_affected: 30
 #Buffer zone around obstacles with non-zero penalty costs (should be larger than min_obstacle_dist in order to take effect). 
 #Also refer to the weight weight_inflation. 
-inflation_dist: 0.5
-dynamic_obstacle_inflation_dist: 0.5
+inflation_dist: 0.6
+dynamic_obstacle_inflation_dist: 0.6
 include_dynamic_obstacles: false
 
 # Optimization
 
-no_inner_iterations: 4
-no_outer_iterations: 3
+no_inner_iterations: 5
+no_outer_iterations: 4
 optimization_activate: True
 optimization_verbose: False
 #Add a small safety margin to penalty functions for hard-constraint approximations 

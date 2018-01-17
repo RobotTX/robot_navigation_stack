@@ -9,7 +9,7 @@
     <arg name="pitch" default="0"/>
     <arg name="yaw" default="0"/>
 
-    <node pkg="tf" type="static_transform_publisher" name="base_link_to_laser" args="0.355 0 0.21 0 0 0 /base_link /base_laser 50" required="true"/>
+    <node pkg="tf" type="static_transform_publisher" name="base_link_to_laser" args="0.355 0 0.21 0 0 0 /base_link /base_laser 100" required="true"/>
 
     <include file="$(find gazebo_ros)/launch/empty_world.launch">       
         <arg name="world_name" value="$(find gobot_gazebo)/worlds/gobot.world"/>

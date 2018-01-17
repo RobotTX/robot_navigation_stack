@@ -27,8 +27,8 @@ then
             nmcli connection up "Hotspot"
             echo "Robot connecting to its own wifi named '$defalutwifi'"
         fi
-    else
-        echo "Robot connected to its own wifi named '$defalutwifi' as there is no assgined wifi"
+    #else
+        #echo "Robot connected to its own wifi named '$defalutwifi' as there is no assgined wifi"
     fi
 
 else      
@@ -48,8 +48,8 @@ else
             nmcli connection up "$wifiname"
             echo "Robot connecting to assigned wifi named '$wifiname'"
         fi
-    else
-        echo "Robot connected to assigned wifi named '$wifiname'"
+    #else
+        #echo "Robot connected to assigned wifi named '$wifiname'"
     fi
 fi
 var=$(ifconfig | grep -A 1 $wifi | grep inet | cut -d ':' -f2|cut -f -3 --delimiter='.')

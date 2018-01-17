@@ -68,8 +68,8 @@ bool startDocking(void){
             double homeOri = -(yaw*180/3.14159);//-(orientation+90)*3.14159/180);
 
             /// We want to go 1 metre in front of the charging station
-            landingPointX = x + 0.4 * std::cos(yaw);
-            landingPointY = y + 0.4 * std::sin(yaw);
+            landingPointX = x + 0.5 * std::cos(yaw);
+            landingPointY = y + 0.5 * std::sin(yaw);
             //~ROS_INFO("(auto_docking::startDocking) landing point : [%f, %f, %f]", landingPointX, landingPointY, homeOri);
 
             /// Create the goal
@@ -164,10 +164,10 @@ void newBumpersInfo(const gobot_msg_srv::BumperMsg::ConstPtr& bumpers){
                 ROS_WARN("(auto_docking::newBumpersInfo) just got a new collision:%d,%d,%d,%d",bumpers->bumper5,bumpers->bumper6,bumpers->bumper7,bumpers->bumper8);
                 //turn right
                 if(bumpers->bumper8==0 && bumpers->bumper5==1 && bumpers->bumper6==1 && bumpers->bumper7==1)
-                    setSpeed('B', 1, 'F', 3);
+                    setSpeed('B', 2, 'F', 3);
                 //turn left
                 else if(bumpers->bumper5==0 && bumpers->bumper6==1 && bumpers->bumper7==1 && bumpers->bumper8==1)
-                    setSpeed('F', 3, 'B', 1);
+                    setSpeed('F', 3, 'B', 2);
                 //turn a bit left
                 else if(bumpers->bumper5==0 && bumpers->bumper6==0 && bumpers->bumper7==1 && bumpers->bumper8==1)
                     setSpeed('F', 3, 'F', 1);
@@ -293,7 +293,7 @@ void finishedDocking(){
     ros::NodeHandle nh;
     gobot_msg_srv::IsCharging arg;
     resetDockingParams();
-    ros::Duration(2.0).sleep();
+    ros::Duration(3.0).sleep();
     if(ros::service::call("/gobot_status/charging_status", arg) && arg.response.isCharging){
         dock_status = 1;
         set_status_class.setGobotStatus(11,"STOP_DOCKING");
@@ -312,13 +312,13 @@ void finishedDocking(){
                 startDockingParams();
                 if(attempt == 1){
                     currentGoal.target_pose.header.stamp = ros::Time::now();
-                    currentGoal.target_pose.pose.position.x = landingPointX + 0.1*std::sin(yaw);
-                    currentGoal.target_pose.pose.position.y = landingPointY - 0.1*std::cos(yaw);
+                    currentGoal.target_pose.pose.position.x = landingPointX + 0.05*std::sin(yaw);
+                    currentGoal.target_pose.pose.position.y = landingPointY - 0.05*std::cos(yaw);
                 }
                 else if(attempt == 2){
                     currentGoal.target_pose.header.stamp = ros::Time::now();
-                    currentGoal.target_pose.pose.position.x = landingPointX - 0.1*std::sin(yaw);
-                    currentGoal.target_pose.pose.position.y = landingPointY + 0.1*std::cos(yaw);
+                    currentGoal.target_pose.pose.position.x = landingPointX - 0.05*std::sin(yaw);
+                    currentGoal.target_pose.pose.position.y = landingPointY + 0.05*std::cos(yaw);
                 }
                 else {
                     currentGoal.target_pose.header.stamp = ros::Time::now();

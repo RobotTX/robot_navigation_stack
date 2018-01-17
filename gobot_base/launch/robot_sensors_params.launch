@@ -3,8 +3,8 @@
     <!-- MD49 AND STM32 RELATED -->
     <param name="wheel_separation" type="double" value="0.35" />
     <param name="wheel_radius" type="double" value="0.075" />
-    <param name="ticks_per_rotation" type="double" value="980" />
-    <param name="collision_threshold" type="double" value="5.0" />
+    <param name="ticks_per_rotation" type="double" value="982" />
+    <param name="collision_threshold" type="double" value="4.0" />
     <param name="avoid_spd" type="int" value="12" />
     <param name="STMdevice" type="string" value="/dev/STM" />
     <param name="MD49device" type="string" value="/dev/MD" />

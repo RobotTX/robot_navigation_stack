@@ -1,7 +1,7 @@
 #!/bin/bash
 isAlive="$1"
 wififile="$2"
-defalutwifi="Robot_Hotspot"
+defalutwifi="Robot_Hotspot_"
 wifi=$(nmcli device status | grep wifi |cut -d ' ' -f1)
 n=1
 while read line
@@ -27,8 +27,8 @@ then
             nmcli connection up "Hotspot"
             echo "Robot connecting to its own wifi named '$defalutwifi'"
         fi
-    else
-        echo "Robot connected to its own wifi named '$defalutwifi' as there is no assgined wifi"
+    #else
+        #echo "Robot connected to its own wifi named '$defalutwifi' as there is no assgined wifi"
     fi
 
 else      
@@ -48,9 +48,11 @@ else
             nmcli connection up "$wifiname"
             echo "Robot connecting to assigned wifi named '$wifiname'"
         fi
-    else
-        echo "Robot connected to assigned wifi named '$wifiname'"
+    #else
+        #echo "Robot connected to assigned wifi named '$wifiname'"
     fi
 fi
 var=$(ifconfig | grep -A 1 $wifi | grep inet | cut -d ':' -f2|cut -f -3 --delimiter='.')
 fping -r 0 -g "$var.0/24" 2>/dev/null | grep alive | cut -d ' ' -f1 > $isAlive
+sed -i "/$var.144/d" $isAlive
+sed -i "/$var.165/d" $isAlive

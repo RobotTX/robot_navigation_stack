@@ -43,6 +43,7 @@ ros::Time last_time;
 
 int current_stage = FREE_STAGE;
 int charging_state = -1, pre_charing_state=-1;
+bool charging = false;
 
 gobot_msg_srv::GetGobotStatus get_gobot_status;
 ros::ServiceClient getGobotStatusSrv;
@@ -301,6 +302,8 @@ void batteryCallback(const gobot_msg_srv::BatteryMsg::ConstPtr& msg){
         current_stage = FREE_STAGE;
         pre_charing_state = -1;
     }
+
+    charging = msg->ChargingFlag;
 }
 
 void explorationCallback(const std_msgs::Int8::ConstPtr& msg){
@@ -404,23 +407,25 @@ void batteryLed(){
 }
 
 void timerCallback(const ros::TimerEvent&){
-    std::vector<uint8_t> color;
-    if (charging_state == 0 && current_stage != CHARGING_STAGE){
-        if(current_stage<LOW_BATTERY_STAGE){
-            current_stage = LOW_BATTERY_STAGE;
-            color.push_back(MAGENTA);
-            setLedPermanent(color);
-        }
+    if (!charging){
+        std::vector<uint8_t> color;
+        if (charging_state == 0 && current_stage != CHARGING_STAGE){
+            if(current_stage<LOW_BATTERY_STAGE){
+                current_stage = LOW_BATTERY_STAGE;
+                color.push_back(MAGENTA);
+                setLedPermanent(color);
+            }
 
-        getGobotStatusSrv.call(get_gobot_status);
-        if(get_gobot_status.response.status!=15){
-            setSound(3,2);
+            getGobotStatusSrv.call(get_gobot_status);
+            if(get_gobot_status.response.status!=15){
+                setSound(3,2);
+            }
         }
+        //Show battery status if no stage for certain period, show battery lvl
+        else if(((ros::Time::now() - last_time).toSec()>300.0) && (current_stage==FREE_STAGE)){
+            batteryLed();
+        }   
     }
-    //Show battery status if no stage for certain period, show battery lvl
-    else if(((ros::Time::now() - last_time).toSec()>300.0) && (current_stage==FREE_STAGE)){
-        batteryLed();
-    }   
 }
 
 int main(int argc, char **argv) {

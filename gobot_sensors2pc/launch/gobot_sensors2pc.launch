@@ -2,22 +2,22 @@
 <launch>
     <include file="$(find gobot_base)/launch/robot_sensors_params.launch"/>
     <!--laser to base tf frequency depends on the laser update rate-->
-    <node pkg="tf" type="static_transform_publisher" name="front_right_sonar_to_base_link" args="0.25 0.13 0.31 0 0 0 /base_link /front_right_sonar 50 "/>
-    <node pkg="tf" type="static_transform_publisher" name="front_left_sonar_to_base_link" args="0.25 -0.13 0.31 0 0 0 /base_link /front_left_sonar 50 "/>
-    <node pkg="tf" type="static_transform_publisher" name="rear_right_sonar_to_base_link" args="-0.25 0.11 0.31 3.14159 0 0 /base_link /rear_right_sonar 50 " />
-    <node pkg="tf" type="static_transform_publisher" name="rear_left_sonar_to_base_link" args="-0.25 -0.11 0.31 3.14159 0 0 /base_link /rear_left_sonar 50 " />
+    <node pkg="tf" type="static_transform_publisher" name="front_right_sonar_to_base_link" args="0.25 0.13 0.31 0 0 0 /base_link /front_right_sonar 200 "/>
+    <node pkg="tf" type="static_transform_publisher" name="front_left_sonar_to_base_link" args="0.25 -0.13 0.31 0 0 0 /base_link /front_left_sonar 200 "/>
+    <node pkg="tf" type="static_transform_publisher" name="rear_right_sonar_to_base_link" args="-0.25 0.11 0.31 3.14159 0 0 /base_link /rear_right_sonar 200 " />
+    <node pkg="tf" type="static_transform_publisher" name="rear_left_sonar_to_base_link" args="-0.25 -0.11 0.31 3.14159 0 0 /base_link /rear_left_sonar 200 " />
 
-    <node pkg="tf" type="static_transform_publisher" name="front_right_cliff_to_base_link" args="0.25 0.18 0.01 0 0 0 /base_link /front_right_cliff 50" />
-    <node pkg="tf" type="static_transform_publisher" name="front_left_cliff_to_base_link" args="0.25 -0.18 0.01 0 0 0 /base_link /front_left_cliff 50" />
-    <node pkg="tf" type="static_transform_publisher" name="back_right_cliff_to_base_link" args="-0.25 0.18 0.01 3.14159 0 0 /base_link /back_right_cliff 50" />
-    <node pkg="tf" type="static_transform_publisher" name="back_left_cliff_to_base_link" args="-0.25 -0.18 0.01 3.14159 0 0 /base_link /back_left_cliff 50" />
+    <node pkg="tf" type="static_transform_publisher" name="front_right_cliff_to_base_link" args="0.25 0.18 0.01 0 0 0 /base_link /front_right_cliff 200" />
+    <node pkg="tf" type="static_transform_publisher" name="front_left_cliff_to_base_link" args="0.25 -0.18 0.01 0 0 0 /base_link /front_left_cliff 200" />
+    <node pkg="tf" type="static_transform_publisher" name="back_right_cliff_to_base_link" args="-0.25 0.18 0.01 3.14159 0 0 /base_link /back_right_cliff 200" />
+    <node pkg="tf" type="static_transform_publisher" name="back_left_cliff_to_base_link" args="-0.25 -0.18 0.01 3.14159 0 0 /base_link /back_left_cliff 200" />
 
-    <node pkg="gobot_sensors2pc" type="bumpers2pc" name="bumpers2pc" required="true">
+    <node pkg="gobot_sensors2pc" type="bumpers2pc" name="bumpers2pc" respawn="true">
     </node>
 
-    <node pkg="gobot_sensors2pc" type="sonars2pc" name="sonars2pc" output="screen" required="true">
+    <node pkg="gobot_sensors2pc" type="sonars2pc" name="sonars2pc" output="screen" respawn="true">
     </node>
 
-    <node pkg="gobot_sensors2pc" type="cliffs2pc" name="cliffs2pc" output="screen" required="true">
+    <node pkg="gobot_sensors2pc" type="cliffs2pc" name="cliffs2pc" output="screen" respawn="true">
     </node>
 </launch>

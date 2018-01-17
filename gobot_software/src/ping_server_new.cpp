@@ -233,7 +233,7 @@ void checkNewServers(void){
             serverMutex.unlock();
         }
         scanIP=false;
-        ROS_INFO("(ping_server) Available IPs: %lu, Connected IPs: %lu", availableIPs.size(),oldIPs.size());
+        //ROS_INFO("(ping_server) Available IPs: %lu, Connected IPs: %lu", availableIPs.size(),oldIPs.size());
         loop_rate.sleep();        
     }
 }

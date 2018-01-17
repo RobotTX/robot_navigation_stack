@@ -68,6 +68,7 @@ void cliffCallback(const gobot_msg_srv::CliffMsg::ConstPtr& cliff){
         }
     }
     else if(!moved_from_front_cliff){
+        ros::Duration(0.5).sleep();
         moved_from_front_cliff=true;
         setSpeed('F', 0, 'F', 0);
     }
@@ -86,6 +87,7 @@ void cliffCallback(const gobot_msg_srv::CliffMsg::ConstPtr& cliff){
         }
     }
     else if(!moved_from_back_cliff){
+        ros::Duration(0.5).sleep();
         moved_from_back_cliff=true;
         setSpeed('F', 0, 'F', 0);
     }
