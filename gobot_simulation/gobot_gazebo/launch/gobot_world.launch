@@ -2,14 +2,14 @@
 <launch>
 
     <!-- Robot spawn pose -->
-    <arg name="x" default="0.073"/>
+    <arg name="x" default="0.2"/>
     <arg name="y" default="0"/>
     <arg name="z" default="0"/>
     <arg name="roll" default="0"/>
     <arg name="pitch" default="0"/>
     <arg name="yaw" default="0"/>
 
-    <node pkg="tf" type="static_transform_publisher" name="base_link_to_laser" args="0.355 0 0.21 0 0 0 /base_link /base_laser 100" required="true"/>
+    <node pkg="tf" type="static_transform_publisher" name="base_link_to_laser" args="0.22 0 0.21 0 0 0 /base_link /base_laser 100" required="true"/>
 
     <include file="$(find gazebo_ros)/launch/empty_world.launch">       
         <arg name="world_name" value="$(find gobot_gazebo)/worlds/gobot.world"/>

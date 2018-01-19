@@ -4,11 +4,11 @@
 min_particles: 150
 max_particles: 5000
 #Translational/Rotational movement required before performing a filter update
-update_min_d: 0.3  #default:0.2 meter
-update_min_a: 0.25
+update_min_d: 0.25 
+update_min_a: 0.2  #11 degree
 #Number of filter updates required before resampling
 resample_interval: 2
-transform_tolerance: 0.2
+transform_tolerance: 0.3
 #Maximum rate (Hz) at which to store the last estimated pose and covariance to the parameter server,
 #This saved pose will be used on subsequent runs to initialize the filter
 save_pose_rate: 1

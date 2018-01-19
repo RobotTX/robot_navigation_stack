@@ -411,7 +411,7 @@ bool setLedSrvCallback(gobot_msg_srv::LedStrip::Request &req, gobot_msg_srv::Led
         //ROS_INFO("Receive a LED change request, and succeed to execute.");
         std::vector<uint8_t> led_cmd={req.data[0],req.data[1],req.data[2],req.data[3],req.data[4],req.data[5],req.data[6],req.data[7],req.data[8],req.data[9],req.data[10]};
         std::vector<uint8_t> buff = writeAndRead(led_cmd,5);
-        ROS_INFO("Receive a LED change request, and succeed to execute.");
+        //ROS_INFO("Receive a LED change request, and succeed to execute.");
         return true;
     }
     else{
@@ -448,7 +448,7 @@ bool setSoundSrvCallback(gobot_msg_srv::SetInt::Request &req, gobot_msg_srv::Set
                 break;
         }
         std::vector<uint8_t> buff = writeAndRead(sound_cmd,5);
-        ROS_INFO("Receive a sound request, and succeed to execute.");
+        //ROS_INFO("Receive a sound request, and succeed to execute.");
         return true;
     }
     else{

@@ -26,8 +26,8 @@
     <xacro:include filename="$(find gobot_description)/urdf/battery/battery.urdf.xacro" />
 
     <!-- Base -->
-    <xacro:property name="base_width" value="0.648" />
-    <xacro:property name="base_length" value="0.599" />
+    <xacro:property name="base_width" value="0.49" />
+    <xacro:property name="base_length" value="0.50" />
     <xacro:property name="base_height" value="0.185" />
     <xacro:property name="lower_base_height" value="0.04" />
     <xacro:property name="base_space_height" value="0.05" />
@@ -39,7 +39,7 @@
     <xacro:property name="laser_height" value="0.06" />
 
     <!-- Wheels -->
-    <xacro:property name="driving_wheel_radius" value="0.0725" /> 
+    <xacro:property name="driving_wheel_radius" value="0.075" /> 
     <xacro:property name="driving_wheel_length" value="0.042" />
     <xacro:property name="driving_wheel_mass" value="0.6" /> <!-- in kg-->
 
@@ -100,7 +100,7 @@
 
 
     <!-- Hokuyo Laser -->
-    <hokuyo_04lx_laser name="hokuyo" parent="base_link" ros_topic="/scan" update_rate="20" min_angle="${-2.094395102}" max_angle="${2.094395102}" translateX="${base_width/2 - 0.04266}" translateY="0" translateZ="${-0.01 + originZ}" visualize="1"/>
+    <hokuyo_04lx_laser name="hokuyo" parent="base_link" ros_topic="/scan" update_rate="20" min_angle="${-1.8}" max_angle="${1.8}" translateX="${base_width/2 - 0.04266}" translateY="0" translateZ="${0.29}" visualize="1"/>
 
 
     <!-- Cliff sensor, IR technology on real robot but we use a sonar here to simulate -->

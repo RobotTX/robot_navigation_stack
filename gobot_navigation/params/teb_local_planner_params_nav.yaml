@@ -7,7 +7,7 @@ TebLocalPlannerROS:
     # VELOCITY & ACCELERATION    
     max_vel_x: 0.4 #0.5 
     max_vel_x_backwards: 0.1
-    max_vel_theta: 0.6 #0.6
+    max_vel_theta: 0.8 #0.6
 
     
     #acc_x + acc_the*r_seperation<=motor_max_acc -> acc_x+acc_the*0.172<=0.459
