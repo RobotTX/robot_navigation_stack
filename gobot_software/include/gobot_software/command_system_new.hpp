@@ -16,6 +16,7 @@
 #include <tf/transform_broadcaster.h>
 #include <stdio.h>
 #include <nav_msgs/MapMetaData.h>
+#include <gobot_msg_srv/set_status_class.h>
 #include <gobot_msg_srv/SetString.h>
 #include <gobot_msg_srv/GetString.h>
 #include <gobot_msg_srv/SetDockStatus.h>

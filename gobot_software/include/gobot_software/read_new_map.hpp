@@ -14,11 +14,8 @@
 #include <boost/asio.hpp>
 #include <std_srvs/Empty.h>
 #include <geometry_msgs/PoseWithCovarianceStamped.h>
-#include <gobot_msg_srv/SetString.h>
+#include <gobot_msg_srv/set_status_class.h>
 #include <gobot_msg_srv/GetString.h>
-#include <gobot_msg_srv/SetInt.h>
-#include <gobot_msg_srv/SetStage.h>
-#include <gobot_msg_srv/SetPath.h>
 #include <gobot_msg_srv/GetGobotStatus.h>
 
 using boost::asio::ip::tcp;

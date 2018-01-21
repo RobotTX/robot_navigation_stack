@@ -24,7 +24,7 @@
 #include <gobot_msg_srv/SetSpeeds.h>
 #include <gobot_msg_srv/IsCharging.h>
 #include <gobot_msg_srv/GetGobotStatus.h>
-#include <gobot_msg_srv/SetGobotStatus.h>
+#include <gobot_msg_srv/set_status_class.h>
 #include <gobot_msg_srv/SetStage.h>
 #include <gobot_msg_srv/GetStage.h>
 #include <gobot_msg_srv/SetPath.h>
@@ -48,11 +48,7 @@ struct Point {
 
 bool setSpeed(const char directionR, const int velocityR, const char directionL, const int velocityL);
 
-void setStageInFile(const int _stage);
-
-void setGobotStatus(int status,std::string text);
-
-void setSound(int num,int time_on, int time_off=1);
+void setStageInFile(const int stage);
 
 void goalResultCallback(const move_base_msgs::MoveBaseActionResult::ConstPtr& msg);
 

@@ -6,6 +6,10 @@
 #include <signal.h>
 #include <std_msgs/Int8.h>
 #include <std_srvs/Empty.h>
+#include <thread>
+#include "serial/serial.h"
+#include <mutex>
+#include <gobot_msg_srv/set_status_class.h>
 #include <gobot_msg_srv/SetSpeeds.h>
 #include <gobot_msg_srv/SetSpeeds.h>
 #include <gobot_msg_srv/BatteryMsg.h>
@@ -20,14 +24,8 @@
 #include <gobot_msg_srv/GetInt.h>
 #include <gobot_msg_srv/SetInt.h>
 #include <gobot_msg_srv/GetGobotStatus.h>
-#include <gobot_msg_srv/SetGobotStatus.h>
-#include <gobot_msg_srv/SetDockStatus.h>
-#include <thread>
 #include <gobot_msg_srv/SetBattery.h>
 #include <gobot_msg_srv/SetSpeeds.h>
-#include <gobot_msg_srv/SetString.h>
-#include "serial/serial.h"
-#include <mutex>
 
 
 std::vector<uint8_t> writeAndRead(std::vector<uint8_t> toWrite, int bytesToRead = 0);

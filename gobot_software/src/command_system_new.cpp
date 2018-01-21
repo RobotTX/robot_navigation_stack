@@ -33,6 +33,8 @@ ros::ServiceClient getGobotStatusSrv,getDockStatusSrv;
 
 std::string user_name;
 
+gobot_class::SetStatus set_status_class;
+
 template<typename Out>
 void split(const std::string &s, const char delim, Out result) {
     std::stringstream ss;
@@ -217,9 +219,7 @@ bool renameRobot(const std::vector<std::string> command){
     ros::NodeHandle n;
     if(command.size() == 2){
         ROS_INFO("(Command system) New name : %s", command.at(1).c_str());
-        gobot_msg_srv::SetString set_name;
-        set_name.request.data.push_back(command.at(1));
-        return ros::service::call("/gobot_status/set_name",set_name);
+        set_status_class.setName(command.at(1));
     } 
     else 
         ROS_ERROR("(Command system) Name missing");
@@ -391,7 +391,7 @@ bool newPath(const std::vector<std::string> command){
 
         if(ros::service::call("/gobot_status/set_path", set_path)){
             // reset the path stage in the file
-            return ros::service::call("/gobot_function/update_path", empty_srv);
+            set_status_class.updatePath();
         } 
     } 
     else 
@@ -494,10 +494,9 @@ bool stopAndDeletePath(const std::vector<std::string> command){
         }
 
         ROS_INFO("(Command system) Stop the robot and delete its path");
-        gobot_msg_srv::SetPath set_path;
-        if(ros::service::call("/gobot_status/set_path", set_path)){
+        if(set_status_class.clearPath()){
             // reset the path stage in the file
-            return ros::service::call("/gobot_function/update_path", empty_srv);
+            set_status_class.updatePath();
         }
     }
 
@@ -523,16 +522,7 @@ bool newChargingStation(const std::vector<std::string> command){
             ROS_INFO("(Command System::New CS) Map Type: %s", mapType.c_str());
             //We change the last known pose for localize Gobot in scanned map
         }
-
-        gobot_msg_srv::SetString set_home;
-        set_home.request.data.push_back(homeX);
-        set_home.request.data.push_back(homeY);
-        set_home.request.data.push_back(std::to_string(quaternion.x()));
-        set_home.request.data.push_back(std::to_string(quaternion.y()));
-        set_home.request.data.push_back(std::to_string(quaternion.z()));
-        set_home.request.data.push_back(std::to_string(quaternion.w()));
-
-        ros::service::call("/gobot_status/set_home",set_home);
+        set_status_class.setHome(homeX,homeY,std::to_string(quaternion.x()),std::to_string(quaternion.y()),std::to_string(quaternion.z()),std::to_string(quaternion.w()));
         ros::service::call("/gobot_recovery/initialize_home",empty_srv);
         return true;
     } 
@@ -734,10 +724,7 @@ bool keyboardControl(const std::vector<std::string> command){
 bool muteOff(const std::vector<std::string> command){
     if(command.size() == 1) {
         ROS_INFO("(Command system) Disable mute");
-        gobot_msg_srv::SetInt set_mute;
-        set_mute.request.data.push_back(0);
-        if(ros::service::call("/gobot_status/set_mute", set_mute))
-            return true;
+        return set_status_class.setMute(0);
     }
 
     return false;
@@ -747,10 +734,7 @@ bool muteOff(const std::vector<std::string> command){
 bool muteOn(const std::vector<std::string> command){
 if(command.size() == 1) {
         ROS_INFO("(Command system) Enable mute");
-        gobot_msg_srv::SetInt set_mute;
-        set_mute.request.data.push_back(1);
-        if(ros::service::call("/gobot_status/set_mute", set_mute))
-            return true;
+        return set_status_class.setMute(1);
     }
 
     return false;
@@ -762,11 +746,7 @@ bool setWifi(const std::vector<std::string> command){
     //1=y, 2=wifi name, 3=wifi password
     if(command.size() == 3){
         ROS_INFO("(Command system) Wifi received %s %s", command.at(1).c_str(), command.at(2).c_str());
-        gobot_msg_srv::SetString set_wifi;
-        set_wifi.request.data.push_back(command.at(1));
-        set_wifi.request.data.push_back(command.at(2));
-
-        if(ros::service::call("/gobot_status/set_wifi",set_wifi)){
+        if(set_status_class.setWifi(command.at(1),command.at(2))){
             socketsMutex.lock();
             std::vector<std::string> connected_ip;
             for (std::map<std::string, boost::shared_ptr<tcp::socket>>::iterator it=sockets.begin();it!=sockets.end();++it){

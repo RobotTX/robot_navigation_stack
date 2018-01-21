@@ -13,6 +13,7 @@ find_package(catkin REQUIRED COMPONENTS
     rospy
     actionlib
     actionlib_msgs
+    gobot_msg_srv
     message_generation
     std_msgs
 )

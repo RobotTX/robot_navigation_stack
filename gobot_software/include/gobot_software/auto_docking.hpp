@@ -12,6 +12,7 @@
 #include <move_base_msgs/MoveBaseAction.h>
 #include <actionlib/client/simple_action_client.h>
 #include <boost/smart_ptr.hpp>
+#include <gobot_msg_srv/set_status_class.h>
 #include <gobot_msg_srv/SetSpeeds.h>
 #include <gobot_msg_srv/BatteryMsg.h>
 #include <gobot_msg_srv/BumperMsg.h>
@@ -25,7 +26,6 @@
 #include <ctime>
 #include <chrono>
 #include <thread>
-#include <gobot_software/set_status_class.h>
 
 typedef actionlib::SimpleActionClient<move_base_msgs::MoveBaseAction> MoveBaseClient;
 bool startDocking(void);

@@ -17,8 +17,9 @@ std::shared_ptr<actionlib::SimpleActionClient<move_base_msgs::MoveBaseAction>> a
 ros::Publisher exploration_pub;
 ros::ServiceClient getGobotStatusSrv;
 ros::Timer sound_timer;
-gobot_msg_srv::SetGobotStatus set_gobot_status;
 gobot_msg_srv::GetGobotStatus get_gobot_status;
+
+gobot_class::SetStatus set_status_class;
 
 /// To get the starting position
 bool getRobotPos(void){
@@ -61,13 +62,9 @@ void backToStart(){
     gobot_msg_srv::SetString set_home;
     switch(back_to_start_when_finished){
         case 1:
-            set_home.request.data.push_back(std::to_string(startingPose.position.x));
-            set_home.request.data.push_back(std::to_string(startingPose.position.y));
-            set_home.request.data.push_back(std::to_string(startingPose.orientation.x));
-            set_home.request.data.push_back(std::to_string(startingPose.orientation.y));
-            set_home.request.data.push_back(std::to_string(startingPose.orientation.z));
-            set_home.request.data.push_back(std::to_string(startingPose.orientation.w));
-            ros::service::call("/gobot_status/set_home",set_home);
+            set_status_class.setHome(std::to_string(startingPose.position.x),std::to_string(startingPose.position.y),std::to_string(startingPose.orientation.x),
+            std::to_string(startingPose.orientation.y),std::to_string(startingPose.orientation.z),std::to_string(startingPose.orientation.w));
+        
             ROS_INFO("(Exploration) Complete exploration and Set robot home:%.2f,%.2f",startingPose.position.x,startingPose.position.y);
 
             if(ros::service::call("/gobot_function/startDocking", empty_srv))
@@ -129,10 +126,7 @@ void doExploration(void){
                             std_msgs::Int8 result;
                             result.data=1;
                             exploration_pub.publish(result);
-
-                            set_gobot_status.request.status = 21;
-                            set_gobot_status.request.text = "COMPLETE_EXPLORING";
-                            ros::service::call("/gobot_status/set_gobot_status",set_gobot_status);
+                            set_status_class.setGobotStatus(21,"COMPLETE_EXPLORING");
                             sound_timer.stop();
                         }
                         stopExploration();
@@ -161,10 +155,7 @@ bool startExplorationSrv(hector_exploration_node::Exploration::Request &req, hec
         std_msgs::Int8 result;
         result.data=-1;
         exploration_pub.publish(result);
-
-        set_gobot_status.request.status = 25;
-        set_gobot_status.request.text = "EXPLORING";
-        ros::service::call("/gobot_status/set_gobot_status",set_gobot_status);
+        set_status_class.setGobotStatus(25,"EXPLORING");
         sound_timer.start();
 
         back_to_start_when_finished = req.backToStartWhenFinished;
@@ -196,10 +187,7 @@ bool stopExplorationSrv(std_srvs::Empty::Request &req, std_srvs::Empty::Response
         std_msgs::Int8 result;
         result.data=0;
         exploration_pub.publish(result);
-
-        set_gobot_status.request.status = 21;
-        set_gobot_status.request.text = "STOP_EXPLORING";
-        ros::service::call("/gobot_status/set_gobot_status",set_gobot_status);
+        set_status_class.setGobotStatus(21,"STOP_EXPLORING");
         sound_timer.stop();
     }
     return stopExploration();
@@ -231,12 +219,7 @@ bool setSpeed(const char directionR, const int velocityR, const char directionL,
 }
 
 void timerCallback(const ros::TimerEvent&){
-    if(set_gobot_status.request.status==25){
-        gobot_msg_srv::SetInt sound_num;
-        sound_num.request.data.push_back(2);
-        sound_num.request.data.push_back(1);
-        ros::service::call("/gobot_base/setSound",sound_num);
-    }
+    set_status_class.setSound(2,1);
 }
 
 int main(int argc, char* argv[]){
@@ -284,9 +267,7 @@ int main(int argc, char* argv[]){
     ros::ServiceServer startExploration = nh.advertiseService("/gobot_scan/startExploration", startExplorationSrv);
     ros::ServiceServer stopExploration = nh.advertiseService("/gobot_scan/stopExploration", stopExplorationSrv);
 
-    set_gobot_status.request.status = 20;
-    set_gobot_status.request.text = "EXPLORATION";
-    ros::service::call("/gobot_status/set_gobot_status",set_gobot_status);
+    set_status_class.setGobotStatus(20,"EXPLORATION");
 
     ros::spin();
 

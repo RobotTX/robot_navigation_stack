@@ -46,6 +46,10 @@ sudo apt install ros-kinetic-hector_gazebo-plugins (gazebo)
 
 ###################################################
 
+#use usb-connected joystick#
+sudo apt-get install libusb-dev
+sudo apt-get install libspnav-dev
+
 ### Installing Gobot System###
 gobot_navigation_stack
 Then catkin_make, then add the packages above to the src, then catkin_make again.

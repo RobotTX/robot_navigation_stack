@@ -29,7 +29,8 @@ tfScalar roll,pitch,yaw;
 double landingPointX, landingPointY;
 
 int dock_status = 0;
-SetStatus set_status_class;
+gobot_class::SetStatus set_status_class;
+
 /****************************************** STEP 1 : Go 1.5 meters in front of the charging station *********************************************************/
 bool setSpeed(const char directionR, const int velocityR, const char directionL, const int velocityL){
     //ROS_INFO("(auto_docking::setSpeed) %c %d %c %d", directionR, velocityR, directionL, velocityL);

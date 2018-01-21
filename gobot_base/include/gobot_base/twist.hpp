@@ -3,8 +3,12 @@
 #include <unistd.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <move_base_msgs/MoveBaseAction.h>
+#include <actionlib/client/simple_action_client.h>
 #include <std_srvs/Empty.h>
+#include <std_msgs/Int8.h>
 #include <geometry_msgs/Twist.h>
+#include <sensor_msgs/Joy.h>
 #include <gobot_msg_srv/BumperMsg.h>
 #include <gobot_msg_srv/SetSpeeds.h>
 #include <gobot_msg_srv/IsCharging.h>
@@ -14,6 +18,7 @@
 #include <chrono>
 #include <thread>
 
+typedef actionlib::SimpleActionClient<move_base_msgs::MoveBaseAction> MoveBaseClient;
 
 void setSound(int num,int time_on, int time_off=1);
 

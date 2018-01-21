@@ -3,6 +3,8 @@
 #define CLIFF_THRESHOLD 170
 #define CLIFF_OUTRANGE 0
 
+std::shared_ptr<MoveBaseClient> ac(0);
+std_srvs::Empty empty_srv;
 bool collision = false;
 bool moved_from_collision = true;
 bool pause_robot = false;
@@ -16,8 +18,14 @@ bool bumper_on=false, cliff_on=false,moved_from_front_cliff = true,moved_from_ba
 bool bumpers_broken[8]={false,false,false,false,false,false,false,false};
 gobot_msg_srv::BumperMsg bumpers_data;
 
+/// based on tests, the linear regression from the velocity in m/s to the ticks/sec is approx : y=15.606962627075x-2.2598795680051
+//15.606962627075;//-2.2598795680051;
+double a = 15.55, b = -2.26;  
+
 double pi = 3.14159;
 
+bool enable_joy = false;
+double linear_limit = 0.4, angular_limit = 0.8; 
 
 void setSound(int num,int time_on, int time_off){
     gobot_msg_srv::SetInt sound_num;
@@ -178,9 +186,93 @@ void newBumpersInfo(const gobot_msg_srv::BumperMsg::ConstPtr& bumpers){
     }
 }
 
+void joyConnectionCallback(const std_msgs::Int8::ConstPtr& data){
+    if(data->data == 0){
+        if(enable_joy){
+            enable_joy = false;
+            setSound(3,1);
+            setSpeed('F', 0, 'F', 0);
+        }
+    }
+    else if(data->data == 1){
+        if(!enable_joy){
+            enable_joy = true;
+            setSound(2,1);
+            setSpeed('F', 0, 'F', 0);
+        }
+    }
+}
+
+void joyCallback(const sensor_msgs::Joy::ConstPtr& joy){
+    //start -> enable manual control
+    if(joy->buttons[7]){
+        enable_joy = true;
+        if(ac->isServerConnected()){
+            ac->cancelAllGoals();
+        }
+        setSound(2,1);
+        ros::service::call("/gobot_base/show_Battery_LED",empty_srv);
+    }
+    //back -> disable manual control
+    if(joy->buttons[6]){
+        enable_joy = false;
+        setSpeed('F', 0, 'F', 0);
+        setSound(2,1);
+        ros::service::call("/gobot_base/show_Battery_LED",empty_srv);
+    }
+    if(enable_joy){
+        //button B -> cancel all goal
+        if(joy->buttons[1]){
+            if(ac->isServerConnected())
+                ac->cancelAllGoals();
+        }
+        //adjust linear speed
+        if(joy->axes[7] == 1){
+            linear_limit = (linear_limit+0.1) <= 0.9 ? linear_limit+0.1 : 0.9;
+        }
+        else if(joy->axes[7] == -1){
+            linear_limit = (linear_limit-0.1) > 0 ? linear_limit-0.1 : 0.1;
+        }
+
+        //adjust angular speed
+        if(joy->axes[6] == -1){
+            angular_limit = (angular_limit+0.1) <= 2.0 ? angular_limit+0.1 : 2.0;
+        }
+        else if(joy->axes[6] == 1){
+            angular_limit = (angular_limit-0.1) > 0 ? angular_limit-0.1 : 0.1;
+        }
+
+        //reset linear speed limit 0.4
+        if(joy->buttons[9]){
+            linear_limit = 0.4;
+        }
+
+        //reset angular speed limit 0.8
+        if(joy->buttons[10]){
+            angular_limit = 0.8;
+        }
+
+        if(!collision && !cliff_on){
+            if(joy->axes[1] == 0 && joy->axes[3] == 0)
+                setSpeed('F', 0, 'F', 0);
+            else {
+                /// calculate the speed of each wheel in m/s
+                double right_vel_m_per_sec = linear_limit * joy->axes[1] + angular_limit * joy->axes[3] * wheel_separation / (double)2;
+                double left_vel_m_per_sec = linear_limit * joy->axes[1] - angular_limit * joy->axes[3] * wheel_separation / (double)2;
+
+                /// calculate the real value we need to give the MD49
+                double right_vel_speed = ((right_vel_m_per_sec * ticks_per_rotation) / (2 * pi * wheel_radius) - b ) / a;
+                double left_vel_speed = ((left_vel_m_per_sec * ticks_per_rotation) / (2 * pi * wheel_radius) - b ) / a;
+
+                setSpeed(right_vel_speed >= 0 ? 'F' : 'B', abs(right_vel_speed), left_vel_speed >= 0 ? 'F' : 'B', abs(left_vel_speed));;
+            }
+        }
+    }
+}
+
 void newCmdVel(const geometry_msgs::Twist::ConstPtr& twist){
     /// Received a new velocity cmd
-    if(!collision && !pause_robot && !cliff_on){
+    if(!collision && !pause_robot && !cliff_on && !enable_joy){
         /// if the velocity cmd is to tell the robot to stop, we just give 0 and don't calculate
         /// because with the linear regression function we would get a speed of ~0.002 m/s
         if(twist->linear.x == 0 && twist->angular.z == 0)
@@ -189,12 +281,6 @@ void newCmdVel(const geometry_msgs::Twist::ConstPtr& twist){
             /// calculate the speed of each wheel in m/s
             double right_vel_m_per_sec = twist->linear.x + twist->angular.z * wheel_separation / (double)2;
             double left_vel_m_per_sec = twist->linear.x - twist->angular.z * wheel_separation / (double)2;
-
-            /// based on tests, the linear regression from the velocity in m/s to the ticks/sec is approx : y=15.606962627075x-2.2598795680051
-            //tx// ticks_per_m/s=2086, ticks_per_setspeed = 15.46
-            //tx// setspeed = velocity*ticks_per_m/ticks_per_setspeed
-            double a = 15.55; //15.606962627075;
-            double b = -2.26; //-2.2598795680051;
 
             /// calculate the real value we need to give the MD49
             double right_vel_speed = ((right_vel_m_per_sec * ticks_per_rotation) / (2 * pi * wheel_radius) - b ) / a;
@@ -238,10 +324,14 @@ int main(int argc, char **argv) {
         ros::Subscriber cmdVelSub = nh.subscribe("cmd_vel", 1, newCmdVel);
         ros::Subscriber bumpersSub = nh.subscribe("/gobot_base/bumpers_raw_topic", 1, newBumpersInfo);
         ros::Subscriber cliffSub = nh.subscribe("/gobot_base/cliff_topic", 1, cliffCallback);
+        ros::Subscriber joySub = nh.subscribe("joy", 1, joyCallback);
+        ros::Subscriber joyConSub = nh.subscribe("joy_connection", 1, joyConnectionCallback);
 
         //not in use now
         ros::ServiceServer continueRobot = nh.advertiseService("/gobot_base/continue_robot",continueRobotSrvCallback);
         ros::ServiceServer pauseRobot = nh.advertiseService("/gobot_base/pause_robot",pauseRobotSrvCallback);
+
+        ac = std::shared_ptr<MoveBaseClient> (new MoveBaseClient("move_base", true));
 
         ros::spin();
     }

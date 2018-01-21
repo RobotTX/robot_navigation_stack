@@ -27,6 +27,7 @@ bool display_data = false;
 int STM_CHECK = 0, STM_RATE=5, charge_check = 0;;
 bool USE_BUMPER=true,USE_SONAR=true,USE_CLIFF=true;
 
+gobot_class::SetStatus set_status_class;
 
 std::vector<uint8_t> writeAndRead(std::vector<uint8_t> toWrite, int bytesToRead){
     std::vector<uint8_t> buff;
@@ -283,17 +284,14 @@ void publishSensors(void){
                 }
 
                 if(charging != battery_data.ChargingFlag){
-                    gobot_msg_srv::SetDockStatus set_dock_status;
                     if(battery_data.ChargingFlag && charge_check>1){
                         charging = true;
-                        set_dock_status.request.status = 1;
-                        ros::service::call("/gobot_status/set_dock_status",set_dock_status);
+                        set_status_class.setDockStatus(1);
                     }
                     else{
                         charging = false;
                         if(!battery_data.ChargingFlag){
-                            set_dock_status.request.status = 0;
-                            ros::service::call("/gobot_status/set_dock_status",set_dock_status);
+                            set_status_class.setDockStatus(0);
                         }
                         battery_data.ChargingFlag = false;
                     }
@@ -356,12 +354,8 @@ void publishSensors(void){
                 else if(error_bumper)
                     ROS_ERROR("(sensors::publishSensors ERROR) All bumpers got a collision");
             
-                if(resetwifi_button==1){
-                    gobot_msg_srv::SetString set_wifi;
-                    set_wifi.request.data.push_back("");
-                    set_wifi.request.data.push_back("");
-                    ros::service::call("/gobot_status/set_wifi",set_wifi);
-                }
+                if(resetwifi_button==1)
+                    set_status_class.setWifi("","");
             }
         } 
         else {
@@ -564,10 +558,7 @@ int main(int argc, char **argv) {
 
             if(STM_CHECK==10){
                 //Startup begin
-                gobot_msg_srv::SetGobotStatus set_gobot_status;
-                set_gobot_status.request.status = -1;
-                set_gobot_status.request.text ="STM32_READY";
-                ros::service::call("/gobot_status/set_gobot_status",set_gobot_status);
+                set_status_class.setGobotStatus(-1,"STM32_READY");
                 //Startup end
             }
         }

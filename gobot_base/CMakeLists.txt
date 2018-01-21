@@ -10,10 +10,12 @@ add_compile_options(-std=c++11)
 find_package(catkin REQUIRED COMPONENTS
     roscpp
     geometry_msgs
+    sensor_msgs
     nav_msgs
     tf
     serial
     std_srvs
+    actionlib
     actionlib_msgs
     move_base_msgs
     gobot_msg_srv
@@ -106,7 +108,7 @@ find_package(catkin REQUIRED COMPONENTS
 ## DEPENDS: system dependencies of this project that dependent projects also need
 catkin_package(
     INCLUDE_DIRS include
-    CATKIN_DEPENDS roscpp geometry_msgs nav_msgs tf serial std_srvs gobot_msg_srv actionlib_msgs move_base_msgs
+    CATKIN_DEPENDS roscpp actionlib geometry_msgs sensor_msgs nav_msgs tf serial std_srvs gobot_msg_srv actionlib_msgs move_base_msgs
 )
 
 ###########

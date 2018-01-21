@@ -34,18 +34,18 @@ find_package(catkin REQUIRED COMPONENTS
 catkin_package(
     INCLUDE_DIRS include
     CATKIN_DEPENDS 
-    roscpp
-    tf
-    actionlib
-    hector_exploration_node
-    geometry_msgs
-    gobot_msg_srv
-    actionlib_msgs
-    nav_msgs
-    move_base_msgs
-    sensor_msgs
-    std_msgs
-    std_srvs
+        roscpp
+        tf
+        actionlib
+        hector_exploration_node
+        geometry_msgs
+        gobot_msg_srv
+        actionlib_msgs
+        nav_msgs
+        move_base_msgs
+        sensor_msgs
+        std_msgs
+        std_srvs
 )
 
 ###########
@@ -60,14 +60,15 @@ include_directories(
     ${catkin_INCLUDE_DIRS}
 )
 
+add_executable(auto_docking src/auto_docking.cpp)
+target_link_libraries(auto_docking ${catkin_LIBRARIES} ${gobot_software} ${Boost_FILESYSTEM_LIBRARY} ${Boost_SYSTEM_LIBRARY})
+add_dependencies(auto_docking ${${gobot_msg_srv}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
 
-add_library(set_status_class src/set_status_class.cpp)
-target_link_libraries(set_status_class ${catkin_LIBRARIES} ${gobot_software} ${Boost_FILESYSTEM_LIBRARY} ${Boost_SYSTEM_LIBRARY} )
-add_dependencies(set_status_class ${${gobot_msg_srv}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
 
 add_executable(gobot_status src/gobot_status.cpp)
 target_link_libraries(gobot_status ${catkin_LIBRARIES} ${gobot_software} ${Boost_FILESYSTEM_LIBRARY} ${Boost_SYSTEM_LIBRARY} )
 add_dependencies(gobot_status ${${gobot_msg_srv}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
+
 
 add_executable(map_transfer src/map_transfer.cpp)
 target_link_libraries(map_transfer ${catkin_LIBRARIES} ${gobot_software} ${Boost_FILESYSTEM_LIBRARY} ${Boost_SYSTEM_LIBRARY} )
@@ -100,11 +101,6 @@ add_dependencies(send_laser_data ${${gobot_msg_srv}_EXPORTED_TARGETS} ${catkin_E
 add_executable(recover_position src/recover_position.cpp)
 target_link_libraries(recover_position ${catkin_LIBRARIES} ${gobot_software} ${Boost_FILESYSTEM_LIBRARY} ${Boost_SYSTEM_LIBRARY} )
 add_dependencies(recover_position ${${gobot_msg_srv}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
-
-
-add_executable(auto_docking src/auto_docking.cpp)
-target_link_libraries(auto_docking ${catkin_LIBRARIES} ${gobot_software} ${Boost_FILESYSTEM_LIBRARY} ${Boost_SYSTEM_LIBRARY} set_status_class)
-add_dependencies(auto_docking ${${gobot_msg_srv}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
 
 
 add_executable(battery_check src/battery_check.cpp)

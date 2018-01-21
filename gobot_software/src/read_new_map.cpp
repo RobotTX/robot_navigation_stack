@@ -18,6 +18,7 @@ std_srvs::Empty empty_srv;
 gobot_msg_srv::GetGobotStatus get_gobot_status;
 
 std::string user_name;
+gobot_class::SetStatus set_status_class;
 
 void session(boost::shared_ptr<tcp::socket> sock){
 
@@ -179,14 +180,7 @@ void session(boost::shared_ptr<tcp::socket> sock){
                             //#### delete old robot data ####
                             if(mapType != "IMPT" && mapType != "SCAN"){
                                 /// We delete the old home
-                                gobot_msg_srv::SetString set_home;
-                                set_home.request.data.push_back("0");
-                                set_home.request.data.push_back("0");
-                                set_home.request.data.push_back("0");
-                                set_home.request.data.push_back("0");
-                                set_home.request.data.push_back("0");
-                                set_home.request.data.push_back("0");
-                                ros::service::call("/gobot_status/set_home",set_home);
+                                set_status_class.setHome("0","0","0","0","0","0");
                                 ROS_INFO("(New Map) Home deleted");
                             }
 
@@ -196,9 +190,9 @@ void session(boost::shared_ptr<tcp::socket> sock){
                                     std::string lastPoseFile;
                                     n.getParam("last_known_position_file", lastPoseFile);
                                     std::ofstream ofs(lastPoseFile, std::ofstream::out | std::ofstream::trunc);
+                                    
                                     gobot_msg_srv::GetString get_home;
                                     ros::service::call("/gobot_status/get_home",get_home);
-                                    
                                     if(ofs.is_open()){
                                         ofs << get_home.response.data[0] << " " << get_home.response.data[1] << " " << get_home.response.data[2] << " " << get_home.response.data[3] << " " << get_home.response.data[4] << " "<< get_home.response.data[5];
                                         ofs.close();
@@ -208,22 +202,17 @@ void session(boost::shared_ptr<tcp::socket> sock){
                             }
                             
                             /// We detele the loop
-                            gobot_msg_srv::SetInt set_loop;
-                            set_loop.request.data.push_back(0);
-                            ros::service::call("/gobot_status/set_loop",set_loop);
+                            set_status_class.setLoop(0);
                             ROS_INFO("(New Map) Loop deleted");
 
                             /// We delete the old path
-                            gobot_msg_srv::SetPath set_path;
-                            ros::service::call("/gobot_status/set_path", set_path);
+                            set_status_class.clearPath();
                             // reset the path stage in the file
-                            ros::service::call("/gobot_function/update_path", empty_srv);
+                            set_status_class.updatePath();
                             ROS_INFO("(New Map) Path deleted");
 
                             /// We delete the old path stage
-                            gobot_msg_srv::SetStage set_stage;
-                            set_stage.request.stage = 0;
-                            ros::service::call("/gobot_status/set_stage", set_stage);
+                            set_status_class.setStage(0);
                             ROS_INFO("(New Map) Path stage deleted");
                             //#### delete old robot data ####
                         }
