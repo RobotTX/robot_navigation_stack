@@ -45,6 +45,19 @@ namespace gobot_class {
         return ros::service::call("/gobot_status/set_name",set_name);
     }
 
+    bool SetStatus::setBatteryLvl(std::string battery_lvl){
+        gobot_msg_srv::SetString set_battery;
+        set_battery.request.data.push_back(battery_lvl);
+        return ros::service::call("/gobot_status/set_battery",set_battery);
+    }
+
+    bool SetStatus::setSpeed(std::string linear, std::string angular){
+        gobot_msg_srv::SetString set_speed;
+        set_speed.request.data.push_back(linear);
+        set_speed.request.data.push_back(angular);
+        return ros::service::call("/gobot_status/set_speed",set_speed);
+    }
+
     bool SetStatus::setHome(std::string pos_x,std::string pos_y,std::string ori_x,std::string ori_y,std::string ori_z,std::string ori_w){
         gobot_msg_srv::SetString set_home;
         set_home.request.data.push_back(pos_x);

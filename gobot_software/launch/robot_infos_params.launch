@@ -22,6 +22,7 @@
     <param name="home_file" type="string" value="$(find gobot_data)/data/home.txt" />
     <param name="robot_name_file" type="string" value="$(find gobot_data)/data/name.txt" />
     <param name="low_battery_file" type="string" value="$(find gobot_data)/data/low_battery.txt" />
+    <param name="speed_file" type="string" value="$(find gobot_data)/data/speed.txt" />
     <!--WIFI RELATED -->
     <param name="ping_file" type="string" value="$(find gobot_data)/IP/ping.sh" />
     <param name="wifi_file" type="string" value="$(find gobot_data)/IP/wifi.txt" />

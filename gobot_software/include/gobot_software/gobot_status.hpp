@@ -29,6 +29,9 @@ bool getHomeSrvCallback(gobot_msg_srv::GetString::Request &req, gobot_msg_srv::G
 bool setBatterySrvCallback(gobot_msg_srv::SetString::Request &req, gobot_msg_srv::SetString::Response &res);
 bool getBatterySrvCallback(gobot_msg_srv::GetString::Request &req, gobot_msg_srv::GetString::Response &res);
 
+bool setSpeedSrvCallback(gobot_msg_srv::SetString::Request &req, gobot_msg_srv::SetString::Response &res);
+bool getSpeedSrvCallback(gobot_msg_srv::GetString::Request &req, gobot_msg_srv::GetString::Response &res);
+
 bool setNameSrvCallback(gobot_msg_srv::SetString::Request &req, gobot_msg_srv::SetString::Response &res);
 bool getNameSrvCallback(gobot_msg_srv::GetString::Request &req, gobot_msg_srv::GetString::Response &res);
 

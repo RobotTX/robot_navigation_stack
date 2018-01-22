@@ -20,7 +20,7 @@ DOCK STATUS
 -1 FAILED TO GO TO CHARGING
 */
 
-std::mutex gobotStatusMutex,dockStatusMutex,stageMutex,pathMutex,nameMutex,homeMutex,loopMutex,muteMutex,wifiMutex,batteryMutex;
+std::mutex gobotStatusMutex,dockStatusMutex,stageMutex,pathMutex,nameMutex,homeMutex,loopMutex,muteMutex,wifiMutex,batteryMutex,speedMutex;
 std_srvs::Empty empty_srv;
 
 std::string wifiFile, deleteWifi;
@@ -43,6 +43,10 @@ int loop_ = 0;
 
 std::string lowBatteryFile;
 std::string low_battery_="0.0";
+
+std::string speedFile;
+std::string linear_spd_="0.4";
+std::string angular_spd_="0.8";
 
 std::string pathFile;
 std::vector<std::string> path_;
@@ -149,7 +153,7 @@ bool setBatterySrvCallback(gobot_msg_srv::SetString::Request &req, gobot_msg_srv
     if(ofsBattery){
         ofsBattery << low_battery_;
         ofsBattery.close();
-        ROS_INFO("(Gobot_status) set Gobot battery: %.2f", std::stod(low_battery_));
+        ROS_INFO("(Gobot_status) set Gobot battery level: %.2f", std::stod(low_battery_));
     }
 
     return true;
@@ -159,6 +163,30 @@ bool getBatterySrvCallback(gobot_msg_srv::GetString::Request &req, gobot_msg_srv
     batteryMutex.lock();
     res.data.push_back(low_battery_);
     batteryMutex.unlock();
+    return true;
+}
+
+bool setSpeedSrvCallback(gobot_msg_srv::SetString::Request &req, gobot_msg_srv::SetString::Response &res){
+    speedMutex.lock();
+    linear_spd_=req.data[0];
+    angular_spd_=req.data[1];
+    speedMutex.unlock();
+
+    std::ofstream ofSpeed(speedFile, std::ofstream::out | std::ofstream::trunc);
+    if(ofSpeed){
+        ofSpeed << linear_spd_ << " " << angular_spd_;
+        ofSpeed.close();
+        ROS_INFO("(Gobot_status) set Gobot speed: %.2f, %.2f", std::stod(linear_spd_),std::stod(angular_spd_));
+    }
+
+    return true;
+}
+
+bool getSpeedSrvCallback(gobot_msg_srv::GetString::Request &req, gobot_msg_srv::GetString::Response &res){
+    speedMutex.lock();
+    res.data.push_back(linear_spd_);
+    res.data.push_back(angular_spd_);
+    speedMutex.unlock();
     return true;
 }
 
@@ -422,6 +450,15 @@ void initialData(){
         ROS_INFO("(Gobot_status) Read Gobot battery: %.2f", std::stod(low_battery_));
     }
 
+    //read speed
+    n.getParam("speed_file", speedFile);
+    std::ifstream ifsSpeed(speedFile, std::ifstream::in);
+    if(ifsSpeed){
+        ifsSpeed >> linear_spd_ >> angular_spd_;
+        ifsSpeed.close();
+        ROS_INFO("(Gobot_status) Read Gobot speed: %.2f, %.2f", std::stod(linear_spd_),std::stod(angular_spd_));
+    }
+
     //read wifi
     n.getParam("wifi_file", wifiFile);
     std::ifstream ifWifi(wifiFile, std::ifstream::in);
@@ -482,6 +519,9 @@ int main(int argc, char* argv[]){
 
         ros::ServiceServer setBatterySrv = n.advertiseService("/gobot_status/set_battery", setBatterySrvCallback);
         ros::ServiceServer getBatterySrv = n.advertiseService("/gobot_status/get_battery", getBatterySrvCallback);
+
+        ros::ServiceServer setSpeedSrv = n.advertiseService("/gobot_status/set_speed", setSpeedSrvCallback);
+        ros::ServiceServer getSpeedSrv = n.advertiseService("/gobot_status/get_speed", getSpeedSrvCallback);
 
         ros::ServiceServer setMuteSrv = n.advertiseService("/gobot_status/set_mute", setMuteSrvCallback);
         ros::ServiceServer getMuteSrv = n.advertiseService("/gobot_status/get_mute", getMuteSrvCallback);

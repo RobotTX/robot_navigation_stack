@@ -50,7 +50,14 @@ bool execCommand(const std::string ip, const std::vector<std::string> command){
     std::string commandStr = command.at(0);
     bool status=false;
     switch (commandStr.at(0)) {
-
+        /// Adjust linear&angular speed
+        case '1':
+            status = adjustSpeed(command);
+        break;
+        /// Adjust auto-charging battery level
+        case '2':
+            status = adjustBatteryLvl(command);
+        break;
         /// Command to change the name of the robot
         case 'a':
             status = renameRobot(command);
@@ -213,6 +220,22 @@ bool execCommand(const std::string ip, const std::vector<std::string> command){
 }
 
 /*********************************** COMMAND FUNCTIONS ***********************************/
+/// Command: 1, 2nd param=linear_vel, 3rd param=angular_vel
+bool adjustSpeed(const std::vector<std::string> command){
+    if(command.size() == 3){
+        return set_status_class.setSpeed(command.at(1),command.at(2));
+    }
+    return false;
+}
+
+/// Command: 2, 2nd param=battery level
+bool adjustBatteryLvl(const std::vector<std::string> command){
+    if(command.size() == 2){
+        return set_status_class.setBatteryLvl(command.at(1));
+    }
+    return false;
+}
+
 
 /// Command : a, second param = new name 
 bool renameRobot(const std::vector<std::string> command){
@@ -1075,27 +1098,26 @@ bool lowBatterySrvCallback(std_srvs::Empty::Request &req, std_srvs::Empty::Respo
 void sendConnectionData(boost::shared_ptr<tcp::socket> sock){
     ros::NodeHandle n;
     /// Send a message to the app to tell we are connected
+    gobot_msg_srv::GetString get_home, get_speed, get_battery;
 
     /// Get the charging station position from the home file
-    std::string homeX,homeY;
-    double x_angle,y_angle,z_angle,w_angle;
-    tfScalar roll,pitch,yaw;
-    double homeOri = 0;
-    gobot_msg_srv::GetString get_home;
     ros::service::call("/gobot_status/get_home",get_home);
-    homeX=get_home.response.data[0];
-    homeY=get_home.response.data[1];
-    x_angle=std::stod(get_home.response.data[2]);
-    y_angle=std::stod(get_home.response.data[3]);
-    z_angle=std::stod(get_home.response.data[4]);
-    w_angle=std::stod(get_home.response.data[5]);
+    std::string homeX = get_home.response.data[0],
+                homeY=get_home.response.data[1];
+                
+    double x_angle = std::stod(get_home.response.data[2]),
+           y_angle = std::stod(get_home.response.data[3]),
+           z_angle = std::stod(get_home.response.data[4]),
+           w_angle = std::stod(get_home.response.data[5]);
+
+    tfScalar roll,pitch,yaw;
     if(homeX=="0" && homeY=="0" && x_angle==0 && y_angle==0){
         homeX = "-150";
         homeY = "-150";
     }
     tf::Matrix3x3 matrix = tf::Matrix3x3(tf::Quaternion(x_angle , y_angle , z_angle, w_angle));
     matrix.getRPY(roll, pitch, yaw);
-    homeOri = -(yaw*180/3.14159) - 90.0;//-(orientation+90)*3.14159/180);
+    double homeOri = -(yaw*180/3.14159) - 90.0;
 
     /// we send the path along with the time of the last modification of its file
     std::string path("");
@@ -1139,7 +1161,14 @@ void sendConnectionData(boost::shared_ptr<tcp::socket> sock){
     std::string looping_str = (get_loop.response.data[0]) ? "1" : "0";
     std::string following_path_str = (get_gobot_status.response.status==5) ? "1" : "0";
 
-    sendMessageToSock(sock, std::string("Connected" + sep + mapId + sep + mapDate + sep + homeX + sep + homeY + sep + std::to_string(homeOri) + sep + scan + sep + laserStr + sep + following_path_str + sep + looping_str + sep + path));
+    ros::service::call("/gobot_status/get_speed",get_speed);
+    ros::service::call("/gobot_status/get_battery",get_battery);
+    std::string linear_spd = get_speed.response.data[0],
+                angular_spd=get_speed.response.data[1], 
+                battery_lvl = get_battery.response.data[0];
+
+    sendMessageToSock(sock, std::string("Connected" + sep + mapId + sep + mapDate + sep + homeX + sep + homeY + sep + std::to_string(homeOri) + 
+    sep + scan + sep + laserStr + sep + following_path_str + sep + looping_str + sep + linear_spd + sep +angular_spd + sep+ battery_lvl + sep +path));
 }
 
 bool sendMessageToSock(boost::shared_ptr<tcp::socket> sock, const std::string message){

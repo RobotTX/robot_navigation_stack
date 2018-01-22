@@ -207,9 +207,6 @@ void joyCallback(const sensor_msgs::Joy::ConstPtr& joy){
     //start -> enable manual control
     if(joy->buttons[7]){
         enable_joy = true;
-        if(ac->isServerConnected()){
-            ac->cancelAllGoals();
-        }
         setSound(2,1);
         ros::service::call("/gobot_base/show_Battery_LED",empty_srv);
     }
@@ -221,11 +218,6 @@ void joyCallback(const sensor_msgs::Joy::ConstPtr& joy){
         ros::service::call("/gobot_base/show_Battery_LED",empty_srv);
     }
     if(enable_joy){
-        //button B -> cancel all goal
-        if(joy->buttons[1]){
-            if(ac->isServerConnected())
-                ac->cancelAllGoals();
-        }
         //adjust linear speed
         if(joy->axes[7] == 1){
             linear_limit = (linear_limit+0.1) <= 0.9 ? linear_limit+0.1 : 0.9;
@@ -271,8 +263,12 @@ void joyCallback(const sensor_msgs::Joy::ConstPtr& joy){
 }
 
 void newCmdVel(const geometry_msgs::Twist::ConstPtr& twist){
+    if(enable_joy){
+        if(ac->isServerConnected())
+            ac->cancelAllGoals();
+    }
     /// Received a new velocity cmd
-    if(!collision && !pause_robot && !cliff_on && !enable_joy){
+    else if(!collision && !pause_robot && !cliff_on){
         /// if the velocity cmd is to tell the robot to stop, we just give 0 and don't calculate
         /// because with the linear regression function we would get a speed of ~0.002 m/s
         if(twist->linear.x == 0 && twist->angular.z == 0)

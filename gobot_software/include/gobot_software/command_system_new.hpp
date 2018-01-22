@@ -47,6 +47,11 @@ void split(const std::string &s, const char delim, Out result);
 bool execCommand(const std::string ip, const std::vector<std::string> command);
 
 /*********************************** COMMAND FUNCTIONS ***********************************/
+/// 1
+bool adjustSpeed(const std::vector<std::string> command);
+
+/// 2
+bool adjustBatteryLvl(const std::vector<std::string> command);
 
 /// a
 bool renameRobot(const std::vector<std::string> command);

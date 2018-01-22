@@ -15,6 +15,7 @@ ros::Publisher cliff_pub;
 ros::Publisher button_pub;
 serial::Serial serialConnection;
 
+std::string user_name;
 std::vector<uint8_t> cmd;
 std::mutex connectionMutex;
 std::string STMdevice;
@@ -532,6 +533,8 @@ int main(int argc, char **argv) {
     nh.getParam("USE_BUMPER", USE_BUMPER);
     nh.getParam("USE_SONAR", USE_SONAR);
     nh.getParam("USE_CLIFF", USE_CLIFF);
+    nh.getParam("user_name", user_name);
+
 
     if(initSerial()){
         bumper_pub = nh.advertise<gobot_msg_srv::BumperMsg>("/gobot_base/bumpers_raw_topic", 50);
@@ -559,6 +562,8 @@ int main(int argc, char **argv) {
             if(STM_CHECK==10){
                 //Startup begin
                 set_status_class.setGobotStatus(-1,"STM32_READY");
+                std::string joy_cmd = "gnome-terminal -x bash -c \"source /opt/ros/kinetic/setup.bash;source /home/" + user_name +"/catkin_ws/devel/setup.bash;rosrun joy joy_node;exec bash;\"";
+                system(joy_cmd.c_str());
                 //Startup end
             }
         }

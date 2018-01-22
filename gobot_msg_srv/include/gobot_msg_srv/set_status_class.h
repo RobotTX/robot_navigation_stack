@@ -36,6 +36,10 @@ namespace gobot_class {
 
             bool setName(std::string robot_name);
 
+            bool setBatteryLvl(std::string battery_lvl);
+
+            bool setSpeed(std::string linear, std::string angular);
+
             bool setHome(std::string pos_x,std::string pos_y,std::string ori_x,std::string ori_y,std::string ori_z,std::string ori_w);
 
             bool clearPath(void);

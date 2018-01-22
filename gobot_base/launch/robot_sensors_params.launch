@@ -1,6 +1,7 @@
 <?xml version="1.0"?>
 <launch>
     <!-- MD49 AND STM32 RELATED -->
+    <param name="user_name" type="string" value="gtdollar" />
     <param name="wheel_separation" type="double" value="0.35" />
     <param name="wheel_radius" type="double" value="0.075" />
     <param name="ticks_per_rotation" type="double" value="982" />
