@@ -22,6 +22,7 @@ find_package(catkin REQUIRED COMPONENTS
   tf
   tf_conversions
   visualization_msgs
+  gobot_msg_srv
 )
 message(STATUS "System: ${CMAKE_SYSTEM}")
 ## System dependencies are found with CMake's conventions
@@ -160,6 +161,7 @@ catkin_package(
 	tf_conversions
 	visualization_msgs
   DEPENDS SUITESPARSE G2O
+  gobot_msg_srv
 )
 
 ###########

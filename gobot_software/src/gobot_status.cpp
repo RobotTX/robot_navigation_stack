@@ -46,7 +46,7 @@ std::string low_battery_="0.0";
 
 std::string speedFile;
 std::string linear_spd_="0.4";
-std::string angular_spd_="0.8";
+std::string angular_spd_="45";
 
 std::string pathFile;
 std::vector<std::string> path_;
@@ -177,6 +177,19 @@ bool setSpeedSrvCallback(gobot_msg_srv::SetString::Request &req, gobot_msg_srv::
         ofSpeed << linear_spd_ << " " << angular_spd_;
         ofSpeed.close();
         ROS_INFO("(Gobot_status) set Gobot speed: %.2f, %.2f", std::stod(linear_spd_),std::stod(angular_spd_));
+    }
+
+    dynamic_reconfigure::Reconfigure config;
+    dynamic_reconfigure::DoubleParameter linear_param,angular_param;
+    linear_param.name = "max_vel_x";
+    linear_param.value = std::stod(linear_spd_);
+    angular_param.name = "max_vel_theta";
+    angular_param.value = std::stod(angular_spd_)*3.14159/180;
+
+    config.request.config.doubles.push_back(linear_param);
+    config.request.config.doubles.push_back(angular_param);
+    if(ros::service::call("/move_base/TebLocalPlannerROS/set_parameters",config)){
+        return true;
     }
 
     return true;

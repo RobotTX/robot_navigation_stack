@@ -242,7 +242,7 @@ bool renameRobot(const std::vector<std::string> command){
     ros::NodeHandle n;
     if(command.size() == 2){
         ROS_INFO("(Command system) New name : %s", command.at(1).c_str());
-        set_status_class.setName(command.at(1));
+        return set_status_class.setName(command.at(1));
     } 
     else 
         ROS_ERROR("(Command system) Name missing");
@@ -396,7 +396,7 @@ bool robotStartup(const std::vector<std::string> command){
     return false;
 }
 
-/// First param = i, then the path name, then quadriplets of parameters to represent path points (path point name, posX, posY, waiting time,yaw) 
+/// First param = i, then the path name, then quadriplets of parameters to represent path points (path point name, posX, posY, waiting time,prientation) 
 bool newPath(const std::vector<std::string> command){
     ros::NodeHandle n;
     if(command.size() >= 6 && command.size()%5 == 2){  
@@ -414,7 +414,8 @@ bool newPath(const std::vector<std::string> command){
 
         if(ros::service::call("/gobot_status/set_path", set_path)){
             // reset the path stage in the file
-            set_status_class.updatePath();
+            ros::service::call("/gobot_function/update_path", empty_srv);
+            return true;
         } 
     } 
     else 
@@ -519,7 +520,8 @@ bool stopAndDeletePath(const std::vector<std::string> command){
         ROS_INFO("(Command system) Stop the robot and delete its path");
         if(set_status_class.clearPath()){
             // reset the path stage in the file
-            set_status_class.updatePath();
+            ros::service::call("/gobot_function/update_path", empty_srv);
+            return true;
         }
     }
 
@@ -537,7 +539,7 @@ bool newChargingStation(const std::vector<std::string> command){
         std::string homeX = command.at(1), homeY = command.at(2), homeOri = command.at(3);
         int orientation = std::stoi(homeOri);
         tf::Quaternion quaternion;
-        quaternion.setEuler(0, 0, -(orientation+90)*3.14159/180);
+        quaternion.setEuler(0, 0, -DegreeToRad(orientation+90));
 
         std::string mapType = homeX.substr(0,1);
         if(mapType == "S"){
@@ -836,12 +838,7 @@ bool startAutoExplore(const std::vector<std::string> command){
 bool stopAutoExplore(const std::vector<std::string> command){
     if(command.size() == 1) {
         ROS_INFO("(Command system) Stop to explore");
-        if(!ros::service::call("/gobot_scan/stopExploration", empty_srv)){
-            //~ROS_INFO("(Command system) Could not call the service /gobot_scan/stopExploration");
-            return false;
-        }
-
-        return true;
+        return ros::service::call("/gobot_scan/stopExploration", empty_srv);
     }
 
     return false;
@@ -872,6 +869,13 @@ bool loopPath(const std::vector<std::string> command){
 
 
 /*********************************** SOME FUNCTIONS USED MULTIPLE TIMES ***********************************/
+double RadToDegree(double rad){
+    return rad*180/3.1415926;
+}
+
+double DegreeToRad(double degree){
+    return degree*3.1415926/180;
+}
 
 bool sendMapAutomatically(const std::string ip){
     ROS_INFO("(Command system) Launching the service to get the map auto");
@@ -1117,7 +1121,7 @@ void sendConnectionData(boost::shared_ptr<tcp::socket> sock){
     }
     tf::Matrix3x3 matrix = tf::Matrix3x3(tf::Quaternion(x_angle , y_angle , z_angle, w_angle));
     matrix.getRPY(roll, pitch, yaw);
-    double homeOri = -(yaw*180/3.14159) - 90.0;
+    double homeOri = -RadToDegree(yaw) - 90.0;
 
     /// we send the path along with the time of the last modification of its file
     std::string path("");

@@ -20,6 +20,7 @@ find_package(catkin REQUIRED COMPONENTS
     sensor_msgs
     std_msgs
     std_srvs
+    dynamic_reconfigure
 )
 
 #add_service_files(
@@ -46,6 +47,7 @@ catkin_package(
         sensor_msgs
         std_msgs
         std_srvs
+        dynamic_reconfigure
 )
 
 ###########

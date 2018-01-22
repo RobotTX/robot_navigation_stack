@@ -297,7 +297,7 @@ bool stopPathService(std_srvs::Empty::Request &req, std_srvs::Empty::Response &r
 	//ac->getState() == actionlib::SimpleClientGoalState::SUCCEEDED
 	if(ac->isServerConnected()){
 		if (ac->getState() == actionlib::SimpleClientGoalState::SUCCEEDED)
-			ros::service::call("/gobot_base/show_blue_LED", empty_srv);
+			set_status_class.setLed("blue");
 		ac->cancelAllGoals();
 	}
 
@@ -320,8 +320,16 @@ bool pausePathService(std_srvs::Empty::Request &req, std_srvs::Empty::Response &
 	//ac->getState() == actionlib::SimpleClientGoalState::SUCCEEDED
 	if(ac->isServerConnected()){
 		if (ac->getState() == actionlib::SimpleClientGoalState::SUCCEEDED)
-			ros::service::call("/gobot_base/show_blue_LED", empty_srv);
+			set_status_class.setLed("blue");
 		ac->cancelAllGoals();
+	}
+
+	if(dockAfterPath){
+		std::thread([](){
+			//~ROS_INFO("(PlayPath::goalReached) battery is low, go to charging station!!");
+			ros::service::call("/gobot_command/goDock", empty_srv);
+			dockAfterPath = false;
+		}).detach();
 	}
 
 	return true;

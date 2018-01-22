@@ -150,6 +150,9 @@ void sendCommand(const std::string ip, const std::vector<std::string> command, s
 
 void checkCommand(char c);
 
+double RadToDegree(double rad);
+
+double DegreeToRad(double degree);
 /*********************************** SERVICES ***********************************/
 bool pausePathSrvCallback(std_srvs::Empty::Request &req, std_srvs::Empty::Response &res);
 

@@ -171,10 +171,10 @@ void newBumpersInfo(const gobot_msg_srv::BumperMsg::ConstPtr& bumpers){
                     setSpeed('F', 3, 'B', 2);
                 //turn a bit left
                 else if(bumpers->bumper5==0 && bumpers->bumper6==0 && bumpers->bumper7==1 && bumpers->bumper8==1)
-                    setSpeed('F', 3, 'F', 1);
+                    setSpeed('F', 3, 'B', 1);
                 //turn a bit right
                 else if(bumpers->bumper7==0 && bumpers->bumper8==0 && bumpers->bumper5==1 && bumpers->bumper6==1)
-                    setSpeed('F', 1, 'F', 3);
+                    setSpeed('B', 1, 'F', 3);
                 //forward
                 else
                     setSpeed('F', 3, 'F', 3);

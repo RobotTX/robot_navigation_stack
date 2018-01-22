@@ -17,6 +17,8 @@
 #include <gobot_msg_srv/GetString.h>
 #include <gobot_msg_srv/SetInt.h>
 #include <gobot_msg_srv/GetInt.h>
+#include <dynamic_reconfigure/Reconfigure.h>
+#include <dynamic_reconfigure/DoubleParameter.h>
 
 bool disconnectedSrvCallback(std_srvs::Empty::Request &req, std_srvs::Empty::Response &res);
 

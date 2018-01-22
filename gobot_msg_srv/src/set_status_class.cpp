@@ -74,8 +74,31 @@ namespace gobot_class {
         return ros::service::call("/gobot_status/set_path", set_path);
     }
 
-    bool SetStatus::updatePath(){
-        return ros::service::call("/gobot_function/update_path", empty_srv);
+    void SetStatus::setLed(std::string color){
+        gobot_msg_srv::LedStrip cmd;
+        cmd.request.data[0]=0xB0;
+        cmd.request.data[1]=0x03;
+        cmd.request.data[2]=0x01;
+        cmd.request.data[3]=0x00;
+        cmd.request.data[4]=0x00;
+        cmd.request.data[5]=0x00;
+        cmd.request.data[6]=0x00;
+        cmd.request.data[7]=0x00;
+        cmd.request.data[8]=0x03;
+        cmd.request.data[9]=0xE8;
+        cmd.request.data[10]=0x1B;
+        //0x52 = Blue,0x47 = Red,0x42 = Green,0x4D = Magenta,0x43 = Cyan,0x59 = Yellow,0x57 = White, 0x00 = Off
+        if (color == "yellow")
+            cmd.request.data[3]=0x59;
+        else if (color == "red")
+            cmd.request.data[3]=0x47;
+        else if (color == "blue")
+            cmd.request.data[3]=0x52;
+        else if (color == "green")
+            cmd.request.data[3]=0x42;
+        else
+            cmd.request.data[3]=0x57;
+        ros::service::call("/gobot_base/setLed",cmd);
     }
 
     void SetStatus::setSound(int num,int time_on, int time_off){

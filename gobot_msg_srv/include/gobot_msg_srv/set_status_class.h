@@ -16,6 +16,7 @@
 #include <gobot_msg_srv/GetString.h>
 #include <gobot_msg_srv/SetInt.h>
 #include <gobot_msg_srv/GetInt.h>
+#include <gobot_msg_srv/LedStrip.h>
 
 
 namespace gobot_class {
@@ -44,9 +45,9 @@ namespace gobot_class {
 
             bool clearPath(void);
 
-            bool updatePath(void);
-
             void setSound(int num,int time_on, int time_off=1);
+
+            void setLed(std::string color);
 
         private:
             std_srvs::Empty empty_srv;

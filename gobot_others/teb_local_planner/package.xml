@@ -43,7 +43,7 @@
   <depend>tf</depend>
   <depend>tf_conversions</depend>
   <depend>visualization_msgs</depend>
-
+  <depend>gobot_msg_srv</depend>
   <export>
     <nav_core plugin="${prefix}/teb_local_planner_plugin.xml"/>
   </export>

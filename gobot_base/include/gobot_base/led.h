@@ -44,8 +44,6 @@ bool showBatteryLedsrvCallback(std_srvs::Empty::Request &req, std_srvs::Empty::R
 
 bool showSlowLEDsrvCallback(std_srvs::Empty::Request &req, std_srvs::Empty::Response &res);
 
-bool showBlueLEDsrvCallback(std_srvs::Empty::Request &req, std_srvs::Empty::Response &res);
-
 void batteryLed(void);
 
 void timerCallback(const ros::TimerEvent&);

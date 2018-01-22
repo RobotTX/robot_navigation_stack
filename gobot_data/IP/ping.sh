@@ -54,5 +54,5 @@ else
 fi
 var=$(ifconfig | grep -A 1 $wifi | grep inet | cut -d ':' -f2|cut -f -3 --delimiter='.')
 fping -r 0 -g "$var.0/24" 2>/dev/null | grep alive | cut -d ' ' -f1 > $isAlive
-sed -i "/$var.33/d" $isAlive
+sed -i "/$var.29/d" $isAlive
 #sed -i "/$var.165/d" $isAlive

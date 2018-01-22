@@ -138,12 +138,14 @@ int main(int argc, char** argv){
             //publish the message
             odom_pub.publish(odom);
 
+            /*
             /// some test
             gobot_msg_srv::OdomTestMsg odomTest;
             odomTest.x = x;
             odomTest.y = y;
             odomTest.yaw = th;
             odom_test_pub.publish(odomTest);
+            */
 
 
             last_time = current_time;

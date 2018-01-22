@@ -208,7 +208,7 @@ void session(boost::shared_ptr<tcp::socket> sock){
                             /// We delete the old path
                             set_status_class.clearPath();
                             // reset the path stage in the file
-                            set_status_class.updatePath();
+                            ros::service::call("/gobot_function/update_path", empty_srv);
                             ROS_INFO("(New Map) Path deleted");
 
                             /// We delete the old path stage

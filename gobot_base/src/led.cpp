@@ -368,16 +368,6 @@ bool showSlowLEDsrvCallback(std_srvs::Empty::Request &req, std_srvs::Empty::Resp
     return true;
 }
 
-bool showBlueLEDsrvCallback(std_srvs::Empty::Request &req, std_srvs::Empty::Response &res){
-    if(current_stage<COMPLETE_STAGE){
-        std::vector<uint8_t> color;
-        color.push_back(BLUE);
-        setLedPermanent(color);
-        current_stage=FREE_STAGE;
-    }
-    return true;
-}
-
 void batteryLed(){
     std::vector<uint8_t> color;
     switch (charging_state){
@@ -444,7 +434,6 @@ int main(int argc, char **argv) {
     ros::Subscriber lostRobot = nh.subscribe("/gobot_recovery/lost_robot",1,lostCallback);
 
     ros::ServiceServer showSlowLedsSrv = nh.advertiseService("/gobot_base/show_slow_LED", showSlowLEDsrvCallback);
-    ros::ServiceServer showBlueLedsSrv = nh.advertiseService("/gobot_base/show_blue_LED", showBlueLEDsrvCallback);
     ros::ServiceServer showBatteryLed = nh.advertiseService("/gobot_base/show_Battery_LED", showBatteryLedsrvCallback);
 
     getGobotStatusSrv = nh.serviceClient<gobot_msg_srv::GetGobotStatus>("/gobot_status/get_gobot_status");

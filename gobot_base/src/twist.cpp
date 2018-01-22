@@ -27,6 +27,8 @@ double pi = 3.14159;
 bool enable_joy = false;
 double linear_limit = 0.4, angular_limit = 0.8; 
 
+gobot_class::SetStatus set_status_class;
+
 void setSound(int num,int time_on, int time_off){
     gobot_msg_srv::SetInt sound_num;
     sound_num.request.data.push_back(num);
@@ -243,6 +245,15 @@ void joyCallback(const sensor_msgs::Joy::ConstPtr& joy){
         if(joy->buttons[10]){
             angular_limit = 0.8;
         }
+
+        if(joy->buttons[0])
+            set_status_class.setLed("green");
+        if(joy->buttons[1])
+            set_status_class.setLed("red");
+        if(joy->buttons[2])
+            set_status_class.setLed("blue");
+        if(joy->buttons[3])
+            set_status_class.setLed("yellow");
 
         if(!collision && !cliff_on){
             if(joy->axes[1] == 0 && joy->axes[3] == 0)
