@@ -113,8 +113,7 @@ bool initializeHomeSrcCallback(std_srvs::Empty::Request &req, std_srvs::Empty::R
             home_ang_y=std::stod(get_home.response.data[3]);
             home_ang_z=std::stod(get_home.response.data[4]);
             home_ang_w=std::stod(get_home.response.data[5]);
-            double roll,pitch;
-            tf::Matrix3x3(tf::Quaternion(home_ang_x,home_ang_y,home_ang_z,home_ang_w)).getRPY(roll,pitch,home_pos_yaw);
+            home_pos_yaw = tf::getYaw(tf::Quaternion(home_ang_x,home_ang_y,home_ang_z,home_ang_w));
             ROS_INFO("Home: pos(%.2f,%.2f,%.2f),cov(%.2f,%.2f,%.2f).",home_pos_x,home_pos_y,home_pos_yaw,initial_cov_xy,initial_cov_xy,initial_cov_yaw);
         }
         else
@@ -376,8 +375,7 @@ void getPose(){
         home_ang_y=std::stod(get_home.response.data[3]);
         home_ang_z=std::stod(get_home.response.data[4]);
         home_ang_w=std::stod(get_home.response.data[5]);
-        double roll,pitch;
-        tf::Matrix3x3(tf::Quaternion(home_ang_x,home_ang_y,home_ang_z,home_ang_w)).getRPY(roll,pitch,home_pos_yaw);
+        home_pos_yaw = tf::getYaw(tf::Quaternion(home_ang_x,home_ang_y,home_ang_z,home_ang_w));
         ROS_INFO("Home: pos(%.2f,%.2f,%.2f),cov(%.2f,%.2f,%.2f).",home_pos_x,home_pos_y,home_pos_yaw,initial_cov_xy,initial_cov_xy,initial_cov_yaw);
     }
     else
@@ -405,7 +403,7 @@ void getPose(){
             ifs >> last_pos_x >> last_pos_y >> last_ang_x >> last_ang_y >> last_ang_z >> last_ang_w;
             ifs.close();
             double roll,pitch;
-            tf::Matrix3x3(tf::Quaternion(last_ang_x,last_ang_y,last_ang_z,last_ang_w)).getRPY(roll,pitch,last_pos_yaw);
+            last_pos_yaw = tf::getYaw(tf::Quaternion(last_ang_x,last_ang_y,last_ang_z,last_ang_w));
             ROS_INFO("Last: pos(%.2f,%.2f,%.2f),cov(%.2f,%.2f,%.2f).",last_pos_x,last_pos_y,last_pos_yaw,initial_cov_xy,initial_cov_xy,initial_cov_yaw);
         }
     } 

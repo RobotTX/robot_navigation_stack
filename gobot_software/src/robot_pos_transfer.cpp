@@ -39,12 +39,8 @@ void sendRobotPos(const ros::TimerEvent&){
 }
 
 void getRobotPos(const geometry_msgs::Pose::ConstPtr& msg){
-    /// to recover the orientation of the robot :)
-    tf::Matrix3x3 matrix = tf::Matrix3x3(tf::Quaternion(msg->orientation.x, msg->orientation.y, msg->orientation.z, msg->orientation.w));
-    tfScalar roll;
-    tfScalar pitch;
-    tfScalar yaw;
-    matrix.getRPY(roll, pitch, yaw);
+    double yaw = tf::getYaw(tf::Quaternion(msg->orientation.x, msg->orientation.y, msg->orientation.z, msg->orientation.w));
+
     robot_string = std::to_string(msg->position.x) + " " + std::to_string(msg->position.y) + " " + std::to_string(yaw) + " ";
     last_pos_x = msg->position.x;
     last_pos_y = msg->position.y;

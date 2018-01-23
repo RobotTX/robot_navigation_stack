@@ -539,7 +539,7 @@ bool newChargingStation(const std::vector<std::string> command){
         std::string homeX = command.at(1), homeY = command.at(2), homeOri = command.at(3);
         int orientation = std::stoi(homeOri);
         tf::Quaternion quaternion;
-        quaternion.setEuler(0, 0, -DegreeToRad(orientation+90));
+        quaternion.setRPY(0, 0, -DegreeToRad(orientation+90));
 
         std::string mapType = homeX.substr(0,1);
         if(mapType == "S"){
@@ -1114,14 +1114,12 @@ void sendConnectionData(boost::shared_ptr<tcp::socket> sock){
            z_angle = std::stod(get_home.response.data[4]),
            w_angle = std::stod(get_home.response.data[5]);
 
-    tfScalar roll,pitch,yaw;
     if(homeX=="0" && homeY=="0" && x_angle==0 && y_angle==0){
         homeX = "-150";
         homeY = "-150";
     }
-    tf::Matrix3x3 matrix = tf::Matrix3x3(tf::Quaternion(x_angle , y_angle , z_angle, w_angle));
-    matrix.getRPY(roll, pitch, yaw);
-    double homeOri = -RadToDegree(yaw) - 90.0;
+
+    double homeOri = -RadToDegree(tf::getYaw(tf::Quaternion(x_angle , y_angle , z_angle, w_angle))) - 90.0;
 
     /// we send the path along with the time of the last modification of its file
     std::string path("");

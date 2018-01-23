@@ -16,7 +16,7 @@
 #include <unistd.h>
 #include <assert.h>
 #include <move_base_msgs/MoveBaseAction.h>
-#include <tf/transform_broadcaster.h> // tf::Matrix3x3
+#include <tf/transform_broadcaster.h>
 #include <boost/asio.hpp>
 #include <actionlib/client/simple_action_client.h>
 #include <std_msgs/String.h>

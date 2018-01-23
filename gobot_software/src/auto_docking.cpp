@@ -25,8 +25,7 @@ ros::Timer sound_timer;
 std_srvs::Empty empty_srv;
 
 tfScalar x, y, oriX, oriY, oriZ, oriW;
-tfScalar roll,pitch,yaw;
-double landingPointX, landingPointY;
+double landingPointX, landingPointY, landingYaw;
 
 int dock_status = 0;
 gobot_class::SetStatus set_status_class;
@@ -62,16 +61,12 @@ bool startDocking(void){
         if(x != 0 || y != 0 || oriX != 0 || oriY != 0 || oriZ != 0){
             //~ROS_INFO("(auto_docking::startDocking) home found : [%f, %f] [%f, %f, %f, %f]", x, y, oriX, oriY, oriZ, oriW);
 
-            /// Got a quaternion and want an orientation in radian
-            tf::Matrix3x3 matrix = tf::Matrix3x3(tf::Quaternion(oriX , oriY , oriZ, oriW));
-
-            matrix.getRPY(roll, pitch, yaw);
-            double homeOri = -(yaw*180/3.14159);//-(orientation+90)*3.14159/180);
+            landingYaw = tf::getYaw(tf::Quaternion(oriX , oriY , oriZ, oriW));
 
             /// We want to go 1 metre in front of the charging station
-            landingPointX = x + 0.5 * std::cos(yaw);
-            landingPointY = y + 0.5 * std::sin(yaw);
-            //~ROS_INFO("(auto_docking::startDocking) landing point : [%f, %f, %f]", landingPointX, landingPointY, homeOri);
+            landingPointX = x + 0.6 * std::cos(landingYaw);
+            landingPointY = y + 0.6 * std::sin(landingYaw);
+            //~ROS_INFO("(auto_docking::startDocking) landing point : [%f, %f, %f]", landingPointX, landingPointY, landingYaw);
 
             /// Create the goal
             currentGoal.target_pose.header.frame_id = "map";
@@ -200,7 +195,7 @@ void newIrSignal(const gobot_msg_srv::IrMsg::ConstPtr& irSignal){
             lostIrSignal = false;
             /// rear ir received 1 and 2 signal, so robot goes backward
             if (irSignal->rearSignal == 3)
-                setSpeed('B', 5, 'B', 5);
+                setSpeed('B', 4, 'B', 4);
             else if (irSignal->rearSignal == 2)
                 /// rear ir received signal 2, so robot turns right
                 setSpeed('B', 3, 'F', 3);
@@ -306,20 +301,20 @@ void finishedDocking(){
         if(attempt <= 3){
             ROS_WARN("(auto_docking::finishedDocking) Failed docking %d time(s)", attempt);
             setSpeed('F', 15, 'F', 15);
-            ros::Duration(1.0).sleep();
+            ros::Duration(1.5).sleep();
             setSpeed('F', 0, 'F', 0);
 
             if(ac->isServerConnected()) {
                 startDockingParams();
                 if(attempt == 1){
                     currentGoal.target_pose.header.stamp = ros::Time::now();
-                    currentGoal.target_pose.pose.position.x = landingPointX + 0.05*std::sin(yaw);
-                    currentGoal.target_pose.pose.position.y = landingPointY - 0.05*std::cos(yaw);
+                    currentGoal.target_pose.pose.position.x = landingPointX + 0.05*std::sin(landingYaw);
+                    currentGoal.target_pose.pose.position.y = landingPointY - 0.05*std::cos(landingYaw);
                 }
                 else if(attempt == 2){
                     currentGoal.target_pose.header.stamp = ros::Time::now();
-                    currentGoal.target_pose.pose.position.x = landingPointX - 0.05*std::sin(yaw);
-                    currentGoal.target_pose.pose.position.y = landingPointY + 0.05*std::cos(yaw);
+                    currentGoal.target_pose.pose.position.x = landingPointX - 0.05*std::sin(landingYaw);
+                    currentGoal.target_pose.pose.position.y = landingPointY + 0.05*std::cos(landingYaw);
                 }
                 else {
                     currentGoal.target_pose.header.stamp = ros::Time::now();
