@@ -36,7 +36,7 @@ min_obstacle_dist: 0.05
 include_costmap_obstacles: true
 costmap_obstacles_behind_robot_dist: 1.0
 obstacle_poses_affected: 30
-inflation_dist: 0.4
+inflation_dist: 0.6
 oscillation_recovery: false
 #Not in use
 weight_dynamic_obstacle: 50.0

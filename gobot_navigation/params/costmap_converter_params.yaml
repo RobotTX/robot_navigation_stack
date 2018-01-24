@@ -22,7 +22,7 @@ TebLocalPlannerROS:
     costmap_converter/CostmapToPolygonsDBSMCCH:
         cluster_max_distance: 0.45
         cluster_min_pts: 2
-        cluster_max_pts: 30
+        cluster_max_pts: 50
         #Clear keypoints/vertices of the convex polygon that are close to each other
         convex_hull_min_pt_separation: 0.1
 

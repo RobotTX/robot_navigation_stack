@@ -422,8 +422,9 @@ int main(int argc, char **argv) {
     ros::init(argc, argv, "led");
     ros::NodeHandle nh;
 
-    ros::Timer timer = nh.createTimer(ros::Duration(60), timerCallback);
+    ros::service::waitForService("/gobot_base/setLed", ros::Duration(30));
 
+    ros::Timer timer = nh.createTimer(ros::Duration(60), timerCallback);
     ros::Subscriber goalResult = nh.subscribe("/move_base/result",1,goalResultCallback);
     ros::Subscriber goalGet = nh.subscribe("/move_base/goal",1,goalGetCallback);
     ros::Subscriber goalCancel = nh.subscribe("/move_base/cancel",1,goalCancelCallback);

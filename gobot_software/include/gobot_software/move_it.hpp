@@ -32,7 +32,10 @@
 #include <gobot_msg_srv/GetInt.h>
 #include <gobot_msg_srv/SetInt.h>
 #include <gobot_msg_srv/SetString.h>
+#include <gobot_msg_srv/GetString.h>
 #include <thread>
+#include <dynamic_reconfigure/Reconfigure.h>
+#include <dynamic_reconfigure/DoubleParameter.h>
 
 typedef actionlib::SimpleActionClient<move_base_msgs::MoveBaseAction> MoveBaseClient;
 
@@ -45,8 +48,6 @@ struct Point {
     bool isHome;
     double yaw;
 };
-
-bool setSpeed(const char directionR, const int velocityR, const char directionL, const int velocityL);
 
 void setStageInFile(const int stage);
 

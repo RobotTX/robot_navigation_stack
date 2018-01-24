@@ -74,6 +74,17 @@ namespace gobot_class {
         return ros::service::call("/gobot_status/set_path", set_path);
     }
 
+    bool SetStatus::setMotorSpeed(const char directionR, const int velocityR, const char directionL, const int velocityL){
+    //ROS_INFO("(auto_docking::setSpeed) %c %d %c %d", directionR, velocityR, directionL, velocityL);
+    gobot_msg_srv::SetSpeeds speed; 
+    speed.request.directionR = std::string(1, directionR);
+    speed.request.velocityR = velocityR;
+    speed.request.directionL = std::string(1, directionL);
+    speed.request.velocityL = velocityL;
+
+    return ros::service::call("/gobot_motor/setSpeeds", speed);
+    }
+
     void SetStatus::setLed(std::string color){
         gobot_msg_srv::LedStrip cmd;
         cmd.request.data[0]=0xB0;

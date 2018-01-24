@@ -35,8 +35,6 @@ void backToStart(void);
 
 /// To get the starting position
 bool getRobotPos(void);
-
-bool setSpeed(const char directionR, const int velocityR, const char directionL, const int velocityL);
     
 void timerCallback(const ros::TimerEvent&);
 #endif

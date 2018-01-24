@@ -17,6 +17,7 @@
 #include <gobot_msg_srv/SetInt.h>
 #include <gobot_msg_srv/GetInt.h>
 #include <gobot_msg_srv/LedStrip.h>
+#include <gobot_msg_srv/SetSpeeds.h>
 
 
 namespace gobot_class {
@@ -44,6 +45,8 @@ namespace gobot_class {
             bool setHome(std::string pos_x,std::string pos_y,std::string ori_x,std::string ori_y,std::string ori_z,std::string ori_w);
 
             bool clearPath(void);
+
+            bool setMotorSpeed(const char directionR, const int velocityR, const char directionL, const int velocityL);
 
             void setSound(int num,int time_on, int time_off=1);
 

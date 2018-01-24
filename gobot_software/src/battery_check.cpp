@@ -2,7 +2,6 @@
 
 bool canGoCharge = true;
 int test = -1;
-double LOW_BATTERY_THRESHOLD = 0.0;
 
 /// For test purpose only
 bool testAutoDocking(gobot_msg_srv::SetBattery::Request &req, gobot_msg_srv::SetBattery::Response &res){
@@ -11,15 +10,18 @@ bool testAutoDocking(gobot_msg_srv::SetBattery::Request &req, gobot_msg_srv::Set
     return true;
 }
 
-/// Check if the battery is low and the robot should go charge
-void newBatteryInfo(const gobot_msg_srv::BatteryMsg::ConstPtr& batteryInfo){
-    gobot_msg_srv::GetString get_battery;
-    ros::service::call("/gobot_status/get_battery",get_battery);
-    LOW_BATTERY_THRESHOLD = std::stod(get_battery.response.data[0]);
+void timerCallback(const ros::TimerEvent&){
+    gobot_msg_srv::IsCharging isCharging;
+    ros::service::call("/gobot_status/charging_status", isCharging);
 
-    if(!batteryInfo->ChargingFlag){
-        if(canGoCharge && (batteryInfo->Percentage <= LOW_BATTERY_THRESHOLD || test == 0)){
-            ROS_WARN("(Battery check) Battery info : %d %.2f %d. Battery is low, let's go charge!!", batteryInfo->BatteryVoltage, batteryInfo->Percentage,batteryInfo->ChargingCurrent);
+    gobot_msg_srv::GetInt battery_percent;
+    ros::service::call("/gobot_status/battery_percent", battery_percent);
+
+    if(!isCharging.response.isCharging){
+           gobot_msg_srv::GetString get_battery;
+           ros::service::call("/gobot_status/get_battery",get_battery);
+        if(canGoCharge && (battery_percent.response.data[0] <= std::stod(get_battery.response.data[0]) || test == 0)){
+            ROS_WARN("(Battery check) Battery below percentage: %d ", battery_percent.response.data[0]);
             std_srvs::Empty arg;
             ros::service::call("/gobot_command/lowBattery", arg);
             canGoCharge = false;
@@ -27,7 +29,7 @@ void newBatteryInfo(const gobot_msg_srv::BatteryMsg::ConstPtr& batteryInfo){
     }
     else{
         //reset the gocharge when complete godock
-        if(batteryInfo->Percentage>0.75){
+        if(battery_percent.response.data[0]>75){
             canGoCharge = true;
         }
         else{
@@ -42,13 +44,10 @@ int main(int argc, char* argv[]){
     ROS_INFO("(Battery check) running");
     
     ros::service::waitForService("/gobot_status/get_battery", ros::Duration(30));
-    gobot_msg_srv::GetString get_battery;
-    ros::service::call("/gobot_status/get_battery",get_battery);
-    LOW_BATTERY_THRESHOLD = std::stod(get_battery.response.data[0]);
 
     ros::ServiceServer testAutoDockingService = nh.advertiseService("/gobot_test/testAutoDocking", testAutoDocking);
 
-    ros::Subscriber batterySub = nh.subscribe("/gobot_base/battery_topic", 1, newBatteryInfo);
+    ros::Timer battery_timer = nh.createTimer(ros::Duration(60), timerCallback);
     
     ros::spin();
 

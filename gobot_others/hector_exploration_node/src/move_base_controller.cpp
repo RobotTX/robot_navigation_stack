@@ -19,7 +19,7 @@ ros::ServiceClient getGobotStatusSrv;
 ros::Timer sound_timer;
 gobot_msg_srv::GetGobotStatus get_gobot_status;
 
-gobot_class::SetStatus set_status_class;
+gobot_class::SetStatus robot;
 
 /// To get the starting position
 bool getRobotPos(void){
@@ -62,7 +62,7 @@ void backToStart(){
     gobot_msg_srv::SetString set_home;
     switch(back_to_start_when_finished){
         case 1:
-            set_status_class.setHome(std::to_string(startingPose.position.x),std::to_string(startingPose.position.y),std::to_string(startingPose.orientation.x),
+            robot.setHome(std::to_string(startingPose.position.x),std::to_string(startingPose.position.y),std::to_string(startingPose.orientation.x),
             std::to_string(startingPose.orientation.y),std::to_string(startingPose.orientation.z),std::to_string(startingPose.orientation.w));
         
             ROS_INFO("(Exploration) Complete exploration and Set robot home:%.2f,%.2f",startingPose.position.x,startingPose.position.y);
@@ -126,7 +126,7 @@ void doExploration(void){
                             std_msgs::Int8 result;
                             result.data=1;
                             exploration_pub.publish(result);
-                            set_status_class.setGobotStatus(21,"COMPLETE_EXPLORING");
+                            robot.setGobotStatus(21,"COMPLETE_EXPLORING");
                             sound_timer.stop();
                         }
                         stopExploration();
@@ -155,7 +155,7 @@ bool startExplorationSrv(hector_exploration_node::Exploration::Request &req, hec
         std_msgs::Int8 result;
         result.data=-1;
         exploration_pub.publish(result);
-        set_status_class.setGobotStatus(25,"EXPLORING");
+        robot.setGobotStatus(25,"EXPLORING");
         sound_timer.start();
 
         back_to_start_when_finished = req.backToStartWhenFinished;
@@ -166,9 +166,9 @@ bool startExplorationSrv(hector_exploration_node::Exploration::Request &req, hec
         gobot_msg_srv::IsCharging isCharging;
         if(ros::service::call("/gobot_status/charging_status", isCharging) && isCharging.response.isCharging){
             ROS_WARN("(Exploration) we are charging so we go straight to avoid bumping into the CS when turning");
-            setSpeed('F', 15, 'F', 15);
+            robot.setMotorSpeed('F', 15, 'F', 15);
 		    std::this_thread::sleep_for(std::chrono::milliseconds(3000));
-            setSpeed('F', 0, 'F', 0);
+            robot.setMotorSpeed('F', 0, 'F', 0);
         }
 
         std::thread(doExploration).detach();
@@ -187,7 +187,7 @@ bool stopExplorationSrv(std_srvs::Empty::Request &req, std_srvs::Empty::Response
         std_msgs::Int8 result;
         result.data=0;
         exploration_pub.publish(result);
-        set_status_class.setGobotStatus(21,"STOP_EXPLORING");
+        robot.setGobotStatus(21,"STOP_EXPLORING");
         sound_timer.stop();
     }
     return stopExploration();
@@ -207,19 +207,9 @@ bool stopExploration(void){
     return true;
 }
 
-bool setSpeed(const char directionR, const int velocityR, const char directionL, const int velocityL){
-    //ROS_INFO("(auto_docking::setSpeed) %c %d %c %d", directionR, velocityR, directionL, velocityL);
-    gobot_msg_srv::SetSpeeds speed; 
-    speed.request.directionR = std::string(1, directionR);
-    speed.request.velocityR = velocityR;
-    speed.request.directionL = std::string(1, directionL);
-    speed.request.velocityL = velocityL;
-
-    return ros::service::call("/gobot_motor/setSpeeds", speed);
-}
 
 void timerCallback(const ros::TimerEvent&){
-    set_status_class.setSound(2,1);
+    robot.setSound(2,1);
 }
 
 int main(int argc, char* argv[]){
@@ -267,7 +257,7 @@ int main(int argc, char* argv[]){
     ros::ServiceServer startExploration = nh.advertiseService("/gobot_scan/startExploration", startExplorationSrv);
     ros::ServiceServer stopExploration = nh.advertiseService("/gobot_scan/stopExploration", stopExplorationSrv);
 
-    set_status_class.setGobotStatus(20,"EXPLORATION");
+    robot.setGobotStatus(20,"EXPLORATION");
 
     ros::spin();
 

@@ -9,6 +9,7 @@ footprint: [[0.250,0],[0.245,-0.165], [0.225,-0.220], [0.165,-0.240],
 
 footprint_padding: 0.0001
 resolution: 0.04
+transform_tolerance: 0.5
 
 #plugins:
     # Add the data from the map to the costmap
@@ -40,8 +41,8 @@ obstacles:
     z_voxels: 5
     publish_voxel_map: True
     laser_scan_sensor: {
-        obstacle_range: 4.5,
-        raytrace_range: 5.0,
+        obstacle_range: 5.5,
+        raytrace_range: 6.0,
         sensor_frame: base_laser, 
         data_type: LaserScan, 
         topic: /scan, 
@@ -153,5 +154,5 @@ obstacles:
     }
 
 inflation_layer:
-    inflation_radius: 0.8
-    cost_scaling_factor: 1.5 #2.58
+    inflation_radius: 0.6
+    cost_scaling_factor: 1.2 #2.58

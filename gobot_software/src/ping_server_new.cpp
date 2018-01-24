@@ -9,11 +9,10 @@ std::string ipsFile, wifiFile;
 bool simulation = false;
 bool muteFlag = false;
 bool scanIP = false;
-int batteryLevel = 50;
 double STATUS_UPDATE=5.0, IP_UPDATE=20.0;
 
 std::vector<std::string> availableIPs;
-std::vector<std::string> connectedIPs;
+std::vector<std::string> connectedIPs, disconnectedIPs;
 std::vector<std::pair<std::string, int>> oldIPs;
 std::mutex serverMutex;
 std::mutex connectedMutex;
@@ -41,11 +40,32 @@ std::string getDataToSend(void){
     gobot_msg_srv::GetStage get_stage;
     ros::service::call("/gobot_status/get_stage", get_stage);
     
+    //Retrives mute or not
     gobot_msg_srv::GetInt get_mute;
     ros::service::call("/gobot_status/get_mute",get_mute);
     muteFlag=(get_mute.response.data[0]) ? 1 : 0;
+
+    //Retrives battery percentage
+    gobot_msg_srv::GetInt get_battery;
+    ros::service::call("/gobot_status/battery_percent", get_battery);
+
     /// Form the string to send to the Qt app
-    return  get_name.response.data[0] + sep + std::to_string(get_stage.response.stage) + sep + std::to_string(batteryLevel) + sep + std::to_string(muteFlag) + sep + std::to_string(get_dock_status.response.status);
+    return  get_name.response.data[0] + sep + std::to_string(get_stage.response.stage) + sep + std::to_string(get_battery.response.data[0]) + 
+            sep + std::to_string(muteFlag) + sep + std::to_string(get_dock_status.response.status);
+}
+
+/**
+ * Will disconnet all servers for updating map/wifi
+ */
+bool disServersSrvCallback(std_srvs::Empty::Request &req, std_srvs::Empty::Response &res){
+    //disconnect all sockets when closed
+    for(int i=0;i<oldIPs.size();i++){
+        std_msgs::String msg;
+        msg.data = oldIPs.at(i).first;
+        disco_pub.publish(msg);
+    }
+    
+    return true;
 }
 
 /**
@@ -64,7 +84,7 @@ bool updataStatusSrvCallback(std_srvs::Empty::Request &req, std_srvs::Empty::Res
 
             ///we wait for all the threads to be done
             for(int i = 0; i < data_threads.size(); ++i)
-                data_threads.at(i).join();
+                data_threads.at(i).join();          
         }
     }).detach();
 
@@ -130,8 +150,6 @@ void updateIP(){
                 msg.data = oldIPs.at(i).first;
                 disco_pub.publish(msg);
                 toRemove.push_back(i);
-                if(oldIPs.at(i).first=="192.168.100.29")
-                    ros::service::call("/gobot_test/disconnected",empty_srv);
             } 
             else{
                 //ROS_WARN("Could not ping IP %s for %d time(s)", oldIPs.at(i).first.c_str(), oldIPs.at(i).second);
@@ -196,9 +214,9 @@ void pingIP2(std::string ip, std::string dataToSend, double sec){
             /// Send the required data
             client.write_line(dataToSend, boost::posix_time::seconds(sec));
             //ROS_INFO("(ping_server) Connected to %s", ip.c_str());
-        } //else
-            //ROS_ERROR("(ping_server) read %lu bytes : %s", read.size(), read.c_str());
-        
+        } 
+        else
+            disconnectedIPs.push_back(ip);
     } catch(std::exception& e) {
         //ROS_ERROR("(ping_server) error %s : %s", ip.c_str(), e.what());
     }
@@ -238,26 +256,17 @@ void checkNewServers(void){
     }
 }
 
-/**  * Update the battery informations we need to send to the Qt app  */ 
-void newBatteryInfo(const gobot_msg_srv::BatteryMsg::ConstPtr& batteryInfo){         
-    if(batteryInfo->Temperature > 0) 
-        if (batteryInfo->BatteryStatus < 0){
-            batteryLevel = 10;
-        }    
-        else{
-            batteryLevel = batteryInfo->BatteryStatus>100 ? 100 : batteryInfo->BatteryStatus;
-        }    
-}
-
 
 void mySigintHandler(int sig)
 {   
+    ipMutex.lock();
     //disconnect all sockets when closed
     for(int i=0;i<oldIPs.size();i++){
         std_msgs::String msg;
         msg.data = oldIPs.at(i).first;
         disco_pub.publish(msg);
     }
+    ipMutex.unlock();
 
     while(scanIP){
         ros::Duration(0.5).sleep();
@@ -288,6 +297,7 @@ int main(int argc, char* argv[]){
     signal(SIGINT, mySigintHandler);
     
     if (initParams()){
+
         getGobotStatusSrv = n.serviceClient<gobot_msg_srv::GetGobotStatus>("/gobot_status/get_gobot_status");
         
         getGobotStatusSrv.waitForExistence(ros::Duration(30.0));
@@ -297,7 +307,7 @@ int main(int argc, char* argv[]){
             getGobotStatusSrv.call(get_gobot_status);
             while((get_gobot_status.response.status!=-1 || get_gobot_status.response.text!="FOUND_POSE") && ros::ok()){
                 getGobotStatusSrv.call(get_gobot_status);
-                ros::Duration(0.2).sleep();
+                ros::Duration(0.5).sleep();
             }
             ROS_INFO("(ping_server) Robot finding initial pose is ready.");
         }
@@ -305,8 +315,8 @@ int main(int argc, char* argv[]){
         //Startup end
 
         disco_pub = n.advertise<std_msgs::String>("/gobot_software/server_disconnected", 10);
-        ros::Subscriber batterySub = n.subscribe("/gobot_base/battery_topic", 1, newBatteryInfo);
         ros::ServiceServer updataStatusSrv = n.advertiseService("/gobot_software/update_status", updataStatusSrvCallback);
+        ros::ServiceServer disServersSrv = n.advertiseService("/gobot_software/disconnet_servers", disServersSrvCallback);
 
         /// Thread which will get an array of potential servers
         std::thread t1(checkNewServers);

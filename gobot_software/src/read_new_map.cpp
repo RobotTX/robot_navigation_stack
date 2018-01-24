@@ -13,12 +13,11 @@ std::map<std::string, boost::shared_ptr<tcp::socket>> sockets;
 ros::Publisher map_pub;
 ros::Publisher initial_pose_publisher;
 
-ros::Publisher disco_pub;
 std_srvs::Empty empty_srv;
 gobot_msg_srv::GetGobotStatus get_gobot_status;
 
 std::string user_name;
-gobot_class::SetStatus set_status_class;
+gobot_class::SetStatus robot;
 
 void session(boost::shared_ptr<tcp::socket> sock){
 
@@ -180,7 +179,7 @@ void session(boost::shared_ptr<tcp::socket> sock){
                             //#### delete old robot data ####
                             if(mapType != "IMPT" && mapType != "SCAN"){
                                 /// We delete the old home
-                                set_status_class.setHome("0","0","0","0","0","0");
+                                robot.setHome("0","0","0","0","0","0");
                                 ROS_INFO("(New Map) Home deleted");
                             }
 
@@ -202,17 +201,17 @@ void session(boost::shared_ptr<tcp::socket> sock){
                             }
                             
                             /// We detele the loop
-                            set_status_class.setLoop(0);
+                            robot.setLoop(0);
                             ROS_INFO("(New Map) Loop deleted");
 
                             /// We delete the old path
-                            set_status_class.clearPath();
+                            robot.clearPath();
                             // reset the path stage in the file
                             ros::service::call("/gobot_function/update_path", empty_srv);
                             ROS_INFO("(New Map) Path deleted");
 
                             /// We delete the old path stage
-                            set_status_class.setStage(0);
+                            robot.setStage(0);
                             ROS_INFO("(New Map) Path stage deleted");
                             //#### delete old robot data ####
                         }
@@ -267,11 +266,7 @@ void session(boost::shared_ptr<tcp::socket> sock){
                 connected_ip.push_back(it->first);
             }
             socketsMutex.unlock();
-            for(int i=0;i<connected_ip.size();i++){
-                std_msgs::String msg;
-                msg.data = connected_ip.at(i);
-                disco_pub.publish(msg);
-            }
+            ros::service::call("/gobot_software/disconnet_servers",empty_srv);
         }
     }
 }
@@ -351,7 +346,6 @@ int main(int argc, char **argv){
 
     /// Advertise that we are going to publish to /map
     map_pub = n.advertise<nav_msgs::OccupancyGrid>("/map", 1000);
-    disco_pub = n.advertise<std_msgs::String>("/gobot_software/server_disconnected", 10);
 
     ROS_INFO("(New Map) Ready to be launched.");
 

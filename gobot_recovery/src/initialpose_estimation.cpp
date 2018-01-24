@@ -160,8 +160,6 @@ bool initializePoseSrvCallback(std_srvs::Empty::Request &req, std_srvs::Empty::R
                         break;
 
                     case CHARGING_STAGE:
-                        //wait for battery update
-                        ros::Duration(1.5).sleep();
                         ros::service::call("/gobot_status/charging_status",arg);
                         //if robot is charging, it is in CS station 
                         if(arg.response.isCharging){
@@ -318,10 +316,10 @@ void getAmclPoseCallback(const geometry_msgs::PoseWithCovarianceStamped::ConstPt
     //Write lastest amcl_pose to file
     if(found_pose){
         std_msgs::Int8 lost;
-        if((cov_x > 100*initial_cov_xy && cov_y > 100*initial_cov_xy) || cov_yaw > 50*initial_cov_yaw){
+        if((cov_x > 200*initial_cov_xy && cov_y > 200*initial_cov_xy) || cov_yaw > 50*initial_cov_yaw){
             if(cov_yaw > 50*initial_cov_yaw)
                 ROS_ERROR("Big yaw covariance in the amcl pose");
-            if(cov_x > 100*initial_cov_xy && cov_y > 100*initial_cov_xy)
+            if(cov_x > 200*initial_cov_xy && cov_y > 200*initial_cov_xy)
                 ROS_ERROR("Big xy covariance in the amcl pose");
             lost.data = 1; 
         }

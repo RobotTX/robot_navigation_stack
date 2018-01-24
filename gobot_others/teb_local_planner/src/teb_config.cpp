@@ -75,13 +75,6 @@ void TebConfig::loadRosParamFromNodeHandle(const ros::NodeHandle& nh)
   nh.param("wheelbase", robot.wheelbase, robot.wheelbase);
   nh.param("cmd_angle_instead_rotvel", robot.cmd_angle_instead_rotvel, robot.cmd_angle_instead_rotvel);
   nh.param("is_footprint_dynamic", robot.is_footprint_dynamic, robot.is_footprint_dynamic);
-  //Get speed vel from local setting
-  ros::service::waitForService("/gobot_status/get_speed", ros::Duration(30));
-  gobot_msg_srv::GetString get_speed;
-  ros::service::call("/gobot_status/get_speed",get_speed);
-  robot.max_vel_x = std::stod(get_speed.response.data[0]);
-  robot.max_vel_theta = std::stod(get_speed.response.data[1])*3.14159/180;
-  ROS_INFO("Teb_local_planner: set linear speed:%.2f, angular speed:%.2f", robot.max_vel_x,robot.max_vel_theta);
 
   // GoalTolerance
   nh.param("xy_goal_tolerance", goal_tolerance.xy_goal_tolerance, goal_tolerance.xy_goal_tolerance);

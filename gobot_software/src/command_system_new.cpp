@@ -33,7 +33,7 @@ ros::ServiceClient getGobotStatusSrv,getDockStatusSrv;
 
 std::string user_name;
 
-gobot_class::SetStatus set_status_class;
+gobot_class::SetStatus robot;
 
 template<typename Out>
 void split(const std::string &s, const char delim, Out result) {
@@ -223,7 +223,7 @@ bool execCommand(const std::string ip, const std::vector<std::string> command){
 /// Command: 1, 2nd param=linear_vel, 3rd param=angular_vel
 bool adjustSpeed(const std::vector<std::string> command){
     if(command.size() == 3){
-        return set_status_class.setSpeed(command.at(1),command.at(2));
+        return robot.setSpeed(command.at(1),command.at(2));
     }
     return false;
 }
@@ -231,7 +231,7 @@ bool adjustSpeed(const std::vector<std::string> command){
 /// Command: 2, 2nd param=battery level
 bool adjustBatteryLvl(const std::vector<std::string> command){
     if(command.size() == 2){
-        return set_status_class.setBatteryLvl(command.at(1));
+        return robot.setBatteryLvl(command.at(1));
     }
     return false;
 }
@@ -242,7 +242,7 @@ bool renameRobot(const std::vector<std::string> command){
     ros::NodeHandle n;
     if(command.size() == 2){
         ROS_INFO("(Command system) New name : %s", command.at(1).c_str());
-        return set_status_class.setName(command.at(1));
+        return robot.setName(command.at(1));
     } 
     else 
         ROS_ERROR("(Command system) Name missing");
@@ -518,7 +518,7 @@ bool stopAndDeletePath(const std::vector<std::string> command){
         }
 
         ROS_INFO("(Command system) Stop the robot and delete its path");
-        if(set_status_class.clearPath()){
+        if(robot.clearPath()){
             // reset the path stage in the file
             ros::service::call("/gobot_function/update_path", empty_srv);
             return true;
@@ -547,7 +547,7 @@ bool newChargingStation(const std::vector<std::string> command){
             ROS_INFO("(Command System::New CS) Map Type: %s", mapType.c_str());
             //We change the last known pose for localize Gobot in scanned map
         }
-        set_status_class.setHome(homeX,homeY,std::to_string(quaternion.x()),std::to_string(quaternion.y()),std::to_string(quaternion.z()),std::to_string(quaternion.w()));
+        robot.setHome(homeX,homeY,std::to_string(quaternion.x()),std::to_string(quaternion.y()),std::to_string(quaternion.z()),std::to_string(quaternion.w()));
         ros::service::call("/gobot_recovery/initialize_home",empty_srv);
         return true;
     } 
@@ -749,7 +749,7 @@ bool keyboardControl(const std::vector<std::string> command){
 bool muteOff(const std::vector<std::string> command){
     if(command.size() == 1) {
         ROS_INFO("(Command system) Disable mute");
-        return set_status_class.setMute(0);
+        return robot.setMute(0);
     }
 
     return false;
@@ -759,7 +759,7 @@ bool muteOff(const std::vector<std::string> command){
 bool muteOn(const std::vector<std::string> command){
 if(command.size() == 1) {
         ROS_INFO("(Command system) Enable mute");
-        return set_status_class.setMute(1);
+        return robot.setMute(1);
     }
 
     return false;
@@ -771,18 +771,14 @@ bool setWifi(const std::vector<std::string> command){
     //1=y, 2=wifi name, 3=wifi password
     if(command.size() == 3){
         ROS_INFO("(Command system) Wifi received %s %s", command.at(1).c_str(), command.at(2).c_str());
-        if(set_status_class.setWifi(command.at(1),command.at(2))){
+        if(robot.setWifi(command.at(1),command.at(2))){
             socketsMutex.lock();
             std::vector<std::string> connected_ip;
             for (std::map<std::string, boost::shared_ptr<tcp::socket>>::iterator it=sockets.begin();it!=sockets.end();++it){
                 connected_ip.push_back(it->first);
             }
             socketsMutex.unlock();
-            for(int i=0;i<connected_ip.size();i++){
-                std_msgs::String msg;
-                msg.data = connected_ip.at(i);
-                disco_pub.publish(msg); 
-            }
+            ros::service::call("/gobot_software/disconnet_servers",empty_srv);
         }
         return true;
     } 
@@ -1076,11 +1072,16 @@ bool stopGoDockSrvCallback(std_srvs::Empty::Request &req, std_srvs::Empty::Respo
 
 bool lowBatterySrvCallback(std_srvs::Empty::Request &req, std_srvs::Empty::Response &res){
     getGobotStatusSrv.call(get_gobot_status);
+    //scanning process
+    if(get_gobot_status.response.status==20 || get_gobot_status.response.status==25 || get_gobot_status.response.status==21)
+        return true;
+        
     //robot is doing the path
     if(get_gobot_status.response.status==5){
         ros::service::call("/gobot_function/goDockAfterPath", empty_srv);
         ROS_WARN("(Command system) The battery is low, the robot will go back when it stops being busy with its path");
     }
+    //robot is docking
     else if(get_gobot_status.response.status==15){
         ROS_WARN("(Command system) The robot is trying to dock");
     }
@@ -1219,7 +1220,7 @@ void session(boost::shared_ptr<tcp::socket> sock){
 
         /// Send some connection information to the server
         sendConnectionData(sock);
-
+        int error_count = 0;
         /// Finally process any incoming command
         while(sockets.count(ip) && ros::ok()) {
             char data[max_length];
@@ -1228,21 +1229,30 @@ void session(boost::shared_ptr<tcp::socket> sock){
             /// We wait to receive some data
             size_t length = sock->read_some(boost::asio::buffer(data), error);
             if ((error == boost::asio::error::eof) || (error == boost::asio::error::connection_reset)){
-                ROS_WARN("(Command system) Connection closed %s", ip.c_str());
-                //disconnect(ip);
-                std_msgs::String msg;
-                msg.data = ip;
-                disco_pub.publish(msg);
+                ROS_WARN("(Command system) Connection error %s", ip.c_str());
+                error_count++;
+                if(error_count >3){
+                    //disconnect(ip);
+                    std_msgs::String msg;
+                    msg.data = ip;
+                    disco_pub.publish(msg);
+                }
                 return;
             } 
             else if (error) {
-                //disconnect(ip);
-                std_msgs::String msg;
-                msg.data = ip;
-                disco_pub.publish(msg);
+                error_count++;
+                if(error_count >3){
+                    //disconnect(ip);
+                    std_msgs::String msg;
+                    msg.data = ip;
+                    disco_pub.publish(msg);
+                }
+
                 throw boost::system::system_error(error); // Some other error.
                 return;
             }
+            //reset error count
+            error_count = 0;
 
             for(int i = 0; i < length; i++){
                 //Null

@@ -13,7 +13,6 @@
 #include <actionlib/client/simple_action_client.h>
 #include <boost/smart_ptr.hpp>
 #include <gobot_msg_srv/set_status_class.h>
-#include <gobot_msg_srv/SetSpeeds.h>
 #include <gobot_msg_srv/BatteryMsg.h>
 #include <gobot_msg_srv/BumperMsg.h>
 #include <gobot_msg_srv/IrMsg.h>
@@ -30,7 +29,7 @@
 typedef actionlib::SimpleActionClient<move_base_msgs::MoveBaseAction> MoveBaseClient;
 bool startDocking(void);
 void findChargingStation(void);
-bool setSpeed(const char directionR, const int velocityR, const char directionL, const int velocityL);
+void poseCallback(const geometry_msgs::Pose::ConstPtr& msg);
 void newBumpersInfo(const gobot_msg_srv::BumperMsg::ConstPtr& bumpers);
 void newBatteryInfo(const gobot_msg_srv::BatteryMsg::ConstPtr& batteryInfo);
 void newIrSignal(const gobot_msg_srv::IrMsg::ConstPtr& irSignal);

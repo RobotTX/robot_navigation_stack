@@ -126,6 +126,7 @@ int main(int argc, char **argv) {
     ros::Subscriber button_sub = nh.subscribe("/gobot_base/button_topic",1,getButtonCallback);
 
     ros::service::waitForService("/gobot_recovery/initialize_pose", ros::Duration(30.0));
+    ros::service::waitForService("/move_base/clear_costmaps", ros::Duration(30.0));
     while(!ros::service::call("/gobot_recovery/initialize_pose",empty_srv) && ros::ok()){
         ROS_ERROR("Failed to initilize robot pose");
         ros::service::call("/gobot_recovery/stop_globalize_pose",empty_srv);

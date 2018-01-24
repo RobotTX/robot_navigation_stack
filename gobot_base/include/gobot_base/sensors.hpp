@@ -30,8 +30,6 @@
 
 std::vector<uint8_t> writeAndRead(std::vector<uint8_t> toWrite, int bytesToRead = 0);
 
-bool setSpeed(const char directionR, const int velocityR, const char directionL, const int velocityL);
-
 bool displaySensorData(gobot_msg_srv::SetBattery::Request &req, gobot_msg_srv::SetBattery::Response &res);
 
 /// Send a command to reset the stm32
@@ -39,6 +37,8 @@ void resetStm(void);
 
 /// Service to know if the robot is charging
 bool isChargingService(gobot_msg_srv::IsCharging::Request &req, gobot_msg_srv::IsCharging::Response &res);
+
+bool PercentService(gobot_msg_srv::GetInt::Request &req, gobot_msg_srv::GetInt::Response &res);
 
 /// Get the output of the given system command
 std::string getStdoutFromCommand(std::string cmd);

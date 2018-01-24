@@ -8,7 +8,6 @@ std::mutex socketsMutex;
 std::map<std::string, boost::shared_ptr<tcp::socket>> sockets;
 std::string robot_string;
 std::string lastPoseFile;
-ros::Publisher disco_pub;
 bool simulation = false;
 
 double last_pos_x=0.0,last_pos_y=0.0,last_pos_yaw=0.0,last_ang_x=0.0,last_ang_y=0.0,last_ang_z=0.0,last_ang_w=0.0;
@@ -130,12 +129,10 @@ int main(int argc, char **argv){
             getGobotStatusSrv.call(get_gobot_status);
             while((get_gobot_status.response.status!=-1 || get_gobot_status.response.text!="FOUND_POSE") && ros::ok()){
                 getGobotStatusSrv.call(get_gobot_status);
-                ros::Duration(0.2).sleep();
+                ros::Duration(0.5).sleep();
             }
             ROS_INFO("(Robot Pos) Robot finding initial pose is ready.");
         }
-
-        disco_pub = n.advertise<std_msgs::String>("/gobot_software/server_disconnected", 10);
         
         ros::Subscriber sub = n.subscribe("/gobot_software/server_disconnected", 1000, serverDisconnected);
 

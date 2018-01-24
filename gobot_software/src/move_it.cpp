@@ -21,27 +21,16 @@ ros::Time action_time;
 int status_ = 0;
 std::string text_ = "";
 
-gobot_class::SetStatus set_status_class;
-
-bool setSpeed(const char directionR, const int velocityR, const char directionL, const int velocityL){
-    ////ROS_INFO("(auto_docking::setSpeed) %c %d %c %d", directionR, velocityR, directionL, velocityL);
-    gobot_msg_srv::SetSpeeds speed; 
-    speed.request.directionR = std::string(1, directionR);
-    speed.request.velocityR = velocityR;
-    speed.request.directionL = std::string(1, directionL);
-    speed.request.velocityL = velocityL;
-
-    return ros::service::call("/gobot_motor/setSpeeds", speed);
-}
+gobot_class::SetStatus robot;
 
 void setStageInFile(const int stage){
-	set_status_class.setStage(stage);
+	robot.setStage(stage);
 }
 
 void setGobotStatus(int status,std::string text){
 	status_ = status;
 	text_ = text;
-	set_status_class.setGobotStatus(status_,text_);
+	robot.setGobotStatus(status_,text_);
 }
 
 void goalResultCallback(const move_base_msgs::MoveBaseActionResult::ConstPtr& msg){
@@ -200,9 +189,9 @@ bool playPointService(gobot_msg_srv::SetString::Request &req, gobot_msg_srv::Set
 	gobot_msg_srv::IsCharging arg;
 	if(ros::service::call("/gobot_status/charging_status", arg) && arg.response.isCharging){
 		ROS_WARN("(PlayPath::playPathService) we are charging so we go straight to avoid bumping into the CS when turning");
-		setSpeed('F', 15, 'F', 15);
+		robot.setMotorSpeed('F', 15, 'F', 15);
 		std::this_thread::sleep_for(std::chrono::milliseconds(3000));
-		setSpeed('F', 0, 'F', 0);
+		robot.setMotorSpeed('F', 0, 'F', 0);
 	}
 
 	//request data: 0-name,1-x,2-y,3-orientation, 4-home or not
@@ -244,9 +233,9 @@ bool playPathService(std_srvs::Empty::Request &req, std_srvs::Empty::Response &r
 	gobot_msg_srv::IsCharging arg;
 	if(ros::service::call("/gobot_status/charging_status", arg) && arg.response.isCharging){
 		ROS_WARN("(PlayPath::playPathService) we are charging so we go straight to avoid bumping into the CS when turning");
-		setSpeed('F', 15, 'F', 15);
+		robot.setMotorSpeed('F', 15, 'F', 15);
 		std::this_thread::sleep_for(std::chrono::milliseconds(2500));
-		setSpeed('F', 0, 'F', 0);
+		robot.setMotorSpeed('F', 0, 'F', 0);
 	}
 	setGobotStatus(5,"PLAY_PATH");
 	goNextPoint(path.at(stage_));
@@ -297,7 +286,7 @@ bool stopPathService(std_srvs::Empty::Request &req, std_srvs::Empty::Response &r
 	//ac->getState() == actionlib::SimpleClientGoalState::SUCCEEDED
 	if(ac->isServerConnected()){
 		if (ac->getState() == actionlib::SimpleClientGoalState::SUCCEEDED)
-			set_status_class.setLed("blue");
+			robot.setLed("blue");
 		ac->cancelAllGoals();
 	}
 
@@ -320,7 +309,7 @@ bool pausePathService(std_srvs::Empty::Request &req, std_srvs::Empty::Response &
 	//ac->getState() == actionlib::SimpleClientGoalState::SUCCEEDED
 	if(ac->isServerConnected()){
 		if (ac->getState() == actionlib::SimpleClientGoalState::SUCCEEDED)
-			set_status_class.setLed("blue");
+			robot.setLed("blue");
 		ac->cancelAllGoals();
 	}
 
@@ -338,13 +327,13 @@ bool pausePathService(std_srvs::Empty::Request &req, std_srvs::Empty::Response &
 bool startLoopPathService(std_srvs::Empty::Request &req, std_srvs::Empty::Response &res){
     //~ROS_INFO("(PlayPath::startLoopPathService) service called");
 	looping = true;
-    return set_status_class.setLoop(1);
+    return robot.setLoop(1);
 }
 
 bool stopLoopPathService(std_srvs::Empty::Request &req, std_srvs::Empty::Response &res){
     //~ROS_INFO("(PlayPath::stopLoopPathService) service called");
 	looping = false;
-    return set_status_class.setLoop(0);
+    return robot.setLoop(0);
 }
 
 bool goDockAfterPathService(std_srvs::Empty::Request &req, std_srvs::Empty::Response &res){
@@ -417,6 +406,22 @@ void initData(){
 			}
 		}
 	}
+
+	//Set speed given by user
+	gobot_msg_srv::GetString get_speed;
+	ros::service::call("/gobot_status/get_speed",get_speed);
+	dynamic_reconfigure::Reconfigure config;
+    dynamic_reconfigure::DoubleParameter linear_param,angular_param;
+    linear_param.name = "max_vel_x";
+    linear_param.value = std::stod(get_speed.response.data[0]);
+    angular_param.name = "max_vel_theta";
+    angular_param.value = std::stod(get_speed.response.data[1])*3.14159/180;
+
+    config.request.config.doubles.push_back(linear_param);
+    config.request.config.doubles.push_back(angular_param);
+	ros::service::waitForService("/move_base/TebLocalPlannerROS/set_parameters",ros::Duration(30));
+    ros::service::call("/move_base/TebLocalPlannerROS/set_parameters",config);
+
 }
 
 void mySigintHandler(int sig)
@@ -436,6 +441,8 @@ int main(int argc, char* argv[]){
 
 		signal(SIGINT, mySigintHandler);
 		
+		initData();
+
 		currentGoal.x = 0;
 		currentGoal.y = -1;
 		currentGoal.waitingTime = -1;
@@ -473,9 +480,6 @@ int main(int argc, char* argv[]){
 
 		if(ac->isServerConnected())
             ROS_INFO("Play path Action lib server is connected");
-		
-
-		initData();
 
 		ros::spin();
 

@@ -312,7 +312,6 @@ void disconnect(const std::string ip){
     if(sockets.count(ip)){
         sockets.at(ip)->close();
         sockets.erase(ip);
-        ROS_WARN("(Robot Pos) The ip %s just disconnected", ip.c_str());
     }
     socketsMutex.unlock();
 }

@@ -1,5 +1,5 @@
 #include <gobot_software/gobot_status.hpp>
-
+#include <std_msgs/String.h>
 /*
 GOBOT STATUS
 25 EXPLORING
@@ -19,6 +19,8 @@ DOCK STATUS
 0  NOT CHARGING
 -1 FAILED TO GO TO CHARGING
 */
+
+ros::Publisher disco_pub;
 
 std::mutex gobotStatusMutex,dockStatusMutex,stageMutex,pathMutex,nameMutex,homeMutex,loopMutex,muteMutex,wifiMutex,batteryMutex,speedMutex;
 std_srvs::Empty empty_srv;
@@ -46,7 +48,7 @@ std::string low_battery_="0.0";
 
 std::string speedFile;
 std::string linear_spd_="0.4";
-std::string angular_spd_="45";
+std::string angular_spd_="40";
 
 std::string pathFile;
 std::vector<std::string> path_;
@@ -61,11 +63,18 @@ std::string disconnectedFile;
 int disconnected = 0;
 
 bool disconnectedSrvCallback(std_srvs::Empty::Request &req, std_srvs::Empty::Response &res){
+    /*
     disconnected++;
     std::ofstream ofsDisconnected(disconnectedFile, std::ofstream::out | std::ofstream::trunc);
     if(ofsDisconnected){
         ofsDisconnected << disconnected;
     }
+    */
+
+    //test purpose
+    std_msgs::String msg;
+    msg.data = "192.168.100.29";
+    disco_pub.publish(msg); 
 
     return true;
 }
@@ -543,7 +552,8 @@ int main(int argc, char* argv[]){
         ros::ServiceServer getWifiSrv = n.advertiseService("/gobot_status/get_wifi", getWifiSrvCallback);
 
         ros::ServiceServer disconnectedSrv = n.advertiseService("/gobot_test/disconnected", disconnectedSrvCallback);
-
+        
+        disco_pub = n.advertise<std_msgs::String>("/gobot_software/server_disconnected", 10);
 
         ros::spin();
         
