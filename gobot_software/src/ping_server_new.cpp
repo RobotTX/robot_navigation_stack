@@ -3,26 +3,19 @@
 #define PING_THRESHOLD 4
 
 static const std::string sep = std::string(1, 31);
-std::string pingFile;
-std::string ipsFile, wifiFile;
+std::string pingFile, ipsFile, wifiFile;
 
-bool simulation = false;
-bool muteFlag = false;
-bool scanIP = false;
+bool simulation = false, muteFlag = false, scanIP = false;
 double STATUS_UPDATE=5.0, IP_UPDATE=20.0;
 
-std::vector<std::string> availableIPs;
-std::vector<std::string> connectedIPs, disconnectedIPs;
+std::vector<std::string> availableIPs, connectedIPs;
 std::vector<std::pair<std::string, int>> oldIPs;
-std::mutex serverMutex;
-std::mutex connectedMutex;
-std::mutex ipMutex;
-
+std::mutex serverMutex, connectedMutex, ipMutex;
 ros::Publisher disco_pub;
 ros::ServiceClient getGobotStatusSrv;
 gobot_msg_srv::GetGobotStatus get_gobot_status;
-
 std_srvs::Empty empty_srv;
+
 /**
  * Create the string with information to connect to the Qt app
  * hostname + sep + stage + sep + batteryLevel + sep + muteFlag + sep + dockStatus
@@ -57,12 +50,21 @@ std::string getDataToSend(void){
 /**
  * Will disconnet all servers for updating map/wifi
  */
-bool disServersSrvCallback(std_srvs::Empty::Request &req, std_srvs::Empty::Response &res){
+bool disServersSrvCallback(gobot_msg_srv::SetString::Request &req, gobot_msg_srv::SetString::Response &res){
+    std_msgs::String msg;
+    bool keep_ip;
     //disconnect all sockets when closed
     for(int i=0;i<oldIPs.size();i++){
-        std_msgs::String msg;
         msg.data = oldIPs.at(i).first;
-        disco_pub.publish(msg);
+        keep_ip = false;
+        for(int i=0; i<req.data.size();i++){
+            if(msg.data.compare(req.data[i])==0){
+                keep_ip = true;
+                break;
+            }
+        }
+        if(!keep_ip)
+            disco_pub.publish(msg);
     }
     
     return true;
@@ -215,8 +217,7 @@ void pingIP2(std::string ip, std::string dataToSend, double sec){
             client.write_line(dataToSend, boost::posix_time::seconds(sec));
             //ROS_INFO("(ping_server) Connected to %s", ip.c_str());
         } 
-        else
-            disconnectedIPs.push_back(ip);
+
     } catch(std::exception& e) {
         //ROS_ERROR("(ping_server) error %s : %s", ip.c_str(), e.what());
     }

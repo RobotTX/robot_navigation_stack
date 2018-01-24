@@ -255,18 +255,13 @@ void session(boost::shared_ptr<tcp::socket> sock){
 
             if(error) 
                 ROS_INFO("(New Map) Error : %s", error.message().c_str());
-            else 
+            else if(message ==  "done 1"){
                 ROS_INFO("(New Map) Message sent succesfully : %lu bytes sent", message.length());
-
-            //disconnect all other users to receive new map
-            ROS_INFO("(New Map) Disconnect other uses to update them new map.");
-            std::vector<std::string> connected_ip;
-            socketsMutex.lock();
-            for (std::map<std::string, boost::shared_ptr<tcp::socket>>::iterator it=sockets.begin();it!=sockets.end();++it){
-                connected_ip.push_back(it->first);
-            }
-            socketsMutex.unlock();
-            ros::service::call("/gobot_software/disconnet_servers",empty_srv);
+                //disconnect all other users to receive new map
+                ROS_INFO("(New Map) Disconnect other uses to update them new map.");
+                gobot_msg_srv::SetString keep_ip;
+                ros::service::call("/gobot_software/disconnet_servers",keep_ip);
+            }   
         }
     }
 }

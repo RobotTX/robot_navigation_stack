@@ -28,6 +28,8 @@ using boost::asio::ip::tcp;
 
 std::string getDataToSend(void);
 
+bool disServersSrvCallback(gobot_msg_srv::SetString::Request &req, gobot_msg_srv::SetString::Response &res);
+
 bool updataStatusSrvCallback(std_srvs::Empty::Request &req, std_srvs::Empty::Response &res);
 
 void pingAllIPs(void);

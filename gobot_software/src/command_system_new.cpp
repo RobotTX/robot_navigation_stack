@@ -350,6 +350,9 @@ bool startScanAndAutoExplore(const std::string ip, const std::vector<std::string
         ROS_INFO("(Command system) Gobot start to scan a new map");
         scanning = true;
         scanningIp = ip;
+        gobot_msg_srv::SetString keep_ip;
+        keep_ip.request.data.push_back(ip);
+        ros::service::call("/gobot_software/disconnet_servers",keep_ip);
 
         /// Kill gobot move so that we'll restart it with the new map
         std::string cmd = "rosnode kill /move_base";
@@ -656,6 +659,9 @@ bool startNewScan(const std::string ip, const std::vector<std::string> command){
         ROS_INFO("(Command system) Gobot start to scan a new map");
         scanning = true;
         scanningIp = ip;
+        gobot_msg_srv::SetString keep_ip;
+        keep_ip.request.data.push_back(ip);
+        ros::service::call("/gobot_software/disconnet_servers",empty_srv);
 
         /// Kill gobot move so that we'll restart it with the new map
         std::string cmd = "rosnode kill /move_base";
@@ -772,15 +778,9 @@ bool setWifi(const std::vector<std::string> command){
     if(command.size() == 3){
         ROS_INFO("(Command system) Wifi received %s %s", command.at(1).c_str(), command.at(2).c_str());
         if(robot.setWifi(command.at(1),command.at(2))){
-            socketsMutex.lock();
-            std::vector<std::string> connected_ip;
-            for (std::map<std::string, boost::shared_ptr<tcp::socket>>::iterator it=sockets.begin();it!=sockets.end();++it){
-                connected_ip.push_back(it->first);
-            }
-            socketsMutex.unlock();
-            ros::service::call("/gobot_software/disconnet_servers",empty_srv);
+            gobot_msg_srv::SetString keep_ip;
+            return ros::service::call("/gobot_software/disconnet_servers",keep_ip);
         }
-        return true;
     } 
     else
         ROS_ERROR("(Command system) Not enough arguments, received %lu arguments, 4 arguments expected", command.size());
@@ -1327,7 +1327,6 @@ void server(void){
             socketsMutex.unlock();
 
             /// Launch the session thread which will communicate with the server
-            //tx??//one thread for one command (even from the same IP?)
             std::thread(session, sock).detach();
         } else 
             ROS_WARN("(Command system) The ip %s tried to connect to the robot while already scanning with ip %s", ip.c_str(), scanningIp.c_str());
