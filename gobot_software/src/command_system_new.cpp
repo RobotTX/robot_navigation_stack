@@ -358,7 +358,7 @@ bool startScanAndAutoExplore(const std::string ip, const std::vector<std::string
         
         /// Relaunch gobot_navigation
         if(simulation)
-            cmd = "gnome-terminal -x bash -c \"source /opt/ros/kinetic/setup.bash;source /home/" + user_name + "/catkin_ws/devel/setup.bash;roslaunch gobot_navigation gazebo_scan.launch\"";
+            cmd = "gnome-terminal -x bash -c \"source /opt/ros/kinetic/setup.bash;source /home/" + user_name + "/catkin_ws/devel/setup.bash;roslaunch gobot_gazebo gazebo_scan.launch\"";
         else
             cmd = "gnome-terminal -x bash -c \"source /opt/ros/kinetic/setup.bash;source /home/" + user_name + "/catkin_ws/devel/setup.bash;roslaunch gobot_navigation gobot_scan.launch\"";
         system(cmd.c_str());
@@ -665,7 +665,7 @@ bool startNewScan(const std::string ip, const std::vector<std::string> command){
 
         /// Relaunch gobot_navigation
         if(simulation)
-            cmd = "gnome-terminal -x bash -c \"source /opt/ros/kinetic/setup.bash;source /home/" + user_name + "/catkin_ws/devel/setup.bash;roslaunch gobot_navigation gazebo_scan.launch\"";
+            cmd = "gnome-terminal -x bash -c \"source /opt/ros/kinetic/setup.bash;source /home/" + user_name + "/catkin_ws/devel/setup.bash;roslaunch gobot_gazebo gazebo_scan.launch\"";
         else
             cmd = "gnome-terminal -x bash -c \"source /opt/ros/kinetic/setup.bash;source /home/" + user_name + "/catkin_ws/devel/setup.bash;roslaunch gobot_navigation gobot_scan.launch\"";
         system(cmd.c_str());
@@ -694,7 +694,7 @@ bool stopScanning(const std::string ip, const std::vector<std::string> command){
 
             /// Relaunch gobot_navigation
             if(simulation)
-                cmd = "gnome-terminal -x bash -c \"source /opt/ros/kinetic/setup.bash;source /home/" + user_name + "/catkin_ws/devel/setup.bash;roslaunch gobot_navigation gazebo_slam.launch\"";
+                cmd = "gnome-terminal -x bash -c \"source /opt/ros/kinetic/setup.bash;source /home/" + user_name + "/catkin_ws/devel/setup.bash;roslaunch gobot_gazebo gazebo_slam.launch\"";
             else
                 cmd = "gnome-terminal -x bash -c \"source /opt/ros/kinetic/setup.bash;source /home/" + user_name + "/catkin_ws/devel/setup.bash;roslaunch gobot_navigation gobot_navigation.launch\"";
             system(cmd.c_str());
