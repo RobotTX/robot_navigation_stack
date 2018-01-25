@@ -17,6 +17,8 @@
 #include <gobot_msg_srv/GetString.h>
 #include <gobot_msg_srv/SetInt.h>
 #include <gobot_msg_srv/GetInt.h>
+#include <gobot_msg_srv/BatteryMsg.h>
+#include <gobot_msg_srv/IsCharging.h>
 #include <dynamic_reconfigure/Reconfigure.h>
 #include <dynamic_reconfigure/DoubleParameter.h>
 
@@ -54,5 +56,11 @@ bool getGobotStatusSrvCallback(gobot_msg_srv::GetGobotStatus::Request &req, gobo
 
 bool getMuteSrvCallback(gobot_msg_srv::GetInt::Request &req, gobot_msg_srv::GetInt::Response &res);
 bool setLoopSrvCallback(gobot_msg_srv::SetInt::Request &req, gobot_msg_srv::SetInt::Response &res);
+
+bool isChargingService(gobot_msg_srv::IsCharging::Request &req, gobot_msg_srv::IsCharging::Response &res);
+
+bool PercentService(gobot_msg_srv::GetInt::Request &req, gobot_msg_srv::GetInt::Response &res);
+
+void batteryCallback(const gobot_msg_srv::BatteryMsg::ConstPtr& msg);
 
 void initialData(void);

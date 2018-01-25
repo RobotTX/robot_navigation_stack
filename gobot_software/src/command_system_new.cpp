@@ -18,7 +18,6 @@ static const char sep_c = 31;
 std::mutex socketsMutex;
 std::mutex commandMutex;
 
-std::string scanningIp;
 std::map<std::string, boost::shared_ptr<tcp::socket>> sockets;
 
 std_srvs::Empty empty_srv;
@@ -348,8 +347,6 @@ bool startScanAndAutoExplore(const std::string ip, const std::vector<std::string
         
         ROS_INFO("(Command system) Going to scan automatically");
         ROS_INFO("(Command system) Gobot start to scan a new map");
-        scanning = true;
-        scanningIp = ip;
         gobot_msg_srv::SetString keep_ip;
         keep_ip.request.data.push_back(ip);
         ros::service::call("/gobot_software/disconnet_servers",keep_ip);
@@ -361,7 +358,7 @@ bool startScanAndAutoExplore(const std::string ip, const std::vector<std::string
         
         /// Relaunch gobot_navigation
         if(simulation)
-            cmd = "gnome-terminal -x bash -c \"source /opt/ros/kinetic/setup.bash;source /home/tx/catkin_ws/devel/setup.bash;roslaunch gobot_navigation gazebo_scan.launch\"";
+            cmd = "gnome-terminal -x bash -c \"source /opt/ros/kinetic/setup.bash;source /home/" + user_name + "/catkin_ws/devel/setup.bash;roslaunch gobot_navigation gazebo_scan.launch\"";
         else
             cmd = "gnome-terminal -x bash -c \"source /opt/ros/kinetic/setup.bash;source /home/" + user_name + "/catkin_ws/devel/setup.bash;roslaunch gobot_navigation gobot_scan.launch\"";
         system(cmd.c_str());
@@ -657,11 +654,9 @@ bool sendMapOnce(const std::string ip, const std::vector<std::string> command){
 bool startNewScan(const std::string ip, const std::vector<std::string> command){
     if(command.size() == 1) {
         ROS_INFO("(Command system) Gobot start to scan a new map");
-        scanning = true;
-        scanningIp = ip;
         gobot_msg_srv::SetString keep_ip;
         keep_ip.request.data.push_back(ip);
-        ros::service::call("/gobot_software/disconnet_servers",empty_srv);
+        ros::service::call("/gobot_software/disconnet_servers",keep_ip);
 
         /// Kill gobot move so that we'll restart it with the new map
         std::string cmd = "rosnode kill /move_base";
@@ -670,7 +665,7 @@ bool startNewScan(const std::string ip, const std::vector<std::string> command){
 
         /// Relaunch gobot_navigation
         if(simulation)
-            cmd = "gnome-terminal -x bash -c \"source /opt/ros/kinetic/setup.bash;source /home/tx/catkin_ws/devel/setup.bash;roslaunch gobot_navigation gazebo_scan.launch\"";
+            cmd = "gnome-terminal -x bash -c \"source /opt/ros/kinetic/setup.bash;source /home/" + user_name + "/catkin_ws/devel/setup.bash;roslaunch gobot_navigation gazebo_scan.launch\"";
         else
             cmd = "gnome-terminal -x bash -c \"source /opt/ros/kinetic/setup.bash;source /home/" + user_name + "/catkin_ws/devel/setup.bash;roslaunch gobot_navigation gobot_scan.launch\"";
         system(cmd.c_str());
@@ -687,8 +682,6 @@ bool startNewScan(const std::string ip, const std::vector<std::string> command){
 bool stopScanning(const std::string ip, const std::vector<std::string> command){
     if(command.size() == 2) {
         ROS_INFO("(Command system) Gobot stops the scan of the new map");
-        scanning = false;
-        scanningIp = "";
 
         ros::service::call("/gobot_scan/stopExploration", empty_srv);
 
@@ -701,7 +694,7 @@ bool stopScanning(const std::string ip, const std::vector<std::string> command){
 
             /// Relaunch gobot_navigation
             if(simulation)
-                cmd = "gnome-terminal -x bash -c \"source /opt/ros/kinetic/setup.bash;source /home/tx/catkin_ws/devel/setup.bash;roslaunch gobot_navigation gazebo_slam.launch\"";
+                cmd = "gnome-terminal -x bash -c \"source /opt/ros/kinetic/setup.bash;source /home/" + user_name + "/catkin_ws/devel/setup.bash;roslaunch gobot_navigation gazebo_slam.launch\"";
             else
                 cmd = "gnome-terminal -x bash -c \"source /opt/ros/kinetic/setup.bash;source /home/" + user_name + "/catkin_ws/devel/setup.bash;roslaunch gobot_navigation gobot_navigation.launch\"";
             system(cmd.c_str());
@@ -796,8 +789,6 @@ bool restartEverything(const std::vector<std::string> command){
         n.getParam("restart_file", restart_sh);
         ROS_INFO("(Command system) Gobot restarts its packages");
         ROS_INFO("(Command system) Please wait for 15s");
-        scanning = false;
-        scanningIp = "";
         std::string cmd = "sh " + restart_sh + " &";
         system(cmd.c_str());
         return true;
@@ -1317,19 +1308,16 @@ void server(void){
 
         /// Got a new connection so we had it to our array of sockets
         std::string ip = sock->remote_endpoint().address().to_string();
-        if(!scanning || scanningIp.compare(ip) == 0){
-            ROS_INFO("(Command system) Command socket connected to %s", ip.c_str());
-            socketsMutex.lock();
-            if(!sockets.count(ip))
-                sockets.insert(std::pair<std::string, boost::shared_ptr<tcp::socket>>(ip, sock));
-            else
-                ROS_ERROR("(Command system) the ip %s is already connected, this should not happen", ip.c_str());
-            socketsMutex.unlock();
+        ROS_INFO("(Command system) Command socket connected to %s", ip.c_str());
+        socketsMutex.lock();
+        if(!sockets.count(ip))
+            sockets.insert(std::pair<std::string, boost::shared_ptr<tcp::socket>>(ip, sock));
+        else
+            ROS_ERROR("(Command system) the ip %s is already connected, this should not happen", ip.c_str());
+        socketsMutex.unlock();
 
-            /// Launch the session thread which will communicate with the server
-            std::thread(session, sock).detach();
-        } else 
-            ROS_WARN("(Command system) The ip %s tried to connect to the robot while already scanning with ip %s", ip.c_str(), scanningIp.c_str());
+        /// Launch the session thread which will communicate with the server
+        std::thread(session, sock).detach();
     }
 }
 

@@ -62,6 +62,9 @@ std::vector<std::string> home_(6,"0");
 std::string disconnectedFile;
 int disconnected = 0;
 
+bool charging_ = false;
+int battery_percent_ = 51;
+
 bool disconnectedSrvCallback(std_srvs::Empty::Request &req, std_srvs::Empty::Response &res){
     /*
     disconnected++;
@@ -72,9 +75,8 @@ bool disconnectedSrvCallback(std_srvs::Empty::Request &req, std_srvs::Empty::Res
     */
 
     //test purpose
-    std_msgs::String msg;
-    msg.data = "192.168.100.29";
-    disco_pub.publish(msg); 
+    gobot_msg_srv::SetString keep_ip;
+    ros::service::call("/gobot_software/disconnet_servers",keep_ip);
 
     return true;
 }
@@ -386,6 +388,22 @@ bool getGobotStatusSrvCallback(gobot_msg_srv::GetGobotStatus::Request &req, gobo
     return true;
 }
 
+bool isChargingService(gobot_msg_srv::IsCharging::Request &req, gobot_msg_srv::IsCharging::Response &res){
+    res.isCharging = charging_;
+    return true;
+}
+
+bool PercentService(gobot_msg_srv::GetInt::Request &req, gobot_msg_srv::GetInt::Response &res){
+    res.data.push_back(battery_percent_);
+    return true;
+}
+
+
+void batteryCallback(const gobot_msg_srv::BatteryMsg::ConstPtr& msg){
+    charging_ = msg->ChargingFlag;
+    battery_percent_ = msg->BatteryStatus;
+}
+
 
 void initialData(){
     ros::NodeHandle n;
@@ -551,9 +569,12 @@ int main(int argc, char* argv[]){
         ros::ServiceServer setWifiSrv = n.advertiseService("/gobot_status/set_wifi", setWifiSrvCallback);
         ros::ServiceServer getWifiSrv = n.advertiseService("/gobot_status/get_wifi", getWifiSrvCallback);
 
+        ros::ServiceServer isChargingSrv = n.advertiseService("/gobot_status/charging_status", isChargingService);
+        ros::ServiceServer PercentSrv = n.advertiseService("/gobot_status/battery_percent", PercentService);
+
         ros::ServiceServer disconnectedSrv = n.advertiseService("/gobot_test/disconnected", disconnectedSrvCallback);
-        
-        disco_pub = n.advertise<std_msgs::String>("/gobot_software/server_disconnected", 10);
+
+        ros::Subscriber battery = n.subscribe("/gobot_base/battery_topic",1, batteryCallback);
 
         ros::spin();
         

@@ -27,7 +27,6 @@ int error_count = 0;
 bool display_data = false;
 int STM_CHECK = 0, STM_RATE=5, charge_check = 0;;
 bool USE_BUMPER=true,USE_SONAR=true,USE_CLIFF=true;
-int battery_percent = 0.5;
 
 gobot_class::SetStatus robot;
 
@@ -281,7 +280,6 @@ void publishSensors(void){
                         battery_data.ChargingFlag = false;
                     }
                 }
-                battery_percent = battery_data.BatteryStatus;
                 last_charging_current = battery_data.ChargingCurrent;
             }
 
@@ -382,16 +380,6 @@ void publishSensors(void){
         initSerial();
         ROS_ERROR("(sensors::publishSensors error) Check serial connection 2");
     }
-}
-
-bool isChargingService(gobot_msg_srv::IsCharging::Request &req, gobot_msg_srv::IsCharging::Response &res){
-    res.isCharging = charging;
-    return true;
-}
-
-bool PercentService(gobot_msg_srv::GetInt::Request &req, gobot_msg_srv::GetInt::Response &res){
-    res.data.push_back(battery_percent);
-    return true;
 }
 
 bool setLedSrvCallback(gobot_msg_srv::LedStrip::Request &req, gobot_msg_srv::LedStrip::Response &res){
@@ -539,7 +527,11 @@ int main(int argc, char **argv) {
     battery_pub = nh.advertise<gobot_msg_srv::BatteryMsg>("/gobot_base/battery_topic", 50);
     cliff_pub = nh.advertise<gobot_msg_srv::CliffMsg>("/gobot_base/cliff_topic", 50);
     button_pub = nh.advertise<std_msgs::Int8>("/gobot_base/button_topic",50);
-
+    ros::ServiceServer shutdownSrv;
+    ros::ServiceServer setLedSrv;
+    ros::ServiceServer setSoundSrv;
+    ros::ServiceServer displayDataSrv;
+    ros::ServiceServer resetSTMSrv;
     if(initSerial()){
         ros::Rate r(STM_RATE);
         while(ros::ok()){
@@ -552,13 +544,11 @@ int main(int argc, char **argv) {
                 robot.setGobotStatus(-1,"STM32_READY");
                 std::string joy_cmd = "rosrun joy joy_node &";
                 system(joy_cmd.c_str());
-                ros::ServiceServer isChargingSrv = nh.advertiseService("/gobot_status/charging_status", isChargingService);
-                ros::ServiceServer PercentSrv = nh.advertiseService("/gobot_status/battery_percent", PercentService);
-                ros::ServiceServer shutdownSrv = nh.advertiseService("/gobot_base/shutdown_robot", shutdownSrvCallback);
-                ros::ServiceServer setLedSrv = nh.advertiseService("/gobot_base/setLed", setLedSrvCallback);
-                ros::ServiceServer setSoundSrv = nh.advertiseService("/gobot_base/setSound", setSoundSrvCallback);
-                ros::ServiceServer displayDataSrv = nh.advertiseService("/gobot_base/displaySensorData", displaySensorData);
-                ros::ServiceServer resetSTMSrv = nh.advertiseService("/gobot_base/reset_STM", resetSTMSrvCallback);
+                shutdownSrv = nh.advertiseService("/gobot_base/shutdown_robot", shutdownSrvCallback);
+                setLedSrv = nh.advertiseService("/gobot_base/setLed", setLedSrvCallback);
+                setSoundSrv = nh.advertiseService("/gobot_base/setSound", setSoundSrvCallback);
+                displayDataSrv = nh.advertiseService("/gobot_base/displaySensorData", displaySensorData);
+                resetSTMSrv = nh.advertiseService("/gobot_base/reset_STM", resetSTMSrvCallback);
                 //Startup end
             }
         }

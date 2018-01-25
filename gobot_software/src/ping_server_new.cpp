@@ -5,6 +5,8 @@
 static const std::string sep = std::string(1, 31);
 std::string pingFile, ipsFile, wifiFile;
 
+std::string battery_level = "51.0";
+
 bool simulation = false, muteFlag = false, scanIP = false;
 double STATUS_UPDATE=5.0, IP_UPDATE=20.0;
 
