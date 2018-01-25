@@ -31,7 +31,7 @@ void sonarFrontToCloud(double sonarR,double sonarL,pcl::PointCloud<pcl::PointXYZ
     for(double i=-factor*SONAR_VIEW;i<y;i=i+SONAR_VIEW/SONAR_RESOLUTION)
         cloudL.push_back(pcl::PointXYZ(SONAR_MAX*factor, i, 0));
 
-    if(std::abs(sonarR-sonarL)>0.1 && (sonarR>0.5 || sonarL>0.5)){
+    if(fabs(sonarR-sonarL)>0.1 && (sonarR>0.5 || sonarL>0.5)){
         cloudR.push_back(pcl::PointXYZ(sonarR, 0, 0));
         cloudL.push_back(pcl::PointXYZ(sonarL, 0, 0));
     }

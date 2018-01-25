@@ -269,7 +269,7 @@ void joyCallback(const sensor_msgs::Joy::ConstPtr& joy){
                 double right_vel_speed = ((right_vel_m_per_sec * ticks_per_rotation) / (2 * pi * wheel_radius) - b ) / a;
                 double left_vel_speed = ((left_vel_m_per_sec * ticks_per_rotation) / (2 * pi * wheel_radius) - b ) / a;
 
-                setSpeed(right_vel_speed >= 0 ? 'F' : 'B', abs(right_vel_speed), left_vel_speed >= 0 ? 'F' : 'B', abs(left_vel_speed));;
+                setSpeed(right_vel_speed >= 0 ? 'F' : 'B', fabs(right_vel_speed), left_vel_speed >= 0 ? 'F' : 'B', fabs(left_vel_speed));;
             }
         }
     }
@@ -297,7 +297,7 @@ void newCmdVel(const geometry_msgs::Twist::ConstPtr& twist){
 
             //ROS_INFO("(twist::newCmdVel) new vel %f %f", right_vel_speed, left_vel_speed);
 
-            setSpeed(right_vel_speed >= 0 ? 'F' : 'B', abs(right_vel_speed), left_vel_speed >= 0 ? 'F' : 'B', abs(left_vel_speed));
+            setSpeed(right_vel_speed >= 0 ? 'F' : 'B', fabs(right_vel_speed), left_vel_speed >= 0 ? 'F' : 'B', fabs(left_vel_speed));
 
             /// just to show the actual real speed we gave to the wheels
             //double real_vel = (a * (int)right_vel_speed + b) / ticks_per_rotation * 2 * pi * wheel_radius;

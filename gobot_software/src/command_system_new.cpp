@@ -1222,22 +1222,19 @@ void session(boost::shared_ptr<tcp::socket> sock){
             if ((error == boost::asio::error::eof) || (error == boost::asio::error::connection_reset)){
                 ROS_WARN("(Command system) Connection error %s", ip.c_str());
                 error_count++;
-                if(error_count >3){
-                    //disconnect(ip);
-                    std_msgs::String msg;
-                    msg.data = ip;
-                    disco_pub.publish(msg);
-                }
+                //disconnect(ip);
+                std_msgs::String msg;
+                msg.data = ip;
+                disco_pub.publish(msg);
+                
                 return;
             } 
             else if (error) {
                 error_count++;
-                if(error_count >3){
-                    //disconnect(ip);
-                    std_msgs::String msg;
-                    msg.data = ip;
-                    disco_pub.publish(msg);
-                }
+                //disconnect(ip);
+                std_msgs::String msg;
+                msg.data = ip;
+                disco_pub.publish(msg);
 
                 throw boost::system::system_error(error); // Some other error.
                 return;
@@ -1340,13 +1337,7 @@ void disconnect(const std::string ip){
 
 /*********************************** SHUT DOWN ***********************************/
 void mySigintHandler(int sig){ 
-    socketsMutex.lock();
-    for(auto const &elem : sockets){
-        elem.second->close();
-        sockets.erase(elem.first);
-    }
-    socketsMutex.unlock();
-
+    
     ros::shutdown();
 }
 

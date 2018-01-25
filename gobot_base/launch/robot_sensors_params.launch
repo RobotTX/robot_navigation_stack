@@ -21,7 +21,7 @@
     <param name="angle_max" type="double" value="105.0" />
     <!--SENSORS ON/OFF -->
     <param name="USE_BUMPER" type="bool" value="true" />
-    <param name="USE_SONAR" type="bool" value="false" />
+    <param name="USE_SONAR" type="bool" value="true" />
     <param name="USE_CLIFF" type="bool" value="true" />
     <!--BUMPER CLOUD RELATED -->
     <param name="dimension_x" type="double" value="0.255" />

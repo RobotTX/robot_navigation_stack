@@ -28,7 +28,7 @@ bool evaluatePose(int type){
     //Evaluate Last pose compared to Home pose
     else if(type==1){
         if(home_pos_x!=0 || home_pos_y!=0 || home_ang_x!=0 || home_ang_y!=0 || home_ang_z!=0 || home_ang_w!=0)
-            if(std::abs(home_pos_x-last_pos_x)<0.1 && std::abs(home_pos_y-last_pos_y)<0.1 && std::abs(home_pos_yaw-last_pos_yaw)<PI*10/180){
+            if(fabs(home_pos_x-last_pos_x)<0.1 && fabs(home_pos_y-last_pos_y)<0.1 && fabs(home_pos_yaw-last_pos_yaw)<PI*10/180){
                 ROS_INFO("Last recorded post near to charging station.");
                 return true;
             }
@@ -316,10 +316,10 @@ void getAmclPoseCallback(const geometry_msgs::PoseWithCovarianceStamped::ConstPt
     //Write lastest amcl_pose to file
     if(found_pose){
         std_msgs::Int8 lost;
-        if((cov_x > 200*initial_cov_xy && cov_y > 200*initial_cov_xy) || cov_yaw > 50*initial_cov_yaw){
-            if(cov_yaw > 50*initial_cov_yaw)
+        if((cov_x > 5 && cov_y > 5) || cov_yaw > 1){
+            if(cov_yaw > 1)
                 ROS_ERROR("Big yaw covariance in the amcl pose");
-            if(cov_x > 200*initial_cov_xy && cov_y > 200*initial_cov_xy)
+            if(cov_x > 5 && cov_y > 5)
                 ROS_ERROR("Big xy covariance in the amcl pose");
             lost.data = 1; 
         }

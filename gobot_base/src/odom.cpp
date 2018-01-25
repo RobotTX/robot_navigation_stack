@@ -5,6 +5,7 @@
 #include <gobot_msg_srv/OdomTestMsg.h>
 #include <gobot_msg_srv/GetGobotStatus.h>
 #include <std_srvs/Empty.h>
+#include <geometry_msgs/Twist.h>
 
 std_srvs::Empty arg;
 
@@ -33,6 +34,7 @@ int main(int argc, char** argv){
     
     ros::Publisher odom_pub = n.advertise<nav_msgs::Odometry>("odom", 50);
     ros::Publisher odom_test_pub = n.advertise<gobot_msg_srv::OdomTestMsg>("odom_test", 50);
+    ros::Publisher real_vel_pub = n.advertise<geometry_msgs::Twist>("real_vel", 50);
     tf::TransformBroadcaster odom_broadcaster;
 
     double x = 0.0;
@@ -70,9 +72,9 @@ int main(int argc, char** argv){
             double dt = (current_time - last_time).toSec();
 
             // difference of ticks compared to last time
-            //122rpm, 2 rotation/sec, 980ticks/sec, 1 time update (0.1s) can not bigger than 200
-            int64_t delta_left_encoder = abs(encoders.response.leftEncoder - last_left_encoder)<400 ? (encoders.response.leftEncoder - last_left_encoder) : 0;
-            int64_t delta_right_encoder = abs(encoders.response.rightEncoder - last_right_encoder)<400 ? (encoders.response.rightEncoder - last_right_encoder) : 0;
+            //122rpm, 2 rotation/sec, 980ticks/rotation, 2000ticks/sec maximum
+            int64_t delta_left_encoder = abs(encoders.response.leftEncoder - last_left_encoder)<3000/ODOM_RATE ? (encoders.response.leftEncoder - last_left_encoder) : 0;
+            int64_t delta_right_encoder = abs(encoders.response.rightEncoder - last_right_encoder)<3000/ODOM_RATE ? (encoders.response.rightEncoder - last_right_encoder) : 0;
 
             //ROS_INFO("right:%zu, left:%zu",delta_right_encoder,delta_left_encoder);
             last_left_encoder = encoders.response.leftEncoder;
@@ -96,10 +98,25 @@ int main(int argc, char** argv){
             double delta_y = vy * dt;
             double delta_th = vth * dt;
 
-
+            /*TEST REAL VELOCITY: angular speed varying
+            geometry_msgs::Twist real_cmd;
+            real_cmd.linear.x = vel;
+            real_cmd.angular.z = vth;
+            real_vel_pub.publish(real_cmd);
+            */
+            //if odom reading too large, probably wrong reading.
+            //just skip them to prevent position jump
+            if((fabs(delta_x)>1.5/ODOM_RATE) || (fabs(delta_y)>1.5/ODOM_RATE) || (fabs(delta_th)>5.0/ODOM_RATE)){
+                ROS_WARN("(odom) pose jump detected. %.4f,%.4f,%.4f.",fabs(delta_x),fabs(delta_y),fabs(delta_th));
+                delta_x=0;
+                delta_y=0;
+                delta_th=0;
+            }
             x += delta_x;
             y += delta_y;
             th += delta_th;
+
+            //ROS_INFO("%.5f,%.5f, %.5f",delta_x,delta_y,delta_th);
             
             //since all odometry is 6DOF we'll need a quaternion created from yaw
             geometry_msgs::Quaternion odom_quat = tf::createQuaternionMsgFromYaw(th);

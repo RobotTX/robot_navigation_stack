@@ -19,7 +19,7 @@ weight_acc_lim_theta: 5.0 #default:1
 weight_kinematics_nh: 1000.0
 weight_kinematics_forward_drive: 999.0
 weight_viapoint: 75.0 # 1.0
-weight_obstacle: 10.0
+weight_obstacle: 25.0
 weight_optimaltime: 4.0 #2
 
 
@@ -32,11 +32,11 @@ yaw_goal_tolerance: 0.1 #8.6 degrees
 free_goal_vel: false
 
 # Obstacles
-min_obstacle_dist: 0.05
+min_obstacle_dist: 0.1
 include_costmap_obstacles: true
 costmap_obstacles_behind_robot_dist: 1.0
 obstacle_poses_affected: 30
-inflation_dist: 0.6
+inflation_dist: 0.55
 oscillation_recovery: false
 #Not in use
 weight_dynamic_obstacle: 50.0

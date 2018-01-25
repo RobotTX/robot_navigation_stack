@@ -1,6 +1,6 @@
 #include "gobot_software/ping_server_new.hpp"
 
-#define PING_THRESHOLD 4
+#define PING_THRESHOLD 5
 
 static const std::string sep = std::string(1, 31);
 std::string pingFile, ipsFile, wifiFile;
@@ -83,7 +83,7 @@ bool updataStatusSrvCallback(std_srvs::Empty::Request &req, std_srvs::Empty::Res
             ipMutex.lock();
             //ROS_INFO("(ping_server) Trying to ping everyone %lu", availableIPs.size());
             for(int i = 0; i < oldIPs.size(); ++i)
-                data_threads.push_back(std::thread(pingIP2, oldIPs.at(i).first, dataToSend, 3.0));
+                data_threads.push_back(std::thread(pingIP2, oldIPs.at(i).first, dataToSend, 2.5));
             ipMutex.unlock();
 
             ///we wait for all the threads to be done
@@ -117,7 +117,7 @@ void pingAllIPs(void){
             serverMutex.lock();
             //ROS_INFO("(ping_server) Trying to ping everyone %lu", availableIPs.size());
             for(int i = 0; i < availableIPs.size(); ++i)
-                threads.push_back(std::thread(pingIP, availableIPs.at(i), dataToSend, 3.0));
+                threads.push_back(std::thread(pingIP, availableIPs.at(i), dataToSend, 2.5));
             serverMutex.unlock();
 
             /// We join all the threads => we wait for all the threads to be done

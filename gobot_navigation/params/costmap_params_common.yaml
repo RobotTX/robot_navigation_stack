@@ -30,7 +30,8 @@ static_map:
     unknown_cost_value: -1
 
 obstacles:
-    observation_sources: laser_scan_sensor bumpers frontRight_cliff frontLeft_cliff backRight_cliff backLeft_cliff frontRight_sonar frontLeft_sonar rearRight_sonar rearLeft_sonar 
+    observation_sources: laser_scan_sensor bumpers frontRight_cliff frontLeft_cliff backRight_cliff backLeft_cliff 
+    #frontRight_sonar frontLeft_sonar rearRight_sonar rearLeft_sonar 
     #left_sonar right_sonar top_sonar mid_sonar
     #If false, each pixel has one of 2 states: lethal obstacle or free. 
     #If true, each pixel has one of 3 states: lethal obstacle, free, or unknown.
@@ -41,8 +42,8 @@ obstacles:
     z_voxels: 5
     publish_voxel_map: True
     laser_scan_sensor: {
-        obstacle_range: 5.5,
-        raytrace_range: 6.0,
+        obstacle_range: 4.5,
+        raytrace_range: 5.0,
         sensor_frame: base_laser, 
         data_type: LaserScan, 
         topic: /scan, 
@@ -154,5 +155,5 @@ obstacles:
     }
 
 inflation_layer:
-    inflation_radius: 0.6
+    inflation_radius: 0.55
     cost_scaling_factor: 1.2 #2.58

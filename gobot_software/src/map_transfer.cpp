@@ -317,12 +317,6 @@ void disconnect(const std::string ip){
 }
 /*********************************** SHUT DOWN ***********************************/
 void mySigintHandler(int sig){ 
-    socketsMutex.lock();
-    for(auto const &elem : sockets){
-        elem.second->close();
-        sockets.erase(elem.first);
-    }
-    socketsMutex.unlock();
 
     ros::shutdown();
 }

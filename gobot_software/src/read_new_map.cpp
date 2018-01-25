@@ -72,18 +72,6 @@ void session(boost::shared_ptr<tcp::socket> sock){
         // when the last 5 bytes are 254 we know we have received a complete map
         if(map.size() > 4 && static_cast<int>(map.at(map.size()-5)) == 254 && static_cast<int>(map.at(map.size()-4)) == 254
              && static_cast<int>(map.at(map.size()-3)) == 254 && static_cast<int>(map.at(map.size()-2)) == 254 && static_cast<int>(map.at(map.size()-1)) == 254){
-            
-            //stop the robot for reading new map
-            gobot_msg_srv::GetGobotStatus get_gobot_status;
-            ros::service::call("/gobot_status/get_gobot_status",get_gobot_status);
-            if(get_gobot_status.response.status==15){
-                ros::service::call("/gobot_command/stopGoDock",empty_srv);
-                ROS_INFO("(New Map) stop auto docking to read new map.");
-            }
-            else if(get_gobot_status.response.status==5){
-                ros::service::call("/gobot_command/pause_path",empty_srv);
-                ROS_INFO("(New Map) stop gobot to read new map.");
-            }
 
             std::string mapType = mapId.substr(0,4);
             ROS_INFO("(New Map) Map Type: %s", mapType.c_str());
@@ -108,6 +96,19 @@ void session(boost::shared_ptr<tcp::socket> sock){
 
             /// If we have a different map, we replace it
             if(mapIdFromFile.compare(mapId) != 0){
+                
+                //stop the robot for reading new map
+                gobot_msg_srv::GetGobotStatus get_gobot_status;
+                ros::service::call("/gobot_status/get_gobot_status",get_gobot_status);
+                if(get_gobot_status.response.status==15){
+                    ros::service::call("/gobot_command/stopGoDock",empty_srv);
+                    ROS_INFO("(New Map) stop auto docking to read new map.");
+                }
+                else if(get_gobot_status.response.status==5){
+                    ros::service::call("/gobot_command/pause_path",empty_srv);
+                    ROS_INFO("(New Map) stop gobot to read new map.");
+                }
+                
                 /// Save the id of the new map
                 std::ofstream ofs(mapIdFile, std::ofstream::out | std::ofstream::trunc);
                 if(ofs){
@@ -308,12 +309,6 @@ void serverDisconnected(const std_msgs::String::ConstPtr& msg){
 
 /*********************************** SHUT DOWN ***********************************/
 void mySigintHandler(int sig){ 
-    socketsMutex.lock();
-    for(auto const &elem : sockets){
-        elem.second->close();
-        sockets.erase(elem.first);
-    }
-    socketsMutex.unlock();
 
     ros::shutdown();
 }

@@ -22,7 +22,7 @@ recovery_behaviors: [
 shutdown_costmaps: false # True
 
 # Frequency of the control loop
-controller_frequency: 5
+controller_frequency: 8
 
 # Frequency of the global planner
 planner_frequency: 2
