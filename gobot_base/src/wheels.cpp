@@ -163,6 +163,9 @@ bool stopTests(std_srvs::Empty::Request &req, std_srvs::Empty::Response &res){
     return true;
 }
 
+bool motorReadySrvCallback(std_srvs::Empty::Request &req, std_srvs::Empty::Response &res){
+    return true;
+}
 
 bool initSerial() {
     /// Get the port in which our device is connected
@@ -228,11 +231,8 @@ int main(int argc, char **argv) {
         ros::ServiceServer stopTestsSrv = nh.advertiseService("/gobot_test/stopTestEncoder", stopTests);
 
         //Startup begin
-        ros::service::waitForService("/gobot_status/set_gobot_status", ros::Duration(30.0));
-        gobot_msg_srv::SetGobotStatus set_gobot_status;
-        set_gobot_status.request.status = -1;
-        set_gobot_status.request.text ="MD49_READY";
-        ros::service::call("/gobot_status/set_gobot_status",set_gobot_status);
+        ros::service::waitForService("/gobot_status/set_gobot_status", ros::Duration(60.0));
+        ros::ServiceServer motorReadySrv = nh.advertiseService("/gobot_startup/motor_ready", motorReadySrvCallback);
         //Startup end
         
         ros::spin();

@@ -17,7 +17,7 @@ std_srvs::Empty empty_srv;
 gobot_msg_srv::GetGobotStatus get_gobot_status;
 
 std::string user_name;
-gobot_class::SetStatus robot;
+robot_class::SetRobot robot;
 
 void session(boost::shared_ptr<tcp::socket> sock){
 

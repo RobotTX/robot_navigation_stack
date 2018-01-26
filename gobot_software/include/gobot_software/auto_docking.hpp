@@ -12,7 +12,7 @@
 #include <move_base_msgs/MoveBaseAction.h>
 #include <actionlib/client/simple_action_client.h>
 #include <boost/smart_ptr.hpp>
-#include <gobot_msg_srv/set_status_class.h>
+#include <gobot_msg_srv/set_robot_class.h>
 #include <gobot_msg_srv/BatteryMsg.h>
 #include <gobot_msg_srv/BumperMsg.h>
 #include <gobot_msg_srv/IrMsg.h>

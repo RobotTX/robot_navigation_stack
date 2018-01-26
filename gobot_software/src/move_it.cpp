@@ -21,7 +21,7 @@ ros::Time action_time;
 int status_ = 0;
 std::string text_ = "";
 
-gobot_class::SetStatus robot;
+robot_class::SetRobot robot;
 
 void setStageInFile(const int stage){
 	robot.setStage(stage);
@@ -30,7 +30,7 @@ void setStageInFile(const int stage){
 void setGobotStatus(int status,std::string text){
 	status_ = status;
 	text_ = text;
-	robot.setGobotStatus(status_,text_);
+	robot.setStatus(status_,text_);
 }
 
 void goalResultCallback(const move_base_msgs::MoveBaseActionResult::ConstPtr& msg){
@@ -47,6 +47,8 @@ void goalResultCallback(const move_base_msgs::MoveBaseActionResult::ConstPtr& ms
 			case 4:
 				setStageInFile(-stage_ - 1);
 				setGobotStatus(0,"ABORTED_PATH");
+				robot.setPermanentLed("red");
+				robot.setSound(3,2);
 				break;
 			//OTHER CASE
 			default:
@@ -59,10 +61,12 @@ void goalResultCallback(const move_base_msgs::MoveBaseActionResult::ConstPtr& ms
 
 // called when the last goal has been reached
 void goalReached(){
+	robot.setSound(1,2);
 	//ROS_INFO("(PlayPath::goalReached) path point reached");
 	stage_ = text_=="PLAY_PATH" ? stage_+1:stage_;
 	setStageInFile(stage_);
 	if(stage_ >= path.size() && text_!="PLAY_POINT"){
+		robot.setPermanentLed("green");
 		if(looping && !dockAfterPath && path.size()>1){
 			//ROS_INFO("(PlayPath:: complete path but looping!!");
 			stage_ = 0;
@@ -92,7 +96,7 @@ void goalReached(){
 void checkGoalDelay(){
 	if(currentGoal.waitingTime != 0)
 	{
-		ros::service::call("/gobot_base/show_slow_LED", empty_srv);
+		robot.setRunningLed("blue");
 		if(currentGoal.waitingTime > 0){
 			setGobotStatus(5,"DELAY");
 			//ROS_INFO("(PlayPath::goalReached) goalReached going to sleep for %f seconds", currentGoal.waitingTime);
@@ -155,8 +159,10 @@ void goNextPoint(const Point _point){
     goal.target_pose.pose.orientation.z = quaternion.z();
     goal.target_pose.pose.orientation.w = quaternion.w();
 
-	if(ac->isServerConnected()) 
+	if(ac->isServerConnected()){ 
+		robot.setRunningLed("green");
 		ac->sendGoal(goal);
+	}
 	else 
 		ROS_ERROR("(PlayPath::goNextPoint) no action server");
 }
@@ -285,9 +291,13 @@ bool stopPathService(std_srvs::Empty::Request &req, std_srvs::Empty::Response &r
 	ros::service::call("/move_base/clear_costmaps",empty_srv);
 	//ac->getState() == actionlib::SimpleClientGoalState::SUCCEEDED
 	if(ac->isServerConnected()){
-		if (ac->getState() == actionlib::SimpleClientGoalState::SUCCEEDED)
-			robot.setLed("blue");
 		ac->cancelAllGoals();
+		if (ac->getState() == actionlib::SimpleClientGoalState::SUCCEEDED){
+			robot.setPermanentLed("green");
+		}
+		else if (ac->getState() == actionlib::SimpleClientGoalState::ACTIVE){
+			robot.setPermanentLed("blue");
+		}
 	}
 
     if(dockAfterPath){
@@ -308,9 +318,13 @@ bool pausePathService(std_srvs::Empty::Request &req, std_srvs::Empty::Response &
 	setStageInFile(stage_);
 	//ac->getState() == actionlib::SimpleClientGoalState::SUCCEEDED
 	if(ac->isServerConnected()){
-		if (ac->getState() == actionlib::SimpleClientGoalState::SUCCEEDED)
-			robot.setLed("blue");
 		ac->cancelAllGoals();
+		if (ac->getState() == actionlib::SimpleClientGoalState::SUCCEEDED){
+			robot.setPermanentLed("green");
+		}
+		else if (ac->getState() == actionlib::SimpleClientGoalState::ACTIVE){
+			robot.setPermanentLed("blue");
+		}
 	}
 
 	if(dockAfterPath){
@@ -440,6 +454,8 @@ int main(int argc, char* argv[]){
 		ros::NodeHandle n;
 
 		signal(SIGINT, mySigintHandler);
+		
+		ros::service::waitForService("/gobot_startup/pose_ready", ros::Duration(60.0));
 		
 		initData();
 

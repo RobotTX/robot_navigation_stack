@@ -24,19 +24,11 @@ void setLedRunning(std::vector<uint8_t> &color);
 
 void setLedSlowRunning(std::vector<uint8_t> &color);
 
-void goalResultCallback(const move_base_msgs::MoveBaseActionResult::ConstPtr& msg);
-
-void goalGetCallback(const move_base_msgs::MoveBaseActionGoal::ConstPtr& msg);
-
-void goalCancelCallback(const actionlib_msgs::GoalID::ConstPtr& msg);
-
 void initialPoseResultCallback(const std_msgs::Int8::ConstPtr& msg);
 
 void newBumpersInfo(const gobot_msg_srv::BumperMsg::ConstPtr& msg);
 
 void batteryCallback(const gobot_msg_srv::BatteryMsg::ConstPtr& msg);
-
-void explorationCallback(const std_msgs::Int8::ConstPtr& msg);
 
 void lostCallback(const std_msgs::Int8::ConstPtr& msg);
  
@@ -46,5 +38,4 @@ bool showSlowLEDsrvCallback(std_srvs::Empty::Request &req, std_srvs::Empty::Resp
 
 void batteryLed(void);
 
-void timerCallback(const ros::TimerEvent&);
 

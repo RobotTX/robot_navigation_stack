@@ -47,6 +47,7 @@ bool charging = false;
 
 gobot_msg_srv::GetGobotStatus get_gobot_status;
 ros::ServiceClient getGobotStatusSrv;
+std_srvs::Empty empty_srv;
 
 void setSound(int num,int time_on, int time_off){
     gobot_msg_srv::SetInt sound_num;
@@ -127,115 +128,6 @@ void setLedSlowRunning(std::vector<uint8_t> &color)
     last_time=ros::Time::now();
 }
 
-void goalResultCallback(const move_base_msgs::MoveBaseActionResult::ConstPtr& msg){
-    getGobotStatusSrv.call(get_gobot_status);
-    //LED permanent ON
-    if(current_stage<COMPLETE_STAGE && get_gobot_status.response.status!=15 && get_gobot_status.response.status!=25){
-        std::vector<uint8_t> color;
-        switch(msg->status.status){
-            case 2:
-                break;
-            case 3:
-                //ROS_INFO("Goal SUCCEED and disable teb_local_planner allow_init_with_backwards_motion.");
-                color.push_back(GREEN);
-                setLedPermanent(color);
-                setSound(1,2);
-                break;
-            case 4:
-                //ROS_INFO("Goal ABORTED and disable teb_local_planner allow_init_with_backwards_motion.");
-                color.push_back(RED);
-                setLedPermanent(color);
-                setSound(3,2);
-                break;
-            default:
-                //ROS_ERROR("Unknown goal status %d and disable teb_local_planner allow_init_with_backwards_motion.",msg->status.status);
-                color.push_back(OFF);
-                setLedPermanent(color);
-                break;
-        }
-        current_stage=FREE_STAGE;
-    }
-}
-
-void goalGetCallback(const move_base_msgs::MoveBaseActionGoal::ConstPtr& msg){
-    if(current_stage<GOAL_STAGE){
-        current_stage=GOAL_STAGE;
-        std::vector<uint8_t> color;
-        getGobotStatusSrv.call(get_gobot_status);
-        if(get_gobot_status.response.status==15){
-            //if docking, set LED cyan yellow running
-            color.push_back(CYAN);
-            color.push_back(YELLOW);
-            setLedRunning(color);
-            pre_charing_state=-1;
-        }
-        else{
-            //White Green LED Running
-            color.push_back(GREEN);
-            color.push_back(WHITE);
-            setLedRunning(color);
-        }
-    }
-}
-
-void goalCancelCallback(const actionlib_msgs::GoalID::ConstPtr& msg){
-    if(current_stage==GOAL_STAGE && current_stage<COMPLETE_STAGE){
-        std::vector<uint8_t> color;
-        //ROS_INFO("Goal Cancelled and disable teb_local_planner allow_init_with_backwards_motion.");
-        getGobotStatusSrv.call(get_gobot_status);
-        if(get_gobot_status.response.status!=25){
-            //if cancel by failed docking, set red
-            if(get_gobot_status.response.status==11 && get_gobot_status.response.text=="FAIL_DOCKING"){
-                color.push_back(RED);
-                setLedPermanent(color);
-                current_stage=FREE_STAGE;
-            }
-            else {
-                color.push_back(BLUE);
-                setLedPermanent(color);
-                current_stage=FREE_STAGE;
-            }
-        }
-    }
-}
-
-void initialPoseResultCallback(const std_msgs::Int8::ConstPtr& msg){
-    std::vector<uint8_t> color;
-    if(current_stage<LOCALIZE_STAGE){
-        switch(msg->data){
-            //START
-            case -1:
-                current_stage=FREE_STAGE;
-                break;
-            case 0:
-            //NOT FOUND
-                current_stage=FREE_STAGE;
-                color.push_back(RED);
-                setLedPermanent(color);
-                break;
-            case 1:
-            //FOUND
-                current_stage=FREE_STAGE;
-                batteryLed();
-                setSound(1,2);
-                break;
-            case 2:
-            //CANCEL
-                current_stage=FREE_STAGE;
-                color.push_back(BLUE);
-                setLedPermanent(color);
-                break;
-            default:
-                current_stage=FREE_STAGE;
-                color.push_back(OFF);
-                setLedPermanent(color);
-                break;
-        }
-    }
-    else if((current_stage == CHARGING_STAGE) && (msg->data==1)){
-        setSound(1,2);
-    }
-}
 
 void newBumpersInfo(const gobot_msg_srv::BumperMsg::ConstPtr& msg){
     int n = msg->bumper1+msg->bumper2+msg->bumper3+msg->bumper4+msg->bumper5+msg->bumper6+msg->bumper7+msg->bumper8;
@@ -258,84 +150,6 @@ void newBumpersInfo(const gobot_msg_srv::BumperMsg::ConstPtr& msg){
     }
 }
 
-void batteryCallback(const gobot_msg_srv::BatteryMsg::ConstPtr& msg){
-    if(msg->Percentage<=0.25)
-        charging_state=0;
-    else if(msg->Percentage<=0.75)
-        charging_state=1;
-    else if(msg->Percentage<1.0)
-        charging_state=2;
-    else if(msg->Percentage==1.0)
-        charging_state=3;
-
-    std::vector<uint8_t> color;
-    if(msg->ChargingFlag && (current_stage==LOW_BATTERY_STAGE || current_stage<CHARGING_STAGE || charging_state!=pre_charing_state)){
-        current_stage = CHARGING_STAGE;
-        pre_charing_state=charging_state;
-        switch (charging_state){
-            case 0:
-            color.push_back(MAGENTA);
-            color.push_back(WHITE);
-            setLedRunning(color);
-            break;
-
-            case 1:
-            color.push_back(YELLOW);
-            color.push_back(WHITE);
-            setLedRunning(color);
-            break;
-
-            case 2:
-            color.push_back(CYAN);
-            color.push_back(WHITE);
-            setLedRunning(color);
-            break;
-
-            case 3:
-            color.push_back(CYAN);
-            setLedPermanent(color);
-            break;
-        }
-    }
-    else if(!msg->ChargingFlag && current_stage==CHARGING_STAGE){
-        batteryLed();
-        current_stage = FREE_STAGE;
-        pre_charing_state = -1;
-    }
-
-    charging = msg->ChargingFlag;
-}
-
-void explorationCallback(const std_msgs::Int8::ConstPtr& msg){
-    if(current_stage<COMPLETE_STAGE){
-        std::vector<uint8_t> color;
-        gobot_msg_srv::SetInt sound_num;
-        switch(msg->data){
-            //hector exploration completed
-            case 1:
-                color.push_back(GREEN);
-                setLedPermanent(color);
-                setSound(1,2);
-                break;
-            //hector exploration stopped
-            case 0:
-                color.push_back(BLUE);
-                setLedPermanent(color);
-                break;
-            //hector exploration started
-            case -1:
-                color.push_back(GREEN);
-                color.push_back(WHITE);
-                setLedRunning(color);
-                break;
-
-            default:
-                break;
-        }   
-        current_stage=FREE_STAGE;
-    }
-}
-
 void lostCallback(const std_msgs::Int8::ConstPtr& msg){
     std::vector<uint8_t> color;
     if(msg->data==1 && current_stage<LOST_STAGE){
@@ -351,91 +165,14 @@ void lostCallback(const std_msgs::Int8::ConstPtr& msg){
     }
 }
 
-bool showBatteryLedsrvCallback(std_srvs::Empty::Request &req, std_srvs::Empty::Response &res){
-    batteryLed();
-    setSound(1,2);
-    return true;
-}
-
-bool showSlowLEDsrvCallback(std_srvs::Empty::Request &req, std_srvs::Empty::Response &res){
-    if(current_stage<COMPLETE_STAGE){
-        std::vector<uint8_t> color;
-        color.push_back(GREEN);
-        color.push_back(WHITE);
-        setLedSlowRunning(color);
-        current_stage=FREE_STAGE;
-    }
-    return true;
-}
-
-void batteryLed(){
-    std::vector<uint8_t> color;
-    switch (charging_state){
-        case 0:
-        color.push_back(MAGENTA);
-        setLedPermanent(color);
-        break;
-        
-        case 1:
-        color.push_back(YELLOW);
-        setLedPermanent(color);
-        break;
-
-        case 2:
-        color.push_back(CYAN);
-        setLedPermanent(color);
-        break;
-
-        case 3:
-        color.push_back(CYAN);
-        setLedPermanent(color);
-        break;
-
-        default:
-        break;
-    }
-}
-
-void timerCallback(const ros::TimerEvent&){
-    if (!charging){
-        std::vector<uint8_t> color;
-        if (charging_state == 0 && current_stage != CHARGING_STAGE){
-            if(current_stage<LOW_BATTERY_STAGE){
-                current_stage = LOW_BATTERY_STAGE;
-                color.push_back(MAGENTA);
-                setLedPermanent(color);
-            }
-
-            getGobotStatusSrv.call(get_gobot_status);
-            if(get_gobot_status.response.status!=15){
-                setSound(3,2);
-            }
-        }
-        //Show battery status if no stage for certain period, show battery lvl
-        else if(((ros::Time::now() - last_time).toSec()>300.0) && (current_stage==FREE_STAGE)){
-            batteryLed();
-        }   
-    }
-}
-
 int main(int argc, char **argv) {
     ros::init(argc, argv, "led");
     ros::NodeHandle nh;
 
     ros::service::waitForService("/gobot_base/setLed", ros::Duration(30));
 
-    ros::Timer timer = nh.createTimer(ros::Duration(60), timerCallback);
-    ros::Subscriber goalResult = nh.subscribe("/move_base/result",1,goalResultCallback);
-    ros::Subscriber goalGet = nh.subscribe("/move_base/goal",1,goalGetCallback);
-    ros::Subscriber goalCancel = nh.subscribe("/move_base/cancel",1,goalCancelCallback);
-    ros::Subscriber initialPoseResult = nh.subscribe("/gobot_recovery/find_initial_pose",1, initialPoseResultCallback);
     ros::Subscriber bumpersSub = nh.subscribe("/gobot_base/bumpers_topic", 1, newBumpersInfo);
-    ros::Subscriber battery = nh.subscribe("/gobot_base/battery_topic",1, batteryCallback);
-    ros::Subscriber exploration = nh.subscribe("/gobot_scan/exploration_result",1,explorationCallback);
     ros::Subscriber lostRobot = nh.subscribe("/gobot_recovery/lost_robot",1,lostCallback);
-
-    ros::ServiceServer showSlowLedsSrv = nh.advertiseService("/gobot_base/show_slow_LED", showSlowLEDsrvCallback);
-    ros::ServiceServer showBatteryLed = nh.advertiseService("/gobot_base/show_Battery_LED", showBatteryLedsrvCallback);
 
     getGobotStatusSrv = nh.serviceClient<gobot_msg_srv::GetGobotStatus>("/gobot_status/get_gobot_status");
     last_time=ros::Time::now();

@@ -9,7 +9,7 @@
 #include <thread>
 #include "serial/serial.h"
 #include <mutex>
-#include <gobot_msg_srv/set_status_class.h>
+#include <gobot_msg_srv/set_robot_class.h>
 #include <gobot_msg_srv/SetSpeeds.h>
 #include <gobot_msg_srv/SetSpeeds.h>
 #include <gobot_msg_srv/BatteryMsg.h>
@@ -35,13 +35,10 @@ bool displaySensorData(gobot_msg_srv::SetBattery::Request &req, gobot_msg_srv::S
 /// Send a command to reset the stm32
 void resetStm(void);
 
-/// Service to know if the robot is charging
-bool isChargingService(gobot_msg_srv::IsCharging::Request &req, gobot_msg_srv::IsCharging::Response &res);
-
-bool PercentService(gobot_msg_srv::GetInt::Request &req, gobot_msg_srv::GetInt::Response &res);
-
 /// Get the output of the given system command
 std::string getStdoutFromCommand(std::string cmd);
+
+void ledTimerCallback(const ros::TimerEvent&);
 
 /// Read and publish all the sensors info
 void publishSensors(void);
@@ -52,6 +49,12 @@ bool initSerial(void);
 bool shutdownSrvCallback(std_srvs::Empty::Request &req, std_srvs::Empty::Response &res);
 
 bool setLedSrvCallback(gobot_msg_srv::LedStrip::Request &req, gobot_msg_srv::LedStrip::Response &res);
+
+void displayBatteryLed(void);
+
+bool setLed(std::vector<uint8_t> cmd);
+
+bool setSound(int num,int time_on, int time_off=0);
 
 bool resetSTMSrvCallback(std_srvs::Empty::Request &req, std_srvs::Empty::Response &res);
 

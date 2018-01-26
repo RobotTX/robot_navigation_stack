@@ -114,19 +114,11 @@ int main(int argc, char **argv){
 	signal(SIGINT, mySigintHandler);
 
     if (initParams()){
-        ros::ServiceClient getGobotStatusSrv = n.serviceClient<gobot_msg_srv::GetGobotStatus>("/gobot_status/get_gobot_status");
-        gobot_msg_srv::GetGobotStatus get_gobot_status;
-        getGobotStatusSrv.waitForExistence(ros::Duration(30.0));
         if(!simulation){
             //Startup begin
-            ROS_INFO("(Robot Pos) Waiting for Robot finding initial pose...");
-            getGobotStatusSrv.call(get_gobot_status);
-            while((get_gobot_status.response.status!=-1 || get_gobot_status.response.text!="FOUND_POSE") && ros::ok()){
-                getGobotStatusSrv.call(get_gobot_status);
-                ros::Duration(0.5).sleep();
-            }
-            ROS_INFO("(Robot Pos) Robot finding initial pose is ready.");
+            ros::service::waitForService("/gobot_startup/pose_ready", ros::Duration(60.0));
         }
+        //Startup end
         
         ros::Subscriber sub = n.subscribe("/gobot_software/server_disconnected", 1000, serverDisconnected);
 

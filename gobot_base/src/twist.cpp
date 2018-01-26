@@ -27,17 +27,7 @@ double pi = 3.14159;
 bool enable_joy = false;
 double linear_limit = 0.4, angular_limit = 0.8; 
 
-gobot_class::SetStatus robot;
-
-void setSound(int num,int time_on, int time_off){
-    gobot_msg_srv::SetInt sound_num;
-    sound_num.request.data.push_back(num);
-    sound_num.request.data.push_back(time_on);
-    if(time_off!=0)
-        sound_num.request.data.push_back(time_off);
-
-    ros::service::call("/gobot_base/setSound",sound_num);
-}
+robot_class::SetRobot robot;
 
 bool setSpeed(const char directionR, const int velocityR, const char directionL, const int velocityL){
     //ROS_INFO("(auto_docking::setSpeed) %c %d %c %d", directionR , velocityR, directionL, velocityL);
@@ -71,7 +61,7 @@ void cliffCallback(const gobot_msg_srv::CliffMsg::ConstPtr& cliff){
             if(get_speed.response.data[0]!=128 || get_speed.response.data[1]!=128){
                 if(!bumper_on){
                     moved_from_front_cliff = false;
-                    setSound(3,1);
+                    robot.setSound(3,1);
                     setSpeed('B', avoid_spd, 'B', avoid_spd);
                 }
             }
@@ -91,7 +81,7 @@ void cliffCallback(const gobot_msg_srv::CliffMsg::ConstPtr& cliff){
             if(get_speed.response.data[0]!=128 || get_speed.response.data[1]!=128)
                 if(!bumper_on){
                     moved_from_back_cliff = false;
-                    setSound(3,1);
+                    robot.setSound(3,1);
                     setSpeed('F', avoid_spd, 'F', avoid_spd);
                 }
         }
@@ -192,14 +182,14 @@ void joyConnectionCallback(const std_msgs::Int8::ConstPtr& data){
     if(data->data == 0){
         if(enable_joy){
             enable_joy = false;
-            setSound(3,1);
+            robot.setSound(3,1);
             setSpeed('F', 0, 'F', 0);
         }
     }
     else if(data->data == 1){
         if(!enable_joy){
             enable_joy = true;
-            setSound(2,1);
+            robot.setSound(2,1);
             linear_limit = 0.4;
             angular_limit = 0.8;
             setSpeed('F', 0, 'F', 0);
@@ -211,15 +201,13 @@ void joyCallback(const sensor_msgs::Joy::ConstPtr& joy){
     //start -> enable manual control
     if(joy->buttons[7]){
         enable_joy = true;
-        setSound(2,1);
-        ros::service::call("/gobot_base/show_Battery_LED",empty_srv);
+        robot.setBatteryLed();
     }
     //back -> disable manual control
     if(joy->buttons[6]){
         enable_joy = false;
         setSpeed('F', 0, 'F', 0);
-        setSound(2,1);
-        ros::service::call("/gobot_base/show_Battery_LED",empty_srv);
+        robot.setBatteryLed();
     }
     if(enable_joy){
         //adjust linear speed
@@ -249,13 +237,13 @@ void joyCallback(const sensor_msgs::Joy::ConstPtr& joy){
         }
 
         if(joy->buttons[0])
-            robot.setLed("green");
+            robot.setPermanentLed("green");
         if(joy->buttons[1])
-            robot.setLed("red");
+            robot.setPermanentLed("red");
         if(joy->buttons[2])
-            robot.setLed("blue");
+            robot.setPermanentLed("blue");
         if(joy->buttons[3])
-            robot.setLed("yellow");
+            robot.setPermanentLed("yellow");
 
         if(!collision && !cliff_on){
             if(joy->axes[1] == 0 && joy->axes[3] == 0)

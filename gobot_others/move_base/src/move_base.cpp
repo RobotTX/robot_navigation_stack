@@ -73,6 +73,10 @@ namespace move_base {
     private_nh.param("planner_patience", planner_patience_, 5.0);
     private_nh.param("controller_patience", controller_patience_, 15.0);
     private_nh.param("max_planning_retries", max_planning_retries_, -1);  // disabled by default
+    
+    //add these two params to smooth motion 
+    private_nh.param("linear_spd_limit_", linear_spd_limit_, 0.0); 
+    private_nh.param("angular_spd_limit_", angular_spd_limit_, 3.0); 
 
     private_nh.param("oscillation_timeout", oscillation_timeout_, 0.0);
     private_nh.param("oscillation_distance", oscillation_distance_, 0.5);
@@ -940,7 +944,7 @@ namespace move_base {
                            cmd_vel.linear.x, cmd_vel.linear.y, cmd_vel.angular.z );
           last_valid_control_ = ros::Time::now();
           //make sure that we send the velocity command to the base
-          if (cmd_vel.linear.x <0 && fabs(cmd_vel.angular.z) > 0.3){
+          if ((cmd_vel.linear.x <0 || fabs(cmd_vel.linear.x) <linear_spd_limit_) && fabs(cmd_vel.angular.z) > angular_spd_limit_){
                 cmd_vel.linear.x = 0.0;
           }
           vel_pub_.publish(cmd_vel);

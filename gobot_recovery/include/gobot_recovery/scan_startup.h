@@ -8,6 +8,11 @@
 #include <gobot_msg_srv/SetGobotStatus.h>
 #include <gobot_msg_srv/SetInt.h>
 
+
+void saveMap(void);
+
 void getButtonCallback(const std_msgs::Int8::ConstPtr& msg);
+
+bool saveMapSrvCallback(std_srvs::Empty::Request &req, std_srvs::Empty::Response &res);
 
 void mySigintHandler(int sig);

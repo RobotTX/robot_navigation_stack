@@ -15,11 +15,10 @@ std_srvs::Empty empty_srv;
 std::shared_ptr<actionlib::SimpleActionClient<move_base_msgs::MoveBaseAction>> ac;
 
 ros::Publisher exploration_pub;
-ros::ServiceClient getGobotStatusSrv;
 ros::Timer sound_timer;
 gobot_msg_srv::GetGobotStatus get_gobot_status;
 
-gobot_class::SetStatus robot;
+robot_class::SetRobot robot;
 
 /// To get the starting position
 bool getRobotPos(void){
@@ -111,9 +110,11 @@ void doExploration(void){
                     /// so we only extract the last goal and move_base will be in charge of going there
                     goal.target_pose = poses.back();
 
-                    if(ac->isServerConnected() && exploring)
+                    if(ac->isServerConnected() && exploring){
                         /// Send the goal to move_base
                         ac->sendGoal(goal);
+                        robot.setRunningLed("green");
+                    }
                     else 
                         ROS_INFO("(Exploration) No action server or we stopped exploring already");
                 } 
@@ -126,7 +127,7 @@ void doExploration(void){
                             std_msgs::Int8 result;
                             result.data=1;
                             exploration_pub.publish(result);
-                            robot.setGobotStatus(21,"COMPLETE_EXPLORING");
+                            robot.setPermanentLed("green");
                             sound_timer.stop();
                         }
                         stopExploration();
@@ -155,7 +156,7 @@ bool startExplorationSrv(hector_exploration_node::Exploration::Request &req, hec
         std_msgs::Int8 result;
         result.data=-1;
         exploration_pub.publish(result);
-        robot.setGobotStatus(25,"EXPLORING");
+        robot.setStatus(25,"EXPLORING");
         sound_timer.start();
 
         back_to_start_when_finished = req.backToStartWhenFinished;
@@ -187,7 +188,8 @@ bool stopExplorationSrv(std_srvs::Empty::Request &req, std_srvs::Empty::Response
         std_msgs::Int8 result;
         result.data=0;
         exploration_pub.publish(result);
-        robot.setGobotStatus(21,"STOP_EXPLORING");
+        robot.setStatus(21,"STOP_EXPLORING");
+        robot.setPermanentLed("blue");
         sound_timer.stop();
     }
     return stopExploration();
@@ -216,16 +218,9 @@ int main(int argc, char* argv[]){
     ros::init(argc, argv, "move_base_controller");
     ros::NodeHandle nh;
 
-    getGobotStatusSrv = nh.serviceClient<gobot_msg_srv::GetGobotStatus>("/gobot_status/get_gobot_status");
-
     //Startup begin
     ROS_INFO("(Exploration) Waiting for Robot setting hardware...");
-    getGobotStatusSrv.waitForExistence(ros::Duration(30.0));
-    getGobotStatusSrv.call(get_gobot_status);
-    while((get_gobot_status.response.status!=-1 || get_gobot_status.response.text!="STM32_READY") && ros::ok()){
-        getGobotStatusSrv.call(get_gobot_status);
-        ros::Duration(0.2).sleep();
-    }
+    ros::service::waitForService("/gobot_startup/sensors_ready", ros::Duration(60.0));
     ROS_INFO("(Exploration) Robot setting hardware is ready.");
     //Startup end
 
@@ -257,7 +252,7 @@ int main(int argc, char* argv[]){
     ros::ServiceServer startExploration = nh.advertiseService("/gobot_scan/startExploration", startExplorationSrv);
     ros::ServiceServer stopExploration = nh.advertiseService("/gobot_scan/stopExploration", stopExplorationSrv);
 
-    robot.setGobotStatus(20,"EXPLORATION");
+    robot.setStatus(20,"EXPLORATION");
 
     ros::spin();
 

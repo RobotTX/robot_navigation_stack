@@ -9,7 +9,7 @@
 #include <std_msgs/Int8.h>
 #include <geometry_msgs/Twist.h>
 #include <sensor_msgs/Joy.h>
-#include <gobot_msg_srv/set_status_class.h>
+#include <gobot_msg_srv/set_robot_class.h>
 #include <gobot_msg_srv/BumperMsg.h>
 #include <gobot_msg_srv/SetSpeeds.h>
 #include <gobot_msg_srv/IsCharging.h>
@@ -20,8 +20,6 @@
 #include <thread>
 
 typedef actionlib::SimpleActionClient<move_base_msgs::MoveBaseAction> MoveBaseClient;
-
-void setSound(int num,int time_on, int time_off=1);
 
 bool continueRobotSrvCallback(std_srvs::Empty::Request &req, std_srvs::Empty::Response &res);
 

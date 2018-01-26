@@ -8,7 +8,6 @@ ros::Time action_time;
 gobot_msg_srv::GetGobotStatus get_gobot_status;
 ros::ServiceClient getGobotStatusSrv;
 std::string map_path,map_id;
-std::string mapId, mapDate;
 
 void getButtonCallback(const std_msgs::Int8::ConstPtr& msg){
   if(msg->data==0 && buttonOn){
@@ -39,23 +38,37 @@ void getButtonCallback(const std_msgs::Int8::ConstPtr& msg){
       }
       //save map
       else if(get_gobot_status.response.status==21){
-        ROS_INFO("Save scaned map.");
-        std::string cmd = "rosrun map_server map_saver -f "+ map_path +" &";
-        system(cmd.c_str());
-        
-        int id = std::rand() % 10000;
-        mapDate = "1990-12-05-00-00-00";
-        mapId = "{b09f0a3b-b0da-4c50-aa66-ff0b3080"+std::to_string(id)+"}";
-
-        std::ofstream ofs(map_id, std::ofstream::out | std::ofstream::trunc);
-        if(ofs){
-            ofs << mapId << std::endl << mapDate << std::endl;
-            ofs.close();
-            ROS_INFO("(startup) map id: %s.",mapId.c_str());
-        }
+        saveMap();
       }
     }
 	}
+}
+
+void saveMap(){
+  ROS_INFO("Save scaned map.");
+  std::string cmd = "rosrun map_server map_saver -f "+ map_path +" &";
+  system(cmd.c_str());
+  
+  int id = std::rand() % 10000;
+  std::string mapDate = "1990-12-05-00-00-00";
+  std::string mapId = "{b09f0a3b-b0da-4c50-aa66-ff0b3080"+std::to_string(id)+"}";
+
+  std::ofstream ofs(map_id, std::ofstream::out | std::ofstream::trunc);
+  if(ofs){
+      ofs << mapId << std::endl << mapDate << std::endl;
+      ofs.close();
+      ROS_INFO("(startup) map id: %s.",mapId.c_str());
+  }
+}
+
+bool saveMapSrvCallback(std_srvs::Empty::Request &req, std_srvs::Empty::Response &res){
+  saveMap();
+  return true;
+}
+
+
+bool poseReadySrvCallback(std_srvs::Empty::Request &req, std_srvs::Empty::Response &res){
+  return true;
 }
 
 void mySigintHandler(int sig)
@@ -74,27 +87,22 @@ int main(int argc, char **argv) {
     
     //Startup begin
     ROS_INFO("(startup) Waiting for Robot setting hardware...");
-    getGobotStatusSrv.waitForExistence(ros::Duration(30.0));
-    getGobotStatusSrv.call(get_gobot_status);
-    while((get_gobot_status.response.status!=-1 || get_gobot_status.response.text!="STM32_READY") && ros::ok()){
-        getGobotStatusSrv.call(get_gobot_status);
-        ros::Duration(0.2).sleep();
-    }
+    ros::service::waitForService("/gobot_startup/sensors_ready", ros::Duration(60.0));
     ROS_INFO("(startup) Robot setting hardware is ready.");
-    gobot_msg_srv::SetGobotStatus set_gobot_status;
-    set_gobot_status.request.status = -1;
-    set_gobot_status.request.text ="FOUND_POSE";
-    ros::service::call("/gobot_status/set_gobot_status",set_gobot_status);
+    ros::ServiceServer poseReadySrv = nh.advertiseService("/gobot_startup/pose_ready", poseReadySrvCallback);
     //Startup end
+
     nh.getParam("map_path", map_path);
     ROS_INFO("(startup) map_path: %s.",map_path.c_str());
 
     nh.getParam("map_id_file", map_id);
     
+    ros::ServiceServer saveMapSrv = nh.advertiseService("/gobot_scan/save_map", saveMapSrvCallback);
+
     ros::Subscriber button_sub = nh.subscribe("/gobot_base/button_topic",1,getButtonCallback);
     
     ros::service::call("/gobot_base/show_Battery_LED",empty_srv);
-
+    
     ROS_INFO("Started Robot.");
     
     ros::spin();

@@ -41,6 +41,9 @@ oscillation_distance: 0.25 #0.5
 
 max_planning_retries: 2 #-1
 
+linear_spd_limit_: 0.0
+angular_spd_limit_: 0.2
+
 TrajectoryPlannerROS:
     acc_lim_th: 0.5
     max_rotational_vel: 1.2

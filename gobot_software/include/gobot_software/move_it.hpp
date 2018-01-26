@@ -24,7 +24,7 @@
 #include <gobot_msg_srv/SetSpeeds.h>
 #include <gobot_msg_srv/IsCharging.h>
 #include <gobot_msg_srv/GetGobotStatus.h>
-#include <gobot_msg_srv/set_status_class.h>
+#include <gobot_msg_srv/set_robot_class.h>
 #include <gobot_msg_srv/SetStage.h>
 #include <gobot_msg_srv/GetStage.h>
 #include <gobot_msg_srv/SetPath.h>

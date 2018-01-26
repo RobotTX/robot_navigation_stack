@@ -32,7 +32,7 @@ ros::ServiceClient getGobotStatusSrv,getDockStatusSrv;
 
 std::string user_name;
 
-gobot_class::SetStatus robot;
+robot_class::SetRobot robot;
 
 template<typename Out>
 void split(const std::string &s, const char delim, Out result) {

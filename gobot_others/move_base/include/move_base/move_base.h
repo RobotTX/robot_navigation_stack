@@ -205,6 +205,8 @@ namespace move_base {
       bool shutdown_costmaps_, clearing_rotation_allowed_, recovery_behavior_enabled_;
       double oscillation_timeout_, oscillation_distance_;
 
+      double linear_spd_limit_,angular_spd_limit_;
+
       MoveBaseState state_;
       RecoveryTrigger recovery_trigger_;
 

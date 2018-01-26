@@ -43,7 +43,7 @@ int main(int argc, char* argv[]){
     ros::NodeHandle nh;
     ROS_INFO("(Battery check) running");
     
-    ros::service::waitForService("/gobot_software/disconnet_servers", ros::Duration(30));
+    ros::service::waitForService("/gobot_startup/pose_ready", ros::Duration(60.0));
 
     ros::ServiceServer testAutoDockingService = nh.advertiseService("/gobot_test/testAutoDocking", testAutoDocking);
 

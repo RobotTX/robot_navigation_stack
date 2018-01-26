@@ -1,0 +1,9 @@
+<?xml version="1.0"?>
+<launch>
+    <include file="$(find gobot_software)/launch/robot_infos_params.launch"/>
+	<node pkg="gobot_software" type="gobot_status" name="software_gobot_status" output="screen" required="true" />
+    <include file="$(find gobot_navigation)/launch/amcl.launch"/>
+    <include file="$(find gobot_navigation)/launch/move_base.launch"/>
+    <include file="$(find gobot_gazebo)/launch/gazebo_function.launch"/>
+    <include file="$(find gobot_recovery)/launch/gazebo_recovery.launch"/>
+</launch>

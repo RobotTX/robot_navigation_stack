@@ -16,6 +16,11 @@ ros::Publisher vel_pub,foundPose_pub,initial_pose_publisher,goal_pub,lost_pub;
 std::string lastPoseFile;
 gobot_msg_srv::GetGobotStatus get_gobot_status;
 ros::ServiceClient getGobotStatusSrv;
+ros::ServiceServer poseReadySrv;
+
+bool poseReadySrvCallback(std_srvs::Empty::Request &req, std_srvs::Empty::Response &res){
+    return true;
+}
 
 bool evaluatePose(int type){
     //Evaluate ROS server pose 
@@ -207,11 +212,10 @@ bool initializePoseSrvCallback(std_srvs::Empty::Request &req, std_srvs::Empty::R
                 ros::service::call("/request_nomotion_update",empty_srv);
 
                  //Startup begin
-                gobot_msg_srv::SetGobotStatus set_gobot_status;
-                set_gobot_status.request.status = -1;
-                set_gobot_status.request.text ="FOUND_POSE";
-                ros::service::call("/gobot_status/set_gobot_status",set_gobot_status);
-                //Startup end
+                 ros::NodeHandle nh;
+                 poseReadySrv = nh.advertiseService("/gobot_startup/pose_ready", poseReadySrvCallback);
+                 ros::service::call("/gobot_base/show_Battery_LED",empty_srv);
+                 //Startup end
             }
             running = false;
         }).detach();

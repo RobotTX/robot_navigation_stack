@@ -16,17 +16,10 @@ int main(int argc, char** argv){
 
     //Startup begin
     ROS_INFO("(Odom) Waiting for MD49 to be ready...");
-    ros::service::waitForService("/gobot_status/get_gobot_status", ros::Duration(30));
-    gobot_msg_srv::GetGobotStatus get_gobot_status;
-    ros::service::call("/gobot_status/get_gobot_status",get_gobot_status);
-    while((get_gobot_status.response.status!=-1 || get_gobot_status.response.text!="MD49_READY") && ros::ok()){
-        ros::service::call("/gobot_status/get_gobot_status",get_gobot_status);
-        ros::Duration(0.2).sleep();
-    }
+    ros::service::waitForService("/gobot_startup/motor_ready", ros::Duration(60.0));
     ROS_INFO("(Odom) MD49 is ready.");
     //Startup end
 
-    ros::service::waitForService("/gobot_motor/resetEncoders", ros::Duration(30));
     ros::service::call("/gobot_motor/resetEncoders", arg);
     /// The encoders should be reinitialized to 0 every time we launch odom
     int64_t last_left_encoder = 0;

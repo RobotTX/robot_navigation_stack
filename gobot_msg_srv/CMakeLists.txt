@@ -102,7 +102,7 @@ generate_messages(
 catkin_package(
   INCLUDE_DIRS include
     LIBRARIES
-        gobot_class
+        robot_class
 #  LIBRARIES gobot_msg_srv
     CATKIN_DEPENDS message_runtime
 #  DEPENDS system_lib
@@ -119,12 +119,14 @@ include_directories(
     ${catkin_INCLUDE_DIRS}
 )
 
-add_library(gobot_class src/set_status_class.cpp)
-target_link_libraries(gobot_class ${catkin_LIBRARIES} ${Boost_FILESYSTEM_LIBRARY} ${Boost_SYSTEM_LIBRARY} )
-add_dependencies(gobot_class ${${gobot_msg_srv}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
+add_library(robot_class
+                src/set_robot_class.cpp
+                src/robot_command.cpp)
+target_link_libraries(robot_class ${catkin_LIBRARIES} ${Boost_FILESYSTEM_LIBRARY} ${Boost_SYSTEM_LIBRARY} )
+add_dependencies(robot_class ${${gobot_msg_srv}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
 
 install(TARGETS
-            gobot_class
+            robot_class
        ARCHIVE DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
        LIBRARY DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
        )

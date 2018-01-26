@@ -20,13 +20,14 @@
 #include <gobot_msg_srv/SetSpeeds.h>
 
 
-namespace gobot_class {
-    class SetStatus {
+namespace robot_class {
+    class SetRobot {
         public:
-            SetStatus();
-            bool setGobotStatus(int status,std::string text);
+            SetRobot();
+            ~SetRobot();
+            bool setStatus(int status,std::string text);
             
-            bool setDockStatus(int status);
+            bool setDock(int status);
 
             bool setStage(const int stage);
 
@@ -50,14 +51,21 @@ namespace gobot_class {
 
             void setSound(int num,int time_on, int time_off=1);
 
-            void setLed(std::string color);
+            void setBatteryLed();
 
+            void setPermanentLed(std::string color);
+
+            void setRunningLed(std::string color1, std::string color2="white");
+            
         private:
             std_srvs::Empty empty_srv;
-            gobot_msg_srv::SetGobotStatus set_gobot_status;
-            gobot_msg_srv::SetDockStatus set_dock_status;
-            gobot_msg_srv::SetStage set_stage;
-
+            gobot_msg_srv::SetGobotStatus set_gobot_status_;
+            gobot_msg_srv::SetDockStatus set_dock_status_;
+            gobot_msg_srv::SetStage set_stage_;
+            gobot_msg_srv::SetInt set_loop_;
+            gobot_msg_srv::SetSpeeds motor_speed_;
+            std::map<std::string, uint8_t> led_color_;
+            gobot_msg_srv::LedStrip cmd1_,cmd2_;  //cmd1 for permanent led change, cmd2 for running led change
     };
 };
 

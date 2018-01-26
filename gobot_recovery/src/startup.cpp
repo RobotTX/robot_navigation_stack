@@ -107,12 +107,7 @@ int main(int argc, char **argv) {
     
     //Startup begin
     ROS_INFO("(startup) Waiting for Robot setting hardware...");
-    getGobotStatusSrv.waitForExistence(ros::Duration(30.0));
-    getGobotStatusSrv.call(get_gobot_status);
-    while((get_gobot_status.response.status!=-1 || get_gobot_status.response.text!="STM32_READY") && ros::ok()){
-        getGobotStatusSrv.call(get_gobot_status);
-        ros::Duration(0.2).sleep();
-    }
+    ros::service::waitForService("/gobot_startup/sensors_ready", ros::Duration(60.0));
     ROS_INFO("(startup) Robot setting hardware is ready.");
     //Startup end
 

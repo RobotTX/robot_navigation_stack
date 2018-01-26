@@ -14,7 +14,6 @@ std::vector<std::string> availableIPs, connectedIPs;
 std::vector<std::pair<std::string, int>> oldIPs;
 std::mutex serverMutex, connectedMutex, ipMutex;
 ros::Publisher disco_pub;
-ros::ServiceClient getGobotStatusSrv;
 gobot_msg_srv::GetGobotStatus get_gobot_status;
 std_srvs::Empty empty_srv;
 
@@ -300,18 +299,10 @@ int main(int argc, char* argv[]){
     signal(SIGINT, mySigintHandler);
     
     if (initParams()){
-
-        getGobotStatusSrv = n.serviceClient<gobot_msg_srv::GetGobotStatus>("/gobot_status/get_gobot_status");
-        
-        getGobotStatusSrv.waitForExistence(ros::Duration(30.0));
         if(!simulation){
             //Startup begin
             ROS_INFO("(ping_server) Waiting for Robot finding initial pose...");
-            getGobotStatusSrv.call(get_gobot_status);
-            while((get_gobot_status.response.status!=-1 || get_gobot_status.response.text!="FOUND_POSE") && ros::ok()){
-                getGobotStatusSrv.call(get_gobot_status);
-                ros::Duration(0.5).sleep();
-            }
+            ros::service::waitForService("/gobot_startup/pose_ready", ros::Duration(60.0));
             ROS_INFO("(ping_server) Robot finding initial pose is ready.");
         }
 
