@@ -21,8 +21,8 @@
 #include <gobot_msg_srv/CliffMsg.h>
 #include <gobot_msg_srv/IsCharging.h>
 #include <gobot_msg_srv/LedStrip.h>
-#include <gobot_msg_srv/GetInt.h>
-#include <gobot_msg_srv/SetInt.h>
+#include <gobot_msg_srv/GetIntArray.h>
+#include <gobot_msg_srv/SetIntArray.h>
 #include <gobot_msg_srv/GetGobotStatus.h>
 #include <gobot_msg_srv/SetBattery.h>
 #include <gobot_msg_srv/SetSpeeds.h>
@@ -52,9 +52,9 @@ bool setLedSrvCallback(gobot_msg_srv::LedStrip::Request &req, gobot_msg_srv::Led
 
 void displayBatteryLed(void);
 
-bool setLed(std::vector<uint8_t> cmd);
+bool setLed(int mode, const std::vector<std::string> &color);
 
-bool setSound(int num,int time_on, int time_off=0);
+bool setSound(int num,int time_on);
 
 bool resetSTMSrvCallback(std_srvs::Empty::Request &req, std_srvs::Empty::Response &res);
 

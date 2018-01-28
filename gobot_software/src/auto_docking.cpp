@@ -36,7 +36,7 @@ bool startDocking(void){
     ros::spinOnce();
 
     /// Get the charging station position from the home file
-    gobot_msg_srv::GetString get_home;
+    gobot_msg_srv::GetStringArray get_home;
     if(ros::service::call("/gobot_status/get_home",get_home)){
         x=std::stod(get_home.response.data[0]);
         y=std::stod(get_home.response.data[1]);
@@ -69,7 +69,6 @@ bool startDocking(void){
             /// send the goal
             if(ac->isServerConnected()) {
                 startDockingParams();
-                robot.setRunningLed("yellow","cyan");
                 ac->sendGoal(currentGoal);
 
                 return true;
@@ -101,8 +100,6 @@ void goalResultCallback(const move_base_msgs::MoveBaseActionResult::ConstPtr& ms
                 dock_status = -1;
                 robot.setDock(dock_status);
                 robot.setStatus(11,"FAIL_DOCKING");
-                robot.setPermanentLed("red");
-                robot.setSound(3,2);
                 ROS_WARN("(auto_docking::finishedDocking) Auto docking finished->FAILED because goal can not be reached.");
 				break;
 		}
@@ -311,9 +308,8 @@ void finishedDocking(){
     ros::Duration(3.0).sleep();
     if(ros::service::call("/gobot_status/charging_status", arg) && arg.response.isCharging){
         dock_status = 1;
-        robot.setStatus(11,"STOP_DOCKING");
+        robot.setStatus(11,"COMPLETE_DOCKING");
         ROS_INFO("(auto_docking::finishedDocking) Auto docking finished->SUCESSFUL.");
-        robot.setSound(1,2);
     }
     else{
         attempt++;
@@ -351,8 +347,6 @@ void finishedDocking(){
             robot.setMotorSpeed('F', 15, 'F', 15);
             ros::Duration(2.0).sleep();
             robot.setMotorSpeed('F', 0, 'F', 0);
-            robot.setPermanentLed("red");
-            robot.setSound(3,2);
         }
     }
 }
@@ -361,10 +355,9 @@ void finishedDocking(){
 bool stopDockingService(std_srvs::Empty::Request &req, std_srvs::Empty::Response &res){
     if(dock_status==3){
         resetDockingParams();
-        if(ac->isServerConnected()){
-            robot.setPermanentLed("blue");
+        if(ac->isServerConnected())
             ac->cancelAllGoals();
-        }
+
         gobot_msg_srv::IsCharging arg;
         dock_status=(ros::service::call("/gobot_status/charging_status", arg) && arg.response.isCharging) ? 1 : 0; 
         robot.setDock(dock_status);
@@ -380,12 +373,6 @@ bool startDockingService(std_srvs::Empty::Request &req, std_srvs::Empty::Respons
 }
 
 
-void timerCallback(const ros::TimerEvent&){
-    if(docking){
-        robot.setSound(2,1);
-    }
-}
-
 void resetDockingParams(){
     robot.setMotorSpeed('F', 0, 'F', 0);
     bumperSub.shutdown();
@@ -399,7 +386,6 @@ void resetDockingParams(){
     lostIrSignal = false;
     leftFlag = false;
     move_from_collision = true;
-    sound_timer.stop();
 }
 
 void startDockingParams(){
@@ -408,7 +394,6 @@ void startDockingParams(){
     robot.setDock(dock_status);
     robot.setStatus(15,"DOCKING");
     docking = true;
-    sound_timer.start();
     goalStatusSub = nh.subscribe("/move_base/result",1,goalResultCallback);
 }
 
@@ -417,9 +402,6 @@ int main(int argc, char* argv[]){
     ros::NodeHandle nh;
 
     ros::service::waitForService("/gobot_startup/pose_ready", ros::Duration(60.0));
-    
-    sound_timer = nh.createTimer(ros::Duration(10), timerCallback);
-    sound_timer.stop();
 
     ac = std::shared_ptr<MoveBaseClient> (new MoveBaseClient("move_base", true));
     ac->waitForServer();

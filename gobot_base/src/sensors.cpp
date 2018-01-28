@@ -25,6 +25,7 @@ int error_count = 0;
 bool display_data = false;
 int STM_CHECK = 0, STM_RATE=5, charge_check = 0;;
 bool USE_BUMPER=true,USE_SONAR=true,USE_CLIFF=true;
+std::map<std::string, uint8_t> led_color_;
 
 robot_class::SetRobot robot;
 
@@ -339,6 +340,7 @@ void publishSensors(void){
                     ROS_ERROR("(sensors::publishSensors ERROR) All bumpers got a collision");
             
                 if(resetwifi_button==1){
+                    setSound(1,2);
                     ros::service::call("/gobot_status/get_gobot_status",get_gobot_status);
                     //if scanning, save the map
                     if(get_gobot_status.response.status==20 || get_gobot_status.response.status==25 || get_gobot_status.response.status==21){                        
@@ -377,34 +379,36 @@ void publishSensors(void){
     }
 }
 
-bool setSoundSrvCallback(gobot_msg_srv::SetInt::Request &req, gobot_msg_srv::SetInt::Response &res){
+bool setSoundSrvCallback(gobot_msg_srv::SetIntArray::Request &req, gobot_msg_srv::SetIntArray::Response &res){
     return setSound(req.data[0],req.data[1]);
 }
 
-bool setSound(int num,int time_on, int time_off){
+bool setSound(int num,int time_on){
     gobot_msg_srv::GetInt get_mute;
     ros::service::call("/gobot_status/get_mute",get_mute);
     //mute.
-    if(get_mute.response.data[0])
+    if(get_mute.response.data)
         return true;
 
     //serial open and not mute
     if(serialConnection.isOpen()){
         uint8_t n = num;
-        uint8_t time_off = (n==1) ? 0x00 : 0x96;
-        std::vector<uint8_t> sound_cmd;
+        uint8_t time_off = n==1 ? 0x00 : 0x96;
+        std::vector<uint8_t> sound_cmd = {0xE0, 0x01, 0x05, n, 0x00, 0x64, 0X00, time_off, 0X00, 0X00, 0x1B};
         switch (time_on){
             //100ms
             case 1:
-                sound_cmd={0xE0, 0x01, 0x05, n, 0x00, 0x64, 0X00, time_off, 0X00, 0X00, 0x1B};
+                sound_cmd[5] = 0x64;
                 break;
             //400ms
             case 2:
-                sound_cmd={0xE0, 0x01, 0x05, n, 0x01, 0x90, 0X00, time_off, 0X00, 0X00, 0x1B};
+                sound_cmd[4] = 0x01;
+                sound_cmd[5] = 0x90;
                 break;
             //800ms
             default:
-                sound_cmd={0xE0, 0x01, 0x05, n, 0x03, 0x20, 0X00, time_off, 0X00, 0X00, 0x1B};
+                sound_cmd[4] = 0x03;
+                sound_cmd[5] = 0x20;
                 break;
         }
         std::vector<uint8_t> buff = writeAndRead(sound_cmd,5);
@@ -417,22 +421,58 @@ bool setSound(int num,int time_on, int time_off){
     } 
 }
 
+bool setLedSrvCallback(gobot_msg_srv::LedStrip::Request &req, gobot_msg_srv::LedStrip::Response &res){
+    //if low battery and not charging, only show magenta color to warn user
+    if(!low_battery || charging){
+        //ROS_INFO("Receive a LED change request, and succeed to execute.");
+        return setLed(req.mode,req.color);
+    }
+}
+
 bool showBatteryLedsrvCallback(std_srvs::Empty::Request &req, std_srvs::Empty::Response &res){
     displayBatteryLed();
     setSound(1,2);
     return true;
 }
 
-bool setLedSrvCallback(gobot_msg_srv::LedStrip::Request &req, gobot_msg_srv::LedStrip::Response &res){
-    if(!low_battery || charging){
-        //ROS_INFO("Receive a LED change request, and succeed to execute.");
-        return setLed({req.data[0],req.data[1],req.data[2],req.data[3],req.data[4],req.data[5],req.data[6],req.data[7],req.data[8],req.data[9],req.data[10]});
-    }
+void displayBatteryLed(){
+    std::string color;
+    if(battery_percent<25)
+        color = "magenta";
+    else if(battery_percent<75)
+        color = "yellow";
+    else if(battery_percent<100)
+        color = "cyan";
+
+    if(!charging)
+        setLed(0,{color});
+    else
+        setLed(1,{color,"white"});
 }
 
-bool setLed(std::vector<uint8_t> cmd){
+//mode 0=permanent, mode 1=running
+bool setLed(int mode, const std::vector<std::string> &color){
     if(serialConnection.isOpen()){
-        std::vector<uint8_t> led_cmd=cmd;
+        //0x52 = Blue,0x47 = Red,0x42 = Green,0x4D = Magenta,0x43 = Cyan,0x59 = Yellow,0x57 = White, 0x00 = Off
+        std::vector<uint8_t> led_cmd;
+        switch (mode) {
+            case 0:
+                led_cmd = {0xB0,0x03,0x01,0x57,0x00,0x00,0x00,0x00,0x03,0xE8,0x1B};
+            break;
+
+            case 1:
+                led_cmd = {0xB0,0x01,0x02,0x42,0x57,0x00,0x00,0x00,0x00,0x96,0x1B};
+            break;
+
+            default:
+                led_cmd = {0xB0,0x03,0x01,0x57,0x00,0x00,0x00,0x00,0x03,0xE8,0x1B}; 
+            break;
+        }
+
+        led_cmd[2]=color.size();
+        for(int i=0;i<color.size();i++){
+            led_cmd[3+i]=led_color_.at(color[i]);
+        }
         std::vector<uint8_t> buff = writeAndRead(led_cmd,5);
         last_led_time = ros::Time::now();
         ROS_INFO("Receive a LED change request, and succeed to execute.");
@@ -444,49 +484,23 @@ bool setLed(std::vector<uint8_t> cmd){
     } 
 }
 
-void displayBatteryLed(){
-    std::vector<uint8_t> led_cmd;
-    std::vector<uint8_t> led_buff;
-    if(!charging){
-        if(battery_percent<25)
-            led_cmd={0xB0,0x03,0x01,0x4D,0x00,0x00,0x00,0x00,0x03,0xE8,0x1B};
-        else if(battery_percent<75)
-            led_cmd={0xB0,0x03,0x01,0x59,0x00,0x00,0x00,0x00,0x03,0xE8,0x1B};
-        else if(battery_percent<100)
-            led_cmd={0xB0,0x03,0x01,0x43,0x00,0x00,0x00,0x00,0x03,0xE8,0x1B};
-    }
-    else{
-        if(battery_percent<25)
-            led_cmd={0xB0,0x01,0x02,0x4D,0x57,0x00,0x00,0x00,0x00,0x96,0x1B};
-        else if(battery_percent<75)
-            led_cmd={0xB0,0x01,0x02,0x59,0x57,0x00,0x00,0x00,0x00,0x96,0x1B};
-        else if(battery_percent<100)
-            led_cmd={0xB0,0x01,0x02,0x43,0x57,0x00,0x00,0x00,0x00,0x96,0x1B};
-        else
-            led_cmd={0xB0,0x03,0x01,0x43,0x00,0x00,0x00,0x00,0x03,0xE8,0x1B};
-    }
-    setLed(led_cmd);
-}
-
 void ledTimerCallback(const ros::TimerEvent&){
-    //0x52 = Blue,0x47 = Red,0x42 = Green,0x4D = Magenta,0x43 = Cyan,0x59 = Yellow,0x57 = White, 0x00 = Off
+    ros::service::call("/gobot_status/get_gobot_status",get_gobot_status);
+    low_battery = battery_percent<10 ? true : false;
     if (!charging){
-        if (battery_percent < 10){
-            setLed({0xB0,0x03,0x01,0x4D,0x00,0x00,0x00,0x00,0x03,0xE8,0x1B});
-            ros::service::call("/gobot_status/get_gobot_status",get_gobot_status);
-            if(get_gobot_status.response.status!=15){
-                setSound(3,2);
-            }
-            low_battery = true;
+        if (low_battery){
+            setLed(0,{"magenta"});
         }
         //Show battery status if no stage for certain period, show battery lvl
-        else {
-            low_battery = false;
-            if (((ros::Time::now() - last_led_time).toSec()>300.0)){
-                displayBatteryLed();
-            }
+        else if (((ros::Time::now() - last_led_time).toSec()>300.0)){
+            displayBatteryLed();
         }   
     }
+    //if docking or exploring, perdically sound twice
+    if(get_gobot_status.response.status==15 || get_gobot_status.response.status==25)
+        setSound(2,1);
+    else if(low_battery && !charging)
+        setSound(3,2);
 }
 
 
@@ -506,7 +520,6 @@ bool shutdownSrvCallback(std_srvs::Empty::Request &req, std_srvs::Empty::Respons
         ROS_WARN("Receive a shutdown request, but failed to execute.");
         return false;
     } 
-
 }
 
 
@@ -542,7 +555,6 @@ void mySigintHandler(int sig)
     try{
         if(serialConnection.isOpen()){
             //Turn off LED when shut down node
-            //0x52 = Blue,0x47 = Red,0x42 = Green,0x4D = Magenta,0x43 = Cyan,0x59 = Yellow,0x57 = White, 0x00 = Off
             writeAndRead({0xB0,0x03,0x01,0x57,0x00,0x00,0x00,0x00,0x03,0xE8,0x1B},5);
         }
     } catch (std::exception& e) {
@@ -573,6 +585,9 @@ int main(int argc, char **argv) {
     nh.getParam("USE_SONAR", USE_SONAR);
     nh.getParam("USE_CLIFF", USE_CLIFF);
     nh.getParam("user_name", user_name);
+
+    //0x52 = Blue,0x47 = Red,0x42 = Green,0x4D = Magenta,0x43 = Cyan,0x59 = Yellow,0x57 = White, 0x00 = Off
+    led_color_ = {{"green",0x42}, {"blue",0x52}, {"yellow",0x59}, {"red",0x47}, {"cyan",0x43}, {"white",0x57}, {"magenta",0x4D}, {"off",0x00}};
 
     ros::Timer ledTimer = nh.createTimer(ros::Duration(60), ledTimerCallback);
     last_led_time = ros::Time::now();

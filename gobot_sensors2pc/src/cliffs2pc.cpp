@@ -38,7 +38,7 @@ void cliffCallback(const gobot_msg_srv::CliffMsg::ConstPtr& cliff){
     FLcliffCloud.header.frame_id = front_left_cliff_frame;
     BRcliffCloud.header.frame_id = back_right_cliff_frame;
     BLcliffCloud.header.frame_id = back_left_cliff_frame;
-    gobot_msg_srv::GetInt get_speed;
+    gobot_msg_srv::GetIntArray get_speed;
     ros::service::call("/gobot_motor/getSpeeds",get_speed);
     //if robot is moving
     if(get_speed.response.data[0]!=128 || get_speed.response.data[1]!=128){

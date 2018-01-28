@@ -1,3 +1,4 @@
-uint8[11] data
+int8 mode
+string[] color
 ---
 bool ack

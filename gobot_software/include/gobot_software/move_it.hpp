@@ -25,12 +25,12 @@
 #include <gobot_msg_srv/IsCharging.h>
 #include <gobot_msg_srv/GetGobotStatus.h>
 #include <gobot_msg_srv/set_robot_class.h>
-#include <gobot_msg_srv/SetStage.h>
-#include <gobot_msg_srv/GetStage.h>
-#include <gobot_msg_srv/SetPath.h>
-#include <gobot_msg_srv/GetPath.h>
-#include <gobot_msg_srv/GetInt.h>
+#include <gobot_msg_srv/GetIntArray.h>
+#include <gobot_msg_srv/SetIntArray.h>
 #include <gobot_msg_srv/SetInt.h>
+#include <gobot_msg_srv/GetInt.h>
+#include <gobot_msg_srv/SetStringArray.h>
+#include <gobot_msg_srv/GetStringArray.h>
 #include <gobot_msg_srv/SetString.h>
 #include <gobot_msg_srv/GetString.h>
 #include <thread>
@@ -61,9 +61,9 @@ void getButtonCallback(const std_msgs::Int8::ConstPtr& msg);
 
 void goNextPoint(const Point _point);
 
-bool savePointService(gobot_msg_srv::SetString::Request &req, gobot_msg_srv::SetString::Response &res);
+bool savePointService(gobot_msg_srv::SetStringArray::Request &req, gobot_msg_srv::SetStringArray::Response &res);
 
-bool playPointService(gobot_msg_srv::SetString::Request &req, gobot_msg_srv::SetString::Response &res);
+bool playPointService(gobot_msg_srv::SetStringArray::Request &req, gobot_msg_srv::SetStringArray::Response &res);
 
 bool playPathService(std_srvs::Empty::Request &req, std_srvs::Empty::Response &res);
 

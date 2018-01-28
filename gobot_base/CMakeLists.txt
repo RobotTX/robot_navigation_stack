@@ -169,11 +169,6 @@ add_executable(sensors src/sensors.cpp)
 target_link_libraries(sensors ${catkin_LIBRARIES})
 add_dependencies(sensors ${${gobot_msg_srv}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
 
-add_executable(led src/led.cpp)
-target_link_libraries(led ${catkin_LIBRARIES})
-add_dependencies(led ${${gobot_msg_srv}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
-
-
 #############
 ## Install ##
 #############

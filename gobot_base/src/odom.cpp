@@ -9,6 +9,8 @@
 
 std_srvs::Empty arg;
 
+
+
 int main(int argc, char** argv){
     ros::init(argc, argv, "odometry_publisher");
 
@@ -20,6 +22,7 @@ int main(int argc, char** argv){
     ROS_INFO("(Odom) MD49 is ready.");
     //Startup end
 
+    //ros::ServiceServer getSpeedsSrv = n.advertiseService("/gobot_motor/getRealSpeeds", getRealSpeeds);
     ros::service::call("/gobot_motor/resetEncoders", arg);
     /// The encoders should be reinitialized to 0 every time we launch odom
     int64_t last_left_encoder = 0;

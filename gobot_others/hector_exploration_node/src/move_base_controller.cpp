@@ -14,8 +14,6 @@ std_srvs::Empty empty_srv;
 /// Simple Action client
 std::shared_ptr<actionlib::SimpleActionClient<move_base_msgs::MoveBaseAction>> ac;
 
-ros::Publisher exploration_pub;
-ros::Timer sound_timer;
 gobot_msg_srv::GetGobotStatus get_gobot_status;
 
 robot_class::SetRobot robot;
@@ -58,7 +56,7 @@ bool getRobotPos(void){
 void backToStart(){
     ROS_INFO("(Exploration) Back to start launched...");
     move_base_msgs::MoveBaseGoal goal;
-    gobot_msg_srv::SetString set_home;
+    gobot_msg_srv::SetStringArray set_home;
     switch(back_to_start_when_finished){
         case 1:
             robot.setHome(std::to_string(startingPose.position.x),std::to_string(startingPose.position.y),std::to_string(startingPose.orientation.x),
@@ -113,7 +111,7 @@ void doExploration(void){
                     if(ac->isServerConnected() && exploring){
                         /// Send the goal to move_base
                         ac->sendGoal(goal);
-                        robot.setRunningLed("green");
+                        robot.setStatus(25,"EXPLORING");
                     }
                     else 
                         ROS_INFO("(Exploration) No action server or we stopped exploring already");
@@ -124,13 +122,9 @@ void doExploration(void){
                     /// After no_frontier_threshold attemps at finding a point to explore, we consider the scan finished
                     if(noFrontiersLeft >= no_frontier_threshold){
                         if(exploring){
-                            std_msgs::Int8 result;
-                            result.data=1;
-                            exploration_pub.publish(result);
-                            robot.setPermanentLed("green");
-                            sound_timer.stop();
+                            robot.setStatus(21,"COMPLETE_EXPLORING");
+                            stopExploration();
                         }
-                        stopExploration();
 
                         /// if we want to go back to the starting position
                         if(back_to_start_when_finished)
@@ -153,12 +147,6 @@ void doExploration(void){
 /// Called when the service startExploration is called, launches doExploration in a new thread
 bool startExplorationSrv(hector_exploration_node::Exploration::Request &req, hector_exploration_node::Exploration::Response &res){
     if(!exploring){
-        std_msgs::Int8 result;
-        result.data=-1;
-        exploration_pub.publish(result);
-        robot.setStatus(25,"EXPLORING");
-        sound_timer.start();
-
         back_to_start_when_finished = req.backToStartWhenFinished;
 
         if(back_to_start_when_finished==1){
@@ -185,14 +173,11 @@ bool startExplorationSrv(hector_exploration_node::Exploration::Request &req, hec
 /// Service to stop the exploration
 bool stopExplorationSrv(std_srvs::Empty::Request &req, std_srvs::Empty::Response &res){
     if(exploring){
-        std_msgs::Int8 result;
-        result.data=0;
-        exploration_pub.publish(result);
         robot.setStatus(21,"STOP_EXPLORING");
-        robot.setPermanentLed("blue");
-        sound_timer.stop();
+        stopExploration();
     }
-    return stopExploration();
+
+    return true;
 }
 
 /// To stop the exploration (either when the service is called or when we are done scanning)
@@ -207,11 +192,6 @@ bool stopExploration(void){
         ROS_WARN("(Exploration) We were not exploring");
     
     return true;
-}
-
-
-void timerCallback(const ros::TimerEvent&){
-    robot.setSound(2,1);
 }
 
 int main(int argc, char* argv[]){
@@ -238,14 +218,8 @@ int main(int argc, char* argv[]){
     nh.param<int>("no_frontier_threshold", no_frontier_threshold, 5);
     //~ROS_INFO("(Exploration) no_frontier_threshold : %d", no_frontier_threshold);
 
-    //Publish when exploration is complete
-    exploration_pub = nh.advertise<std_msgs::Int8>("/gobot_scan/exploration_result",10);
-
     /// Create an actionlibClient to be able to send and monitor goals
     ac = std::shared_ptr<actionlib::SimpleActionClient<move_base_msgs::MoveBaseAction>>(new actionlib::SimpleActionClient<move_base_msgs::MoveBaseAction>("move_base", true));
-    
-    sound_timer = nh.createTimer(ros::Duration(10), timerCallback);
-    sound_timer.stop();
 
     /// Launch service's servers
     //0-don't go back to starting point; 1-go back to charging station; 2-go back to normal staring point

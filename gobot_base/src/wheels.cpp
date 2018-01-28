@@ -51,7 +51,7 @@ std::string getStdoutFromCommand(std::string cmd) {
     return data;
 }
 
-bool getSpeeds(gobot_msg_srv::GetInt::Request &req, gobot_msg_srv::GetInt::Response &res){
+bool getSpeeds(gobot_msg_srv::GetIntArray::Request &req, gobot_msg_srv::GetIntArray::Response &res){
     res.data.push_back(leftSpeed_);
     res.data.push_back(rightSpeed_);
     

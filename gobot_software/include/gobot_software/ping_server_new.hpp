@@ -11,15 +11,16 @@
 #include <fstream>
 #include <stdio.h>
 #include <std_srvs/Empty.h>
-#include <gobot_msg_srv/GetDockStatus.h>
 #include <gobot_msg_srv/BatteryMsg.h>
 #include <gobot_msg_srv/GetGobotStatus.h>
-#include <gobot_msg_srv/SetStage.h>
-#include <gobot_msg_srv/GetStage.h>
+#include <gobot_msg_srv/GetIntArray.h>
+#include <gobot_msg_srv/SetIntArray.h>
+#include <gobot_msg_srv/SetInt.h>
+#include <gobot_msg_srv/GetInt.h>
+#include <gobot_msg_srv/SetStringArray.h>
+#include <gobot_msg_srv/GetStringArray.h>
 #include <gobot_msg_srv/SetString.h>
 #include <gobot_msg_srv/GetString.h>
-#include <gobot_msg_srv/GetInt.h>
-#include <gobot_msg_srv/SetInt.h>
 #include <gobot_software/timeout_blocking_tcp_client.h>
 #include <mutex>
 #include <thread>
@@ -28,7 +29,7 @@ using boost::asio::ip::tcp;
 
 std::string getDataToSend(void);
 
-bool disServersSrvCallback(gobot_msg_srv::SetString::Request &req, gobot_msg_srv::SetString::Response &res);
+bool disServersSrvCallback(gobot_msg_srv::SetStringArray::Request &req, gobot_msg_srv::SetStringArray::Response &res);
 
 bool updataStatusSrvCallback(std_srvs::Empty::Request &req, std_srvs::Empty::Response &res);
 

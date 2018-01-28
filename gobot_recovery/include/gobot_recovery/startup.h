@@ -8,7 +8,7 @@
 #include <move_base_msgs/MoveBaseActionResult.h>
 #include <move_base_msgs/MoveBaseActionGoal.h>
 #include <gobot_msg_srv/GetGobotStatus.h>
-#include <gobot_msg_srv/SetString.h>
+#include <gobot_msg_srv/SetStringArray.h>
 
 void initialPoseResultCallback(const std_msgs::Int8::ConstPtr& msg);
 

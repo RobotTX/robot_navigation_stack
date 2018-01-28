@@ -36,5 +36,4 @@ void backToStart(void);
 /// To get the starting position
 bool getRobotPos(void);
     
-void timerCallback(const ros::TimerEvent&);
 #endif

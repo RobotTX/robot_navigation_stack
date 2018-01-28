@@ -6,7 +6,7 @@ GOBOT STATUS
 21 STOP_EXPLORING/COMPLETE_EXPLORING
 20 EXPLORATION
 15 DOCKING
-11 STOP_DOCKING/FAIL_DOKCING
+11 STOP_DOCKING/FAIL_DOKCING/COMPLETE_DOCKING
 5  PLAY_PATH/WAITING/DELAY
 4  PAUSE_PATH
 1  STOP_PATH
@@ -64,32 +64,53 @@ int disconnected = 0;
 bool charging_ = false;
 int battery_percent_ = 51;
 
+std::shared_ptr<MoveBaseClient> ac(0);
+robot_class::SetRobot robot;
+
+//change robot led and sound to inform people its status
+void robotResponse(int status, std::string text){
+    //permanent green case
+    if (text=="COMPLETE_EXPLORING" || text=="COMPLETE_PATH") {
+        robot.setLed(0,{"green"});
+        robot.setSound(1,2);
+    }
+    else if(text=="STOP_EXPLORING" || text=="STOP_DOCKING" || text=="STOP_PATH" || text=="PAUSE_PATH"){
+        robot.setLed(0,{"blue"});
+    }
+    else if(text=="FAIL_DOCKING" || text=="ABORTED_PATH"){
+        robot.setLed(0,{"red"});
+        robot.setSound(3,2);
+    }
+    else if(text=="PLAY_PATH" || text=="PLAY_POINT" || text=="EXPLORING"){
+        robot.setLed(1,{"green","white"});
+    }
+    else if(text=="DELAY" || text=="WAITING"){
+        robot.setLed(1,{"blue","white"});
+    }
+    else if(text=="DOCKING"){
+        robot.setLed(1,{"yellow","cyan"});
+    }
+    else if(text=="COMPLETE_DOCKING"){
+        robot.setSound(1,2);
+    }
+}
+
 bool disconnectedSrvCallback(std_srvs::Empty::Request &req, std_srvs::Empty::Response &res){
     /*
     disconnected++;
     std::ofstream ofsDisconnected(disconnectedFile, std::ofstream::out | std::ofstream::trunc);
-    if(ofsDisconnected){
+    if(ofsDisconnected)
         ofsDisconnected << disconnected;
-    }
     */
 
     //test purpose
-    gobot_msg_srv::SetString keep_ip;
+    gobot_msg_srv::SetStringArray keep_ip;
     ros::service::call("/gobot_software/disconnet_servers",keep_ip);
 
     return true;
 }
 
-bool setWifiSrvCallback(gobot_msg_srv::SetString::Request &req, gobot_msg_srv::SetString::Response &res){
-    if(req.data[0]=="" && req.data[1]==""){
-        std::thread([](){
-            gobot_msg_srv::SetInt sound_num;
-            sound_num.request.data.push_back(1);
-            sound_num.request.data.push_back(2);
-            ros::service::call("/gobot_base/setSound",sound_num);
-        }).detach();
-    }
-    
+bool setWifiSrvCallback(gobot_msg_srv::SetStringArray::Request &req, gobot_msg_srv::SetStringArray::Response &res){    
     if(wifi_.at(0)==req.data[0] && wifi_.at(1)==req.data[1]){
         return false;
     }
@@ -119,7 +140,7 @@ bool setWifiSrvCallback(gobot_msg_srv::SetString::Request &req, gobot_msg_srv::S
     return true;
 }
 
-bool getWifiSrvCallback(gobot_msg_srv::GetString::Request &req, gobot_msg_srv::GetString::Response &res){
+bool getWifiSrvCallback(gobot_msg_srv::GetStringArray::Request &req, gobot_msg_srv::GetStringArray::Response &res){
     wifiMutex.lock();
     for(int i=0;i<wifi_.size();i++)
         res.data.push_back(wifi_.at(i));
@@ -128,7 +149,7 @@ bool getWifiSrvCallback(gobot_msg_srv::GetString::Request &req, gobot_msg_srv::G
 }
 
 
-bool setHomeSrvCallback(gobot_msg_srv::SetString::Request &req, gobot_msg_srv::SetString::Response &res){
+bool setHomeSrvCallback(gobot_msg_srv::SetStringArray::Request &req, gobot_msg_srv::SetStringArray::Response &res){
     homeMutex.lock();
     home_.clear();
     for(int i=0;i<req.data.size();i++)
@@ -145,7 +166,7 @@ bool setHomeSrvCallback(gobot_msg_srv::SetString::Request &req, gobot_msg_srv::S
     return true;
 }
 
-bool getHomeSrvCallback(gobot_msg_srv::GetString::Request &req, gobot_msg_srv::GetString::Response &res){
+bool getHomeSrvCallback(gobot_msg_srv::GetStringArray::Request &req, gobot_msg_srv::GetStringArray::Response &res){
     homeMutex.lock();
     for(int i=0;i<home_.size();i++)
         res.data.push_back(home_.at(i));
@@ -156,7 +177,7 @@ bool getHomeSrvCallback(gobot_msg_srv::GetString::Request &req, gobot_msg_srv::G
 
 bool setBatterySrvCallback(gobot_msg_srv::SetString::Request &req, gobot_msg_srv::SetString::Response &res){
     batteryMutex.lock();
-    low_battery_=req.data[0];
+    low_battery_=req.data;
     batteryMutex.unlock();
 
     std::ofstream ofsBattery(lowBatteryFile, std::ofstream::out | std::ofstream::trunc);
@@ -171,12 +192,12 @@ bool setBatterySrvCallback(gobot_msg_srv::SetString::Request &req, gobot_msg_srv
 
 bool getBatterySrvCallback(gobot_msg_srv::GetString::Request &req, gobot_msg_srv::GetString::Response &res){
     batteryMutex.lock();
-    res.data.push_back(low_battery_);
+    res.data = low_battery_;
     batteryMutex.unlock();
     return true;
 }
 
-bool setSpeedSrvCallback(gobot_msg_srv::SetString::Request &req, gobot_msg_srv::SetString::Response &res){
+bool setSpeedSrvCallback(gobot_msg_srv::SetStringArray::Request &req, gobot_msg_srv::SetStringArray::Response &res){
     speedMutex.lock();
     linear_spd_=req.data[0];
     angular_spd_=req.data[1];
@@ -205,7 +226,7 @@ bool setSpeedSrvCallback(gobot_msg_srv::SetString::Request &req, gobot_msg_srv::
     return true;
 }
 
-bool getSpeedSrvCallback(gobot_msg_srv::GetString::Request &req, gobot_msg_srv::GetString::Response &res){
+bool getSpeedSrvCallback(gobot_msg_srv::GetStringArray::Request &req, gobot_msg_srv::GetStringArray::Response &res){
     speedMutex.lock();
     res.data.push_back(linear_spd_);
     res.data.push_back(angular_spd_);
@@ -215,7 +236,7 @@ bool getSpeedSrvCallback(gobot_msg_srv::GetString::Request &req, gobot_msg_srv::
 
 bool setNameSrvCallback(gobot_msg_srv::SetString::Request &req, gobot_msg_srv::SetString::Response &res){
     nameMutex.lock();
-    hostname_=req.data[0];
+    hostname_=req.data;
     nameMutex.unlock();
 
     std::ofstream ofsName(nameFile, std::ofstream::out | std::ofstream::trunc);
@@ -231,19 +252,19 @@ bool setNameSrvCallback(gobot_msg_srv::SetString::Request &req, gobot_msg_srv::S
 
 bool getNameSrvCallback(gobot_msg_srv::GetString::Request &req, gobot_msg_srv::GetString::Response &res){
     nameMutex.lock();
-    res.data.push_back(hostname_);
+    res.data = hostname_;
     nameMutex.unlock();
 
-    //ROS_INFO("(Gobot_status) Get Gobot name: %s",res.data[0].c_str());
+    //ROS_INFO("(Gobot_status) Get Gobot name: %s",res.data.c_str());
     return true;
 }
 
 
-bool setPathSrvCallback(gobot_msg_srv::SetPath::Request &req, gobot_msg_srv::SetPath::Response &res){
+bool setPathSrvCallback(gobot_msg_srv::SetStringArray::Request &req, gobot_msg_srv::SetStringArray::Response &res){
     pathMutex.lock();
     path_.clear();
-    for(int i=0;i<req.path.size();i++)
-        path_.push_back(req.path[i]);
+    for(int i=0;i<req.data.size();i++)
+        path_.push_back(req.data[i]);
     pathMutex.unlock();
 
     std::ofstream ofsPath(pathFile, std::ofstream::out | std::ofstream::trunc);
@@ -260,10 +281,10 @@ bool setPathSrvCallback(gobot_msg_srv::SetPath::Request &req, gobot_msg_srv::Set
     return true;
 }
 
-bool getPathSrvCallback(gobot_msg_srv::GetPath::Request &req, gobot_msg_srv::GetPath::Response &res){
+bool getPathSrvCallback(gobot_msg_srv::GetStringArray::Request &req, gobot_msg_srv::GetStringArray::Response &res){
     pathMutex.lock();
     for(int i=0;i<path_.size();i++)
-        res.path.push_back(path_.at(i));
+        res.data.push_back(path_.at(i));
     pathMutex.unlock();
     return true;
 }
@@ -272,7 +293,7 @@ bool getPathSrvCallback(gobot_msg_srv::GetPath::Request &req, gobot_msg_srv::Get
 
 bool setMuteSrvCallback(gobot_msg_srv::SetInt::Request &req, gobot_msg_srv::SetInt::Response &res){
     muteMutex.lock();
-    mute_ = req.data[0];
+    mute_ = req.data;
     muteMutex.unlock();
 
     std::ofstream ofsMute(muteFile, std::ofstream::out | std::ofstream::trunc);
@@ -288,7 +309,7 @@ bool setMuteSrvCallback(gobot_msg_srv::SetInt::Request &req, gobot_msg_srv::SetI
 
 bool getMuteSrvCallback(gobot_msg_srv::GetInt::Request &req, gobot_msg_srv::GetInt::Response &res){
     muteMutex.lock();
-    res.data.push_back(mute_);
+    res.data = mute_;
     muteMutex.unlock();
     return true;
 }
@@ -296,7 +317,7 @@ bool getMuteSrvCallback(gobot_msg_srv::GetInt::Request &req, gobot_msg_srv::GetI
 
 bool setLoopSrvCallback(gobot_msg_srv::SetInt::Request &req, gobot_msg_srv::SetInt::Response &res){
     loopMutex.lock();
-    loop_ = req.data[0];
+    loop_ = req.data;
     loopMutex.unlock();
 
     std::ofstream ofsLoop(pathLoopFile, std::ofstream::out | std::ofstream::trunc);
@@ -311,15 +332,15 @@ bool setLoopSrvCallback(gobot_msg_srv::SetInt::Request &req, gobot_msg_srv::SetI
 
 bool getLoopSrvCallback(gobot_msg_srv::GetInt::Request &req, gobot_msg_srv::GetInt::Response &res){
     loopMutex.lock();
-    res.data.push_back(loop_);
+    res.data = loop_;
     loopMutex.unlock();
     return true;
 }
 
 
-bool setStageSrvCallback(gobot_msg_srv::SetStage::Request &req, gobot_msg_srv::SetStage::Response &res){
+bool setStageSrvCallback(gobot_msg_srv::SetInt::Request &req, gobot_msg_srv::SetInt::Response &res){
     stageMutex.lock();
-    stage_ = req.stage;
+    stage_ = req.data;
     stageMutex.unlock();
 
     std::ofstream ofsStage(pathStageFile, std::ofstream::out | std::ofstream::trunc);
@@ -334,9 +355,9 @@ bool setStageSrvCallback(gobot_msg_srv::SetStage::Request &req, gobot_msg_srv::S
     return true;
 }
 
-bool getStageSrvCallback(gobot_msg_srv::GetStage::Request &req, gobot_msg_srv::GetStage::Response &res){
+bool getStageSrvCallback(gobot_msg_srv::GetInt::Request &req, gobot_msg_srv::GetInt::Response &res){
     stageMutex.lock();
-    res.stage = stage_;
+    res.data = stage_;
     stageMutex.unlock();
 
     //ROS_INFO("(Gobot_status) Get Gobot stage: %d",stage_);
@@ -344,9 +365,9 @@ bool getStageSrvCallback(gobot_msg_srv::GetStage::Request &req, gobot_msg_srv::G
 }
 
 
-bool setDockStatusSrvCallback(gobot_msg_srv::SetDockStatus::Request &req, gobot_msg_srv::SetDockStatus::Response &res){
+bool setDockStatusSrvCallback(gobot_msg_srv::SetInt::Request &req, gobot_msg_srv::SetInt::Response &res){
     dockStatusMutex.lock();
-    dock_status_ = req.status;
+    dock_status_ = req.data;
     dockStatusMutex.unlock();
     ROS_INFO("(Gobot_status) Set Dock status: %d", dock_status_);
     ros::service::call("/gobot_software/update_status",empty_srv);
@@ -360,9 +381,9 @@ bool setDockStatusSrvCallback(gobot_msg_srv::SetDockStatus::Request &req, gobot_
     return true;
 }
 
-bool getDockStatusSrvCallback(gobot_msg_srv::GetDockStatus::Request &req, gobot_msg_srv::GetDockStatus::Response &res){
+bool getDockStatusSrvCallback(gobot_msg_srv::GetInt::Request &req, gobot_msg_srv::GetInt::Response &res){
     dockStatusMutex.lock();
-    res.status = dock_status_;
+    res.data = dock_status_;
     dockStatusMutex.unlock();
     //ROS_INFO("(Gobot_status) Get Dock status: %d", dock_status_);
 
@@ -376,6 +397,7 @@ bool setGobotStatusSrvCallback(gobot_msg_srv::SetGobotStatus::Request &req, gobo
     gobot_text_ = req.text;
     gobotStatusMutex.unlock();
     ROS_INFO("(Gobot_status) Set Gobot status: %d,%s",gobot_status_,gobot_text_.c_str());
+    robotResponse(gobot_status_,gobot_text_);
     return true;
 }
 
@@ -393,7 +415,7 @@ bool isChargingService(gobot_msg_srv::IsCharging::Request &req, gobot_msg_srv::I
 }
 
 bool PercentService(gobot_msg_srv::GetInt::Request &req, gobot_msg_srv::GetInt::Response &res){
-    res.data.push_back(battery_percent_);
+    res.data = battery_percent_;
     return true;
 }
 
@@ -575,6 +597,8 @@ int main(int argc, char* argv[]){
 
         ros::Subscriber battery = n.subscribe("/gobot_base/battery_topic",1, batteryCallback);
 
+        ac = std::shared_ptr<MoveBaseClient> (new MoveBaseClient("move_base", true));
+        
         ros::spin();
         
     } catch (std::exception& e) {

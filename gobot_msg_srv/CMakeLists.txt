@@ -12,6 +12,8 @@ find_package(catkin REQUIRED COMPONENTS
     rospy
     std_msgs
     message_generation
+    actionlib
+    actionlib_msgs
 )
 
 ## System dependencies are found with CMake's conventions
@@ -76,16 +78,14 @@ add_service_files(
     SendMap.srv
     GetGobotStatus.srv
     SetGobotStatus.srv
-    GetStage.srv
-    SetStage.srv
-    GetPath.srv
-    SetPath.srv
     GetString.srv
     SetString.srv
     GetInt.srv
     SetInt.srv
-    GetDockStatus.srv
-    SetDockStatus.srv
+    GetStringArray.srv
+    SetStringArray.srv
+    GetIntArray.srv
+    SetIntArray.srv
 )
 
 ## Generate actions in the 'action' folder
@@ -104,7 +104,10 @@ catkin_package(
     LIBRARIES
         robot_class
 #  LIBRARIES gobot_msg_srv
-    CATKIN_DEPENDS message_runtime
+    CATKIN_DEPENDS 
+        message_runtime
+        actionlib
+        actionlib_msgs
 #  DEPENDS system_lib
 )
 
@@ -122,8 +125,9 @@ include_directories(
 add_library(robot_class
                 src/set_robot_class.cpp
                 src/robot_command.cpp)
+add_dependencies(robot_class ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
 target_link_libraries(robot_class ${catkin_LIBRARIES} ${Boost_FILESYSTEM_LIBRARY} ${Boost_SYSTEM_LIBRARY} )
-add_dependencies(robot_class ${${gobot_msg_srv}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
+
 
 install(TARGETS
             robot_class

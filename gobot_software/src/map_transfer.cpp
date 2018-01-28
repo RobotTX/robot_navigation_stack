@@ -180,7 +180,7 @@ std::vector<uint8_t> compress(const std::vector<int8_t> map, const int map_width
 	return my_map;
 }
 
-bool sendAutoMap(gobot_msg_srv::SetString::Request &req, gobot_msg_srv::SetString::Response &res){
+bool sendAutoMap(gobot_msg_srv::SetStringArray::Request &req, gobot_msg_srv::SetStringArray::Response &res){
 	ROS_INFO("(Map::sendAutoMap) SendAutoMap");
 	ros::NodeHandle n;
 
@@ -197,7 +197,7 @@ bool sendAutoMap(gobot_msg_srv::SetString::Request &req, gobot_msg_srv::SetStrin
 }
 
 
-bool stopAutoMap(gobot_msg_srv::SetString::Request &req, gobot_msg_srv::SetString::Response &res){
+bool stopAutoMap(gobot_msg_srv::SetStringArray::Request &req, gobot_msg_srv::SetStringArray::Response &res){
 	ROS_INFO("(Map::stopAutoMap) StopAutoMap");
 
     session_map.at(req.data[0]).sendAutoMap = false;

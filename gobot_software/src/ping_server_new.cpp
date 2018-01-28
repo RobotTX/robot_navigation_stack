@@ -27,31 +27,31 @@ std::string getDataToSend(void){
     ros::service::call("/gobot_status/get_name",get_name);
 
     /// Retrieve the docking status
-    gobot_msg_srv::GetDockStatus get_dock_status;
+    gobot_msg_srv::GetInt get_dock_status;
     ros::service::call("/gobot_status/get_dock_status", get_dock_status);
     
     /// Retrieves the path stage
-    gobot_msg_srv::GetStage get_stage;
+    gobot_msg_srv::GetInt get_stage;
     ros::service::call("/gobot_status/get_stage", get_stage);
     
     //Retrives mute or not
     gobot_msg_srv::GetInt get_mute;
     ros::service::call("/gobot_status/get_mute",get_mute);
-    muteFlag=(get_mute.response.data[0]) ? 1 : 0;
+    muteFlag=(get_mute.response.data) ? 1 : 0;
 
     //Retrives battery percentage
     gobot_msg_srv::GetInt get_battery;
     ros::service::call("/gobot_status/battery_percent", get_battery);
 
     /// Form the string to send to the Qt app
-    return  get_name.response.data[0] + sep + std::to_string(get_stage.response.stage) + sep + std::to_string(get_battery.response.data[0]) + 
-            sep + std::to_string(muteFlag) + sep + std::to_string(get_dock_status.response.status);
+    return  get_name.response.data + sep + std::to_string(get_stage.response.data) + sep + std::to_string(get_battery.response.data) + 
+            sep + std::to_string(muteFlag) + sep + std::to_string(get_dock_status.response.data);
 }
 
 /**
  * Will disconnet all servers for updating map/wifi
  */
-bool disServersSrvCallback(gobot_msg_srv::SetString::Request &req, gobot_msg_srv::SetString::Response &res){
+bool disServersSrvCallback(gobot_msg_srv::SetStringArray::Request &req, gobot_msg_srv::SetStringArray::Response &res){
     std_msgs::String msg;
     bool keep_ip;
     //disconnect all sockets when closed

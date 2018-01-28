@@ -5,5 +5,5 @@
     <include file="$(find gobot_navigation)/launch/amcl.launch"/>
     <include file="$(find gobot_navigation)/launch/move_base.launch"/>
     <include file="$(find gobot_gazebo)/launch/gazebo_function.launch"/>
-    <include file="$(find gobot_recovery)/launch/gazebo_recovery.launch"/>
+    <include file="$(find gobot_gazebo)/launch/gazebo_recovery.launch"/>
 </launch>

@@ -18,9 +18,9 @@
 #include <gobot_msg_srv/IrMsg.h>
 #include <gobot_msg_srv/IsCharging.h>
 #include <gobot_msg_srv/ProximityMsg.h>
-#include <gobot_msg_srv/SetString.h>
-#include <gobot_msg_srv/GetString.h>
-#include <gobot_msg_srv/SetInt.h>
+#include <gobot_msg_srv/SetIntArray.h>
+#include <gobot_msg_srv/SetStringArray.h>
+#include <gobot_msg_srv/GetStringArray.h>
 #include <move_base_msgs/MoveBaseActionResult.h>
 #include <ctime>
 #include <chrono>
@@ -38,7 +38,6 @@ void finishedDocking(void);
 bool stopDockingService(std_srvs::Empty::Request &req, std_srvs::Empty::Response &res);
 bool startDockingService(std_srvs::Empty::Request &req, std_srvs::Empty::Response &res);
 void goalResultCallback(const move_base_msgs::MoveBaseActionResult::ConstPtr& msg);
-void timerCallback(const ros::TimerEvent&);
 void resetDockingParams(void);
 void startDockingParams(void);
 #endif

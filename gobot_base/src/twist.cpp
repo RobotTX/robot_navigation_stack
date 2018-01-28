@@ -5,9 +5,7 @@
 
 std::shared_ptr<MoveBaseClient> ac(0);
 std_srvs::Empty empty_srv;
-bool collision = false;
-bool moved_from_collision = true;
-bool pause_robot = false;
+bool collision = false, moved_from_collision = true, pause_robot = false;
 double wheel_separation, wheel_radius, ticks_per_rotation, collision_threshold, avoid_spd;
 
 ros::Time collisionTime;
@@ -21,8 +19,9 @@ gobot_msg_srv::BumperMsg bumpers_data;
 /// based on tests, the linear regression from the velocity in m/s to the ticks/sec is approx : y=15.606962627075x-2.2598795680051
 //15.606962627075;//-2.2598795680051;
 double a = 15.55, b = -2.26;  
-
 double pi = 3.14159;
+
+bool lost_robot = false;
 
 bool enable_joy = false;
 double linear_limit = 0.4, angular_limit = 0.8; 
@@ -55,7 +54,7 @@ bool pauseRobotSrvCallback(std_srvs::Empty::Request &req, std_srvs::Empty::Respo
 void cliffCallback(const gobot_msg_srv::CliffMsg::ConstPtr& cliff){
     if((cliff->cliff1>CLIFF_THRESHOLD) || (cliff->cliff1==CLIFF_OUTRANGE) || (cliff->cliff2>CLIFF_THRESHOLD) || (cliff->cliff2==CLIFF_OUTRANGE)){
         if(moved_from_front_cliff){
-            gobot_msg_srv::GetInt get_speed;
+            gobot_msg_srv::GetIntArray get_speed;
             ros::service::call("/gobot_motor/getSpeeds",get_speed);
             //if robot is moving
             if(get_speed.response.data[0]!=128 || get_speed.response.data[1]!=128){
@@ -75,7 +74,7 @@ void cliffCallback(const gobot_msg_srv::CliffMsg::ConstPtr& cliff){
 
     if((cliff->cliff3>CLIFF_THRESHOLD) || (cliff->cliff3==CLIFF_OUTRANGE) || (cliff->cliff4>CLIFF_THRESHOLD) || (cliff->cliff4==CLIFF_OUTRANGE)){
         if(moved_from_back_cliff){
-            gobot_msg_srv::GetInt get_speed;
+            gobot_msg_srv::GetIntArray get_speed;
             ros::service::call("/gobot_motor/getSpeeds",get_speed);
             //if robot is moving
             if(get_speed.response.data[0]!=128 || get_speed.response.data[1]!=128)
@@ -130,6 +129,9 @@ void newBumpersInfo(const gobot_msg_srv::BumperMsg::ConstPtr& bumpers){
             collision = true;
             collisionTime = ros::Time::now();
             setSpeed('F', 0, 'F', 0);
+            //White Red LED Running
+            robot.setLed(1,{"red","white"});
+            robot.setSound(3,1);
         } 
         else if((ros::Time::now() - collisionTime).toSec()>collision_threshold && moved_from_collision){
         /// if after 5 seconds, the obstacle is still there, we go to the opposite direction
@@ -172,9 +174,21 @@ void newBumpersInfo(const gobot_msg_srv::BumperMsg::ConstPtr& bumpers){
     } 
     else if(collision && moved_from_collision){
         /// if we had a collision and the obstacle left
-        bumper_collision_pub.publish(bumpers_data);
         ROS_INFO("(twist::newBumpersInfo) Obstacle left after %f seconds",(ros::Time::now() - collisionTime).toSec());
         collision = false;
+        bumper_collision_pub.publish(bumpers_data);
+        robot.setSound(1,1);
+    }
+}
+
+void lostCallback(const std_msgs::Int8::ConstPtr& msg){
+    if(msg->data==1 && !lost_robot){
+        lost_robot=true;
+        robot.setLed(1,{"red","blue"});
+    }
+    else if(msg->data==0 && lost_robot){
+        lost_robot=false;
+        robot.setLed(0,{"green"});
     }
 }
 
@@ -237,13 +251,13 @@ void joyCallback(const sensor_msgs::Joy::ConstPtr& joy){
         }
 
         if(joy->buttons[0])
-            robot.setPermanentLed("green");
+            robot.setLed(0,{"green"});
         if(joy->buttons[1])
-            robot.setPermanentLed("red");
+            robot.setLed(0,{"red"});
         if(joy->buttons[2])
-            robot.setPermanentLed("blue");
+            robot.setLed(0,{"blue"});
         if(joy->buttons[3])
-            robot.setPermanentLed("yellow");
+            robot.setLed(0,{"yellow"});
 
         if(!collision && !cliff_on){
             if(joy->axes[1] == 0 && joy->axes[3] == 0)
@@ -321,6 +335,7 @@ int main(int argc, char **argv) {
         ros::Subscriber cmdVelSub = nh.subscribe("cmd_vel", 1, newCmdVel);
         ros::Subscriber bumpersSub = nh.subscribe("/gobot_base/bumpers_raw_topic", 1, newBumpersInfo);
         ros::Subscriber cliffSub = nh.subscribe("/gobot_base/cliff_topic", 1, cliffCallback);
+        ros::Subscriber lostRobot = nh.subscribe("/gobot_recovery/lost_robot",1,lostCallback);
         ros::Subscriber joySub = nh.subscribe("joy", 1, joyCallback);
         ros::Subscriber joyConSub = nh.subscribe("joy_connection", 1, joyConnectionCallback);
 
@@ -329,6 +344,7 @@ int main(int argc, char **argv) {
         ros::ServiceServer pauseRobot = nh.advertiseService("/gobot_base/pause_robot",pauseRobotSrvCallback);
 
         ac = std::shared_ptr<MoveBaseClient> (new MoveBaseClient("move_base", true));
+        ac->waitForServer();
 
         ros::spin();
     }

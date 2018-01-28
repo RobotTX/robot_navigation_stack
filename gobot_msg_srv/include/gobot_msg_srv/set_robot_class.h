@@ -6,16 +6,14 @@
 #include <std_srvs/Empty.h>
 #include <gobot_msg_srv/GetGobotStatus.h>
 #include <gobot_msg_srv/SetGobotStatus.h>
-#include <gobot_msg_srv/SetDockStatus.h>
-#include <gobot_msg_srv/GetDockStatus.h>
-#include <gobot_msg_srv/SetStage.h>
-#include <gobot_msg_srv/GetStage.h>
-#include <gobot_msg_srv/SetPath.h>
-#include <gobot_msg_srv/GetPath.h>
-#include <gobot_msg_srv/SetString.h>
-#include <gobot_msg_srv/GetString.h>
+#include <gobot_msg_srv/SetIntArray.h>
+#include <gobot_msg_srv/GetIntArray.h>
 #include <gobot_msg_srv/SetInt.h>
 #include <gobot_msg_srv/GetInt.h>
+#include <gobot_msg_srv/SetStringArray.h>
+#include <gobot_msg_srv/GetStringArray.h>
+#include <gobot_msg_srv/SetString.h>
+#include <gobot_msg_srv/GetString.h>
 #include <gobot_msg_srv/LedStrip.h>
 #include <gobot_msg_srv/SetSpeeds.h>
 
@@ -29,13 +27,13 @@ namespace robot_class {
             
             bool setDock(int status);
 
-            bool setStage(const int stage);
+            bool setStage(int stage);
 
-            bool setLoop(const int loop);
+            bool setLoop(int loop);
 
             bool setWifi(std::string wifi_name,std::string wifi_password);
 
-            bool setMute(const int mute);
+            bool setMute(int mute);
 
             bool setName(std::string robot_name);
 
@@ -47,25 +45,19 @@ namespace robot_class {
 
             bool clearPath(void);
 
-            bool setMotorSpeed(const char directionR, const int velocityR, const char directionL, const int velocityL);
-
-            void setSound(int num,int time_on, int time_off=1);
+            bool setMotorSpeed(char directionR, int velocityR, char directionL, int velocityL);
 
             void setBatteryLed();
+            
+            void setSound(int num,int time_on, int time_off=1);
 
-            void setPermanentLed(std::string color);
-
-            void setRunningLed(std::string color1, std::string color2="white");
+            void setLed(int mode, const std::vector<std::string> &color);
             
         private:
             std_srvs::Empty empty_srv;
             gobot_msg_srv::SetGobotStatus set_gobot_status_;
-            gobot_msg_srv::SetDockStatus set_dock_status_;
-            gobot_msg_srv::SetStage set_stage_;
-            gobot_msg_srv::SetInt set_loop_;
+            gobot_msg_srv::SetInt set_dock_status_,set_stage_,set_loop_;
             gobot_msg_srv::SetSpeeds motor_speed_;
-            std::map<std::string, uint8_t> led_color_;
-            gobot_msg_srv::LedStrip cmd1_,cmd2_;  //cmd1 for permanent led change, cmd2 for running led change
     };
 };
 

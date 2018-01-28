@@ -13,8 +13,8 @@
 #include <gobot_msg_srv/BumperMsg.h>
 #include <gobot_msg_srv/SetSpeeds.h>
 #include <gobot_msg_srv/IsCharging.h>
-#include <gobot_msg_srv/SetInt.h>
-#include <gobot_msg_srv/GetInt.h>
+#include <gobot_msg_srv/SetIntArray.h>
+#include <gobot_msg_srv/GetIntArray.h>
 #include "gobot_msg_srv/CliffMsg.h"
 #include <chrono>
 #include <thread>
@@ -32,6 +32,13 @@ bool setSpeed(const char directionR, const int velocityR, const char directionL,
 void newBumpersInfo(const gobot_msg_srv::BumperMsg::ConstPtr& bumpers);
 
 void cliffCallback(const gobot_msg_srv::CliffMsg::ConstPtr& cliff);
+
+void lostCallback(const std_msgs::Int8::ConstPtr& msg);
+
+void joyConnectionCallback(const std_msgs::Int8::ConstPtr& data);
+
+
+void joyCallback(const sensor_msgs::Joy::ConstPtr& joy);
 
 /// Callback of the subscriber on velocity commands
 void newCmdVel(const geometry_msgs::Twist::ConstPtr& twist);

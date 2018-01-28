@@ -47,8 +47,6 @@ void goalResultCallback(const move_base_msgs::MoveBaseActionResult::ConstPtr& ms
 			case 4:
 				setStageInFile(-stage_ - 1);
 				setGobotStatus(0,"ABORTED_PATH");
-				robot.setPermanentLed("red");
-				robot.setSound(3,2);
 				break;
 			//OTHER CASE
 			default:
@@ -61,12 +59,11 @@ void goalResultCallback(const move_base_msgs::MoveBaseActionResult::ConstPtr& ms
 
 // called when the last goal has been reached
 void goalReached(){
-	robot.setSound(1,2);
+	//robot.setSound(1,2);
 	//ROS_INFO("(PlayPath::goalReached) path point reached");
 	stage_ = text_=="PLAY_PATH" ? stage_+1:stage_;
 	setStageInFile(stage_);
 	if(stage_ >= path.size() && text_!="PLAY_POINT"){
-		robot.setPermanentLed("green");
 		if(looping && !dockAfterPath && path.size()>1){
 			//ROS_INFO("(PlayPath:: complete path but looping!!");
 			stage_ = 0;
@@ -96,7 +93,6 @@ void goalReached(){
 void checkGoalDelay(){
 	if(currentGoal.waitingTime != 0)
 	{
-		robot.setRunningLed("blue");
 		if(currentGoal.waitingTime > 0){
 			setGobotStatus(5,"DELAY");
 			//ROS_INFO("(PlayPath::goalReached) goalReached going to sleep for %f seconds", currentGoal.waitingTime);
@@ -159,20 +155,18 @@ void goNextPoint(const Point _point){
     goal.target_pose.pose.orientation.z = quaternion.z();
     goal.target_pose.pose.orientation.w = quaternion.w();
 
-	if(ac->isServerConnected()){ 
-		robot.setRunningLed("green");
+	if(ac->isServerConnected())
 		ac->sendGoal(goal);
-	}
 	else 
 		ROS_ERROR("(PlayPath::goNextPoint) no action server");
 }
 
-bool savePointService(gobot_msg_srv::SetString::Request &req, gobot_msg_srv::SetString::Response &res){
+bool savePointService(gobot_msg_srv::SetStringArray::Request &req, gobot_msg_srv::SetStringArray::Response &res){
 	
 	return true;
 }
 
-bool playPointService(gobot_msg_srv::SetString::Request &req, gobot_msg_srv::SetString::Response &res){
+bool playPointService(gobot_msg_srv::SetStringArray::Request &req, gobot_msg_srv::SetStringArray::Response &res){
 	if (status_==5 && (text_=="DELAY" || text_=="WAITING")){
 		stop_flag = true;
 		if (stage_>=0){
@@ -255,24 +249,24 @@ bool updatePathService(std_srvs::Empty::Request &req, std_srvs::Empty::Response 
 	setStageInFile(stage_);
 
 	path = std::vector<Point>();
-	gobot_msg_srv::GetPath get_path;
+	gobot_msg_srv::GetStringArray get_path;
 	// we recreate the path to follow from the file
 	if(ros::service::call("/gobot_status/get_path", get_path)){
 		Point pathPoint;
-		for(int i=0;i<get_path.response.path.size();i++){
+		for(int i=0;i<get_path.response.data.size();i++){
 			if(i!= 0 && (i-1)%5 != 0){
         		if((i-1)%5 == 1){
-        			pathPoint.x=std::stod(get_path.response.path.at(i));
+        			pathPoint.x=std::stod(get_path.response.data.at(i));
         		} 
 				else if((i-1)%5 == 2){
-        			pathPoint.y=std::stod(get_path.response.path.at(i));
+        			pathPoint.y=std::stod(get_path.response.data.at(i));
         		} 
 				else if((i-1)%5 == 3){
-        			pathPoint.waitingTime=std::stod(get_path.response.path.at(i));
+        			pathPoint.waitingTime=std::stod(get_path.response.data.at(i));
 		            pathPoint.isHome = false;
         		} 
 				else if((i-1)%5 == 4){
-					pathPoint.yaw=std::stod(get_path.response.path.at(i));
+					pathPoint.yaw=std::stod(get_path.response.data.at(i));
 					path.push_back(pathPoint);
 				}
         	}
@@ -290,15 +284,8 @@ bool stopPathService(std_srvs::Empty::Request &req, std_srvs::Empty::Response &r
 	setStageInFile(stage_);
 	ros::service::call("/move_base/clear_costmaps",empty_srv);
 	//ac->getState() == actionlib::SimpleClientGoalState::SUCCEEDED
-	if(ac->isServerConnected()){
+	if(ac->isServerConnected())
 		ac->cancelAllGoals();
-		if (ac->getState() == actionlib::SimpleClientGoalState::SUCCEEDED){
-			robot.setPermanentLed("green");
-		}
-		else if (ac->getState() == actionlib::SimpleClientGoalState::ACTIVE){
-			robot.setPermanentLed("blue");
-		}
-	}
 
     if(dockAfterPath){
 		std::thread([](){
@@ -317,15 +304,8 @@ bool pausePathService(std_srvs::Empty::Request &req, std_srvs::Empty::Response &
 	stop_flag = true;
 	setStageInFile(stage_);
 	//ac->getState() == actionlib::SimpleClientGoalState::SUCCEEDED
-	if(ac->isServerConnected()){
+	if(ac->isServerConnected())
 		ac->cancelAllGoals();
-		if (ac->getState() == actionlib::SimpleClientGoalState::SUCCEEDED){
-			robot.setPermanentLed("green");
-		}
-		else if (ac->getState() == actionlib::SimpleClientGoalState::ACTIVE){
-			robot.setPermanentLed("blue");
-		}
-	}
 
 	if(dockAfterPath){
 		std::thread([](){
@@ -361,15 +341,15 @@ bool skipPathService(gobot_msg_srv::SetInt::Request &req, gobot_msg_srv::SetInt:
 		return false;
 	}
 	//if go to/reached the first point and backward path,set it to be the last point
-	if(stage_==0 && req.data[0]==-1){
+	if(stage_==0 && req.data==-1){
 		stage_ = path.size()-1;
 	}
 	//if go to/reached the last point forward path,set it to be the first point
-	else if(stage_>=path.size()-1 && req.data[0]==1){
+	else if(stage_>=path.size()-1 && req.data==1){
 		stage_ = 0;
 	}
 	else{
-		stage_ +=req.data[0];
+		stage_ +=req.data;
 	}
 	setStageInFile(stage_);
 
@@ -388,41 +368,40 @@ bool skipPathService(gobot_msg_srv::SetInt::Request &req, gobot_msg_srv::SetInt:
 }
 
 void initData(){
-	ros::service::waitForService("/gobot_status/get_loop", ros::Duration(30));
 	gobot_msg_srv::GetInt get_loop;
 	ros::service::call("/gobot_status/get_loop",get_loop);
-	looping = get_loop.response.data[0];
+	looping = get_loop.response.data;
 
-	gobot_msg_srv::GetStage get_stage;
+	gobot_msg_srv::GetInt get_stage;
 	ros::service::call("/gobot_status/get_stage", get_stage);
-	stage_=get_stage.response.stage;
+	stage_=get_stage.response.data;
 
 	path = std::vector<Point>();
-	gobot_msg_srv::GetPath get_path;
+	gobot_msg_srv::GetStringArray get_path;
 	// we recreate the path to follow from the file
 	ros::service::call("/gobot_status/get_path", get_path);
 	Point pathPoint;
-	for(int i=0;i<get_path.response.path.size();i++){
+	for(int i=0;i<get_path.response.data.size();i++){
 		if(i!= 0 && (i-1)%5 != 0){
 			if((i-1)%5 == 1){
-				pathPoint.x=std::stod(get_path.response.path.at(i));
+				pathPoint.x=std::stod(get_path.response.data.at(i));
 			} 
 			else if((i-1)%5 == 2){
-				pathPoint.y=std::stod(get_path.response.path.at(i));
+				pathPoint.y=std::stod(get_path.response.data.at(i));
 			} 
 			else if((i-1)%5 == 3){
-				pathPoint.waitingTime=std::stod(get_path.response.path.at(i));
+				pathPoint.waitingTime=std::stod(get_path.response.data.at(i));
 				pathPoint.isHome = false;
 			} 
 			else if((i-1)%5 == 4){
-				pathPoint.yaw=std::stod(get_path.response.path.at(i));
+				pathPoint.yaw=std::stod(get_path.response.data.at(i));
 				path.push_back(pathPoint);
 			}
 		}
 	}
 
 	//Set speed given by user
-	gobot_msg_srv::GetString get_speed;
+	gobot_msg_srv::GetStringArray get_speed;
 	ros::service::call("/gobot_status/get_speed",get_speed);
 	dynamic_reconfigure::Reconfigure config;
     dynamic_reconfigure::DoubleParameter linear_param,angular_param;
@@ -485,17 +464,12 @@ int main(int argc, char* argv[]){
         // the battery is low so we need to go dock after finishing our path
         ros::ServiceServer _goDockAfterPath = n.advertiseService("/gobot_function/goDockAfterPath", goDockAfterPathService);
 		// tell the action client that we want to spin a thread by default
-
-		ac = std::shared_ptr<MoveBaseClient> (new MoveBaseClient("move_base", true));	
+	
 		// get the current status of the goal 
 		ros::Subscriber goalResult = n.subscribe("/move_base/result",1,goalResultCallback);
 
-		// wait for the action server to come up
-		while(!ac->waitForServer(ros::Duration(10.0)))
-			//~ROS_INFO("Waiting for the move_base action server to come up");
-
-		if(ac->isServerConnected())
-            ROS_INFO("Play path Action lib server is connected");
+		ac = std::shared_ptr<MoveBaseClient> (new MoveBaseClient("move_base", true));
+		ac->waitForServer();
 
 		ros::spin();
 

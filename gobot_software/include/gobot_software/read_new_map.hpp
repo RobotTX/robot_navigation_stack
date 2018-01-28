@@ -15,7 +15,7 @@
 #include <std_srvs/Empty.h>
 #include <geometry_msgs/PoseWithCovarianceStamped.h>
 #include <gobot_msg_srv/set_robot_class.h>
-#include <gobot_msg_srv/GetString.h>
+#include <gobot_msg_srv/GetStringArray.h>
 #include <gobot_msg_srv/GetGobotStatus.h>
 
 using boost::asio::ip::tcp;

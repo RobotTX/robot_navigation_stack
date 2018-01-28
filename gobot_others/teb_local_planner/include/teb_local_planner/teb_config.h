@@ -43,7 +43,7 @@
 #include <ros/ros.h>
 #include <Eigen/Core>
 #include <Eigen/StdVector>
-#include <gobot_msg_srv/GetString.h>
+#include <gobot_msg_srv/GetStringArray.h>
 #include <teb_local_planner/TebLocalPlannerReconfigureConfig.h>
 
 

@@ -20,8 +20,8 @@ void timerCallback(const ros::TimerEvent&){
     if(!isCharging.response.isCharging){
            gobot_msg_srv::GetString get_battery;
            ros::service::call("/gobot_status/get_battery",get_battery);
-        if(canGoCharge && (battery_percent.response.data[0] <= std::stod(get_battery.response.data[0]) || test == 0)){
-            ROS_WARN("(Battery check) Battery below percentage: %d ", battery_percent.response.data[0]);
+        if(canGoCharge && (battery_percent.response.data <= std::stod(get_battery.response.data) || test == 0)){
+            ROS_WARN("(Battery check) Battery below percentage: %d ", battery_percent.response.data);
             std_srvs::Empty arg;
             ros::service::call("/gobot_command/lowBattery", arg);
             canGoCharge = false;
@@ -29,7 +29,7 @@ void timerCallback(const ros::TimerEvent&){
     }
     else{
         //reset the gocharge when complete godock
-        if(battery_percent.response.data[0]>75){
+        if(battery_percent.response.data>75){
             canGoCharge = true;
         }
         else{

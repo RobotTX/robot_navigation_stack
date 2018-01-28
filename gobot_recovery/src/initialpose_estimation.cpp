@@ -109,7 +109,7 @@ bool initializeHomeSrcCallback(std_srvs::Empty::Request &req, std_srvs::Empty::R
     ros::service::call("/gobot_status/charging_status",arg);
     if(arg.response.isCharging){
         //get home pose
-        gobot_msg_srv::GetString get_home;
+        gobot_msg_srv::GetStringArray get_home;
         ros::service::waitForService("/gobot_status/get_home",ros::Duration(30.0));
         if(ros::service::call("/gobot_status/get_home",get_home)){
             home_pos_x=std::stod(get_home.response.data[0]);
@@ -368,7 +368,7 @@ bool goHomeSrvCallback(std_srvs::Empty::Request &req, std_srvs::Empty::Response 
 void getPose(){
     ros::NodeHandle nh;
     //Get home pose
-    gobot_msg_srv::GetString get_home;
+    gobot_msg_srv::GetStringArray get_home;
     ros::service::waitForService("/gobot_status/get_home",ros::Duration(30.0));
     if(ros::service::call("/gobot_status/get_home",get_home)){
         home_pos_x=std::stod(get_home.response.data[0]);

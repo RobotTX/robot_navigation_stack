@@ -191,7 +191,7 @@ void session(boost::shared_ptr<tcp::socket> sock){
                                     n.getParam("last_known_position_file", lastPoseFile);
                                     std::ofstream ofs(lastPoseFile, std::ofstream::out | std::ofstream::trunc);
                                     
-                                    gobot_msg_srv::GetString get_home;
+                                    gobot_msg_srv::GetStringArray get_home;
                                     ros::service::call("/gobot_status/get_home",get_home);
                                     if(ofs.is_open()){
                                         ofs << get_home.response.data[0] << " " << get_home.response.data[1] << " " << get_home.response.data[2] << " " << get_home.response.data[3] << " " << get_home.response.data[4] << " "<< get_home.response.data[5];
@@ -207,8 +207,6 @@ void session(boost::shared_ptr<tcp::socket> sock){
 
                             /// We delete the old path
                             robot.clearPath();
-                            // reset the path stage in the file
-                            ros::service::call("/gobot_function/update_path", empty_srv);
                             ROS_INFO("(New Map) Path deleted");
 
                             /// We delete the old path stage
@@ -260,7 +258,7 @@ void session(boost::shared_ptr<tcp::socket> sock){
                 ROS_INFO("(New Map) Message sent succesfully : %lu bytes sent", message.length());
                 //disconnect all other users to receive new map
                 ROS_INFO("(New Map) Disconnect other uses to update them new map.");
-                gobot_msg_srv::SetString keep_ip;
+                gobot_msg_srv::SetStringArray keep_ip;
                 ros::service::call("/gobot_software/disconnet_servers",keep_ip);
             }   
         }
