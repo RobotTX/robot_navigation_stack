@@ -207,6 +207,7 @@ void session(boost::shared_ptr<tcp::socket> sock){
 
                             /// We delete the old path
                             robot.clearPath();
+                            ros::service::call("/gobot_function/update_path", empty_srv);
                             ROS_INFO("(New Map) Path deleted");
 
                             /// We delete the old path stage
@@ -242,7 +243,7 @@ void session(boost::shared_ptr<tcp::socket> sock){
                 message = "done 0";
             }
 
-            /// Clear the used variables
+             /// Clear the used variables
             gotMapData = 0;
             mapId = "";
             mapDate = "";

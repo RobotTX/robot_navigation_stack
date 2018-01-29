@@ -3,7 +3,7 @@
 #define CLIFF_THRESHOLD 170
 #define CLIFF_OUTRANGE 0
 
-std::shared_ptr<MoveBaseClient> ac(0);
+MoveBaseClient* ac;
 std_srvs::Empty empty_srv;
 bool collision = false, moved_from_collision = true, pause_robot = false;
 double wheel_separation, wheel_radius, ticks_per_rotation, collision_threshold, avoid_spd;
@@ -343,8 +343,7 @@ int main(int argc, char **argv) {
         ros::ServiceServer continueRobot = nh.advertiseService("/gobot_base/continue_robot",continueRobotSrvCallback);
         ros::ServiceServer pauseRobot = nh.advertiseService("/gobot_base/pause_robot",pauseRobotSrvCallback);
 
-        ac = std::shared_ptr<MoveBaseClient> (new MoveBaseClient("move_base", true));
-        ac->waitForServer();
+        ac = new MoveBaseClient("move_base", true);
 
         ros::spin();
     }

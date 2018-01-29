@@ -200,7 +200,7 @@ int main(int argc, char* argv[]){
 
     //Startup begin
     ROS_INFO("(Exploration) Waiting for Robot setting hardware...");
-    ros::service::waitForService("/gobot_startup/sensors_ready", ros::Duration(60.0));
+    ros::service::waitForService("/gobot_startup/pose_ready", ros::Duration(60.0));
     ROS_INFO("(Exploration) Robot setting hardware is ready.");
     //Startup end
 

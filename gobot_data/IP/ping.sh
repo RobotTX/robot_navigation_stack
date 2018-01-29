@@ -1,7 +1,7 @@
 #!/bin/bash
 isAlive="$1"
 wififile="$2"
-defalutwifi="Robot_Hotspot_"
+defalutwifi="Robot_Hotspot_000"
 wifi=$(nmcli device status | grep wifi |cut -d ' ' -f1)
 n=1
 while read line
@@ -11,7 +11,7 @@ do
         wifiname="$line"
     else
         wifipassword="$line"
-    fi 
+    fi
     n=2
 done  < $wififile
 #echo name:$wifiname password:$wifipassword
@@ -30,7 +30,6 @@ then
     #else
         #echo "Robot connected to its own wifi named '$defalutwifi' as there is no assgined wifi"
     fi
-
 else      
     if [ -z "$(nmcli device status | grep "$wifiname")" ] #if has assigned wifi, but not connected
     then
@@ -40,7 +39,7 @@ else
             then
                 nmcli device disconnect $wifi
                 echo "Disconnect current wifi"
-                sleep 5s
+                sleep 3s
             fi
                 nmcli d wifi connect "$wifiname" password "$wifipassword"
                 echo "Robot build connection to assigned wifi named '$wifiname'"

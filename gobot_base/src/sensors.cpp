@@ -15,7 +15,7 @@ std::mutex connectionMutex;
 std::string STMdevice;
 gobot_msg_srv::GetGobotStatus get_gobot_status;
 
-ros::Time last_led_time;
+ros::Time last_led_time, reset_wifi_time;
 
 int last_charging_current = 0;
 bool charging = false, low_battery = false;
@@ -339,16 +339,19 @@ void publishSensors(void){
                 else if(error_bumper)
                     ROS_ERROR("(sensors::publishSensors ERROR) All bumpers got a collision");
             
-                if(resetwifi_button==1){
+                if(resetwifi_button==1 && (ros::Time::now()-reset_wifi_time).toSec()>1.0){
+                    reset_wifi_time = ros::Time::now();
                     setSound(1,2);
                     ros::service::call("/gobot_status/get_gobot_status",get_gobot_status);
                     //if scanning, save the map
-                    if(get_gobot_status.response.status==20 || get_gobot_status.response.status==25 || get_gobot_status.response.status==21){                        
+                    if(get_gobot_status.response.status==20 || get_gobot_status.response.status==25 || get_gobot_status.response.status==21){ 
+                        ROS_INFO("Save scanned map");                       
                         ros::service::call("/gobot_scan/save_map",empty_srv);
                         
                     }
                     //otherwise, reset the wifi
                     else{
+                        ROS_INFO("Reset robot WiFi");  
                         robot.setWifi("","");
                     }
                 }
@@ -427,6 +430,7 @@ bool setLedSrvCallback(gobot_msg_srv::LedStrip::Request &req, gobot_msg_srv::Led
         //ROS_INFO("Receive a LED change request, and succeed to execute.");
         return setLed(req.mode,req.color);
     }
+    return false;
 }
 
 bool showBatteryLedsrvCallback(std_srvs::Empty::Request &req, std_srvs::Empty::Response &res){
@@ -441,10 +445,10 @@ void displayBatteryLed(){
         color = "magenta";
     else if(battery_percent<75)
         color = "yellow";
-    else if(battery_percent<100)
+    else if(battery_percent<=100)
         color = "cyan";
 
-    if(!charging)
+    if(!charging || battery_percent==100)
         setLed(0,{color});
     else
         setLed(1,{color,"white"});
@@ -496,6 +500,9 @@ void ledTimerCallback(const ros::TimerEvent&){
             displayBatteryLed();
         }   
     }
+    else{
+        displayBatteryLed();
+    }
     //if docking or exploring, perdically sound twice
     if(get_gobot_status.response.status==15 || get_gobot_status.response.status==25)
         setSound(2,1);
@@ -543,6 +550,7 @@ bool initSerial(void) {
 
     if(serialConnection.isOpen()){
         resetStm();
+        ros::Duration(2.0).sleep();
         ROS_INFO("Established connection to STM32.");
         return true;
     }
@@ -591,6 +599,7 @@ int main(int argc, char **argv) {
 
     ros::Timer ledTimer = nh.createTimer(ros::Duration(60), ledTimerCallback);
     last_led_time = ros::Time::now();
+    reset_wifi_time = ros::Time::now();
 
     bumper_pub = nh.advertise<gobot_msg_srv::BumperMsg>("/gobot_base/bumpers_raw_topic", 50);
     ir_pub = nh.advertise<gobot_msg_srv::IrMsg>("/gobot_base/ir_topic", 50);
@@ -621,6 +630,7 @@ int main(int argc, char **argv) {
                 std::string joy_cmd = "rosrun joy joy_node &";
                 system(joy_cmd.c_str());
                 sensorsReadySrv = nh.advertiseService("/gobot_startup/sensors_ready", sensorsReadySrvCallback);
+                robot.setStatus(-1,"HARDWARE_READY");
                 //Startup end
             }
         }

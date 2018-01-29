@@ -350,7 +350,7 @@ bool startScanAndAutoExplore(const std::string ip, const std::vector<std::string
         gobot_msg_srv::SetStringArray keep_ip;
         keep_ip.request.data.push_back(ip);
         ros::service::call("/gobot_software/disconnet_servers",keep_ip);
-
+        scanning = true;
         /// Kill gobot move so that we'll restart it with the new map
         std::string cmd = "rosnode kill /move_base";
         system(cmd.c_str());
@@ -518,8 +518,10 @@ bool stopAndDeletePath(const std::vector<std::string> command){
         }
 
         ROS_INFO("(Command system) Stop the robot and delete its path");
-        if(robot.clearPath())
+        if(robot.clearPath()){
+            ros::service::call("/gobot_function/update_path", empty_srv);
             return true;
+        }
     }
 
     return false;
@@ -654,6 +656,7 @@ bool startNewScan(const std::string ip, const std::vector<std::string> command){
         gobot_msg_srv::SetStringArray keep_ip;
         keep_ip.request.data.push_back(ip);
         ros::service::call("/gobot_software/disconnet_servers",keep_ip);
+        scanning = true;
 
         /// Kill gobot move so that we'll restart it with the new map
         std::string cmd = "rosnode kill /move_base";
@@ -683,7 +686,7 @@ bool stopScanning(const std::string ip, const std::vector<std::string> command){
         ros::service::call("/gobot_scan/stopExploration", empty_srv);
 
         if(std::stoi(command.at(1)) == 1){
-
+            scanning = false;
             /// Kill gobot move so that we'll restart it with the new map
             std::string cmd = "rosnode kill /move_base";
             system(cmd.c_str());
@@ -1132,7 +1135,7 @@ void sendConnectionData(boost::shared_ptr<tcp::socket> sock){
     std::string laserStr("0");
 
     if(mapId.empty())
-        mapId = "{00000000-0000-0000-0000-000000000000}";
+        mapId = "{5428014b-c5ec-4bec-9259-6c5a20517e0e}";
     if(mapDate.empty())
         mapDate = "1970-05-21-00-00-00";
     if(homeX.empty())

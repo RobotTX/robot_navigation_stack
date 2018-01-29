@@ -1,4 +1,5 @@
 #include <gobot_recovery/scan_startup.h>
+#include <ctime>
 
 ros::Publisher vel_pub;
 std_srvs::Empty empty_srv;
@@ -8,6 +9,15 @@ ros::Time action_time;
 gobot_msg_srv::GetGobotStatus get_gobot_status;
 ros::ServiceClient getGobotStatusSrv;
 std::string map_path,map_id;
+
+robot_class::SetRobot robot;
+
+std::string getCurrentTime(){
+  std::time_t now = std::time(0);
+  std::stringstream transTime;
+  transTime << std::put_time(localtime(&now), "%F-%H-%M-%S");
+  return transTime.str();
+}
 
 void getButtonCallback(const std_msgs::Int8::ConstPtr& msg){
   if(msg->data==0 && buttonOn){
@@ -48,10 +58,12 @@ void saveMap(){
   ROS_INFO("Save scaned map.");
   std::string cmd = "rosrun map_server map_saver -f "+ map_path +" &";
   system(cmd.c_str());
-  
-  int id = std::rand() % 10000;
-  std::string mapDate = "1990-12-05-00-00-00";
-  std::string mapId = "{b09f0a3b-b0da-4c50-aa66-ff0b3080"+std::to_string(id)+"}";
+  std::time_t now = time(0);
+
+  std::srand(std::time(nullptr));  // use current time as seed for random generator
+  std::string mapDate = getCurrentTime();
+  std::string mapId = "{9abcdef"+ std::to_string(std::rand()%10) +"-123"+ std::to_string(std::rand()%10) +"-456"+ std::to_string(std::rand()%10) 
+                        +"-789"+ std::to_string(std::rand()%10) +"-123456789ab"+ std::to_string(std::rand()%10) +"}"; 
 
   std::ofstream ofs(map_id, std::ofstream::out | std::ofstream::trunc);
   if(ofs){
@@ -59,6 +71,20 @@ void saveMap(){
       ofs.close();
       ROS_INFO("(startup) map id: %s.",mapId.c_str());
   }
+
+  robot.setHome("0","0","0","0","0","0");
+  ROS_INFO("(Scan Startup) Home deleted");
+
+  robot.setLoop(0);
+  ROS_INFO("(Scan Startup) Loop deleted");
+
+  /// We delete the old path
+  robot.clearPath();
+  ROS_INFO("(Scan Startup) Path deleted");
+
+  /// We delete the old path stage
+  robot.setStage(0);
+  ROS_INFO("(Scan Startup) Path stage deleted");
 }
 
 bool saveMapSrvCallback(std_srvs::Empty::Request &req, std_srvs::Empty::Response &res){
@@ -84,13 +110,11 @@ int main(int argc, char **argv) {
     signal(SIGINT, mySigintHandler);
 
     getGobotStatusSrv = nh.serviceClient<gobot_msg_srv::GetGobotStatus>("/gobot_status/get_gobot_status");
-    
+
     //Startup begin
     ROS_INFO("(startup) Waiting for Robot setting hardware...");
     ros::service::waitForService("/gobot_startup/sensors_ready", ros::Duration(60.0));
     ROS_INFO("(startup) Robot setting hardware is ready.");
-    ros::ServiceServer poseReadySrv = nh.advertiseService("/gobot_startup/pose_ready", poseReadySrvCallback);
-    //Startup end
 
     nh.getParam("map_path", map_path);
     ROS_INFO("(startup) map_path: %s.",map_path.c_str());
@@ -104,6 +128,9 @@ int main(int argc, char **argv) {
     ros::service::call("/gobot_base/show_Battery_LED",empty_srv);
     
     ROS_INFO("Started Robot.");
+    
+    ros::ServiceServer poseReadySrv = nh.advertiseService("/gobot_startup/pose_ready", poseReadySrvCallback);
+    //Startup end
     
     ros::spin();
     return 0;

@@ -1,6 +1,7 @@
 #!/bin/bash
 #IFS=$'\n'
-wififile=$1
+wififile="$1"
+wifi=$(nmcli device status | grep wifi |cut -d ' ' -f1)
 n=1
 while read line
 do
@@ -14,10 +15,11 @@ do
 done  < $wififile
 if [ -z "$wifiname" ]
 then 
-    wifiname="Hotspot"
-fi
-if [ "$(nmcli connection show | grep "$wifiname")" ]
-then
-    nmcli connection delete "$wifiname"
-    echo Deleted WIFIs name:$wifiname
+    nmcli device disconnect $wifi
+else
+    if [ "$(nmcli connection show | grep "$wifiname")" ]
+    then
+        nmcli connection delete "$wifiname"
+        echo Deleted WIFIs name:$wifiname
+    fi
 fi

@@ -72,7 +72,6 @@ namespace robot_class {
     bool SetRobot::clearPath(){
         gobot_msg_srv::SetStringArray set_path;
         ros::service::call("/gobot_status/set_path", set_path);
-        ros::service::call("/gobot_function/update_path", empty_srv);
         return true;
     }
 

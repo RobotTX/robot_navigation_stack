@@ -24,7 +24,7 @@ ros::Publisher disco_pub;
 std::mutex gobotStatusMutex,dockStatusMutex,stageMutex,pathMutex,nameMutex,homeMutex,loopMutex,muteMutex,wifiMutex,batteryMutex,speedMutex;
 std_srvs::Empty empty_srv;
 
-std::string wifiFile, deleteWifi;
+std::string wifiFile, deleteWifi, connectWifi;
 std::vector<std::string> wifi_;
 
 std::string muteFile;
@@ -112,20 +112,17 @@ bool disconnectedSrvCallback(std_srvs::Empty::Request &req, std_srvs::Empty::Res
 
 bool setWifiSrvCallback(gobot_msg_srv::SetStringArray::Request &req, gobot_msg_srv::SetStringArray::Response &res){    
     if(wifi_.at(0)==req.data[0] && wifi_.at(1)==req.data[1]){
+        ROS_INFO("(Gobot_status) Receive same wifi info: name:%s, password:%s",wifi_.at(0).c_str(),wifi_.at(1).c_str());
         return false;
     }
     //if previous wifi is not empty and receive a new wifi, we delete the previous wifi in the netowrk list
-    if(wifi_.at(0)!="" && (wifi_.at(0)!=req.data[0] || wifi_.at(1)!=req.data[1]))
-    {   
-        //delete previously connected wifi
-        const std::string deleteWIFI_script = "sudo sh " + deleteWifi + " " + wifiFile ;
-        system(deleteWIFI_script.c_str());
-    }
+    //delete previously connected wifi
+    const std::string deleteWIFI_script = "sudo sh " + deleteWifi + " " + wifiFile;
+    system(deleteWIFI_script.c_str());
     wifiMutex.lock();
     wifi_.clear();
     for(int i=0;i<req.data.size();i++)
         wifi_.push_back(req.data[i]);
-    wifiMutex.unlock();
 
     std::ofstream ofsWifi(wifiFile, std::ofstream::out | std::ofstream::trunc);
     if(ofsWifi){
@@ -540,7 +537,8 @@ void initialData(){
     ROS_INFO("(Gobot_status) Read Gobot wifi: name:%s, password:%s",wifi_.at(0).c_str(),wifi_.at(1).c_str());
 
     n.getParam("deleteWIFI", deleteWifi);
-
+    n.getParam("connectWIFI", connectWifi);
+    
     //record disconnect times
     n.getParam("disconnected_file", disconnectedFile);
     std::ofstream ofsDisconnected(disconnectedFile, std::ofstream::out | std::ofstream::trunc);

@@ -27,5 +27,6 @@
     <param name="ping_file" type="string" value="$(find gobot_data)/IP/ping.sh" />
     <param name="wifi_file" type="string" value="$(find gobot_data)/IP/wifi.txt" />
     <param name="deleteWIFI" type="string" value="$(find gobot_data)/IP/deleteWIFI.sh" />
+    <param name="connectWIFI" type="string" value="$(find gobot_data)/IP/connectWIFI.sh" />
     <param name="ips_file" type="string" value="$(find gobot_data)/IP/isAlive.txt" />
 </launch>
