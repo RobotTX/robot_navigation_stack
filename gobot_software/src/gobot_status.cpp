@@ -242,7 +242,9 @@ bool setNameSrvCallback(gobot_msg_srv::SetString::Request &req, gobot_msg_srv::S
         ofsName.close();
         ROS_INFO("(Gobot_status) Set Gobot name: %s",hostname_.c_str());
     }
-    ros::service::call("/gobot_software/update_status",empty_srv);
+    std::thread([](){
+        ros::service::call("/gobot_software/update_status",empty_srv);
+    }).detach();
 
     return true;
 }
@@ -300,7 +302,9 @@ bool setMuteSrvCallback(gobot_msg_srv::SetInt::Request &req, gobot_msg_srv::SetI
     ROS_INFO("(Gobot_status) Set Gobot mute: %d",mute_);
     }
 
-    ros::service::call("/gobot_software/update_status",empty_srv);
+    std::thread([](){
+        ros::service::call("/gobot_software/update_status",empty_srv);
+    }).detach();
     return true;
 }
 
@@ -347,7 +351,9 @@ bool setStageSrvCallback(gobot_msg_srv::SetInt::Request &req, gobot_msg_srv::Set
         ROS_INFO("(Gobot_status) Set Gobot stage: %d",stage_);
     }
 
-    ros::service::call("/gobot_software/update_status",empty_srv);
+    std::thread([](){
+        ros::service::call("/gobot_software/update_status",empty_srv);
+    }).detach();
 
     return true;
 }
@@ -367,8 +373,9 @@ bool setDockStatusSrvCallback(gobot_msg_srv::SetInt::Request &req, gobot_msg_srv
     dock_status_ = req.data;
     dockStatusMutex.unlock();
     ROS_INFO("(Gobot_status) Set Dock status: %d", dock_status_);
-    ros::service::call("/gobot_software/update_status",empty_srv);
-
+    std::thread([](){
+        ros::service::call("/gobot_software/update_status",empty_srv);
+    }).detach();
     if(dock_status_ == 1 && (gobot_status_!=5 || gobot_text_=="WAITING")){
         std::thread([](){
             ros::service::call("/gobot_recovery/initialize_home",empty_srv);
@@ -394,7 +401,9 @@ bool setGobotStatusSrvCallback(gobot_msg_srv::SetGobotStatus::Request &req, gobo
     gobot_text_ = req.text;
     gobotStatusMutex.unlock();
     ROS_INFO("(Gobot_status) Set Gobot status: %d,%s",gobot_status_,gobot_text_.c_str());
-    robotResponse(gobot_status_,gobot_text_);
+    std::thread([](){
+            robotResponse(gobot_status_,gobot_text_);
+        }).detach();
     return true;
 }
 

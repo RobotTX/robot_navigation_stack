@@ -3,6 +3,7 @@
 
 #include <ros/ros.h>
 #include <string>
+#include <stdio.h>
 #include <std_srvs/Empty.h>
 #include <gobot_msg_srv/GetGobotStatus.h>
 #include <gobot_msg_srv/SetGobotStatus.h>
@@ -53,6 +54,10 @@ namespace robot_class {
 
             void setLed(int mode, const std::vector<std::string> &color);
             
+            void runNavi(bool simulation);
+
+            void runScan(bool simulation);
+
         private:
             std_srvs::Empty empty_srv;
             gobot_msg_srv::SetGobotStatus set_gobot_status_;

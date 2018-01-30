@@ -2,7 +2,6 @@
 <launch>
     <!--COMMON PARAMETERS -->
     <param name="simulation" type="bool" value="false" />
-	  <param name="user_name" type="string" value="gtdollar" />
     <param name="status_update" type="double" value="5.0" />
     <param name="ip_update" type="double" value="20.0" />
     <!-- MAP RELATED -->

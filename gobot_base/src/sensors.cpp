@@ -9,7 +9,6 @@ ros::Publisher bumper_pub, ir_pub, proximity_pub, sonar_pub, weight_pub, battery
 serial::Serial serialConnection;
 
 std_srvs::Empty empty_srv;
-std::string user_name;
 std::vector<uint8_t> cmd;
 std::mutex connectionMutex;
 std::string STMdevice;
@@ -344,7 +343,7 @@ void publishSensors(void){
                     setSound(1,2);
                     ros::service::call("/gobot_status/get_gobot_status",get_gobot_status);
                     //if scanning, save the map
-                    if(get_gobot_status.response.status==20 || get_gobot_status.response.status==25 || get_gobot_status.response.status==21){ 
+                    if(get_gobot_status.response.status<=25 && get_gobot_status.response.status>=20){ 
                         ROS_INFO("Save scanned map");                       
                         ros::service::call("/gobot_scan/save_map",empty_srv);
                         
@@ -592,7 +591,6 @@ int main(int argc, char **argv) {
     nh.getParam("USE_BUMPER", USE_BUMPER);
     nh.getParam("USE_SONAR", USE_SONAR);
     nh.getParam("USE_CLIFF", USE_CLIFF);
-    nh.getParam("user_name", user_name);
 
     //0x52 = Blue,0x47 = Red,0x42 = Green,0x4D = Magenta,0x43 = Cyan,0x59 = Yellow,0x57 = White, 0x00 = Off
     led_color_ = {{"green",0x42}, {"blue",0x52}, {"yellow",0x59}, {"red",0x47}, {"cyan",0x43}, {"white",0x57}, {"magenta",0x4D}, {"off",0x00}};

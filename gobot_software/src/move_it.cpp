@@ -59,19 +59,17 @@ void goalResultCallback(const move_base_msgs::MoveBaseActionResult::ConstPtr& ms
 
 // called when the last goal has been reached
 void goalReached(){
-	//robot.setSound(1,2);
 	//ROS_INFO("(PlayPath::goalReached) path point reached");
 	stage_ = text_=="PLAY_PATH" ? stage_+1:stage_;
-	setStageInFile(stage_);
 	if(stage_ >= path.size() && text_!="PLAY_POINT"){
 		if(looping && !dockAfterPath && path.size()>1){
 			//ROS_INFO("(PlayPath:: complete path but looping!!");
 			stage_ = 0;
-			setStageInFile(stage_);
 		}
 		else{
 			//ROS_INFO("(PlayPath:: complete path!");
 			setGobotStatus(0,"COMPLETE_PATH");
+			setStageInFile(stage_);
 			if(dockAfterPath){
 				//ROS_INFO("(PlayPath::goalReached) battery is low, go to charging station!!");
 				ros::service::call("/gobot_command/goDock", empty_srv);
@@ -79,11 +77,13 @@ void goalReached(){
 			}
 			return;
 		}
-	} 
+	}
+	robot.setSound(1,1); 
 	// reached a normal/path goal so we sleep the given time
 	checkGoalDelay();
 	if(!stop_flag){
 		setGobotStatus(5,"PLAY_PATH");
+		setStageInFile(stage_);
 		goNextPoint(path.at(stage_));
 	}
 	else
@@ -244,10 +244,8 @@ bool playPathService(std_srvs::Empty::Request &req, std_srvs::Empty::Response &r
 }
 
 bool updatePathService(std_srvs::Empty::Request &req, std_srvs::Empty::Response &res){
-	setGobotStatus(1,"STOP_PATH");
 	stage_ = 0;
 	setStageInFile(stage_);
-
 	path = std::vector<Point>();
 	gobot_msg_srv::GetStringArray get_path;
 	// we recreate the path to follow from the file
@@ -283,7 +281,6 @@ bool stopPathService(std_srvs::Empty::Request &req, std_srvs::Empty::Response &r
 	stage_ = 0;
 	setStageInFile(stage_);
 	ros::service::call("/move_base/clear_costmaps",empty_srv);
-	//ac->getState() == actionlib::SimpleClientGoalState::SUCCEEDED
 	if(ac->isServerConnected())
 		ac->cancelAllGoals();
 
@@ -303,7 +300,6 @@ bool pausePathService(std_srvs::Empty::Request &req, std_srvs::Empty::Response &
 	setGobotStatus(4,"PAUSE_PATH");
 	stop_flag = true;
 	setStageInFile(stage_);
-	//ac->getState() == actionlib::SimpleClientGoalState::SUCCEEDED
 	if(ac->isServerConnected())
 		ac->cancelAllGoals();
 

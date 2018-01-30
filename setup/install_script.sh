@@ -50,8 +50,8 @@ sleep 2s
 #    echo "[.bashrc] configuring..."
 #    echo "alias cat_make='cd ~/catkin_ws/ && catkin_make && source devel/setup.bash && . ~/catkin_ws/devel/setup.bash'" >> ~/.bashrc
 #    echo "source /opt/ros/kinetic/setup.bash" >> ~/.bashrc
-#    echo "source /home/gtdollar/catkin_ws/devel/setup.bash" >> ~/.bashrc
-#    echo "export ROS_PACKAGE_PATH=$ROS_PACKAGE_PATH:/home/gtdollar/catkin_ws/src" >> ~/.bashrc
+#    echo "source ~/catkin_ws/devel/setup.bash" >> ~/.bashrc
+#    echo "export ROS_PACKAGE_PATH=$ROS_PACKAGE_PATH:~/catkin_ws/src" >> ~/.bashrc
 #    source ~/.bashrc
 #    echo "[.bashrc] configured!"
 #else

@@ -16,7 +16,6 @@ ros::Publisher initial_pose_publisher;
 std_srvs::Empty empty_srv;
 gobot_msg_srv::GetGobotStatus get_gobot_status;
 
-std::string user_name;
 robot_class::SetRobot robot;
 
 void session(boost::shared_ptr<tcp::socket> sock){
@@ -173,7 +172,7 @@ void session(boost::shared_ptr<tcp::socket> sock){
                         /// Kill gobot move so that we'll restart it with the new map
                         std::string cmd = "rosnode kill /move_base";
                         system(cmd.c_str());
-                        sleep(3);
+                        sleep(4);
                         ROS_INFO("(New Map) We killed gobot_navigation");
 
                         if(mapType != "EDIT"){
@@ -217,12 +216,8 @@ void session(boost::shared_ptr<tcp::socket> sock){
                         }
 
                         /// Relaunch gobot_navigation
-                        if(simulation)
-                            cmd = "gnome-terminal -x bash -c \"source /opt/ros/kinetic/setup.bash;source /home/" + user_name + "/catkin_ws/devel/setup.bash;roslaunch gobot_gazebo gazebo_slam.launch\"";
-                        else
-                            cmd = "gnome-terminal -x bash -c \"source /opt/ros/kinetic/setup.bash;source /home/"+ user_name + "/catkin_ws/devel/setup.bash;roslaunch gobot_navigation gobot_navigation.launch\"";
-                        system(cmd.c_str());
-                        sleep(6);
+                        robot.runNavi(simulation);
+                        sleep(8);
                             
                         ROS_INFO("(New Map) We relaunched gobot_navigation");
                         message = "done 1";
@@ -323,10 +318,6 @@ int main(int argc, char **argv){
     if(n.hasParam("simulation")){
         n.getParam("simulation", simulation);
         ROS_INFO("(New Map) simulation : %d", simulation);
-    }
-    if(n.hasParam("user_name")){
-        n.getParam("user_name", user_name);
-        ROS_INFO("(New Map) user name : %s", user_name.c_str());
     }
 
     /// Subscribe to know when we disconnected from the server

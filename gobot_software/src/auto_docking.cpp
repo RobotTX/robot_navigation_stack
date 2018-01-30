@@ -68,8 +68,8 @@ bool startDocking(void){
             
             /// send the goal
             if(ac->isServerConnected()) {
-                startDockingParams();
                 ac->sendGoal(currentGoal);
+                startDockingParams();
 
                 return true;
             }
@@ -320,7 +320,6 @@ void finishedDocking(){
             robot.setMotorSpeed('F', 0, 'F', 0);
 
             if(ac->isServerConnected()) {
-                startDockingParams();
                 if(attempt == 1){
                     currentGoal.target_pose.header.stamp = ros::Time::now();
                     currentGoal.target_pose.pose.position.x = landingPointX + 0.05*std::sin(landingYaw);
@@ -337,6 +336,7 @@ void finishedDocking(){
                     currentGoal.target_pose.pose.position.y = landingPointY;
                 }
                 ac->sendGoal(currentGoal);
+                startDockingParams();
             }
         }
         else{ 

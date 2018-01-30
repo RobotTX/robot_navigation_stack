@@ -11,10 +11,10 @@
 #include <string>
 #include <vector>
 #include <fstream>
+#include <stdio.h>
 #include <std_srvs/Empty.h>
 #include <geometry_msgs/Twist.h>
 #include <tf/transform_broadcaster.h>
-#include <stdio.h>
 #include <nav_msgs/MapMetaData.h>
 #include <gobot_msg_srv/set_robot_class.h>
 #include <gobot_msg_srv/SendMap.h>
@@ -114,7 +114,6 @@ bool stopScanning(const std::string ip, const std::vector<std::string> command);
 
 /// v
 bool shutdownRobot(const std::vector<std::string> command);
-bool keyboardControl(const std::vector<std::string> command);
 
 /// w
 bool muteOff(const std::vector<std::string> command);

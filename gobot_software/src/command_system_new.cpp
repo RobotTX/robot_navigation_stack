@@ -30,8 +30,6 @@ ros::Publisher go_pub;
 ros::Publisher teleop_pub;
 ros::ServiceClient getGobotStatusSrv,getDockStatusSrv;
 
-std::string user_name;
-
 robot_class::SetRobot robot;
 
 template<typename Out>
@@ -354,15 +352,11 @@ bool startScanAndAutoExplore(const std::string ip, const std::vector<std::string
         /// Kill gobot move so that we'll restart it with the new map
         std::string cmd = "rosnode kill /move_base";
         system(cmd.c_str());
-        sleep(3);
+        sleep(4);
         
         /// Relaunch gobot_navigation
-        if(simulation)
-            cmd = "gnome-terminal -x bash -c \"source /opt/ros/kinetic/setup.bash;source /home/" + user_name + "/catkin_ws/devel/setup.bash;roslaunch gobot_gazebo gazebo_scan.launch\"";
-        else
-            cmd = "gnome-terminal -x bash -c \"source /opt/ros/kinetic/setup.bash;source /home/" + user_name + "/catkin_ws/devel/setup.bash;roslaunch gobot_navigation gobot_scan.launch\"";
-        system(cmd.c_str());
-        sleep(6);
+        robot.runNavi(simulation);system(cmd.c_str());
+        sleep(8);
         ROS_INFO("(New Map) We relaunched gobot_navigation");
 
         /// 0 : the robot doesn't go back to its starting point at the end of the scan
@@ -407,6 +401,10 @@ bool newPath(const std::vector<std::string> command){
         if(get_gobot_status.response.status<=25 && get_gobot_status.response.status>=20){
             ROS_WARN("(Command system) Gobot is scanning.");
             return false;
+        }
+
+        if(get_gobot_status.response.status==5){
+                ros::service::call("/gobot_function/pause_path", empty_srv);
         }
 
         for(int i = 1; i < command.size(); i++)
@@ -492,7 +490,7 @@ bool stopPath(const std::vector<std::string> command){
             return false;
         }
         if(get_gobot_status.response.status==11){
-            ROS_WARN("(Command system) Gobot is scanning.");
+            ROS_WARN("(Command system) Gobot stop docking.");
             return false;
         }
         //not stop docking
@@ -517,6 +515,9 @@ bool stopAndDeletePath(const std::vector<std::string> command){
             return false;
         }
 
+        if(get_gobot_status.response.status==5){
+            ros::service::call("/gobot_function/pause_path", empty_srv);
+        }
         ROS_INFO("(Command system) Stop the robot and delete its path");
         if(robot.clearPath()){
             ros::service::call("/gobot_function/update_path", empty_srv);
@@ -566,7 +567,9 @@ bool goToChargingStation(const std::vector<std::string> command){
             ROS_WARN("(Command system) Gobot is scanning.");
             return false;
         }
-        
+        else if(get_gobot_status.response.status==5){
+            ros::service::call("/gobot_function/pause_path", empty_srv);
+        }
         //if go to charging or charging, ignore
         if(get_dock_status.response.data==1){
             ros::service::call("/gobot_recovery/initialize_home",empty_srv);
@@ -661,15 +664,11 @@ bool startNewScan(const std::string ip, const std::vector<std::string> command){
         /// Kill gobot move so that we'll restart it with the new map
         std::string cmd = "rosnode kill /move_base";
         system(cmd.c_str());
-        sleep(3);
+        sleep(4);
 
         /// Relaunch gobot_navigation
-        if(simulation)
-            cmd = "gnome-terminal -x bash -c \"source /opt/ros/kinetic/setup.bash;source /home/" + user_name + "/catkin_ws/devel/setup.bash;roslaunch gobot_gazebo gazebo_scan.launch\"";
-        else
-            cmd = "gnome-terminal -x bash -c \"source /opt/ros/kinetic/setup.bash;source /home/" + user_name + "/catkin_ws/devel/setup.bash;roslaunch gobot_navigation gobot_scan.launch\"";
-        system(cmd.c_str());
-        sleep(6);
+        robot.runNavi(simulation);
+        sleep(8);
         ROS_INFO("(Command system) We relaunched gobot_navigation");
 
         return sendMapAutomatically(ip);
@@ -690,15 +689,10 @@ bool stopScanning(const std::string ip, const std::vector<std::string> command){
             /// Kill gobot move so that we'll restart it with the new map
             std::string cmd = "rosnode kill /move_base";
             system(cmd.c_str());
-            sleep(3);
-
+            sleep(4);
             /// Relaunch gobot_navigation
-            if(simulation)
-                cmd = "gnome-terminal -x bash -c \"source /opt/ros/kinetic/setup.bash;source /home/" + user_name + "/catkin_ws/devel/setup.bash;roslaunch gobot_gazebo gazebo_slam.launch\"";
-            else
-                cmd = "gnome-terminal -x bash -c \"source /opt/ros/kinetic/setup.bash;source /home/" + user_name + "/catkin_ws/devel/setup.bash;roslaunch gobot_navigation gobot_navigation.launch\"";
-            system(cmd.c_str());
-            sleep(6);
+            robot.runNavi(simulation);
+            sleep(8);
             ROS_INFO("(Command system) We relaunched gobot_navigation");
         }
 
@@ -722,25 +716,6 @@ bool shutdownRobot(const std::vector<std::string> command){
             return true;
         }
     }
-    return false;
-}
-
-bool keyboardControl(const std::vector<std::string> command){
-    if(command.size() == 1) {
-        std::string cmd;
-        ROS_INFO("(Command system) Activate keyboard control");
-        if(!keyboardEnabled){
-            cmd = "gnome-terminal -x bash -c \"source /opt/ros/kinetic/setup.bash;source /home/"+ user_name + "/catkin_ws/devel/setup.bash;rosrun teleop_twist_keyboard teleop_twist_keyboard.py\"";
-            keyboardEnabled = true;
-        }
-        else{
-            cmd = "rosnode kill /teleop_twist_keyboard";
-            keyboardEnabled = false;
-        }
-        system(cmd.c_str());
-        return true;
-    }
-
     return false;
 }
 
@@ -913,28 +888,11 @@ void sendCommand(const std::string ip, const std::vector<std::string> command, s
 
 
 void checkCommand(char c){
+     getGobotStatusSrv.call(get_gobot_status);
     //Before sending, double check command
     switch (c) {
-        /// new path
-        case 'i':
-            getGobotStatusSrv.call(get_gobot_status);
-            if(get_gobot_status.response.status==5){
-                std::vector<std::string> command({"d"});
-                std::string commandStr = command.at(0) + sep;
-                sendCommand("",command,commandStr);
-            }
-            /*
-            if(looping){
-                std::vector<std::string> command({"/","0"});
-                std::string commandStr = command.at(0) + sep + command.at(1) + sep;
-                sendCommand("",command,commandStr);
-            }   
-            */
-        break;
-        
         /// stop path
         case 'l':
-            getGobotStatusSrv.call(get_gobot_status);
             //if robot is docking, just stop docking
             if(get_gobot_status.response.status==15){
                 std::vector<std::string> command({"p"});
@@ -947,19 +905,8 @@ void checkCommand(char c){
             }
         break;
 
-        /// delete and stop path
-        case 'm':
-            getGobotStatusSrv.call(get_gobot_status);
-            if(get_gobot_status.response.status==5){
-                std::vector<std::string> command({"d"});
-                std::string commandStr = command.at(0) + sep;
-                sendCommand("",command,commandStr);
-            }
-        break;
-
         /// new charging station
         case 'n':
-            getGobotStatusSrv.call(get_gobot_status);
             //go to charging station
             if(get_gobot_status.response.status==15){
                 std::vector<std::string> command({"p"});
@@ -968,25 +915,11 @@ void checkCommand(char c){
             }
         break;
 
-        /// go to charging station
-        case 'o':
-            getGobotStatusSrv.call(get_gobot_status);
+        /// shutdown robot
+        case 'v':
             //WAITING OR PLAY PATH
             if(get_gobot_status.response.status==5){
-                std::vector<std::string> command({"d"});
-                std::string commandStr = command.at(0) + sep;
-                sendCommand("",command,commandStr);
-            }
-        break;
-
-        /// keyboard control
-        case 'v':
-            getGobotStatusSrv.call(get_gobot_status);
-            //WAITING OR PLAY PATH
-            if(get_gobot_status.response.status==5 && !keyboardEnabled){
-                std::vector<std::string> command({"d"});
-                std::string commandStr = command.at(0) + sep;
-                sendCommand("",command,commandStr);
+                ros::service::call("/gobot_function/pause_path", empty_srv);
             }
         break;
 
@@ -1060,7 +993,7 @@ bool stopGoDockSrvCallback(std_srvs::Empty::Request &req, std_srvs::Empty::Respo
 bool lowBatterySrvCallback(std_srvs::Empty::Request &req, std_srvs::Empty::Response &res){
     getGobotStatusSrv.call(get_gobot_status);
     //scanning process
-    if(get_gobot_status.response.status==20 || get_gobot_status.response.status==25 || get_gobot_status.response.status==21)
+    if(get_gobot_status.response.status<=25 && get_gobot_status.response.status>=20)
         return true;
         
     //robot is doing the path
@@ -1350,10 +1283,6 @@ int main(int argc, char* argv[]){
         if(n.hasParam("simulation")){
             n.getParam("simulation", simulation);
             ROS_INFO("(Command system) simulation : %d", simulation);
-        }
-        if(n.hasParam("user_name")){
-            n.getParam("user_name", user_name);
-            ROS_INFO("(Command system) user name : %s", user_name.c_str());
         }
         
         ros::Subscriber sub = n.subscribe("/gobot_software/server_disconnected", 1000, serverDisconnected);

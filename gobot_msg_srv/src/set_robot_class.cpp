@@ -105,5 +105,25 @@ namespace robot_class {
             ledCmd.request.color.push_back(color[i]);
         ros::service::call("/gobot_base/setLed",ledCmd);
     }
+
+    void SetRobot::runNavi(bool simulation){
+        std::string cmd;
+        /// Relaunch gobot_navigation
+       if(simulation)
+            cmd = "gnome-terminal -x bash -c \"source /opt/ros/kinetic/setup.bash;source ~/catkin_ws/devel/setup.bash;roslaunch gobot_gazebo gazebo_slam.launch\"";
+        else
+            cmd = "gnome-terminal -x bash -c \"source /opt/ros/kinetic/setup.bash;source ~/catkin_ws/devel/setup.bash;roslaunch gobot_navigation gobot_navigation.launch\"";
+        system(cmd.c_str());
+    }
+
+    void SetRobot::runScan(bool simulation){
+        std::string cmd;
+        /// Relaunch gobot_navigation
+        if(simulation)
+            cmd = "gnome-terminal -x bash -c \"source /opt/ros/kinetic/setup.bash;source ~/catkin_ws/devel/setup.bash;roslaunch gobot_gazebo gazebo_scan.launch\"";
+        else
+            cmd = "gnome-terminal -x bash -c \"source /opt/ros/kinetic/setup.bash;source ~/catkin_ws/devel/setup.bash;roslaunch gobot_navigation gobot_scan.launch\"";
+        system(cmd.c_str());
+    }
 };
 
