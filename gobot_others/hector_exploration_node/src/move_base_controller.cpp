@@ -1,12 +1,7 @@
 #include <hector_exploration_node/move_base_controller.hpp>
 
-int count(0);
-int noFrontiersLeft(0);
+int count(0), noFrontiersLeft(0),new_goal_sec(30),no_frontier_threshold(10),back_to_start_when_finished(0);
 bool exploring(false);
-
-double new_goal_frequency(0.1);
-int no_frontier_threshold(10);
-int back_to_start_when_finished(0);
 geometry_msgs::Pose startingPose;
 std::string map_frame;
 std::string base_frame;
@@ -92,10 +87,10 @@ void doExploration(void){
 
     exploring = true;
 
-    ros::Rate loop_rate(5);
+    ros::Rate loop_rate(2);
     while(ros::ok() && exploring){
         /// We want to refresh the goal after a certain time or when we reached it
-        if(count >= (5 / new_goal_frequency) || ac->getState() == actionlib::SimpleClientGoalState::SUCCEEDED){
+        if(count==0 || count>=new_goal_sec*2 || ac->getState()==actionlib::SimpleClientGoalState::SUCCEEDED){
             hector_nav_msgs::GetRobotTrajectory arg;
             /// Get an array of goals to follow
             if(ros::service::call("get_exploration_path", arg)){
@@ -134,7 +129,7 @@ void doExploration(void){
                     }
                 }
 
-                count = 0;
+                count = 1;
             } else
                 ROS_WARN("(Exploration) get_exploration_path service call failed");
         } else
@@ -212,8 +207,8 @@ int main(int argc, char* argv[]){
     nh.param<std::string>("base_frame", base_frame, "base_link");
     //~ROS_INFO("(Exploration) base_frame : %s", base_frame.c_str());
 
-    nh.param<double>("new_goal_frequency", new_goal_frequency, 0.1);
-    //~ROS_INFO("(Exploration) new_goal_frequency : %f", new_goal_frequency);
+    nh.param<int>("new_goal_sec", new_goal_sec, 30);
+    //~ROS_INFO("(Exploration) new_goal_sec : %d", new_goal_sec);
 
     nh.param<int>("no_frontier_threshold", no_frontier_threshold, 5);
     //~ROS_INFO("(Exploration) no_frontier_threshold : %d", no_frontier_threshold);

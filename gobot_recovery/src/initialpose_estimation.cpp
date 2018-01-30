@@ -80,7 +80,7 @@ void findPoseResult(int status){
 
 void publishInitialpose(const double position_x, const double position_y, const double angle_x, const double angle_y, const double angle_z, const double angle_w,const double cov1,const double cov2){
 
-    if(position_x == 0 && position_y == 0 && angle_x == 0 && angle_y == 0 && angle_z == 0){
+    if(position_x == 0 && position_y == 0 && angle_z == 0){
         ROS_ERROR("(initial_pose_publisher) Robot probably got no home, set it position to map origin");
     }
         geometry_msgs::PoseWithCovarianceStamped initialPose;

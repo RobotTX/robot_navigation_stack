@@ -324,7 +324,7 @@ bool stopLoopPathService(std_srvs::Empty::Request &req, std_srvs::Empty::Respons
 }
 
 bool goDockAfterPathService(std_srvs::Empty::Request &req, std_srvs::Empty::Response &res){
-    //~ROS_INFO("(PlayPath::goDockAfterPathService) service called");
+    ROS_INFO("(PlayPath::goDockAfterPathService) service called");
     dockAfterPath = true;
     return true;
 }

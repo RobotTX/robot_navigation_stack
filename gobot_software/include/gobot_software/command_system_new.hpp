@@ -144,8 +144,6 @@ bool stopSendingMapAutomatically(const std::string ip);
 
 void sendCommand(const std::string ip, const std::vector<std::string> command, std::string commandStr);
 
-void checkCommand(char c);
-
 double RadToDegree(double rad);
 
 double DegreeToRad(double degree);

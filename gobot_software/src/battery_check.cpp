@@ -27,15 +27,8 @@ void timerCallback(const ros::TimerEvent&){
             canGoCharge = false;
         }
     }
-    else{
-        //reset the gocharge when complete godock
-        if(battery_percent.response.data>75){
-            canGoCharge = true;
-        }
-        else{
-            canGoCharge = false;
-        }
-    }
+    //reset canGocharge flag when battery has lot percent
+    canGoCharge = battery_percent.response.data>75 ? true : false;
 }
 
 int main(int argc, char* argv[]){

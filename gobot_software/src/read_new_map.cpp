@@ -315,10 +315,8 @@ int main(int argc, char **argv){
     ros::NodeHandle n;
     signal(SIGINT, mySigintHandler);
 
-    if(n.hasParam("simulation")){
-        n.getParam("simulation", simulation);
-        ROS_INFO("(New Map) simulation : %d", simulation);
-    }
+    n.getParam("simulation", simulation);
+    ROS_INFO("(New Map) simulation : %d", simulation);
 
     /// Subscribe to know when we disconnected from the server
     ros::Subscriber sub = n.subscribe("/gobot_software/server_disconnected", 1000, serverDisconnected);

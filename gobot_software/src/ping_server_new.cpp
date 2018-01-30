@@ -7,7 +7,7 @@ std::string pingFile, ipsFile, wifiFile;
 
 std::string battery_level = "51.0";
 
-bool simulation = false, muteFlag = false, scanIP = false;
+bool muteFlag = false, scanIP = false;
 double STATUS_UPDATE=5.0, IP_UPDATE=20.0;
 
 std::vector<std::string> availableIPs, connectedIPs;
@@ -277,10 +277,6 @@ void mySigintHandler(int sig)
 
 bool initParams(){
     ros::NodeHandle nh;
-    if(nh.hasParam("simulation")){
-        nh.getParam("simulation", simulation);
-        ROS_INFO("(ping_server) simulation : %d", simulation);
-    }
     nh.getParam("ips_file", ipsFile);
     nh.getParam("ping_file", pingFile);
     nh.getParam("wifi_file", wifiFile);
@@ -297,13 +293,10 @@ int main(int argc, char* argv[]){
     signal(SIGINT, mySigintHandler);
     
     if (initParams()){
-        if(!simulation){
-            //Startup begin
-            ROS_INFO("(ping_server) Waiting for Robot finding initial pose...");
-            ros::service::waitForService("/gobot_startup/pose_ready", ros::Duration(60.0));
-            ROS_INFO("(ping_server) Robot finding initial pose is ready.");
-        }
-
+        //Startup begin
+        ROS_INFO("(ping_server) Waiting for Robot finding initial pose...");
+        ros::service::waitForService("/gobot_startup/pose_ready", ros::Duration(60.0));
+        ROS_INFO("(ping_server) Robot finding initial pose is ready.");
         //Startup end
 
         disco_pub = n.advertise<std_msgs::String>("/gobot_software/server_disconnected", 10);

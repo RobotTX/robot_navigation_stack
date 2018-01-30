@@ -555,6 +555,10 @@ void initialData(){
     }
 }
 
+bool poseReadySrvCallback(std_srvs::Empty::Request &req, std_srvs::Empty::Response &res){
+  return true;
+}
+
 int main(int argc, char* argv[]){
 
     try{
@@ -562,6 +566,15 @@ int main(int argc, char* argv[]){
         ros::NodeHandle n;
 
         initialData();
+
+        bool simulation;
+        n.getParam("simulation", simulation);
+        ROS_INFO("(Command system) simulation : %d", simulation);
+        
+        //for simulation purpose
+        if(simulation){
+            ros::ServiceServer poseReadySrv = n.advertiseService("/gobot_startup/pose_ready", poseReadySrvCallback);
+        }
 
         ros::ServiceServer setGobotStatusSrv = n.advertiseService("/gobot_status/get_gobot_status", getGobotStatusSrvCallback);
         ros::ServiceServer getGobotStatusSrv = n.advertiseService("/gobot_status/set_gobot_status", setGobotStatusSrvCallback);

@@ -99,9 +99,7 @@ void mySigintHandler(int sig){
 
 bool initParams(){
     ros::NodeHandle nh;
-    if(nh.hasParam("simulation")){
-        nh.getParam("simulation", simulation);
-    }
+    nh.getParam("simulation", simulation);
     nh.getParam("last_known_position_file", lastPoseFile);
 
     return true;

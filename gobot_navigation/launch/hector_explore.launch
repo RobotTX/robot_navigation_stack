@@ -7,7 +7,7 @@
     </node>
 
     <node pkg="hector_exploration_node" type="move_base_controller" name="exploration_controller" required="true">
-        <param name="new_goal_frequency" type="double" value="0.25"/>
+        <param name="new_goal_sec" type="int" value="30"/>
         <param name="no_frontier_threshold" type="int" value="5"/>
     </node>
 

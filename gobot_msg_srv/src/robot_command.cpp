@@ -3,8 +3,7 @@
 
 namespace robot_class {
 
-    RobotCommand::RobotCommand(){
-        ac_ = new MoveBaseClient("move_base", true);
+    RobotCommand::RobotCommand():SetRobot(){
     }
     RobotCommand::~RobotCommand(){};
 

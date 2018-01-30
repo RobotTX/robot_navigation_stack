@@ -15,7 +15,7 @@ bool leftFlag = false;
 bool charging = false;
 bool move_from_collision = true;
 
-ros::Time lastIrSignalTime;
+ros::Time lastIrSignalTime, goal_pub_time;
 
 ros::Subscriber goalStatusSub,bumperSub,irSub,batterySub,proximitySub,poseSub;
 ros::Timer sound_timer;
@@ -45,7 +45,7 @@ bool startDocking(void){
         oriZ=std::stod(get_home.response.data[4]);
         oriW=std::stod(get_home.response.data[5]);
 
-        if(x != 0 || y != 0 || oriX != 0 || oriY != 0 || oriZ != 0){
+        if(x != 0 || y != 0 || oriZ != 0){
             //~ROS_INFO("(auto_docking::startDocking) home found : [%f, %f] [%f, %f, %f, %f]", x, y, oriX, oriY, oriZ, oriW);
 
             landingYaw = tf::getYaw(tf::Quaternion(oriX , oriY , oriZ, oriW));
@@ -57,6 +57,7 @@ bool startDocking(void){
 
             /// Create the goal
             currentGoal.target_pose.header.frame_id = "map";
+            goal_pub_time = ros::Time::now();
             currentGoal.target_pose.header.stamp = ros::Time::now();
             currentGoal.target_pose.pose.position.x = landingPointX;
             currentGoal.target_pose.pose.position.y = landingPointY;
@@ -355,16 +356,14 @@ void finishedDocking(){
 
 /***************************************************************************************************/
 bool stopDockingService(std_srvs::Empty::Request &req, std_srvs::Empty::Response &res){
-    if(dock_status==3){
-        resetDockingParams();
-        if(ac->isServerConnected())
-            ac->cancelAllGoals();
+    resetDockingParams();
+    if(ac->isServerConnected())
+        ac->cancelAllGoals();
 
-        gobot_msg_srv::IsCharging arg;
-        dock_status=(ros::service::call("/gobot_status/charging_status", arg) && arg.response.isCharging) ? 1 : 0; 
-        robot.setDock(dock_status);
-        robot.setStatus(11,"STOP_DOCKING");
-    }
+    gobot_msg_srv::IsCharging arg;
+    dock_status=(ros::service::call("/gobot_status/charging_status", arg) && arg.response.isCharging) ? 1 : 0; 
+    robot.setDock(dock_status);
+    robot.setStatus(11,"STOP_DOCKING");
     return true;
 }
 
