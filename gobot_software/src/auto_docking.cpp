@@ -89,6 +89,8 @@ void goalResultCallback(const move_base_msgs::MoveBaseActionResult::ConstPtr& ms
     if(docking){
         ROS_INFO("(auto_docking::newBumpersInfo) Goal status %d",msg->status.status);
         switch(msg->status.status){
+            case 2:
+                break;
 			//SUCCEED
 			case 3:
 				/// if we reached the goal for the fisrt time

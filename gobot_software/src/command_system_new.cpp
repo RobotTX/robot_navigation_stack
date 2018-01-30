@@ -46,6 +46,46 @@ bool execCommand(const std::string ip, const std::vector<std::string> command){
 
     std::string commandStr = command.at(0);
     bool status=false;
+    getGobotStatusSrv.call(get_gobot_status);
+    //scanning
+    if(get_gobot_status.response.status<=25 && get_gobot_status.response.status>=20){
+        //pausePath, newPath, 
+        //playPath, playPoint, 
+        //stopPath, stop&deletePath,
+        //goCharging
+        if(commandStr.at(0)=='d' || commandStr.at(0)=='i' || 
+           commandStr.at(0)=='j' || commandStr.at(0)=='k' ||
+           commandStr.at(0)=='l' || commandStr.at(0)=='m' ||
+           commandStr.at(0)=='o'){
+            ROS_WARN("(Command system) Gobot is scanning.");
+            return false;
+        }
+    }
+    //docking
+    else if(get_gobot_status.response.status==15){
+        //pausePath, playPath, 
+        //playPoint,
+        if(commandStr.at(0)=='d' || commandStr.at(0)=='j' ||
+           commandStr.at(0)=='k'){
+            ROS_WARN("(Command system) Gobot is docking.");
+            return false;
+        }
+    }
+    //moving
+    else if(get_gobot_status.response.status==5){
+        //newPath, playPath, stop&deletePath
+        if(commandStr.at(0)=='i' || commandStr.at(0)=='m'){
+            ROS_WARN("(Command system) Gobot is playing path.")
+            ros::service::call("/gobot_function/stop_path", empty_srv);
+        }
+        else if(commandStr.at(0)=='j'){
+            ROS_WARN("(Command system) Gobot is playing path.")
+            return false;
+        }
+        else if(commandStr.at(0)=='o'){
+            ros::service::call("/gobot_function/pause_path", empty_srv);
+        }
+    }
     switch (commandStr.at(0)) {
         /// Adjust linear&angular speed
         case '1':
@@ -303,12 +343,6 @@ bool newGoal(const std::vector<std::string> command){
 bool pausePath(const std::vector<std::string> command){
     if(command.size() == 1) {
         getGobotStatusSrv.call(get_gobot_status);
-        //scanning
-        if(get_gobot_status.response.status<=25 && get_gobot_status.response.status>=20){
-            ROS_WARN("(Command system) Gobot is scanning.");
-            return false;
-        }
-
         if (ros::service::call("/gobot_function/pause_path", empty_srv)){
             ROS_INFO("(Command system) Pause the path");
             return true;
@@ -396,17 +430,6 @@ bool newPath(const std::vector<std::string> command){
     if(command.size() >= 6 && command.size()%5 == 2){  
         ROS_INFO("(Command system) New path received");
         gobot_msg_srv::SetStringArray set_path;
-
-        //Scanning
-        if(get_gobot_status.response.status<=25 && get_gobot_status.response.status>=20){
-            ROS_WARN("(Command system) Gobot is scanning.");
-            return false;
-        }
-
-        if(get_gobot_status.response.status==5){
-                ros::service::call("/gobot_function/pause_path", empty_srv);
-        }
-
         for(int i = 1; i < command.size(); i++)
             set_path.request.data.push_back(command.at(i));
 
@@ -425,23 +448,7 @@ bool newPath(const std::vector<std::string> command){
 /// First param = j
 bool playPath(const std::vector<std::string> command){
     if(command.size() == 1) {
-        getGobotStatusSrv.call(get_gobot_status);
-
-        //Scanning
-        if(get_gobot_status.response.status<=25 && get_gobot_status.response.status>=20){
-            ROS_WARN("(Command system) Gobot is scanning.");
-            return false;
-        }
-
-        //if go docking, can not play
-        if(get_gobot_status.response.status==15){
-            ROS_WARN("(Command system) Gobot is going to dock");
-            return false;
-        }
-        if(get_gobot_status.response.status==5){
-            ROS_WARN("(Command system) Gobot is playing the path");
-        }
-        else if(ros::service::call("/gobot_function/play_path", empty_srv)){
+        if(ros::service::call("/gobot_function/play_path", empty_srv)){
             ROS_INFO("(Command system) Play the path");
             return true;
         }
@@ -453,18 +460,6 @@ bool playPath(const std::vector<std::string> command){
 /// First param = k, 2nd is point name, 3rd is x coordinate, 4th is y coordinate, 5th is orientation, 6th is home bool
 bool playPoint(const std::vector<std::string> command){
     if(command.size() == 6) {
-        getGobotStatusSrv.call(get_gobot_status);
-        //Scanning
-        if(get_gobot_status.response.status<=25 && get_gobot_status.response.status>=20){
-            ROS_WARN("(Command system) Gobot is scanning.");
-            return false;
-        }
-
-        //if go docking, can not play
-        if(get_gobot_status.response.status==15){
-            ROS_WARN("(Command system) Gobot is going to dock");
-            return false;
-        }
         gobot_msg_srv::SetStringArray set_point;    
         set_point.request.data.push_back(command.at(1));
         set_point.request.data.push_back(command.at(2));
@@ -483,18 +478,13 @@ bool playPoint(const std::vector<std::string> command){
 /// First param = l
 bool stopPath(const std::vector<std::string> command){
     if(command.size() == 1) {
-        getGobotStatusSrv.call(get_gobot_status);
-        //scanning
-        if(get_gobot_status.response.status<=25 && get_gobot_status.response.status>=20){
-            ROS_WARN("(Command system) Gobot is scanning.");
-            return false;
-        }
         if(get_gobot_status.response.status==11){
             ROS_WARN("(Command system) Gobot stop docking.");
             return false;
         }
         //not stop docking
         if(ros::service::call("/gobot_function/stop_path", empty_srv)){
+            ros::service::call("/move_base/clear_costmaps",empty_srv);
             ROS_INFO("(Command system) Stop the current motion");
             return true;
         }
@@ -507,17 +497,6 @@ bool stopPath(const std::vector<std::string> command){
 bool stopAndDeletePath(const std::vector<std::string> command){
     ros::NodeHandle n;
     if(command.size() == 1) {
-        getGobotStatusSrv.call(get_gobot_status);
-        
-         //scanning
-        if(get_gobot_status.response.status<=25 && get_gobot_status.response.status>=20){
-            ROS_WARN("(Command system) Gobot is scanning.");
-            return false;
-        }
-
-        if(get_gobot_status.response.status==5){
-            ros::service::call("/gobot_function/pause_path", empty_srv);
-        }
         ROS_INFO("(Command system) Stop the robot and delete its path");
         if(robot.clearPath()){
             ros::service::call("/gobot_function/update_path", empty_srv);
@@ -560,16 +539,6 @@ bool newChargingStation(const std::vector<std::string> command){
 /// First param = o
 bool goToChargingStation(const std::vector<std::string> command){
     if(command.size() == 1){
-        getDockStatusSrv.call(get_dock_status);
-        
-        //Scanning
-        if(get_gobot_status.response.status<=25 && get_gobot_status.response.status>=20){
-            ROS_WARN("(Command system) Gobot is scanning.");
-            return false;
-        }
-        else if(get_gobot_status.response.status==5){
-            ros::service::call("/gobot_function/pause_path", empty_srv);
-        }
         //if go to charging or charging, ignore
         if(get_dock_status.response.data==1){
             ros::service::call("/gobot_recovery/initialize_home",empty_srv);

@@ -64,7 +64,6 @@ int disconnected = 0;
 bool charging_ = false;
 int battery_percent_ = 51;
 
-std::shared_ptr<MoveBaseClient> ac(0);
 robot_class::SetRobot robot;
 
 //change robot led and sound to inform people its status
@@ -603,8 +602,6 @@ int main(int argc, char* argv[]){
         ros::ServiceServer disconnectedSrv = n.advertiseService("/gobot_test/disconnected", disconnectedSrvCallback);
 
         ros::Subscriber battery = n.subscribe("/gobot_base/battery_topic",1, batteryCallback);
-
-        ac = std::shared_ptr<MoveBaseClient> (new MoveBaseClient("move_base", true));
         
         ros::spin();
         

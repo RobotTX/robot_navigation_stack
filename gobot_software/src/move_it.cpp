@@ -244,8 +244,6 @@ bool playPathService(std_srvs::Empty::Request &req, std_srvs::Empty::Response &r
 }
 
 bool updatePathService(std_srvs::Empty::Request &req, std_srvs::Empty::Response &res){
-	stage_ = 0;
-	setStageInFile(stage_);
 	path = std::vector<Point>();
 	gobot_msg_srv::GetStringArray get_path;
 	// we recreate the path to follow from the file
@@ -280,7 +278,6 @@ bool stopPathService(std_srvs::Empty::Request &req, std_srvs::Empty::Response &r
 	stop_flag = true;
 	stage_ = 0;
 	setStageInFile(stage_);
-	ros::service::call("/move_base/clear_costmaps",empty_srv);
 	if(ac->isServerConnected())
 		ac->cancelAllGoals();
 
@@ -431,6 +428,8 @@ int main(int argc, char* argv[]){
 		signal(SIGINT, mySigintHandler);
 		
 		ros::service::waitForService("/gobot_startup/pose_ready", ros::Duration(60.0));
+		ac = std::shared_ptr<MoveBaseClient> (new MoveBaseClient("move_base", true));
+		ac->waitForServer();
 		
 		initData();
 
@@ -463,9 +462,6 @@ int main(int argc, char* argv[]){
 	
 		// get the current status of the goal 
 		ros::Subscriber goalResult = n.subscribe("/move_base/result",1,goalResultCallback);
-
-		ac = std::shared_ptr<MoveBaseClient> (new MoveBaseClient("move_base", true));
-		ac->waitForServer();
 
 		ros::spin();
 
