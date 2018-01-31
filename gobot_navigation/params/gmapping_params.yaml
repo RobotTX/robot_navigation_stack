@@ -22,10 +22,10 @@ srt: 0.02
 str: 0.01
 stt: 0.02
 #Process a scan each time the robot translates/rotates this far
-linearUpdate: 0.25
+linearUpdate: 0.5
 angularUpdate: 0.5 #17degree 
 particles: 50
-map_update_interval: 2.0
+map_update_interval: 4.0
 iterations: 5
 use_footprint: true
 footprint: [[0.250,0],[0.245,-0.165], [0.225,-0.220], [0.165,-0.240],

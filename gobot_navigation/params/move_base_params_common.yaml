@@ -60,7 +60,7 @@ conservative_reset:
     reset_distance: 2.5
 
 aggressive_reset:
-    reset_distance: 0.6
+    reset_distance: 0.5
 
 move_slow_and_clear:
     clearing_distance: 0.5

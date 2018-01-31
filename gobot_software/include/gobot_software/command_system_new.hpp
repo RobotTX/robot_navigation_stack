@@ -44,6 +44,9 @@ void split(const std::string &s, const char delim, Out result);
 bool execCommand(const std::string ip, const std::vector<std::string> command);
 
 /*********************************** COMMAND FUNCTIONS ***********************************/
+/// 3
+bool interruptDelay(const std::vector<std::string> command);
+
 /// 1
 bool adjustSpeed(const std::vector<std::string> command);
 

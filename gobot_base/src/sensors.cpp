@@ -414,7 +414,7 @@ bool setSound(int num,int time_on){
                 break;
         }
         std::vector<uint8_t> buff = writeAndRead(sound_cmd,5);
-        ROS_INFO("Receive a sound request, and succeed to execute.");
+        //ROS_INFO("Receive a sound request, and succeed to execute.");
         return true;
     }
     else{
@@ -425,7 +425,7 @@ bool setSound(int num,int time_on){
 
 bool setLedSrvCallback(gobot_msg_srv::LedStrip::Request &req, gobot_msg_srv::LedStrip::Response &res){
     //if low battery and not charging, only show magenta color to warn user
-    if(!low_battery || charging){
+    if(!low_battery && !charging){
         //ROS_INFO("Receive a LED change request, and succeed to execute.");
         return setLed(req.mode,req.color);
     }
@@ -478,7 +478,7 @@ bool setLed(int mode, const std::vector<std::string> &color){
         }
         std::vector<uint8_t> buff = writeAndRead(led_cmd,5);
         last_led_time = ros::Time::now();
-        ROS_INFO("Receive a LED change request, and succeed to execute.");
+        //ROS_INFO("Receive a LED change request, and succeed to execute.");
         return true;
     }
     else{
@@ -582,7 +582,7 @@ int main(int argc, char **argv) {
 
     //Startup begin
     ROS_INFO("(Sensors) Waiting for MD49 to be ready...");
-    ros::service::waitForService("/gobot_startup/motor_ready", ros::Duration(60.0));
+    ros::service::waitForService("/gobot_startup/motor_ready", ros::Duration(30.0));
     ROS_INFO("(Sensors) MD49 is ready.");
     //Startup end
 

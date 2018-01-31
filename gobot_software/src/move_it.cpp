@@ -3,7 +3,7 @@
 #define PLAY_PATH_PORT 8333
 #define ROBOT_POS_TOLERANCE 0.05
 
-std::shared_ptr<MoveBaseClient> ac(0);
+MoveBaseClient* ac;
 
 // the stage of the robot within the path (if path going from first point to second point, stage is 0, if going from point before last point to last point stage is #points-1)
 int stage_ = 0;
@@ -11,7 +11,7 @@ int stage_ = 0;
 // holds whether the robot is ready to accept a new goal or not (already moving towards one)
 bool looping = false;
 bool dockAfterPath = false;
-bool waitingForAction = false, readAction=true,stop_flag=false;
+bool waitingForAction = false, readAction=true, interruptDelay=false, stop_flag=false;
 
 std_srvs::Empty empty_srv;
 std::vector<Point> path;
@@ -22,10 +22,6 @@ int status_ = 0;
 std::string text_ = "";
 
 robot_class::SetRobot robot;
-
-void setStageInFile(const int stage){
-	robot.setStage(stage);
-}
 
 void setGobotStatus(int status,std::string text){
 	status_ = status;
@@ -45,7 +41,7 @@ void goalResultCallback(const move_base_msgs::MoveBaseActionResult::ConstPtr& ms
 				break;
 			//ABORTED
 			case 4:
-				setStageInFile(-stage_ - 1);
+				robot.setStage(-stage_ - 1);
 				setGobotStatus(0,"ABORTED_PATH");
 				break;
 			//OTHER CASE
@@ -69,7 +65,7 @@ void goalReached(){
 		else{
 			//ROS_INFO("(PlayPath:: complete path!");
 			setGobotStatus(0,"COMPLETE_PATH");
-			setStageInFile(stage_);
+			robot.setStage(stage_);
 			if(dockAfterPath){
 				//ROS_INFO("(PlayPath::goalReached) battery is low, go to charging station!!");
 				ros::service::call("/gobot_command/goDock", empty_srv);
@@ -78,12 +74,13 @@ void goalReached(){
 			return;
 		}
 	}
+	interruptDelay = false;
 	robot.setSound(1,1); 
+	robot.setStage(stage_);
 	// reached a normal/path goal so we sleep the given time
 	checkGoalDelay();
 	if(!stop_flag){
 		setGobotStatus(5,"PLAY_PATH");
-		setStageInFile(stage_);
 		goNextPoint(path.at(stage_));
 	}
 	else
@@ -91,14 +88,13 @@ void goalReached(){
 }
 
 void checkGoalDelay(){
-	if(currentGoal.waitingTime != 0)
-	{
+	if(currentGoal.waitingTime != 0){	
 		if(currentGoal.waitingTime > 0){
 			setGobotStatus(5,"DELAY");
 			//ROS_INFO("(PlayPath::goalReached) goalReached going to sleep for %f seconds", currentGoal.waitingTime);
 			double dt=0.0;
 			ros::Time last_time=ros::Time::now();
-			while(dt<currentGoal.waitingTime && !stop_flag && ros::ok()){
+			while(dt<currentGoal.waitingTime && !stop_flag && !interruptDelay && ros::ok()){
 				dt=(ros::Time::now()-last_time).toSec();
 				ros::Duration(0.1).sleep();
 				ros::spinOnce();
@@ -110,7 +106,7 @@ void checkGoalDelay(){
 			//ROS_INFO("Goal reached. Waiting for human action.");
 			waitingForAction=true;
 			button_sub = n.subscribe("/gobot_base/button_topic",1,getButtonCallback);
-			while(waitingForAction && !stop_flag && ros::ok()){
+			while(waitingForAction && !stop_flag && !interruptDelay && ros::ok()){
 				ros::Duration(0.1).sleep();
 				ros::spinOnce();
 			}
@@ -183,8 +179,6 @@ bool playPointService(gobot_msg_srv::SetStringArray::Request &req, gobot_msg_srv
 	if(stage_>=path.size()){
 		stage_ = 0;
 	}
-	
-	setStageInFile(-99);
 
 	gobot_msg_srv::IsCharging arg;
 	if(ros::service::call("/gobot_status/charging_status", arg) && arg.response.isCharging){
@@ -227,7 +221,7 @@ bool playPathService(std_srvs::Empty::Request &req, std_srvs::Empty::Response &r
 
 	if(stage_>=path.size()){
 		stage_ = 0;
-		setStageInFile(stage_);
+		robot.setStage(stage_);
 	}
 
 	gobot_msg_srv::IsCharging arg;
@@ -277,7 +271,7 @@ bool stopPathService(std_srvs::Empty::Request &req, std_srvs::Empty::Response &r
 	setGobotStatus(1,"STOP_PATH");
 	stop_flag = true;
 	stage_ = 0;
-	setStageInFile(stage_);
+	robot.setStage(stage_);
 	if(ac->isServerConnected())
 		ac->cancelAllGoals();
 
@@ -296,17 +290,8 @@ bool pausePathService(std_srvs::Empty::Request &req, std_srvs::Empty::Response &
 	//~ROS_INFO("(PlayPath::pausePathService) pausePathService called");
 	setGobotStatus(4,"PAUSE_PATH");
 	stop_flag = true;
-	setStageInFile(stage_);
 	if(ac->isServerConnected())
 		ac->cancelAllGoals();
-
-	if(dockAfterPath){
-		std::thread([](){
-			//~ROS_INFO("(PlayPath::goalReached) battery is low, go to charging station!!");
-			ros::service::call("/gobot_command/goDock", empty_srv);
-			dockAfterPath = false;
-		}).detach();
-	}
 
 	return true;
 }
@@ -329,6 +314,12 @@ bool goDockAfterPathService(std_srvs::Empty::Request &req, std_srvs::Empty::Resp
     return true;
 }
 
+bool interruptDelayService(std_srvs::Empty::Request &req, std_srvs::Empty::Response &res){
+	ROS_INFO("(PlayPath::) Delay interruptted by user");
+	interruptDelay = true;
+	return true;
+}
+
 bool skipPathService(gobot_msg_srv::SetInt::Request &req, gobot_msg_srv::SetInt::Response &res){
 	if (path.empty()){
 		return false;
@@ -344,7 +335,7 @@ bool skipPathService(gobot_msg_srv::SetInt::Request &req, gobot_msg_srv::SetInt:
 	else{
 		stage_ +=req.data;
 	}
-	setStageInFile(stage_);
+	robot.setStage(stage_);
 
 	//if robot is waiting for interaction, quit it
 	if (status_==5){
@@ -412,7 +403,7 @@ void initData(){
 
 void mySigintHandler(int sig)
 {   
-    setStageInFile(stage_);
+    robot.setStage(stage_);
     ros::shutdown();
 }
 
@@ -428,8 +419,7 @@ int main(int argc, char* argv[]){
 		signal(SIGINT, mySigintHandler);
 		
 		ros::service::waitForService("/gobot_startup/pose_ready", ros::Duration(60.0));
-		ac = std::shared_ptr<MoveBaseClient> (new MoveBaseClient("move_base", true));
-		ac->waitForServer();
+		ac = new MoveBaseClient("move_base", true);
 		
 		initData();
 
@@ -438,6 +428,8 @@ int main(int argc, char* argv[]){
 		currentGoal.waitingTime = -1;
 		currentGoal.isHome = false;
 
+		// service to interrupt delay/human action
+		ros::ServiceServer _interruptDelayService = n.advertiseService("/gobot_function/interrupt_delay", interruptDelayService);
 		// service to save the robot's point
 		ros::ServiceServer _savePointPathService = n.advertiseService("/gobot_function/save_point", savePointService);
 		// service to play the robot's point

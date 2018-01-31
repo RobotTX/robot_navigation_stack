@@ -15,8 +15,7 @@ RobotPos robotOrigin;
 
 geometry_msgs::Pose robot_full_pos;
 
-/// to process the goals needed to recover the position
-std::shared_ptr<MoveBaseClient> ac(0);
+MoveBaseClient* ac;
 
 ros::Subscriber localizationToolFeedbackSubscriber;
 ros::Subscriber amclPoseSubscriber;
@@ -295,7 +294,7 @@ int main(int argc, char* argv[]){
 		ros::Subscriber sub_map = n.subscribe("/map", 1000, getMap);
 
 		// tell the action client that we want to spin a thread by default
-		ac = std::shared_ptr<MoveBaseClient> (new MoveBaseClient("move_base", true));
+		ac = new MoveBaseClient("move_base", true);
 
 		// to send the position of the robot to the application once recovered
 		ros::ServiceServer recover_position_service = n.advertiseService("recover_position", recoverPosition);

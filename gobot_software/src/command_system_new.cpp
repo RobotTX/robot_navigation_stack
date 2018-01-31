@@ -102,6 +102,10 @@ bool execCommand(const std::string ip, const std::vector<std::string> command){
     }
 
     switch (commandStr.at(0)) {
+        /// Interrupt delay/human action
+        case '3':
+            status = interruptDelay(command);
+        break;
         /// Adjust linear&angular speed
         case '1':
             status = adjustSpeed(command);
@@ -272,6 +276,15 @@ bool execCommand(const std::string ip, const std::vector<std::string> command){
 }
 
 /*********************************** COMMAND FUNCTIONS ***********************************/
+// Command: 3, 2nd param=interrupt flag
+bool interruptDelay(const std::vector<std::string> command){
+    if(command.size() == 2){
+        ros::service::call("/gobot_function/interrupt_delay",empty_srv);
+        return true;
+    }
+    return false;
+}
+
 /// Command: 1, 2nd param=linear_vel, 3rd param=angular_vel
 bool adjustSpeed(const std::vector<std::string> command){
     if(command.size() == 3){
@@ -404,9 +417,10 @@ bool startScanAndAutoExplore(const std::string ip, const std::vector<std::string
         sleep(4);
         
         /// Relaunch gobot_navigation
-        robot.runNavi(simulation);system(cmd.c_str());
+        robot.runScan(simulation);
+        system(cmd.c_str());
         sleep(8);
-        ROS_INFO("(New Map) We relaunched gobot_navigation");
+        ROS_INFO("(New Map) We relaunched gobot_scan");
 
         /// 0 : the robot doesn't go back to its starting point at the end of the scan
         /// 1 : robot goes back to its starting point which is its charging station
@@ -550,10 +564,11 @@ bool newChargingStation(const std::vector<std::string> command){
 /// First param = o
 bool goToChargingStation(const std::vector<std::string> command){
     if(command.size() == 1){
+        getDockStatusSrv.call(get_dock_status);
         //if go to charging or charging, ignore
         if(get_dock_status.response.data==1){
             ros::service::call("/gobot_recovery/initialize_home",empty_srv);
-            return true;
+            return false;
         }
         else{
             ROS_INFO("(Command system) Sending the robot home");
@@ -637,9 +652,9 @@ bool startNewScan(const std::string ip, const std::vector<std::string> command){
         sleep(4);
 
         /// Relaunch gobot_navigation
-        robot.runNavi(simulation);
+        robot.runScan(simulation);
         sleep(8);
-        ROS_INFO("(Command system) We relaunched gobot_navigation");
+        ROS_INFO("(Command system) We relaunched gobot_scan");
 
         return sendMapAutomatically(ip);
     }

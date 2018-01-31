@@ -5,7 +5,7 @@
 
 /// we want the robot to be at most at 0.15 metres of its goal
 move_base_msgs::MoveBaseGoal currentGoal;
-std::shared_ptr<MoveBaseClient> ac(0);
+MoveBaseClient* ac;
 
 int attempt = 0;
 bool docking = false;
@@ -404,8 +404,7 @@ int main(int argc, char* argv[]){
 
     ros::service::waitForService("/gobot_startup/pose_ready", ros::Duration(60.0));
 
-    ac = std::shared_ptr<MoveBaseClient> (new MoveBaseClient("move_base", true));
-    ac->waitForServer();
+    ac = new MoveBaseClient("move_base", true);
 
     ROS_INFO("(auto_docking::startDockingService) actionlib server ready!!");
 

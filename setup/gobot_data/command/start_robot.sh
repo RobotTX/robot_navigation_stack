@@ -1,6 +1,5 @@
 #!/bin/bash
 sleep 10s
-path=$(pwd | cut -d '/' -f1-3)
 var=$(rosclean check | grep 'G')
 if [ ! -z "$var" ] 
 then

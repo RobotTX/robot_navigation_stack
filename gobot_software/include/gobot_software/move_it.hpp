@@ -49,8 +49,6 @@ struct Point {
     double yaw;
 };
 
-void setStageInFile(const int stage);
-
 void goalResultCallback(const move_base_msgs::MoveBaseActionResult::ConstPtr& msg);
 
 void goalReached();
@@ -78,6 +76,8 @@ bool startLoopPathService(std_srvs::Empty::Request &req, std_srvs::Empty::Respon
 bool stopLoopPathService(std_srvs::Empty::Request &req, std_srvs::Empty::Response &res);
 
 bool goDockAfterPathService(std_srvs::Empty::Request &req, std_srvs::Empty::Response &res);
+
+bool interruptDelayService(std_srvs::Empty::Request &req, std_srvs::Empty::Response &res);
 
 bool skipPathService(gobot_msg_srv::SetInt::Request &req, gobot_msg_srv::SetInt::Response &res);
 
