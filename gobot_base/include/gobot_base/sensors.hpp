@@ -5,6 +5,7 @@
 #include <stdlib.h>
 #include <signal.h>
 #include <std_msgs/Int8.h>
+#include <std_msgs/Float32.h>
 #include <std_srvs/Empty.h>
 #include <thread>
 #include "serial/serial.h"
@@ -19,6 +20,7 @@
 #include <gobot_msg_srv/SonarMsg.h>
 #include <gobot_msg_srv/WeightMsg.h>
 #include <gobot_msg_srv/CliffMsg.h>
+#include <gobot_msg_srv/GyroMsg.h>
 #include <gobot_msg_srv/IsCharging.h>
 #include <gobot_msg_srv/LedStrip.h>
 #include <gobot_msg_srv/GetIntArray.h>

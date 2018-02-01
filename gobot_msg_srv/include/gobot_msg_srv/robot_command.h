@@ -23,6 +23,8 @@
 #include <move_base_msgs/MoveBaseAction.h>
 #include <actionlib/client/simple_action_client.h>
 
+#include <geometry_msgs/Pose.h>
+
 namespace robot_class {
     typedef actionlib::SimpleActionClient<move_base_msgs::MoveBaseAction> MoveBaseClient;
     
@@ -30,6 +32,7 @@ namespace robot_class {
         double x;
         double y;
         double theta;
+        double qx,qy,qz,qw;
     };
 
     class RobotCommand: public SetRobot{
@@ -37,11 +40,14 @@ namespace robot_class {
             RobotCommand();
             ~RobotCommand();
             
+            void initilize();
+
+            //math related command
+            
+
             //motion related command
-            void getGoal(double &x, double &y, double &theta);
-            void getGoal(Pose &goal);
-            void getPose(double &x, double &y, double &theta);
-            void getPose(Pose &pose);
+            void getPose(Pose &current_pose);
+            void getGoal(Pose &goal_pose);
             bool sendGoal(const double &x, const double &y, const double &theta);
             bool sendGoal(const Pose &goal);
             bool sendGoal(const double &dis, const double &theta);
@@ -62,10 +68,13 @@ namespace robot_class {
             //communication related command
             std::string getIP();
 
-            
+            //callback functions
+            void PoseCallback(const geometry_msgs::Pose::ConstPtr& msg);
+
         private:
             std_srvs::Empty empty_srv;
-            MoveBaseClient* ac_;
+            Pose robot_pose_, goal_pose_;
+            ros::Subscriber pose_sub_;
     };
 };
 

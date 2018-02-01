@@ -166,10 +166,6 @@ int main(int argc, char** argv){
         else {
             skipped++;
             ROS_WARN("(odom) couldn't call service /gobot_motor/getEncoders, skipping this odom pub, total skipped : %d", skipped);
-            if(skipped==1){
-                ros::service::call("/gobot_recovery/initialize_home",arg);
-                ROS_WARN("(odom) first time happened. Check whether Gobot is home.");
-            }
         }
 
         r.sleep();

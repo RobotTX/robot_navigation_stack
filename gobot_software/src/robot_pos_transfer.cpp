@@ -39,7 +39,6 @@ void sendRobotPos(const ros::TimerEvent&){
 
 void getRobotPos(const geometry_msgs::Pose::ConstPtr& msg){
     double yaw = tf::getYaw(tf::Quaternion(msg->orientation.x, msg->orientation.y, msg->orientation.z, msg->orientation.w));
-
     robot_string = std::to_string(msg->position.x) + " " + std::to_string(msg->position.y) + " " + std::to_string(yaw) + " ";
     last_pos_x = msg->position.x;
     last_pos_y = msg->position.y;

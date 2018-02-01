@@ -17,13 +17,13 @@ bool move_from_collision = true;
 
 ros::Time lastIrSignalTime, goal_pub_time;
 
-ros::Subscriber goalStatusSub,bumperSub,irSub,batterySub,proximitySub,poseSub;
+ros::Subscriber goalStatusSub,bumperSub,irSub,batterySub,proximitySub;
 ros::Timer sound_timer;
 
 std_srvs::Empty empty_srv;
 
 tfScalar x, y, oriX, oriY, oriZ, oriW;
-double landingPointX, landingPointY, landingYaw, currentYaw;
+double landingPointX, landingPointY, landingYaw;
 
 int dock_status = 0;
 robot_class::SetRobot robot;
@@ -123,7 +123,6 @@ void findChargingStation(void){
     /// Pid control with the ir signal
     lastIrSignalTime = ros::Time::now();
     irSub = nh.subscribe("/gobot_base/ir_topic", 1, newIrSignal);
-    poseSub = nh.subscribe("/robot_pose",1,poseCallback);
 }
 
 void newBatteryInfo(const gobot_msg_srv::BatteryMsg::ConstPtr& batteryInfo){
@@ -140,13 +139,6 @@ void newBatteryInfo(const gobot_msg_srv::BatteryMsg::ConstPtr& batteryInfo){
     */
 }
 
-void poseCallback(const geometry_msgs::Pose::ConstPtr& msg){
-    if(docking){
-        currentYaw = tf::getYaw(tf::Quaternion(msg->orientation.x, msg->orientation.y, msg->orientation.z, msg->orientation.w));
-    }
-}
-
-
 void newBumpersInfo(const gobot_msg_srv::BumperMsg::ConstPtr& bumpers){
     /// 0 : collision; 1 : no collision
     //at least two has no collision we will check
@@ -156,7 +148,6 @@ void newBumpersInfo(const gobot_msg_srv::BumperMsg::ConstPtr& bumpers){
         if(back){
             if(!collision){
                 irSub.shutdown();
-                poseSub.shutdown();
                 collision = true;
                 move_from_collision = false;
                 robot.setMotorSpeed('F', 0, 'F', 0);
@@ -198,21 +189,6 @@ void newIrSignal(const gobot_msg_srv::IrMsg::ConstPtr& irSignal){
             lostIrSignal = false;
             /// rear ir received 1 and 2 signal, so robot goes backward
             if (irSignal->rearSignal == 3){
-                /*
-                double diffYaw = currentYaw-landingYaw;
-                if(diffYaw>PI)
-                    diffYaw = diffYaw - 2*PI;
-                else if(diffYaw<-PI)
-                    diffYaw = diffYaw + 2*PI;
-                    
-                ROS_INFO("Yaw Diff: %.3f", diffYaw);
-                if((diffYaw<0.1 && diffYaw >0) || (diffYaw<0 && diffYaw>-0.1))   //0.1->5.7degree
-                    robot.setMotorSpeed('B', 5, 'B', 5);
-                else if(diffYaw>0.1)      //in the left of home yaw. R_VEL>L_VEL
-                    robot.setMotorSpeed('B', 5, 'B', 4);
-                else if(diffYaw<-0.1)  //in the right of home yaw   L_VEL>R_VEL
-                    robot.setMotorSpeed('B', 4, 'B', 5);
-                    */
                 robot.setMotorSpeed('B', 5, 'B', 5);
             }
             else if (irSignal->rearSignal == 2)
@@ -378,7 +354,6 @@ void resetDockingParams(){
     robot.setMotorSpeed('F', 0, 'F', 0);
     bumperSub.shutdown();
     irSub.shutdown();
-    poseSub.shutdown();
     //batterySub.shutdown();
     goalStatusSub.shutdown();
     charging = false;

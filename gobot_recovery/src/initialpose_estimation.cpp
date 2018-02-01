@@ -4,8 +4,8 @@
 double cov_x=0.0,cov_y=0.0,cov_yaw=0.0,initial_cov_xy=0.02,initial_cov_yaw=0.02;
 //Make robot rotate 360 degrees
 double rot_vel = 0.4, rot_time = 150;
-double last_pos_x=0.0,last_pos_y=0.0,last_pos_yaw=0.0,last_ang_x=0.0,last_ang_y=0.0,last_ang_z=0.0,last_ang_w=0.0;
-double home_pos_x=0.0,home_pos_y=0.0,home_pos_yaw=0.0,home_ang_x=0.0,home_ang_y=0.0,home_ang_z=0.0,home_ang_w=0.0;
+double last_pos_x=0.0,last_pos_y=0.0,last_ang_x=0.0,last_ang_y=0.0,last_ang_z=0.0,last_ang_w=0.0;
+double home_pos_x=0.0,home_pos_y=0.0,home_ang_x=0.0,home_ang_y=0.0,home_ang_z=0.0,home_ang_w=0.0;
 double rosparam_x=0.0,rosparam_y=0.0,rosparam_yaw=0.0,rosparam_cov_x=0.0,rosparam_cov_y=0.0,rosparam_cov_yaw=0.0;
 
 bool running = false,found_pose=false;
@@ -33,7 +33,7 @@ bool evaluatePose(int type){
     //Evaluate Last pose compared to Home pose
     else if(type==1){
         if(home_pos_x!=0 || home_pos_y!=0 || home_ang_x!=0 || home_ang_y!=0 || home_ang_z!=0 || home_ang_w!=0)
-            if(fabs(home_pos_x-last_pos_x)<0.1 && fabs(home_pos_y-last_pos_y)<0.1 && fabs(home_pos_yaw-last_pos_yaw)<PI*10/180){
+            if(fabs(home_pos_x-last_pos_x)<0.1 && fabs(home_pos_y-last_pos_y)<0.1){
                 ROS_INFO("Last recorded post near to charging station.");
                 return true;
             }
@@ -118,8 +118,7 @@ bool initializeHomeSrcCallback(std_srvs::Empty::Request &req, std_srvs::Empty::R
             home_ang_y=std::stod(get_home.response.data[3]);
             home_ang_z=std::stod(get_home.response.data[4]);
             home_ang_w=std::stod(get_home.response.data[5]);
-            home_pos_yaw = tf::getYaw(tf::Quaternion(home_ang_x,home_ang_y,home_ang_z,home_ang_w));
-            ROS_INFO("Home: pos(%.2f,%.2f,%.2f),cov(%.2f,%.2f,%.2f).",home_pos_x,home_pos_y,home_pos_yaw,initial_cov_xy,initial_cov_xy,initial_cov_yaw);
+            ROS_INFO("Home: pos(%.2f,%.2f),cov(%.2f,%.2f,%.2f).",home_pos_x,home_pos_y,initial_cov_xy,initial_cov_xy,initial_cov_yaw);
         }
         else
             ROS_ERROR("Could not find the param home_pose");
@@ -378,8 +377,7 @@ void getPose(){
         home_ang_y=std::stod(get_home.response.data[3]);
         home_ang_z=std::stod(get_home.response.data[4]);
         home_ang_w=std::stod(get_home.response.data[5]);
-        home_pos_yaw = tf::getYaw(tf::Quaternion(home_ang_x,home_ang_y,home_ang_z,home_ang_w));
-        ROS_INFO("Home: pos(%.2f,%.2f,%.2f),cov(%.2f,%.2f,%.2f).",home_pos_x,home_pos_y,home_pos_yaw,initial_cov_xy,initial_cov_xy,initial_cov_yaw);
+        ROS_INFO("Home: pos(%.2f,%.2f),cov(%.2f,%.2f,%.2f).",home_pos_x,home_pos_y,initial_cov_xy,initial_cov_xy,initial_cov_yaw);
     }
     else
         ROS_ERROR("Could not find the param home_pose");
@@ -406,8 +404,7 @@ void getPose(){
             ifs >> last_pos_x >> last_pos_y >> last_ang_x >> last_ang_y >> last_ang_z >> last_ang_w;
             ifs.close();
             double roll,pitch;
-            last_pos_yaw = tf::getYaw(tf::Quaternion(last_ang_x,last_ang_y,last_ang_z,last_ang_w));
-            ROS_INFO("Last: pos(%.2f,%.2f,%.2f),cov(%.2f,%.2f,%.2f).",last_pos_x,last_pos_y,last_pos_yaw,initial_cov_xy,initial_cov_xy,initial_cov_yaw);
+            ROS_INFO("Last: pos(%.2f,%.2f),cov(%.2f,%.2f,%.2f).",last_pos_x,last_pos_y,initial_cov_xy,initial_cov_xy,initial_cov_yaw);
         }
     } 
     else

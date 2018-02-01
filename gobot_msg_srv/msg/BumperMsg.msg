@@ -1,9 +1,9 @@
-int32 bumper1
-int32 bumper2
-int32 bumper3
-int32 bumper4
-int32 bumper5
-int32 bumper6
-int32 bumper7
-int32 bumper8
+int8 bumper1
+int8 bumper2
+int8 bumper3
+int8 bumper4
+int8 bumper5
+int8 bumper6
+int8 bumper7
+int8 bumper8
 

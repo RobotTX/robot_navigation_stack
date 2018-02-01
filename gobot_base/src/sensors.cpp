@@ -5,7 +5,7 @@
 #define BATTERY_MAX 23000
 #define BATTERY_MIN 21500
 
-ros::Publisher bumper_pub, ir_pub, proximity_pub, sonar_pub, weight_pub, battery_pub, cliff_pub, button_pub;
+ros::Publisher bumper_pub, ir_pub, proximity_pub, sonar_pub, weight_pub, battery_pub, cliff_pub, button_pub, gyro_pub, temperature_pub;
 serial::Serial serialConnection;
 
 std_srvs::Empty empty_srv;
@@ -23,6 +23,8 @@ int battery_percent = 50;
 int error_count = 0;
 bool display_data = false;
 int STM_CHECK = 0, STM_RATE=5, charge_check = 0;;
+bool STM_NEW = false;
+int received_bytes = 0;
 bool USE_BUMPER=true,USE_SONAR=true,USE_CLIFF=true;
 std::map<std::string, uint8_t> led_color_;
 
@@ -123,7 +125,7 @@ void publishSensors(void){
 
         //ROS_INFO("(sensors::publishSensors) Info : %lu %d %d %d", buff.size(), (int) buff.at(0), (int) buff.at(1), (int) buff.at(2));
         /// check if the 16 is useful
-        if(buff.size() == 49){
+        if(buff.size() == received_bytes){
             /// First 3 bytes are the sensor address, the command and the data length, so we can ignore it
             //7 sonars, 8 bumpers, 3 IR, 2 distance, 4 cliff, 1 battery, 1 load
 
@@ -144,16 +146,6 @@ void publishSensors(void){
             gobot_msg_srv::BumperMsg bumper_data;
 
             if(buff.at(17)){
-                /*for old gobot
-                bumper_data.bumper1 = (buff.at(17) & 0b00000001) > 0;
-                bumper_data.bumper2 = (buff.at(17) & 0b00000010) > 0;
-                bumper_data.bumper3 = (buff.at(17) & 0b00000100) > 0;
-                bumper_data.bumper4 = (buff.at(17) & 0b00001000) > 0;
-                bumper_data.bumper5 = (buff.at(17) & 0b00010000) > 0;
-                bumper_data.bumper6 = (buff.at(17) & 0b00100000) > 0;
-                bumper_data.bumper7 = (buff.at(17) & 0b01000000) > 0;
-                bumper_data.bumper8 = (buff.at(17) & 0b10000000) > 0;
-                */
                 bumper_data.bumper6 = (buff.at(17) & 0b00000001) > 0;
                 bumper_data.bumper3 = (buff.at(17) & 0b00000010) > 0;
                 bumper_data.bumper4 = (buff.at(17) & 0b00000100) > 0;
@@ -287,7 +279,7 @@ void publishSensors(void){
 
             /// Weight data
             gobot_msg_srv::WeightMsg weight_data;
-            weight_data.weightInfo = (buff.at(43) << 8) | buff.at(44);
+            weight_data.weightInfo = (buff.at(42) << 16) | (buff.at(43) << 8) | buff.at(44);
 
 
             /// External button 1-No press; 0-press
@@ -300,6 +292,22 @@ void publishSensors(void){
             /// Reset wifi button (double click power button)
             int32_t resetwifi_button = buff.at(47);
 
+            //48 - 59 gyro+acce
+            gobot_msg_srv::GyroMsg gyro;
+            //if 1st bit is 1, means negative
+            (buff.at(48) & 0b10000000) > 0;
+            gyro.gyrox = (buff.at(48) & 0b10000000)>0 ? !(buff.at(48)<<8|buff.at(49)) : (buff.at(48)<<8|buff.at(49));
+            gyro.gyroy = (buff.at(50) & 0b10000000)>0 ? !(buff.at(50)<<8|buff.at(49)) : (buff.at(48)<<8|buff.at(49));
+            gyro.gyroz = (buff.at(52) & 0b10000000)>0 ? !(buff.at(48)<<8|buff.at(49)) : (buff.at(48)<<8|buff.at(49));
+            gyro.accelx = (buff.at(54) & 0b10000000)>0 ? !(buff.at(48)<<8|buff.at(49)) : (buff.at(48)<<8|buff.at(49));
+            gyro.accely = (buff.at(56) & 0b10000000)>0 ? !(buff.at(48)<<8|buff.at(49)) : (buff.at(48)<<8|buff.at(49));
+            gyro.accelz = (buff.at(58) & 0b10000000)>0 ? !(buff.at(48)<<8|buff.at(49)) : (buff.at(48)<<8|buff.at(49));
+            gyro_pub.publish(gyro);
+
+            //60 - 61 temperature
+            std_msgs::Float32 temperature;
+            temperature.data = (((buff.at(60)<<8)|buff.at(61))-21)/333.87 - 21.0;
+            temperature_pub.publish(temperature);
 
             if(display_data){
                 std::cout << "Sonars : " << sonar_data.distance1 << " " << sonar_data.distance2 << " " << sonar_data.distance3 << " " << sonar_data.distance4 
@@ -586,12 +594,13 @@ int main(int argc, char **argv) {
     ROS_INFO("(Sensors) MD49 is ready.");
     //Startup end
 
+    nh.getParam("STM_NEW", STM_NEW);
     nh.getParam("STMdevice", STMdevice);
     nh.getParam("STM_RATE", STM_RATE);
     nh.getParam("USE_BUMPER", USE_BUMPER);
     nh.getParam("USE_SONAR", USE_SONAR);
     nh.getParam("USE_CLIFF", USE_CLIFF);
-
+    received_bytes = STM_NEW ?  61 : 49;
     //0x52 = Blue,0x47 = Red,0x42 = Green,0x4D = Magenta,0x43 = Cyan,0x59 = Yellow,0x57 = White, 0x00 = Off
     led_color_ = {{"green",0x42}, {"blue",0x52}, {"yellow",0x59}, {"red",0x47}, {"cyan",0x43}, {"white",0x57}, {"magenta",0x4D}, {"off",0x00}};
 
@@ -607,6 +616,9 @@ int main(int argc, char **argv) {
     battery_pub = nh.advertise<gobot_msg_srv::BatteryMsg>("/gobot_base/battery_topic", 50);
     cliff_pub = nh.advertise<gobot_msg_srv::CliffMsg>("/gobot_base/cliff_topic", 50);
     button_pub = nh.advertise<std_msgs::Int8>("/gobot_base/button_topic",50);
+    gyro_pub = nh.advertise<gobot_msg_srv::GyroMsg>("/gobot_base/gyro_topic",50);
+    temperature_pub = nh.advertise<std_msgs::Float32>("/gobot_base/temperature_topic",50);
+
     ros::ServiceServer shutdownSrv = nh.advertiseService("/gobot_base/shutdown_robot", shutdownSrvCallback);
     ros::ServiceServer setLedSrv = nh.advertiseService("/gobot_base/setLed", setLedSrvCallback);
     ros::ServiceServer setSoundSrv = nh.advertiseService("/gobot_base/setSound", setSoundSrvCallback);

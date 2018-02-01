@@ -1,1 +1,1 @@
-int16 weightInfo
+int32 weightInfo

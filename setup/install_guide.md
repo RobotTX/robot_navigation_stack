@@ -27,10 +27,9 @@ catkin_make
 
 #configure .bashrc
 alias cat_make='cd ~/catkin_ws/ && catkin_make && source devel/setup.bash && . ~/catkin_ws/devel/setup.bash'
-rospath=$(pwd | cut -d '/' -f1-3)
 source /opt/ros/kinetic/setup.bash
-source $rospath/catkin_ws/devel/setup.bash
-export ROS_PACKAGE_PATH=$ROS_PACKAGE_PATH:$rospath/catkin_ws/src
+source ~/catkin_ws/devel/setup.bash
+export ROS_PACKAGE_PATH=$ROS_PACKAGE_PATH:~/catkin_ws/src
 
 
 #install Driver Packages
@@ -45,6 +44,8 @@ sudo apt install ros-kinetic-hector-nav-msgs
 sudo apt install ros-kinetic-urg-node
 sudo apt install ros-kinetic-hector-sensors-description (gazebo)
 sudo apt install ros-kinetic-hector_gazebo-plugins (gazebo)
+
+#programmable voice (tts)
 
 ###################################################
 
