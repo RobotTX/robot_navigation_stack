@@ -20,6 +20,7 @@
 #include <gobot_msg_srv/GetString.h>
 #include <gobot_msg_srv/BatteryMsg.h>
 #include <gobot_msg_srv/IsCharging.h>
+#include <gobot_msg_srv/BumperMsg.h>
 #include <dynamic_reconfigure/Reconfigure.h>
 #include <dynamic_reconfigure/DoubleParameter.h>
 

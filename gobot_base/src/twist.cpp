@@ -129,9 +129,6 @@ void newBumpersInfo(const gobot_msg_srv::BumperMsg::ConstPtr& bumpers){
             collision = true;
             collisionTime = ros::Time::now();
             setSpeed('F', 0, 'F', 0);
-            //White Red LED Running
-            robot.setLed(1,{"red","white"});
-            robot.setSound(3,1);
         } 
         else if((ros::Time::now() - collisionTime).toSec()>collision_threshold && moved_from_collision){
         /// if after 5 seconds, the obstacle is still there, we go to the opposite direction
@@ -177,7 +174,6 @@ void newBumpersInfo(const gobot_msg_srv::BumperMsg::ConstPtr& bumpers){
         ROS_INFO("(twist::newBumpersInfo) Obstacle left after %f seconds",(ros::Time::now() - collisionTime).toSec());
         collision = false;
         bumper_collision_pub.publish(bumpers_data);
-        robot.setSound(1,1);
     }
 }
 

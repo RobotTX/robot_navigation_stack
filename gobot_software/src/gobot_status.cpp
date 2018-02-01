@@ -64,6 +64,8 @@ int disconnected = 0;
 bool charging_ = false;
 int battery_percent_ = 51;
 
+bool collision = false;
+
 robot_class::SetRobot robot;
 
 //change robot led and sound to inform people its status
@@ -430,6 +432,24 @@ void batteryCallback(const gobot_msg_srv::BatteryMsg::ConstPtr& msg){
     battery_percent_ = msg->BatteryStatus;
 }
 
+//for changing led/sound purpose. There should be no change when docking
+void bumpersCallback(const gobot_msg_srv::BumperMsg::ConstPtr& bumpers){
+    if(gobot_status_!=15){
+        bool front = !(bumpers->bumper1 && bumpers->bumper2 && bumpers->bumper3 && bumpers->bumper4);
+        bool back = !(bumpers->bumper5 && bumpers->bumper6 && bumpers->bumper7 && bumpers->bumper8);
+        if(front || back){
+            if(!collision){
+                collision = true;
+                robot.setLed(1,{"red,white"});
+                robot.setSound(3,1);
+            }
+        }
+        else if(collision){
+            collision = false;
+            robot.setSound(1,1);
+        }
+    }
+}
 
 void initialData(){
     ros::NodeHandle n;
@@ -615,7 +635,8 @@ int main(int argc, char* argv[]){
         ros::ServiceServer disconnectedSrv = n.advertiseService("/gobot_test/disconnected", disconnectedSrvCallback);
 
         ros::Subscriber battery = n.subscribe("/gobot_base/battery_topic",1, batteryCallback);
-        
+        ros::Subscriber bumpers = n.subscribe("/gobot_base/bumpers_topic",1, bumpersCallback);
+
         ros::spin();
         
     } catch (std::exception& e) {

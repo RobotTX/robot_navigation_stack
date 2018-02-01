@@ -1,3 +1,3 @@
-int16 signal1
-int16 signal2
+int8 signal1
+int8 signal2
 

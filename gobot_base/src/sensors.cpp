@@ -22,9 +22,7 @@ int battery_percent = 50;
 
 int error_count = 0;
 bool display_data = false;
-int STM_CHECK = 0, STM_RATE=5, charge_check = 0;;
-bool STM_NEW = false;
-int received_bytes = 0;
+int STM_CHECK = 0, STM_RATE=5, charge_check = 0, STM_BYTES = 0;
 bool USE_BUMPER=true,USE_SONAR=true,USE_CLIFF=true;
 std::map<std::string, uint8_t> led_color_;
 
@@ -125,7 +123,7 @@ void publishSensors(void){
 
         //ROS_INFO("(sensors::publishSensors) Info : %lu %d %d %d", buff.size(), (int) buff.at(0), (int) buff.at(1), (int) buff.at(2));
         /// check if the 16 is useful
-        if(buff.size() == received_bytes){
+        if(buff.size() == STM_BYTES){
             /// First 3 bytes are the sensor address, the command and the data length, so we can ignore it
             //7 sonars, 8 bumpers, 3 IR, 2 distance, 4 cliff, 1 battery, 1 load
 
@@ -296,12 +294,12 @@ void publishSensors(void){
             gobot_msg_srv::GyroMsg gyro;
             //if 1st bit is 1, means negative
             (buff.at(48) & 0b10000000) > 0;
-            gyro.gyrox = (buff.at(48) & 0b10000000)>0 ? !(buff.at(48)<<8|buff.at(49)) : (buff.at(48)<<8|buff.at(49));
-            gyro.gyroy = (buff.at(50) & 0b10000000)>0 ? !(buff.at(50)<<8|buff.at(49)) : (buff.at(48)<<8|buff.at(49));
-            gyro.gyroz = (buff.at(52) & 0b10000000)>0 ? !(buff.at(48)<<8|buff.at(49)) : (buff.at(48)<<8|buff.at(49));
-            gyro.accelx = (buff.at(54) & 0b10000000)>0 ? !(buff.at(48)<<8|buff.at(49)) : (buff.at(48)<<8|buff.at(49));
-            gyro.accely = (buff.at(56) & 0b10000000)>0 ? !(buff.at(48)<<8|buff.at(49)) : (buff.at(48)<<8|buff.at(49));
-            gyro.accelz = (buff.at(58) & 0b10000000)>0 ? !(buff.at(48)<<8|buff.at(49)) : (buff.at(48)<<8|buff.at(49));
+            gyro.gyrox =  buff.at(48)<<8 | buff.at(49);
+            gyro.gyroy =  buff.at(50)<<8 | buff.at(51); 
+            gyro.gyroz =  buff.at(52)<<8 | buff.at(53);
+            gyro.accelx = buff.at(54)<<8 | buff.at(55);
+            gyro.accely = buff.at(56)<<8 | buff.at(57); 
+            gyro.accelz = buff.at(58)<<8 | buff.at(59);
             gyro_pub.publish(gyro);
 
             //60 - 61 temperature
@@ -312,17 +310,19 @@ void publishSensors(void){
             if(display_data){
                 std::cout << "Sonars : " << sonar_data.distance1 << " " << sonar_data.distance2 << " " << sonar_data.distance3 << " " << sonar_data.distance4 
                 << " " << sonar_data.distance5 << " " << sonar_data.distance6 << " " << sonar_data.distance7 <<
-                "\nBumpers : "  << (int) bumper_data.bumper1 << " " << (int) bumper_data.bumper2 << " " << (int) bumper_data.bumper3 << " " << (int) bumper_data.bumper4 << " "
-                << (int) bumper_data.bumper5 << " " << (int) bumper_data.bumper6 << " " << (int) bumper_data.bumper7 << " " << (int) bumper_data.bumper8 <<
-                "\nIr signals : " << (int) ir_data.rearSignal << " "  << (int) ir_data.leftSignal << " "  << (int) ir_data.rightSignal <<
-                "\nProximity : " << (int) proximity_data.signal1 << " " << (int) proximity_data.signal2 <<
+                "\nBumpers : "  << bumper_data.bumper1 << " " << bumper_data.bumper2 << " " << bumper_data.bumper3 << " " << bumper_data.bumper4 << " "
+                << bumper_data.bumper5 << " " << bumper_data.bumper6 << " " << bumper_data.bumper7 << " " << bumper_data.bumper8 <<
+                "\nIr signals : " << ir_data.rearSignal << " "  << ir_data.leftSignal << " "  << ir_data.rightSignal <<
+                "\nProximity : " << proximity_data.signal1 << " " << proximity_data.signal2 <<
                 "\nCliff : " << cliff_data.cliff1 << " " << cliff_data.cliff2 << " " << cliff_data.cliff3 << " " << cliff_data.cliff4 <<
                 "\nBattery : " << battery_data.BatteryStatus << " " << battery_data.BatteryVoltage << " " << battery_data.ChargingCurrent << " " << battery_data.Temperature 
                 << " " << battery_data.RemainCapacity << " " << battery_data.FullCapacity << " " << battery_data.ChargingFlag <<
                 "\nWeight : " << weight_data.weightInfo << " " <<
                 "\nExternal button : " << external_button << " " <<
                 "\nResetwifi button : " << resetwifi_button << " " << 
-                "\nengage point : " << engage_point << " " << 
+                "\nengage point : " << engage_point << " " <<
+                "\ngyro data : " << gyro.gyrox <<" "<< gyro.gyroy <<" "<< gyro.gyroz <<" "<< gyro.accelx <<" "<< gyro.accely <<" "<< gyro.accelz <<
+                "\ntemperature : "<< temperature.data <<
                 std::endl;
             }
 
@@ -594,13 +594,12 @@ int main(int argc, char **argv) {
     ROS_INFO("(Sensors) MD49 is ready.");
     //Startup end
 
-    nh.getParam("STM_NEW", STM_NEW);
+    nh.getParam("STM_BYTES", STM_BYTES);  //61/49
     nh.getParam("STMdevice", STMdevice);
     nh.getParam("STM_RATE", STM_RATE);
     nh.getParam("USE_BUMPER", USE_BUMPER);
     nh.getParam("USE_SONAR", USE_SONAR);
     nh.getParam("USE_CLIFF", USE_CLIFF);
-    received_bytes = STM_NEW ?  61 : 49;
     //0x52 = Blue,0x47 = Red,0x42 = Green,0x4D = Magenta,0x43 = Cyan,0x59 = Yellow,0x57 = White, 0x00 = Off
     led_color_ = {{"green",0x42}, {"blue",0x52}, {"yellow",0x59}, {"red",0x47}, {"cyan",0x43}, {"white",0x57}, {"magenta",0x4D}, {"off",0x00}};
 

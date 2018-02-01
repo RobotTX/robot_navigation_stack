@@ -44,12 +44,43 @@ sudo apt install ros-kinetic-hector-nav-msgs
 sudo apt install ros-kinetic-urg-node
 sudo apt install ros-kinetic-hector-sensors-description (gazebo)
 sudo apt install ros-kinetic-hector_gazebo-plugins (gazebo)
-
-#programmable voice (tts)
-
+sudo apt-get install libusb-dev
+sudo apt-get install libspnav-dev
 ###################################################
 
+#programmable voice (tts)#
+* festival english - echo "text" | festival --tts
+sudo apt-get install festival
+* female voice
+mkdir us1  
+cd us1
+wget http://www.speech.cs.cmu.edu/cmu_arctic/packed/cmu_us_slt_arctic-0.95-release.tar.bz2
+tar xf cmu_us_slt_arctic-0.95-release.tar.bz2
+sudo mv cmu_us_slt_arctic /usr/share/festival/voices/english/cmu_us_slt_arctic_clunits
+sudo vi /etc/festival.scm
+add (set! voice_default 'voice_cmu_us_slt_arctic_clunits) to the end
+
+
+* ekho chinese - ekho "string"
+sudo apt-get install libespeak-dev
+sudo apt-get install libespeak-dev
+sudo apt-get install libsndfile1-dev 
+sudo apt-get install libpulse-dev
+sudo apt-get install libncurses5-dev (required by --enable-festival)
+sudo apt-get install libestools-dev (optionally required by --enable-festival)
+sudo apt-get install festival-dev  (optionally required by --enable-festival)
+sudo apt-get install libvorbis-dev (optional)
+sudo apt-get install libmp3lame-dev (optional)
+
+$ ./configure
+$ make
+$ sudo make install
+
+* play mp3/wav - sudo play file.wav
+sudo apt install sox
+sudo apt install libsox-fmt-all
 #use usb-connected joystick#
+#*
 sudo apt-get install libusb-dev
 sudo apt-get install libspnav-dev
 

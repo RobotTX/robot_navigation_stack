@@ -42,9 +42,16 @@ sleep 2s
 echo "[network-manager] installing..."
 echo "y" | sudo apt install network-manager
 echo "[network-manager] installed!"
+sleep 2s
+echo "[libusb-dev] installing..."
+echo "y" | sudo apt-get install libusb-dev
+echo "[libusb-dev] installed!"
+sleep 2s
+echo "[libspnav-dev] installing..."
+echo "y" | sudo apt-get install libspnav-dev
+echo "[libspnav-dev] installed!"
 echo "#################################"
 echo "All tools are installed!"
-sleep 2s
 #if [ -z "$(grep "alias cat_make=" ~/.bashrc)" ]
 #then
 #    echo "[.bashrc] configuring..."
