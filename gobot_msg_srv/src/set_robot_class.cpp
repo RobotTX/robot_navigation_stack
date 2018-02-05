@@ -118,12 +118,25 @@ namespace robot_class {
 
     void SetRobot::runScan(bool simulation){
         std::string cmd;
-        /// Relaunch gobot_navigation
+        /// Relaunch gobot_scan
         if(simulation)
             cmd = "gnome-terminal -x bash -c \"source /opt/ros/kinetic/setup.bash;source ~/catkin_ws/devel/setup.bash;roslaunch gobot_gazebo gazebo_scan.launch\"";
         else
             cmd = "gnome-terminal -x bash -c \"source /opt/ros/kinetic/setup.bash;source ~/catkin_ws/devel/setup.bash;roslaunch gobot_navigation gobot_scan.launch\"";
         system(cmd.c_str());
     }
+
+    //this two functions only work with robot equipped with speaker and ekho & festival packages
+    void SetRobot::speakEnglish(std::string str){
+        tts_en_ = "echo \"" + str + "\" | festival --tts";
+        system(tts_en_.c_str());
+    }
+
+    void SetRobot::speakChinese(std::string str){
+        tts_ch_ = "ekho -s -40 \"" + str + "\"";
+        system(tts_ch_.c_str());
+    }
+    //this two functions only work with robot equipped with speaker and ekho & festival packages
+    
 };
 

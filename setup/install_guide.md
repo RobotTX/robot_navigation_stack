@@ -48,37 +48,6 @@ sudo apt-get install libusb-dev
 sudo apt-get install libspnav-dev
 ###################################################
 
-#programmable voice (tts)#
-* festival english - echo "text" | festival --tts
-sudo apt-get install festival
-* female voice
-mkdir us1  
-cd us1
-wget http://www.speech.cs.cmu.edu/cmu_arctic/packed/cmu_us_slt_arctic-0.95-release.tar.bz2
-tar xf cmu_us_slt_arctic-0.95-release.tar.bz2
-sudo mv cmu_us_slt_arctic /usr/share/festival/voices/english/cmu_us_slt_arctic_clunits
-sudo vi /etc/festival.scm
-add (set! voice_default 'voice_cmu_us_slt_arctic_clunits) to the end
-
-
-* ekho chinese - ekho "string"
-sudo apt-get install libespeak-dev
-sudo apt-get install libespeak-dev
-sudo apt-get install libsndfile1-dev 
-sudo apt-get install libpulse-dev
-sudo apt-get install libncurses5-dev (required by --enable-festival)
-sudo apt-get install libestools-dev (optionally required by --enable-festival)
-sudo apt-get install festival-dev  (optionally required by --enable-festival)
-sudo apt-get install libvorbis-dev (optional)
-sudo apt-get install libmp3lame-dev (optional)
-
-$ ./configure
-$ make
-$ sudo make install
-
-* play mp3/wav - sudo play file.wav
-sudo apt install sox
-sudo apt install libsox-fmt-all
 #use usb-connected joystick#
 #*
 sudo apt-get install libusb-dev
@@ -92,13 +61,17 @@ Then catkin_make, then add the packages above to the src, then catkin_make again
 sudo chmod -R +x ~/catkin_ws/src/gobot_navigation_stack
 
 #footprint & other parameters
-gobot_base.launch   wheel_separation    middle:0.351  outside:0.402
-                    wheel_radius        0.0725 -> 0.075
-                    ticks_per_rotation  *819.2 -> 980
-*costmap.yaml/gmapping.yaml/teb_local.yaml
-[[0.2495,0],[0.2478,-0.0835],[0.242,-0.167],[0.2203,-0.2164],[0.1786,-0.2411],[0.0893,-0.2484],[0,-0.25],[-0.0893,-0.2484],[-0.1786,-0.2411],[-0.2203,-0.2164],[-0.242,-0.167],[-0.2478,-0.0835],[-0.2495,0],[-0.2478,0.0835],[-0.242,0.167],[-0.2203,0.2164],[-0.1786,0.2411],[-0.0893,0.2484],[0,0.25],[0.0893,0.2484],[0.1786,0.2411],[0.2203,0.2164],[0.242,0.167],[0.2478,0.0835]]
+robot_sensors_param.launch      wheel_separation    middle:0.351  outside:0.402
+                                wheel_radius        0.0725 -> 0.075
+                                ticks_per_rotation  *819.2 -> 980
+* footprint
+costmap.yaml/gmapping.yaml/teb_local.yaml
+[[0.250,0],[0.245,-0.165], [0.225,-0.220], [0.165,-0.240],
+[0,-0.245],[-0.165,-0.240],[-0.225,-0.220],[-0.245,-0.165],
+[-0.250,0],[-0.245,0.165], [-0.225,0.220], [-0.165,0.240],
+[0,0.245], [0.165,0.240],  [0.225,0.220],  [0.245,0.165]]
 
-*TF
+* TF
 -sonar z=0.3-0.4 front_right:0.243,0.12; front_left:0.243,-0.12; back_right:-0.246,0.112; back_left:-0.246,-0.112
 -laser z=0.2-0.3 200,0
 -cliff z=0-0.1 front_right:0.215,0.18; front_left:0.215,-0.18; back_right:-0.215,0.18; back_left:-0.215,-0.18
@@ -107,8 +80,8 @@ gobot_base.launch   wheel_separation    middle:0.351  outside:0.402
 *costmap_common.yaml/teb_local_planner.yaml
 sqrt(0.255^2+0.25^2) = 0.357  
 inflation_radius = 0.45     0.4/0.45/0.5  
-
-#laser
+s
+* laser
 amcl.yaml
 costmap_common_params.yaml
 gmapping_params.yaml
@@ -129,7 +102,7 @@ all settings->user accounts->automatic login
 
 #robot startup
 startup application->add
-sudo sh ~/catkin_ws/src/gobot_navigation_stack/gobot_data/command/start_robot.sh
+sudo sh /home/gtdollar/catkin_ws/src/gobot_navigation_stack/gobot_data/command/start_robot.sh
 
 #allow fping
 #*

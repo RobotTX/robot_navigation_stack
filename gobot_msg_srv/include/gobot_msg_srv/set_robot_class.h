@@ -5,19 +5,15 @@
 #include <string>
 #include <stdio.h>
 #include <std_srvs/Empty.h>
-#include <gobot_msg_srv/GetGobotStatus.h>
+#include <gobot_msg_srv/LedStrip.h>
 #include <gobot_msg_srv/SetGobotStatus.h>
 #include <gobot_msg_srv/SetIntArray.h>
-#include <gobot_msg_srv/GetIntArray.h>
 #include <gobot_msg_srv/SetInt.h>
-#include <gobot_msg_srv/GetInt.h>
 #include <gobot_msg_srv/SetStringArray.h>
-#include <gobot_msg_srv/GetStringArray.h>
 #include <gobot_msg_srv/SetString.h>
-#include <gobot_msg_srv/GetString.h>
-#include <gobot_msg_srv/LedStrip.h>
 #include <gobot_msg_srv/SetSpeeds.h>
-
+#include <gobot_msg_srv/IsCharging.h>
+#include <gobot_msg_srv/SetBattery.h>
 
 namespace robot_class {
     class SetRobot {
@@ -58,7 +54,12 @@ namespace robot_class {
 
             void runScan(bool simulation);
 
+            void speakEnglish(std::string str);
+
+            void speakChinese(std::string str);
+
         private:
+            std::string tts_en_, tts_ch_;
             std_srvs::Empty empty_srv;
             gobot_msg_srv::SetGobotStatus set_gobot_status_;
             gobot_msg_srv::SetInt set_dock_status_,set_stage_,set_loop_;

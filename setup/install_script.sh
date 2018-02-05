@@ -52,16 +52,8 @@ echo "y" | sudo apt-get install libspnav-dev
 echo "[libspnav-dev] installed!"
 echo "#################################"
 echo "All tools are installed!"
-#if [ -z "$(grep "alias cat_make=" ~/.bashrc)" ]
-#then
-#    echo "[.bashrc] configuring..."
-#    echo "alias cat_make='cd ~/catkin_ws/ && catkin_make && source devel/setup.bash && . ~/catkin_ws/devel/setup.bash'" >> ~/.bashrc
-#    echo "source /opt/ros/kinetic/setup.bash" >> ~/.bashrc
-#    echo "source ~/catkin_ws/devel/setup.bash" >> ~/.bashrc
-#    echo "export ROS_PACKAGE_PATH=$ROS_PACKAGE_PATH:~/catkin_ws/src" >> ~/.bashrc
-#    source ~/.bashrc
-#    echo "[.bashrc] configured!"
-#else
-#    echo "[.bashrc] configured!"
-#fi
+echo "#################################"
+echo "start changing udev rules..."
+path=$(cd `dirname $0`; pwd)
+sudo sh $path/create_udevrules_script.sh
 echo "#################################"

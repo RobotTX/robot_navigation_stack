@@ -9,9 +9,7 @@ std_srvs::Empty empty_srv;
 /// Simple Action client
 std::shared_ptr<actionlib::SimpleActionClient<move_base_msgs::MoveBaseAction>> ac;
 
-gobot_msg_srv::GetGobotStatus get_gobot_status;
-
-robot_class::SetRobot robot;
+robot_class::SetRobot SetRobot;
 
 /// To get the starting position
 bool getRobotPos(void){
@@ -54,7 +52,7 @@ void backToStart(){
     gobot_msg_srv::SetStringArray set_home;
     switch(back_to_start_when_finished){
         case 1:
-            robot.setHome(std::to_string(startingPose.position.x),std::to_string(startingPose.position.y),std::to_string(startingPose.orientation.x),
+            SetRobot.setHome(std::to_string(startingPose.position.x),std::to_string(startingPose.position.y),std::to_string(startingPose.orientation.x),
             std::to_string(startingPose.orientation.y),std::to_string(startingPose.orientation.z),std::to_string(startingPose.orientation.w));
         
             ROS_INFO("(Exploration) Complete exploration and Set robot home:%.2f,%.2f",startingPose.position.x,startingPose.position.y);
@@ -106,7 +104,7 @@ void doExploration(void){
                     if(ac->isServerConnected() && exploring){
                         /// Send the goal to move_base
                         ac->sendGoal(goal);
-                        robot.setStatus(25,"EXPLORING");
+                        SetRobot.setStatus(25,"EXPLORING");
                     }
                     else 
                         ROS_INFO("(Exploration) No action server or we stopped exploring already");
@@ -117,7 +115,7 @@ void doExploration(void){
                     /// After no_frontier_threshold attemps at finding a point to explore, we consider the scan finished
                     if(noFrontiersLeft >= no_frontier_threshold){
                         if(exploring){
-                            robot.setStatus(21,"COMPLETE_EXPLORING");
+                            SetRobot.setStatus(21,"COMPLETE_EXPLORING");
                             stopExploration();
                         }
 
@@ -150,9 +148,9 @@ bool startExplorationSrv(hector_exploration_node::Exploration::Request &req, hec
         gobot_msg_srv::IsCharging isCharging;
         if(ros::service::call("/gobot_status/charging_status", isCharging) && isCharging.response.isCharging){
             ROS_WARN("(Exploration) we are charging so we go straight to avoid bumping into the CS when turning");
-            robot.setMotorSpeed('F', 15, 'F', 15);
+            SetRobot.setMotorSpeed('F', 15, 'F', 15);
 		    std::this_thread::sleep_for(std::chrono::milliseconds(3000));
-            robot.setMotorSpeed('F', 0, 'F', 0);
+            SetRobot.setMotorSpeed('F', 0, 'F', 0);
         }
 
         std::thread(doExploration).detach();
@@ -168,7 +166,7 @@ bool startExplorationSrv(hector_exploration_node::Exploration::Request &req, hec
 /// Service to stop the exploration
 bool stopExplorationSrv(std_srvs::Empty::Request &req, std_srvs::Empty::Response &res){
     if(exploring){
-        robot.setStatus(21,"STOP_EXPLORING");
+        SetRobot.setStatus(21,"STOP_EXPLORING");
         stopExploration();
     }
 
@@ -221,7 +219,7 @@ int main(int argc, char* argv[]){
     ros::ServiceServer startExploration = nh.advertiseService("/gobot_scan/startExploration", startExplorationSrv);
     ros::ServiceServer stopExploration = nh.advertiseService("/gobot_scan/stopExploration", stopExplorationSrv);
 
-    robot.setStatus(20,"EXPLORATION");
+    SetRobot.setStatus(20,"EXPLORATION");
 
     ros::spin();
 

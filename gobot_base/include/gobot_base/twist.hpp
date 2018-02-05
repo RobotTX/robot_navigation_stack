@@ -3,6 +3,9 @@
 #include <unistd.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <signal.h>
+#include <chrono>
+#include <thread>
 #include <move_base_msgs/MoveBaseAction.h>
 #include <actionlib/client/simple_action_client.h>
 #include <std_srvs/Empty.h>
@@ -10,14 +13,9 @@
 #include <geometry_msgs/Twist.h>
 #include <sensor_msgs/Joy.h>
 #include <gobot_msg_srv/set_robot_class.h>
-#include <gobot_msg_srv/BumperMsg.h>
-#include <gobot_msg_srv/SetSpeeds.h>
-#include <gobot_msg_srv/IsCharging.h>
-#include <gobot_msg_srv/SetIntArray.h>
+#include <gobot_msg_srv/robot_msgs.h>
 #include <gobot_msg_srv/GetIntArray.h>
-#include "gobot_msg_srv/CliffMsg.h"
-#include <chrono>
-#include <thread>
+
 
 typedef actionlib::SimpleActionClient<move_base_msgs::MoveBaseAction> MoveBaseClient;
 

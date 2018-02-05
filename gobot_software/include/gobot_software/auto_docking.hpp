@@ -6,25 +6,19 @@
 #include <iostream>
 #include <fstream>
 #include <string>
+#include <ctime>
+#include <chrono>
+#include <thread>
 #include <tf/transform_broadcaster.h>
 #include <geometry_msgs/PoseStamped.h>
 #include <actionlib_msgs/GoalStatusArray.h>
 #include <move_base_msgs/MoveBaseAction.h>
+#include <move_base_msgs/MoveBaseActionResult.h>
 #include <actionlib/client/simple_action_client.h>
 #include <boost/smart_ptr.hpp>
 #include <gobot_msg_srv/set_robot_class.h>
-#include <gobot_msg_srv/BatteryMsg.h>
-#include <gobot_msg_srv/BumperMsg.h>
-#include <gobot_msg_srv/IrMsg.h>
-#include <gobot_msg_srv/IsCharging.h>
-#include <gobot_msg_srv/ProximityMsg.h>
-#include <gobot_msg_srv/SetIntArray.h>
-#include <gobot_msg_srv/SetStringArray.h>
-#include <gobot_msg_srv/GetStringArray.h>
-#include <move_base_msgs/MoveBaseActionResult.h>
-#include <ctime>
-#include <chrono>
-#include <thread>
+#include <gobot_msg_srv/get_robot_class.h>
+#include <gobot_msg_srv/robot_msgs.h>
 
 typedef actionlib::SimpleActionClient<move_base_msgs::MoveBaseAction> MoveBaseClient;
 bool startDocking(void);

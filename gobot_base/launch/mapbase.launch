@@ -7,7 +7,7 @@
     <param name="MD49device" type="string" value="/dev/MD" />
 
     <!--laser to base tf frequency depends on the laser update rate-->
-    <node pkg="tf" type="static_transform_publisher" name="base_link_to_laser" args="0.22 -0.03 0.21 0 0 0 /base_link /base_laser 100" required="true"/>
+    <node pkg="tf" type="static_transform_publisher" name="base_link_to_laser" args="0.22 0.0 0.21 0 0 0 /base_link /base_laser 100" required="true"/>
 
     <node pkg="urg_node" type="urg_node" name="hokuyo" output="screen" required="true">
         <param name="frame_id" value="base_laser" />

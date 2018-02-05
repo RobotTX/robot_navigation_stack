@@ -10,7 +10,6 @@
 #include <string>
 #include <vector>
 #include <std_srvs/Empty.h>
-#include <gobot_msg_srv/GetGobotStatus.h>
 #include <tf/transform_broadcaster.h>
 #include <mutex>
 #include <thread>

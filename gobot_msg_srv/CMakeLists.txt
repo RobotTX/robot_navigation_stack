@@ -125,6 +125,7 @@ include_directories(
 )
 
 add_library(robot_class
+                src/get_robot_class.cpp
                 src/set_robot_class.cpp
                 src/robot_command.cpp)
 add_dependencies(robot_class ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})

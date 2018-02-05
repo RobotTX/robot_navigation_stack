@@ -943,9 +943,10 @@ namespace move_base {
           ROS_DEBUG_NAMED( "move_base", "Got a valid command from the local planner: %.3lf, %.3lf, %.3lf",
                            cmd_vel.linear.x, cmd_vel.linear.y, cmd_vel.angular.z );
           last_valid_control_ = ros::Time::now();
-          //make sure that we send the velocity command to the base
-          if ((cmd_vel.linear.x <0 || fabs(cmd_vel.linear.x) <linear_spd_limit_) && fabs(cmd_vel.angular.z) > angular_spd_limit_){
-                cmd_vel.linear.x = 0.0;
+          if (linear_spd_limit_>=0){
+            //make sure that we send the velocity command to the base
+            if ((cmd_vel.linear.x <0 || fabs(cmd_vel.linear.x) <linear_spd_limit_) && fabs(cmd_vel.angular.z) > angular_spd_limit_)
+                  cmd_vel.linear.x = 0.0;
           }
           vel_pub_.publish(cmd_vel);
           if(recovery_trigger_ == CONTROLLING_R)

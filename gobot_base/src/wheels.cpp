@@ -5,6 +5,7 @@ std::string MD49device;
 serial::Serial serialConnection;
 bool test = false;
 int leftSpeed_=128, rightSpeed_=128;
+ros::ServiceServer setSpeedsSrv,getEncodersSrv,resetEncodersSrv;
 
 /// Write and read informations on the serial port
 std::vector<uint8_t> writeAndRead(std::vector<uint8_t> toWrite, int bytesToRead){
@@ -169,11 +170,6 @@ bool motorReadySrvCallback(std_srvs::Empty::Request &req, std_srvs::Empty::Respo
 
 bool initSerial() {
     /// Get the port in which our device is connected
-    /*
-    std::string deviceNode(MD49device);
-    std::string output = getStdoutFromCommand("ls -l /sys/class/tty/ttyUSB*");
-    std::string port = "/dev" + output.substr(output.find(deviceNode) + deviceNode.size(), 8);
-    */
     std::string port = MD49device;
 
     ROS_INFO("(wheels::initSerial) MD49 port : %s", port.c_str());
@@ -203,11 +199,16 @@ bool initSerial() {
 
 
 void mySigintHandler(int sig)
-{
+{   
+    resetEncodersSrv.shutdown();
+    getEncodersSrv.shutdown();
+    setSpeedsSrv.shutdown();
     try{
-		//set speed to 0 when shutdown
-        writeAndRead(std::vector<uint8_t>({0x00, 0x31, 0x80, 0x00, 0x32, 0x80}));
-        serialConnection.close();
+        if(serialConnection.isOpen()){
+            //set speed to 0 when shutdown
+            writeAndRead(std::vector<uint8_t>({0x00, 0x31, 0x80, 0x00, 0x32, 0x80}));
+            serialConnection.close();
+        }
 	} catch (std::exception& e) {
 		ROS_ERROR("(Wheels) Shutdown exception : %s", e.what());
 	}
@@ -222,13 +223,13 @@ int main(int argc, char **argv) {
     nh.getParam("MD49device", MD49device);
 
     if(initSerial()){
-        ros::ServiceServer getSpeedsSrv = nh.advertiseService("/gobot_motor/getSpeeds", getSpeeds);
-        ros::ServiceServer setSpeedsSrv = nh.advertiseService("/gobot_motor/setSpeeds", setSpeeds);
-        ros::ServiceServer getEncodersSrv = nh.advertiseService("/gobot_motor/getEncoders", getEncoders);
-        ros::ServiceServer resetEncodersSrv = nh.advertiseService("/gobot_motor/resetEncoders", resetEncoders);
+        setSpeedsSrv = nh.advertiseService("/gobot_motor/setSpeeds", setSpeeds);
+        getEncodersSrv = nh.advertiseService("/gobot_motor/getEncoders", getEncoders);
+        resetEncodersSrv = nh.advertiseService("/gobot_motor/resetEncoders", resetEncoders);
         ros::ServiceServer testEncodersSrv = nh.advertiseService("/gobot_test/testEncoders", testEncoders);
         ros::ServiceServer testEncodersSrv2 = nh.advertiseService("/gobot_test/testEncoders2", testEncoders2);
         ros::ServiceServer stopTestsSrv = nh.advertiseService("/gobot_test/stopTestEncoder", stopTests);
+        ros::ServiceServer getSpeedsSrv = nh.advertiseService("/gobot_motor/getSpeeds", getSpeeds);
 
         //Startup begin
         ros::service::waitForService("/gobot_status/set_gobot_status", ros::Duration(60.0));

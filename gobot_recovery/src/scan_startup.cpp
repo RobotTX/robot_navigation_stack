@@ -6,11 +6,12 @@ std_srvs::Empty empty_srv;
 
 bool buttonOn=true;
 ros::Time action_time;
-gobot_msg_srv::GetGobotStatus get_gobot_status;
-ros::ServiceClient getGobotStatusSrv;
 std::string map_path,map_id;
 
-robot_class::SetRobot robot;
+robot_class::SetRobot SetRobot;
+robot_class::GetRobot GetRobot;
+int robot_status_;
+std::string status_text_;
 
 std::string getCurrentTime(){
   std::time_t now = std::time(0);
@@ -25,29 +26,29 @@ void getButtonCallback(const std_msgs::Int8::ConstPtr& msg){
 		buttonOn=false;
 	}
 	else if(msg->data==1 && !buttonOn){
-    getGobotStatusSrv.call(get_gobot_status);
+    GetRobot.getStatus(robot_status_);
 		buttonOn = true;
     double dt = (ros::Time::now() - action_time).toSec();
     if(dt<=5.0){
       //start exploration
-      if(get_gobot_status.response.status==21){
+      if(robot_status_==21){
         ROS_INFO("Continue robot exploration.");
         ros::service::call("/gobot_command/start_explore",empty_srv);
       }
       //stop exploring
-      else if(get_gobot_status.response.status==25){
+      else if(robot_status_==25){
         ROS_INFO("Stop robot exploration.");
         ros::service::call("/gobot_command/stop_explore",empty_srv);
       }
     }
     else if(dt>5.0){
       //exploration
-      if(get_gobot_status.response.status==20){
+      if(robot_status_==20){
         ROS_INFO("Start robot exploration.");
         ros::service::call("/gobot_command/start_explore",empty_srv);
       }
       //save map
-      else if(get_gobot_status.response.status==21){
+      else if(robot_status_==21){
         saveMap();
       }
     }
@@ -72,18 +73,18 @@ void saveMap(){
       ROS_INFO("(startup) map id: %s.",mapId.c_str());
   }
 
-  robot.setHome("0","0","0","0","0","0");
+  SetRobot.setHome("0","0","0","0","0","0");
   ROS_INFO("(Scan Startup) Home deleted");
 
-  robot.setLoop(0);
+  SetRobot.setLoop(0);
   ROS_INFO("(Scan Startup) Loop deleted");
 
   /// We delete the old path
-  robot.clearPath();
+  SetRobot.clearPath();
   ROS_INFO("(Scan Startup) Path deleted");
 
   /// We delete the old path stage
-  robot.setStage(0);
+  SetRobot.setStage(0);
   ROS_INFO("(Scan Startup) Path stage deleted");
 }
 
@@ -108,8 +109,6 @@ int main(int argc, char **argv) {
     ros::init(argc, argv, "scan_startup");
     ros::NodeHandle nh;
     signal(SIGINT, mySigintHandler);
-
-    getGobotStatusSrv = nh.serviceClient<gobot_msg_srv::GetGobotStatus>("/gobot_status/get_gobot_status");
 
     //Startup begin
     ROS_INFO("(startup) Waiting for Robot setting hardware...");

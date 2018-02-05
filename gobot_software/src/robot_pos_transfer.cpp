@@ -3,6 +3,7 @@
 #define PORT_ROBOT_POS 4001
 
 using boost::asio::ip::tcp;
+ros::Timer timer1, timer2;
 
 std::mutex socketsMutex;
 std::map<std::string, boost::shared_ptr<tcp::socket>> sockets;
@@ -12,7 +13,7 @@ bool simulation = false;
 
 double last_pos_x=0.0,last_pos_y=0.0,last_pos_yaw=0.0,last_ang_x=0.0,last_ang_y=0.0,last_ang_z=0.0,last_ang_w=0.0;
 
-void sendRobotPos(const ros::TimerEvent&){
+void sendRobotPosTimer(const ros::TimerEvent&){
     if(sockets.size() > 0){
         std::vector<std::string> dis_ip;
         socketsMutex.lock();
@@ -26,8 +27,12 @@ void sendRobotPos(const ros::TimerEvent&){
                 //dis_ip.push_back(elem.first);
             }
         }
-        socketsMutex.unlock();
-        
+        socketsMutex.unlock(); 
+    }
+}
+
+void saveRobotPosTimer(const ros::TimerEvent&){
+    if(ros::service::exists("/gobot_startup/pose_ready",false)){
         //save pose to local file
         std::ofstream ofs(lastPoseFile, std::ofstream::out | std::ofstream::trunc);
         if(ofs.is_open()){
@@ -90,7 +95,15 @@ void disconnect(const std::string ip){
 
 /*********************************** SHUT DOWN ***********************************/
 void mySigintHandler(int sig){ 
-
+    timer2.stop();
+    timer1.stop();
+    //save robot pose when node shuts down
+    std::ofstream ofs(lastPoseFile, std::ofstream::out | std::ofstream::trunc);
+    if(ofs.is_open()){
+        ofs << last_pos_x << " " << last_pos_y << " " << last_ang_x <<" "<< last_ang_y <<" "<< last_ang_z <<" "<< last_ang_w;
+        ofs.close();
+    
+    }
     ros::shutdown();
 }
 
@@ -122,7 +135,9 @@ int main(int argc, char **argv){
         ros::Subscriber sub_robot = n.subscribe("/robot_pose", 1, getRobotPos);
 
         //Periodically send robot pose to connected clients
-        ros::Timer timer = n.createTimer(ros::Duration(1.0), sendRobotPos);
+        timer1 = n.createTimer(ros::Duration(0.5), sendRobotPosTimer);
+        //Periodically save robot pose to local file
+        timer2 = n.createTimer(ros::Duration(2.0), saveRobotPosTimer);
 
         std::thread t(server);
         ROS_INFO("(Robot Pos) Ready to be launched.");

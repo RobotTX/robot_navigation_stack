@@ -1,12 +1,12 @@
 #udevadm info -a -p $(udevadm info -q path -n /dev/ttyUSB0) | grep KERNELS | grep "-" | grep ":" | cut -d '"' -f2
 #sudo udevadm control --reload-rules && sudo service udev restart && sudo udevadm trigger
-#udevadm test $(udevadm info -q path -n /dev/ttyACM0)
+#udevadm test $(udevadm info -q path -n /dev/ttyUSB0)
 
-SUBSYSTEM=="tty", ACTION=="add", KERNEL=="ttyUSB*", KERNELS=="x-x.x:x.0", MODE="0777", SYMLINK+="STM" 
+SUBSYSTEM=="tty", ACTION=="add", KERNEL=="ttyUSB*", ENV{ID_MODEL_ID}=="ea70", ENV{ID_USB_INTERFACE_NUM}=="00", MODE="0777", SYMLINK+="STM" 
 
-SUBSYSTEM=="tty", ACTION=="add", KERNEL=="ttyUSB*", KERNELS=="x-x.x:x.1", MODE="0777", SYMLINK+="MD" 
+SUBSYSTEM=="tty", ACTION=="add", KERNEL=="ttyUSB*", ENV{ID_MODEL_ID}=="ea70", ENV{ID_USB_INTERFACE_NUM}=="01", MODE="0777", SYMLINK+="MD" 
 
-SUBSYSTEM=="tty", ACTION=="add", KERNEL=="ttyACM*", KERNELS=="2-2:1.0", MODE="0777"
+SUBSYSTEM=="tty", ACTION=="add", KERNEL=="ttyACM*", ATTRS{idVendor}=="15d1", ATTRS{idProduct}=="0000", MODE="0777"
 
 KERNEL=="ttyUSB*", ACTION=="add", ATTRS{idVendor}=="10c4", ATTRS{idProduct}=="ea60", MODE:="0777", SYMLINK+="rplidar" 
 

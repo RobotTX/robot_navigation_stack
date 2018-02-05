@@ -11,12 +11,13 @@ std::mutex socketsMutex;
 std::map<std::string, boost::shared_ptr<tcp::socket>> sockets;
 
 ros::Publisher map_pub;
-ros::Publisher initial_pose_publisher;
 
 std_srvs::Empty empty_srv;
-gobot_msg_srv::GetGobotStatus get_gobot_status;
 
-robot_class::SetRobot robot;
+robot_class::SetRobot SetRobot;
+robot_class::GetRobot GetRobot;
+int robot_status_;
+std::string status_text_;
 
 void session(boost::shared_ptr<tcp::socket> sock){
 
@@ -97,13 +98,12 @@ void session(boost::shared_ptr<tcp::socket> sock){
             if(mapIdFromFile.compare(mapId) != 0){
                 
                 //stop the robot for reading new map
-                gobot_msg_srv::GetGobotStatus get_gobot_status;
-                ros::service::call("/gobot_status/get_gobot_status",get_gobot_status);
-                if(get_gobot_status.response.status==15){
+                GetRobot.getStatus(robot_status_);
+                if(robot_status_==15){
                     ros::service::call("/gobot_command/stopGoDock",empty_srv);
                     ROS_INFO("(New Map) stop auto docking to read new map.");
                 }
-                else if(get_gobot_status.response.status==5){
+                else if(robot_status_==5){
                     ros::service::call("/gobot_command/pause_path",empty_srv);
                     ROS_INFO("(New Map) stop gobot to read new map.");
                 }
@@ -172,14 +172,14 @@ void session(boost::shared_ptr<tcp::socket> sock){
                         /// Kill gobot move so that we'll restart it with the new map
                         std::string cmd = "rosnode kill /move_base";
                         system(cmd.c_str());
-                        sleep(4);
+                        sleep(10);
                         ROS_INFO("(New Map) We killed gobot_navigation");
 
                         if(mapType != "EDIT"){
                             //#### delete old robot data ####
                             if(mapType != "IMPT" && mapType != "SCAN"){
                                 /// We delete the old home
-                                robot.setHome("0","0","0","0","0","0");
+                                SetRobot.setHome("0","0","0","0","0","0");
                                 ROS_INFO("(New Map) Home deleted");
                             }
 
@@ -201,23 +201,22 @@ void session(boost::shared_ptr<tcp::socket> sock){
                             }
                             
                             /// We detele the loop
-                            robot.setLoop(0);
+                            SetRobot.setLoop(0);
                             ROS_INFO("(New Map) Loop deleted");
 
                             /// We delete the old path
-                            robot.clearPath();
-                            ros::service::call("/gobot_function/update_path", empty_srv);
+                            SetRobot.clearPath();
                             ROS_INFO("(New Map) Path deleted");
 
                             /// We delete the old path stage
-                            robot.setStage(0);
+                            SetRobot.setStage(0);
                             ROS_INFO("(New Map) Path stage deleted");
                             //#### delete old robot data ####
                         }
 
                         /// Relaunch gobot_navigation
-                        robot.runNavi(simulation);
-                        sleep(8);
+                        SetRobot.runNavi(simulation);
+                        sleep(5);
                             
                         ROS_INFO("(New Map) We relaunched gobot_navigation");
                         message = "done 1";
@@ -320,7 +319,6 @@ int main(int argc, char **argv){
 
     /// Subscribe to know when we disconnected from the server
     ros::Subscriber sub = n.subscribe("/gobot_software/server_disconnected", 1000, serverDisconnected);
-    initial_pose_publisher = n.advertise<geometry_msgs::PoseWithCovarianceStamped>("/initialpose", 1);
 
     /// Advertise that we are going to publish to /map
     map_pub = n.advertise<nav_msgs::OccupancyGrid>("/map", 1000);

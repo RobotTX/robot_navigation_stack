@@ -16,13 +16,10 @@
 #include <thread>
 #include <signal.h>
 #include <tf/transform_broadcaster.h>
-#include <gobot_msg_srv/IsCharging.h>
-#include <gobot_msg_srv/SetStringArray.h>
-#include <gobot_msg_srv/GetStringArray.h>
-#include <gobot_msg_srv/SetGobotStatus.h>
-#include <gobot_msg_srv/GetGobotStatus.h>
-#include <gobot_msg_srv/IsCharging.h>
 #include <geometry_msgs/Pose.h>
+#include <gobot_msg_srv/SetStringArray.h>
+#include <gobot_msg_srv/IsCharging.h>
+#include <gobot_msg_srv/get_robot_class.h>
 
 #define PI 3.1415926
 

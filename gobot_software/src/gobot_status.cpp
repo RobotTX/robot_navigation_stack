@@ -24,7 +24,7 @@ ros::Publisher disco_pub;
 std::mutex gobotStatusMutex,dockStatusMutex,stageMutex,pathMutex,nameMutex,homeMutex,loopMutex,muteMutex,wifiMutex,batteryMutex,speedMutex;
 std_srvs::Empty empty_srv;
 
-std::string wifiFile, deleteWifi, connectWifi;
+std::string wifiFile, deleteWifi;
 std::vector<std::string> wifi_;
 
 std::string muteFile;
@@ -66,33 +66,33 @@ int battery_percent_ = 51;
 
 bool collision = false;
 
-robot_class::SetRobot robot;
+robot_class::SetRobot SetRobot;
 
 //change robot led and sound to inform people its status
 void robotResponse(int status, std::string text){
     //permanent green case
     if (text=="COMPLETE_EXPLORING" || text=="COMPLETE_PATH") {
-        robot.setLed(0,{"green"});
-        robot.setSound(1,2);
+        SetRobot.setLed(0,{"green"});
+        SetRobot.setSound(1,2);
     }
     else if(text=="STOP_EXPLORING" || text=="STOP_DOCKING" || text=="STOP_PATH" || text=="PAUSE_PATH"){
-        robot.setLed(0,{"blue"});
+        SetRobot.setLed(0,{"blue"});
     }
     else if(text=="FAIL_DOCKING" || text=="ABORTED_PATH"){
-        robot.setLed(0,{"red"});
-        robot.setSound(3,2);
+        SetRobot.setLed(0,{"red"});
+        SetRobot.setSound(3,2);
     }
     else if(text=="PLAY_PATH" || text=="PLAY_POINT" || text=="EXPLORING"){
-        robot.setLed(1,{"green","white"});
+        SetRobot.setLed(1,{"green","white"});
     }
     else if(text=="DELAY" || text=="WAITING"){
-        robot.setLed(1,{"blue","white"});
+        SetRobot.setLed(1,{"blue","white"});
     }
     else if(text=="DOCKING"){
-        robot.setLed(1,{"yellow","cyan"});
+        SetRobot.setLed(1,{"yellow","cyan"});
     }
     else if(text=="COMPLETE_DOCKING"){
-        robot.setSound(1,2);
+        SetRobot.setSound(1,2);
     }
 }
 
@@ -277,7 +277,10 @@ bool setPathSrvCallback(gobot_msg_srv::SetStringArray::Request &req, gobot_msg_s
         ROS_INFO("(Gobot_status) Set Gobot path: %s",path_info.c_str());
         ofsPath.close();
     }
-
+    std::thread([](){
+        ros::service::call("/gobot_function/update_path", empty_srv);
+    }).detach();
+    
     return true;
 }
 
@@ -377,10 +380,12 @@ bool setDockStatusSrvCallback(gobot_msg_srv::SetInt::Request &req, gobot_msg_srv
     std::thread([](){
         ros::service::call("/gobot_software/update_status",empty_srv);
     }).detach();
-    if(dock_status_ == 1 && (gobot_status_!=5 || gobot_text_=="WAITING")){
-        std::thread([](){
-            ros::service::call("/gobot_recovery/initialize_home",empty_srv);
-        }).detach();
+
+    if(dock_status_==1 && ros::service::exists("/gobot_startup/pose_ready",false))
+        if(gobot_status_!=5 || gobot_text_=="WAITING"){
+            std::thread([](){
+                ros::service::call("/gobot_recovery/initialize_home",empty_srv);
+            }).detach();
     }
     
     return true;
@@ -440,13 +445,17 @@ void bumpersCallback(const gobot_msg_srv::BumperMsg::ConstPtr& bumpers){
         if(front || back){
             if(!collision){
                 collision = true;
-                robot.setLed(1,{"red,white"});
-                robot.setSound(3,1);
+                std::thread([](){
+                    SetRobot.setLed(1,{"red","white"});
+                    SetRobot.setSound(3,1);
+                }).detach();
             }
         }
         else if(collision){
             collision = false;
-            robot.setSound(1,1);
+            std::thread([](){
+                SetRobot.setSound(1,1);
+            }).detach();
         }
     }
 }
@@ -565,7 +574,6 @@ void initialData(){
     ROS_INFO("(Gobot_status) Read Gobot wifi: name:%s, password:%s",wifi_.at(0).c_str(),wifi_.at(1).c_str());
 
     n.getParam("deleteWIFI", deleteWifi);
-    n.getParam("connectWIFI", connectWifi);
     
     //record disconnect times
     n.getParam("disconnected_file", disconnectedFile);

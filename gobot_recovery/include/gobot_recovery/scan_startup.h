@@ -4,11 +4,9 @@
 #include <std_srvs/Empty.h>
 #include <std_msgs/Int8.h>
 #include <fstream>
-#include <gobot_msg_srv/GetGobotStatus.h>
-#include <gobot_msg_srv/SetGobotStatus.h>
-#include <gobot_msg_srv/SetIntArray.h>
-#include <gobot_msg_srv/set_robot_class.h>
 #include <ctime>
+#include <gobot_msg_srv/set_robot_class.h>
+#include <gobot_msg_srv/get_robot_class.h>
 
 std::string getCurrentTime();
 

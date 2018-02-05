@@ -14,8 +14,9 @@ std::vector<std::string> availableIPs, connectedIPs;
 std::vector<std::pair<std::string, int>> oldIPs;
 std::mutex serverMutex, connectedMutex, ipMutex;
 ros::Publisher disco_pub;
-gobot_msg_srv::GetGobotStatus get_gobot_status;
 std_srvs::Empty empty_srv;
+
+robot_class::GetRobot GetRobot;
 
 /**
  * Create the string with information to connect to the Qt app
@@ -23,16 +24,10 @@ std_srvs::Empty empty_srv;
  */
 std::string getDataToSend(void){
     /// Retrieves the hostname
-    gobot_msg_srv::GetString get_name;
-    ros::service::call("/gobot_status/get_name",get_name);
 
     /// Retrieve the docking status
-    gobot_msg_srv::GetInt get_dock_status;
-    ros::service::call("/gobot_status/get_dock_status", get_dock_status);
     
     /// Retrieves the path stage
-    gobot_msg_srv::GetInt get_stage;
-    ros::service::call("/gobot_status/get_stage", get_stage);
     
     //Retrives mute or not
     gobot_msg_srv::GetInt get_mute;
@@ -40,12 +35,12 @@ std::string getDataToSend(void){
     muteFlag=(get_mute.response.data) ? 1 : 0;
 
     //Retrives battery percentage
-    gobot_msg_srv::GetInt get_battery;
-    ros::service::call("/gobot_status/battery_percent", get_battery);
+    gobot_msg_srv::GetInt get_battery_percent;
+    ros::service::call("/gobot_status/battery_percent", get_battery_percent);
 
     /// Form the string to send to the Qt app
-    return  get_name.response.data + sep + std::to_string(get_stage.response.data) + sep + std::to_string(get_battery.response.data) + 
-            sep + std::to_string(muteFlag) + sep + std::to_string(get_dock_status.response.data);
+    return  GetRobot.getName() + sep + std::to_string(GetRobot.getStage()) + sep + std::to_string(get_battery_percent.response.data) + 
+            sep + std::to_string(muteFlag) + sep + std::to_string(GetRobot.getDock());
 }
 
 /**

@@ -4,19 +4,9 @@
 #include <ros/ros.h>
 #include <string>
 #include <std_srvs/Empty.h>
-#include <gobot_msg_srv/GetGobotStatus.h>
-#include <gobot_msg_srv/SetGobotStatus.h>
-#include <gobot_msg_srv/SetIntArray.h>
-#include <gobot_msg_srv/GetIntArray.h>
-#include <gobot_msg_srv/SetInt.h>
-#include <gobot_msg_srv/GetInt.h>
-#include <gobot_msg_srv/SetStringArray.h>
-#include <gobot_msg_srv/GetStringArray.h>
-#include <gobot_msg_srv/SetString.h>
-#include <gobot_msg_srv/GetString.h>
-#include <gobot_msg_srv/LedStrip.h>
-#include <gobot_msg_srv/SetSpeeds.h>
 #include <gobot_msg_srv/set_robot_class.h>
+#include <gobot_msg_srv/get_robot_class.h>
+
 
 #include <tf/transform_listener.h>
 

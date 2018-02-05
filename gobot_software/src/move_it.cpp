@@ -21,12 +21,13 @@ ros::Time action_time;
 int status_ = 0;
 std::string text_ = "";
 
-robot_class::SetRobot robot;
+robot_class::SetRobot SetRobot;
+robot_class::GetRobot GetRobot;
 
 void setGobotStatus(int status,std::string text){
 	status_ = status;
 	text_ = text;
-	robot.setStatus(status_,text_);
+	SetRobot.setStatus(status_,text_);
 }
 
 void goalResultCallback(const move_base_msgs::MoveBaseActionResult::ConstPtr& msg){
@@ -41,7 +42,7 @@ void goalResultCallback(const move_base_msgs::MoveBaseActionResult::ConstPtr& ms
 				break;
 			//ABORTED
 			case 4:
-				robot.setStage(-stage_ - 1);
+				SetRobot.setStage(-stage_ - 1);
 				setGobotStatus(0,"ABORTED_PATH");
 				break;
 			//OTHER CASE
@@ -65,7 +66,7 @@ void goalReached(){
 		else{
 			//ROS_INFO("(PlayPath:: complete path!");
 			setGobotStatus(0,"COMPLETE_PATH");
-			robot.setStage(stage_);
+			SetRobot.setStage(stage_);
 			if(dockAfterPath){
 				//ROS_INFO("(PlayPath::goalReached) battery is low, go to charging station!!");
 				ros::service::call("/gobot_command/goDock", empty_srv);
@@ -75,8 +76,8 @@ void goalReached(){
 		}
 	}
 	interruptDelay = false;
-	robot.setSound(1,1); 
-	robot.setStage(stage_);
+	SetRobot.setSound(1,1); 
+	SetRobot.setStage(stage_);
 	// reached a normal/path goal so we sleep the given time
 	checkGoalDelay();
 	if(!stop_flag){
@@ -171,21 +172,18 @@ bool playPointService(gobot_msg_srv::SetStringArray::Request &req, gobot_msg_srv
 			else
 				stage_ = stage_ - 1;
 		}
+		SetRobot.setStage(stage_);
 	}
 	else{
 		stop_flag = false;
 	}
 
-	if(stage_>=path.size()){
-		stage_ = 0;
-	}
-
 	gobot_msg_srv::IsCharging arg;
 	if(ros::service::call("/gobot_status/charging_status", arg) && arg.response.isCharging){
 		ROS_WARN("(PlayPath::playPathService) we are charging so we go straight to avoid bumping into the CS when turning");
-		robot.setMotorSpeed('F', 15, 'F', 15);
+		SetRobot.setMotorSpeed('F', 15, 'F', 15);
 		std::this_thread::sleep_for(std::chrono::milliseconds(3000));
-		robot.setMotorSpeed('F', 0, 'F', 0);
+		SetRobot.setMotorSpeed('F', 0, 'F', 0);
 	}
 
 	//request data: 0-name,1-x,2-y,3-orientation, 4-home or not
@@ -221,15 +219,15 @@ bool playPathService(std_srvs::Empty::Request &req, std_srvs::Empty::Response &r
 
 	if(stage_>=path.size()){
 		stage_ = 0;
-		robot.setStage(stage_);
+		SetRobot.setStage(stage_);
 	}
 
 	gobot_msg_srv::IsCharging arg;
 	if(ros::service::call("/gobot_status/charging_status", arg) && arg.response.isCharging){
 		ROS_WARN("(PlayPath::playPathService) we are charging so we go straight to avoid bumping into the CS when turning");
-		robot.setMotorSpeed('F', 15, 'F', 15);
+		SetRobot.setMotorSpeed('F', 15, 'F', 15);
 		std::this_thread::sleep_for(std::chrono::milliseconds(2500));
-		robot.setMotorSpeed('F', 0, 'F', 0);
+		SetRobot.setMotorSpeed('F', 0, 'F', 0);
 	}
 	setGobotStatus(5,"PLAY_PATH");
 	goNextPoint(path.at(stage_));
@@ -238,6 +236,8 @@ bool playPathService(std_srvs::Empty::Request &req, std_srvs::Empty::Response &r
 }
 
 bool updatePathService(std_srvs::Empty::Request &req, std_srvs::Empty::Response &res){
+	stage_ = 0;
+	SetRobot.setStage(stage_);
 	path = std::vector<Point>();
 	gobot_msg_srv::GetStringArray get_path;
 	// we recreate the path to follow from the file
@@ -271,7 +271,7 @@ bool stopPathService(std_srvs::Empty::Request &req, std_srvs::Empty::Response &r
 	setGobotStatus(1,"STOP_PATH");
 	stop_flag = true;
 	stage_ = 0;
-	robot.setStage(stage_);
+	SetRobot.setStage(stage_);
 	if(ac->isServerConnected())
 		ac->cancelAllGoals();
 
@@ -299,13 +299,13 @@ bool pausePathService(std_srvs::Empty::Request &req, std_srvs::Empty::Response &
 bool startLoopPathService(std_srvs::Empty::Request &req, std_srvs::Empty::Response &res){
     //~ROS_INFO("(PlayPath::startLoopPathService) service called");
 	looping = true;
-    return robot.setLoop(1);
+    return SetRobot.setLoop(1);
 }
 
 bool stopLoopPathService(std_srvs::Empty::Request &req, std_srvs::Empty::Response &res){
     //~ROS_INFO("(PlayPath::stopLoopPathService) service called");
 	looping = false;
-    return robot.setLoop(0);
+    return SetRobot.setLoop(0);
 }
 
 bool goDockAfterPathService(std_srvs::Empty::Request &req, std_srvs::Empty::Response &res){
@@ -335,7 +335,7 @@ bool skipPathService(gobot_msg_srv::SetInt::Request &req, gobot_msg_srv::SetInt:
 	else{
 		stage_ +=req.data;
 	}
-	robot.setStage(stage_);
+	SetRobot.setStage(stage_);
 
 	//if robot is waiting for interaction, quit it
 	if (status_==5){
@@ -352,14 +352,8 @@ bool skipPathService(gobot_msg_srv::SetInt::Request &req, gobot_msg_srv::SetInt:
 }
 
 void initData(){
-	gobot_msg_srv::GetInt get_loop;
-	ros::service::call("/gobot_status/get_loop",get_loop);
-	looping = get_loop.response.data;
-
-	gobot_msg_srv::GetInt get_stage;
-	ros::service::call("/gobot_status/get_stage", get_stage);
-	stage_=get_stage.response.data;
-
+	looping = GetRobot.getLoop();
+	stage_=GetRobot.getStage();
 	path = std::vector<Point>();
 	gobot_msg_srv::GetStringArray get_path;
 	// we recreate the path to follow from the file
@@ -403,7 +397,7 @@ void initData(){
 
 void mySigintHandler(int sig)
 {   
-    robot.setStage(stage_);
+    SetRobot.setStage(stage_);
     ros::shutdown();
 }
 

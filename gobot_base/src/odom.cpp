@@ -23,7 +23,6 @@ int main(int argc, char** argv){
     //Startup end
 
     //ros::ServiceServer getSpeedsSrv = n.advertiseService("/gobot_motor/getRealSpeeds", getRealSpeeds);
-    ros::service::call("/gobot_motor/resetEncoders", arg);
     /// The encoders should be reinitialized to 0 every time we launch odom
     int64_t last_left_encoder = 0;
     int64_t last_right_encoder = 0;
@@ -55,6 +54,7 @@ int main(int argc, char** argv){
     double pi = 3.1415926;
 
     ros::Rate r(ODOM_RATE); //20
+    ros::service::call("/gobot_motor/resetEncoders", arg);
     ros::service::waitForService("/gobot_motor/getEncoders",ros::Duration(30));
     while(n.ok()){
 

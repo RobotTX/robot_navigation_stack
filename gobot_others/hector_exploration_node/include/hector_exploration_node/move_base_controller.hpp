@@ -15,8 +15,6 @@
 #include <tf/transform_listener.h>
 #include <gobot_msg_srv/set_robot_class.h>
 #include <gobot_msg_srv/GetGobotStatus.h>
-#include <gobot_msg_srv/IsCharging.h>
-#include <gobot_msg_srv/SetSpeeds.h>
 
 /// Call a service to get the trajectory for exploration from the hector_exploration_planner and send the goal to move_base
 void doExploration(void);

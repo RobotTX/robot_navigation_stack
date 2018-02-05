@@ -14,7 +14,7 @@ acc_lim_theta: 0.6  #0.8
 weight_max_vel_x: 1.0 #default:2
 weight_max_vel_theta: 1.0 #default:1
 weight_acc_lim_x: 1.0 #default:1
-weight_acc_lim_theta: 5.0 #default:1
+weight_acc_lim_theta: 3.0 #default:1
 
 weight_kinematics_nh: 1000.0
 weight_kinematics_forward_drive: 999.0

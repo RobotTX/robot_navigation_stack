@@ -7,20 +7,9 @@
 #include <std_srvs/Empty.h>
 #include <move_base_msgs/MoveBaseAction.h>
 #include <actionlib/client/simple_action_client.h>
+#include <gobot_msg_srv/robot_msgs.h>
 #include <gobot_msg_srv/set_robot_class.h>
-#include <gobot_msg_srv/GetGobotStatus.h>
-#include <gobot_msg_srv/SetGobotStatus.h>
-#include <gobot_msg_srv/SetIntArray.h>
-#include <gobot_msg_srv/GetIntArray.h>
-#include <gobot_msg_srv/SetInt.h>
-#include <gobot_msg_srv/GetInt.h>
-#include <gobot_msg_srv/SetStringArray.h>
-#include <gobot_msg_srv/GetStringArray.h>
-#include <gobot_msg_srv/SetString.h>
-#include <gobot_msg_srv/GetString.h>
-#include <gobot_msg_srv/BatteryMsg.h>
-#include <gobot_msg_srv/IsCharging.h>
-#include <gobot_msg_srv/BumperMsg.h>
+#include <gobot_msg_srv/get_robot_class.h>
 #include <dynamic_reconfigure/Reconfigure.h>
 #include <dynamic_reconfigure/DoubleParameter.h>
 

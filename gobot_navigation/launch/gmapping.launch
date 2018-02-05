@@ -8,6 +8,4 @@
     </node>
     
     <node pkg="gobot_recovery" type="scan_startup" name="scan_startup" output="screen" />
-
-    <node pkg="teleop_twist_keyboard" type="teleop_twist_keyboard.py" name="teleop_twist_keyboard.py" output="screen" />
 </launch>

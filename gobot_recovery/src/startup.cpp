@@ -7,8 +7,9 @@ int count = 1;
 bool buttonOn=true;
 ros::Time action_time;
 std::string restart_sh;
-gobot_msg_srv::GetGobotStatus get_gobot_status;
-ros::ServiceClient getGobotStatusSrv;
+robot_class::GetRobot GetRobot;
+int robot_status_;
+std::string status_text_;
 
 void initialPoseResultCallback(const std_msgs::Int8::ConstPtr& msg){
   if(msg->data==0){
@@ -37,34 +38,34 @@ void getButtonCallback(const std_msgs::Int8::ConstPtr& msg){
 		buttonOn=false;
 	}
 	else if(msg->data==1 && !buttonOn){
-    getGobotStatusSrv.call(get_gobot_status);
+    GetRobot.getStatus(robot_status_,status_text_);
 		buttonOn = true;
     double dt = (ros::Time::now() - action_time).toSec();
     if(dt<=5.0){
       //play path
-      if(get_gobot_status.response.status==4){
+      if(robot_status_==4){
         ROS_INFO("Continue robot path.");
         ros::service::call("/gobot_command/play_path",empty_srv);
       }
       //pause path
-      else if(get_gobot_status.response.status==5 && get_gobot_status.response.text!="WAITING"){
+      else if(robot_status_==5 && status_text_!="WAITING"){
         ROS_INFO("Pause robot path.");
         ros::service::call("/gobot_command/pause_path",empty_srv);
       }
       //if go docking, stop it
-      else if(get_gobot_status.response.status==15){
+      else if(robot_status_==15){
         ROS_INFO("Stop robot home.");
         ros::service::call("/gobot_command/stopGoDock",empty_srv);
       }
     }
     else if(dt>5.0 && dt<=10.0){
       //if robot pause, reset the path
-      if(get_gobot_status.response.status==4){
+      if(robot_status_==4){
         ROS_INFO("Reset robot path.");
         ros::service::call("/gobot_command/stop_path",empty_srv);
       }
 
-      if(get_gobot_status.response.status!=5){
+      if(robot_status_!=5){
         ROS_INFO("Start robot path.");
         //play the path
         ros::service::call("/gobot_command/play_path",empty_srv);
@@ -103,8 +104,6 @@ int main(int argc, char **argv) {
     ros::NodeHandle nh;
     signal(SIGINT, mySigintHandler);
 
-    getGobotStatusSrv = nh.serviceClient<gobot_msg_srv::GetGobotStatus>("/gobot_status/get_gobot_status");
-    
     //Startup begin
     ROS_INFO("(startup) Waiting for Robot setting hardware...");
     ros::service::waitForService("/gobot_startup/sensors_ready", ros::Duration(60.0));

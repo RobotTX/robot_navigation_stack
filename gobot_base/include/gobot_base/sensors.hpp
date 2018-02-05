@@ -10,24 +10,10 @@
 #include <thread>
 #include "serial/serial.h"
 #include <mutex>
+#include <gobot_msg_srv/robot_msgs.h>
 #include <gobot_msg_srv/set_robot_class.h>
-#include <gobot_msg_srv/SetSpeeds.h>
-#include <gobot_msg_srv/SetSpeeds.h>
-#include <gobot_msg_srv/BatteryMsg.h>
-#include <gobot_msg_srv/BumperMsg.h>
-#include <gobot_msg_srv/IrMsg.h>
-#include <gobot_msg_srv/ProximityMsg.h>
-#include <gobot_msg_srv/SonarMsg.h>
-#include <gobot_msg_srv/WeightMsg.h>
-#include <gobot_msg_srv/CliffMsg.h>
-#include <gobot_msg_srv/GyroMsg.h>
-#include <gobot_msg_srv/IsCharging.h>
-#include <gobot_msg_srv/LedStrip.h>
-#include <gobot_msg_srv/GetIntArray.h>
-#include <gobot_msg_srv/SetIntArray.h>
-#include <gobot_msg_srv/GetGobotStatus.h>
-#include <gobot_msg_srv/SetBattery.h>
-#include <gobot_msg_srv/SetSpeeds.h>
+#include <gobot_msg_srv/get_robot_class.h>
+
 
 
 std::vector<uint8_t> writeAndRead(std::vector<uint8_t> toWrite, int bytesToRead = 0);
