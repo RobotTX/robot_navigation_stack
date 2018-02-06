@@ -111,7 +111,6 @@ void mySigintHandler(int sig){
 
 bool initParams(){
     ros::NodeHandle nh;
-    nh.getParam("simulation", simulation);
     nh.getParam("last_known_position_file", lastPoseFile);
 
     return true;
@@ -124,10 +123,8 @@ int main(int argc, char **argv){
 	signal(SIGINT, mySigintHandler);
 
     if (initParams()){
-        if(!simulation){
-            //Startup begin
-            ros::service::waitForService("/gobot_startup/pose_ready", ros::Duration(60.0));
-        }
+        //Startup begin
+        ros::service::waitForService("/gobot_startup/pose_ready", ros::Duration(60.0));
         //Startup end
         
         ros::Subscriber sub = n.subscribe("/gobot_software/server_disconnected", 1000, serverDisconnected);

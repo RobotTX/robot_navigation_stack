@@ -51,6 +51,9 @@ void newFrontRightCylBumper(const gazebo_msgs::ContactsState::ConstPtr& msg){
     frontRightCylBumper = !(msg->states.size() > 0);
 }
 
+bool poseReadySrvCallback(std_srvs::Empty::Request &req, std_srvs::Empty::Response &res){
+  return true;
+}
 
 int main(int argc, char **argv){
 
@@ -73,6 +76,7 @@ int main(int argc, char **argv){
 
     std::cout << "(bumper_controller) launched." << std::endl;
 
+    ros::ServiceServer poseReadySrv = n.advertiseService("/gobot_startup/pose_ready", poseReadySrvCallback);
 
     ros::Rate loop_rate(10);
 

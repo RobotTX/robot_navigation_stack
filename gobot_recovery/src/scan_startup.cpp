@@ -113,6 +113,7 @@ int main(int argc, char **argv) {
     //Startup begin
     ROS_INFO("(startup) Waiting for Robot setting hardware...");
     ros::service::waitForService("/gobot_startup/sensors_ready", ros::Duration(60.0));
+    ros::service::waitForService("/move_base/clear_costmaps", ros::Duration(60.0));
     ROS_INFO("(startup) Robot setting hardware is ready.");
 
     nh.getParam("map_path", map_path);

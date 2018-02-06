@@ -8,6 +8,7 @@ find_package(catkin REQUIRED COMPONENTS
     gazebo_msgs
     gazebo_plugins
     gazebo_ros
+    std_srvs
 )
 
 #add_service_files(

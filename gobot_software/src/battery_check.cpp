@@ -34,7 +34,6 @@ void timerCallback(const ros::TimerEvent&){
 int main(int argc, char* argv[]){
     ros::init(argc, argv, "battery_check");
     ros::NodeHandle nh;
-    ROS_INFO("(Battery check) running");
     
     ros::service::waitForService("/gobot_startup/pose_ready", ros::Duration(60.0));
 

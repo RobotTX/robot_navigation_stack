@@ -958,11 +958,9 @@ void sendConnectionData(boost::shared_ptr<tcp::socket> sock){
     double x,y,oriX,oriY,oriZ,oriW;
 
     GetRobot.getHome(x,y,oriX,oriY,oriZ,oriW);
-
-    if(x==0 && y==0 && oriZ==0){
-        homeX = "-150";
-        homeY = "-150";
-    }
+    //if no home, set it to be (-150,-150) (invisible in the UI side)
+    homeX = x==0? "-150" : std::to_string(x);
+    homeY = y==0? "-150" : std::to_string(y);
 
     double homeOri = -RadToDegree(tf::getYaw(tf::Quaternion(oriX , oriY , oriZ, oriW))) - 90.0;
 
@@ -1001,7 +999,6 @@ void sendConnectionData(boost::shared_ptr<tcp::socket> sock){
         homeY = "-1";
 
     GetRobot.getStatus(robot_status_);
-
     std::string scan = (scanning) ? "1" : "0";
     std::string looping_str = (GetRobot.getLoop()) ? "1" : "0";
     std::string following_path_str = (robot_status_==5) ? "1" : "0";
@@ -1203,7 +1200,10 @@ int main(int argc, char* argv[]){
 
         n.getParam("simulation", simulation);
         ROS_INFO("(Command system) simulation : %d", simulation);
-                
+        //Startup begin
+        ros::service::waitForService("/gobot_startup/pose_ready", ros::Duration(60.0));
+        //Startup end
+
         ros::Subscriber sub = n.subscribe("/gobot_software/server_disconnected", 1000, serverDisconnected);
 
         disco_pub = n.advertise<std_msgs::String>("/gobot_software/server_disconnected", 10);

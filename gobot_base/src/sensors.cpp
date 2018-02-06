@@ -2,9 +2,6 @@
 
 #define ERROR_THRESHOLD 2
 
-#define BATTERY_MAX 23000
-#define BATTERY_MIN 21500
-
 ros::Publisher bumper_pub, ir_pub, proximity_pub, sonar_pub, weight_pub, battery_pub, cliff_pub, button_pub, gyro_pub, temperature_pub;
 serial::Serial serialConnection;
 
@@ -15,7 +12,7 @@ std::string STMdevice;
 
 ros::Time last_led_time, reset_wifi_time;
 
-int last_charging_current = 0;
+int16_t last_charging_current = 0;
 bool charging = false, low_battery = false;
 int battery_percent = 50;
 
@@ -102,6 +99,27 @@ std::string getStdoutFromCommand(std::string cmd) {
     return data;
 }
 
+bool checkSensors(){
+    if(serialConnection.isOpen()){
+        std::vector<uint8_t> buff = writeAndRead({0x10, 0x01, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x1B},STM_BYTES);
+        if(buff.size() == STM_BYTES){
+            int16_t voltage = (buff.at(32) << 8) | buff.at(33);
+            int16_t temperature = (buff.at(36) << 8) | buff.at(37);
+            
+            if(buff.at(17)){
+                if(voltage>0 && temperature>0){
+                    last_charging_current = (buff.at(34) << 8) | buff.at(35);
+                    return true;
+                }
+                else
+                    ROS_ERROR("(sensors::CheckSensors) Check battery data : Voltage:%d, Temperature:%d", voltage,temperature);
+            }
+            else
+                ROS_ERROR("(sensors::CheckSensors) All bumpers got collision");
+        }
+    }
+    return false;
+}
 
 /*     
        B5 B6 B7 B8     
@@ -193,18 +211,9 @@ void publishSensors(void){
             battery_data.Temperature = (buff.at(36) << 8) | buff.at(37);
             battery_data.RemainCapacity = ((buff.at(38) << 8) | buff.at(39))/100;
             battery_data.FullCapacity = ((buff.at(40) << 8) | buff.at(41))/100;
+            battery_data.Percentage = battery_data.BatteryStatus/100.0;
 
-            //double percentage = battery_data.BatteryVoltage;
-            //percentage=(percentage-BATTERY_MIN)/(BATTERY_MAX-BATTERY_MIN); 
-            double percentage = battery_data.BatteryStatus/100.0;
-            if(percentage>1.0)
-                battery_data.Percentage=1.0;
-            else if(percentage<0.0)
-                battery_data.Percentage=0.0;
-            else
-                battery_data.Percentage=percentage;
-
-            if(battery_data.BatteryVoltage == 0 || battery_data.Temperature <= 0){
+            if(battery_data.BatteryVoltage <= 0 || battery_data.Temperature <= 0){
                 error = true;
                 ROS_ERROR("(sensors::publishSensors ERROR) Check battery data : Status:%d, Voltage:%d, ChargingCurrent:%d, Temperature:%d", 
                 battery_data.BatteryStatus,(int) battery_data.BatteryVoltage, battery_data.ChargingCurrent, battery_data.Temperature);
@@ -292,21 +301,19 @@ void publishSensors(void){
 
             gobot_msg_srv::GyroMsg gyro;
             std_msgs::Float32 temperature;
-            if(STM_BYTES > 49){
-                //48 - 59 gyro+acce
-                //if 1st bit is 1, means negative
-                gyro.gyrox =  buff.at(48)<<8 | buff.at(49);
-                gyro.gyroy =  buff.at(50)<<8 | buff.at(51); 
-                gyro.gyroz =  buff.at(52)<<8 | buff.at(53);
-                gyro.accelx = buff.at(54)<<8 | buff.at(55);
-                gyro.accely = buff.at(56)<<8 | buff.at(57); 
-                gyro.accelz = buff.at(58)<<8 | buff.at(59);
-                gyro_pub.publish(gyro);
+            //48 - 59 gyro+acce
+            //if 1st bit is 1, means negative
+            gyro.gyrox =  buff.at(48)<<8 | buff.at(49);
+            gyro.gyroy =  buff.at(50)<<8 | buff.at(51); 
+            gyro.gyroz =  buff.at(52)<<8 | buff.at(53);
+            gyro.accelx = buff.at(54)<<8 | buff.at(55);
+            gyro.accely = buff.at(56)<<8 | buff.at(57); 
+            gyro.accelz = buff.at(58)<<8 | buff.at(59);
+            gyro_pub.publish(gyro);
 
-                //60 - 61 temperature
-                temperature.data = (((buff.at(60)<<8)|buff.at(61))-21)/333.87 + 21.0;
-                temperature_pub.publish(temperature);
-            }
+            //60 - 61 temperature
+            temperature.data = (((buff.at(60)<<8)|buff.at(61))-21)/333.87 + 21.0;
+            temperature_pub.publish(temperature);
 
             if(display_data){
                 std::cout << "Sonars : " << sonar_data.distance1 << " " << sonar_data.distance2 << " " << sonar_data.distance3 << " " << sonar_data.distance4 
@@ -328,7 +335,7 @@ void publishSensors(void){
             }
 
             /// The last byte is the Frame Check Sum and is not used
-            if(!error && STM_CHECK>=10/2){
+            if(!error){
                 //If no error, publish sensor data
                 ir_pub.publish(ir_data);
                 proximity_pub.publish(proximity_data);
@@ -377,10 +384,6 @@ void publishSensors(void){
             //SetRobot.setMotorSpeed('F', 0, 'F', 0);
             resetStm();
             error_count = 0;
-        }
-
-        if(!error){
-            STM_CHECK++;
         }
     } 
     else{
@@ -527,10 +530,8 @@ bool shutdownSrvCallback(std_srvs::Empty::Request &req, std_srvs::Empty::Respons
         SetRobot.setMotorSpeed('F', 0, 'F', 0);
         //shutdown command
         std::vector<uint8_t> buff = writeAndRead({0xF0,0x01,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x1B},5);
-
-        //turn led white
-        buff.clear();
-        buff = writeAndRead({0xB0,0x03,0x01,0x57,0x00,0x00,0x00,0x00,0x03,0xE8,0x1B},5);
+        setLed(0,{"white"});
+        setSound(2,1);
         return true;
     }
     else{
@@ -560,7 +561,6 @@ bool initSerial(void) {
 
     if(serialConnection.isOpen()){
         resetStm();
-        ros::Duration(2.0).sleep();
         ROS_INFO("Established connection to STM32.");
         return true;
     }
@@ -578,6 +578,7 @@ void mySigintHandler(int sig)
         if(serialConnection.isOpen()){
             //Turn off LED when shut down node
             writeAndRead({0xB0,0x03,0x01,0x57,0x00,0x00,0x00,0x00,0x03,0xE8,0x1B},5);
+            serialConnection.close();
         }
     } catch (std::exception& e) {
 		ROS_ERROR("(Sensors) Shutdown exception : %s", e.what());
@@ -591,10 +592,9 @@ int main(int argc, char **argv) {
     ros::NodeHandle nh;
     signal(SIGINT, mySigintHandler);
 
-
     //Startup begin
     ROS_INFO("(Sensors) Waiting for MD49 to be ready...");
-    ros::service::waitForService("/gobot_startup/motor_ready", ros::Duration(30.0));
+    ros::service::waitForService("/gobot_startup/motor_ready", ros::Duration(60.0));
     ROS_INFO("(Sensors) MD49 is ready.");
     //Startup end
 
@@ -607,11 +607,6 @@ int main(int argc, char **argv) {
     //0x52 = Blue,0x47 = Red,0x42 = Green,0x4D = Magenta,0x43 = Cyan,0x59 = Yellow,0x57 = White, 0x00 = Off
     led_color_ = {{"green",0x42}, {"blue",0x52}, {"yellow",0x59}, {"red",0x47}, {"cyan",0x43}, {"white",0x57}, {"magenta",0x4D}, {"off",0x00}};
 
-    ros::Timer ledTimer = nh.createTimer(ros::Duration(60), ledTimerCallback);
-    ledTimer.stop();
-    last_led_time = ros::Time::now();
-    reset_wifi_time = ros::Time::now();
-
     bumper_pub = nh.advertise<gobot_msg_srv::BumperMsg>("/gobot_base/bumpers_raw_topic", 50);
     ir_pub = nh.advertise<gobot_msg_srv::IrMsg>("/gobot_base/ir_topic", 50);
     proximity_pub = nh.advertise<gobot_msg_srv::ProximityMsg>("/gobot_base/proximity_topic", 50);
@@ -623,31 +618,44 @@ int main(int argc, char **argv) {
     gyro_pub = nh.advertise<gobot_msg_srv::GyroMsg>("/gobot_base/gyro_topic",50);
     temperature_pub = nh.advertise<std_msgs::Float32>("/gobot_base/temperature_topic",50);
 
-    setLedSrv = nh.advertiseService("/gobot_base/setLed", setLedSrvCallback);
-    setSoundSrv = nh.advertiseService("/gobot_base/setSound", setSoundSrvCallback);
-    ros::ServiceServer shutdownSrv = nh.advertiseService("/gobot_base/shutdown_robot", shutdownSrvCallback);
-    ros::ServiceServer displayDataSrv = nh.advertiseService("/gobot_base/displaySensorData", displaySensorData);
-    ros::ServiceServer resetSTMSrv = nh.advertiseService("/gobot_base/reset_STM", resetSTMSrvCallback);
-    ros::ServiceServer showBatteryLed = nh.advertiseService("/gobot_base/show_Battery_LED", showBatteryLedsrvCallback);
-
     ros::ServiceServer sensorsReadySrv;
 
     if(initSerial()){
         ros::Rate r(STM_RATE);
+        ros::Rate r2(2);
+        //checking procedure
+        while(STM_CHECK<5 && ros::ok()){
+            if (checkSensors()){
+                STM_CHECK++;
+                ROS_INFO("Iteration:%d, CC:%d", STM_CHECK,last_charging_current);
+            }
+            r2.sleep();
+        }
+
+        //Declare service server after checking MCU
+        setLedSrv = nh.advertiseService("/gobot_base/setLed", setLedSrvCallback);
+        setSoundSrv = nh.advertiseService("/gobot_base/setSound", setSoundSrvCallback);
+        ros::ServiceServer shutdownSrv = nh.advertiseService("/gobot_base/shutdown_robot", shutdownSrvCallback);
+        ros::ServiceServer displayDataSrv = nh.advertiseService("/gobot_base/displaySensorData", displaySensorData);
+        ros::ServiceServer resetSTMSrv = nh.advertiseService("/gobot_base/reset_STM", resetSTMSrvCallback);
+        ros::ServiceServer showBatteryLed = nh.advertiseService("/gobot_base/show_Battery_LED", showBatteryLedsrvCallback);
+        ros::Timer ledTimer = nh.createTimer(ros::Duration(60), ledTimerCallback);
+        ledTimer.stop();
+        last_led_time = ros::Time::now();
+        reset_wifi_time = ros::Time::now();
+        
+        //Startup begin
+        std::string joy_cmd = "rosrun joy joy_node &";
+        system(joy_cmd.c_str());
+        sensorsReadySrv = nh.advertiseService("/gobot_startup/sensors_ready", sensorsReadySrvCallback);
+        SetRobot.setStatus(-1,"HARDWARE_READY");
+        //Startup end
+
+        //start publish sensor information after checking procedure
         while(ros::ok()){
             ros::spinOnce();
             publishSensors();
             r.sleep();
-
-            if(STM_CHECK==10){
-                //Startup begin
-                std::string joy_cmd = "rosrun joy joy_node &";
-                system(joy_cmd.c_str());
-                ledTimer.start();
-                sensorsReadySrv = nh.advertiseService("/gobot_startup/sensors_ready", sensorsReadySrvCallback);
-                SetRobot.setStatus(-1,"HARDWARE_READY");
-                //Startup end
-            }
         }
     }
 

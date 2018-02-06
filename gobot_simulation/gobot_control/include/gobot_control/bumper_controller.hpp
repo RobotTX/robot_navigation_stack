@@ -2,6 +2,7 @@
 #define BUMPER_CONTROLLER
 
 #include "ros/ros.h"
+#include <std_srvs/Empty.h>
 #include "gazebo_msgs/ContactsState.h"
 #include "gobot_msg_srv/BumperMsg.h"
 

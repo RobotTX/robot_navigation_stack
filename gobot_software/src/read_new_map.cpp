@@ -179,7 +179,7 @@ void session(boost::shared_ptr<tcp::socket> sock){
                             //#### delete old robot data ####
                             if(mapType != "IMPT" && mapType != "SCAN"){
                                 /// We delete the old home
-                                SetRobot.setHome("0","0","0","0","0","0");
+                                SetRobot.setHome("0","0","0","0","0","1");
                                 ROS_INFO("(New Map) Home deleted");
                             }
 
@@ -316,6 +316,9 @@ int main(int argc, char **argv){
 
     n.getParam("simulation", simulation);
     ROS_INFO("(New Map) simulation : %d", simulation);
+    //Startup begin
+    ros::service::waitForService("/gobot_startup/pose_ready", ros::Duration(60.0));
+    //Startup end
 
     /// Subscribe to know when we disconnected from the server
     ros::Subscriber sub = n.subscribe("/gobot_software/server_disconnected", 1000, serverDisconnected);
@@ -323,7 +326,7 @@ int main(int argc, char **argv){
     /// Advertise that we are going to publish to /map
     map_pub = n.advertise<nav_msgs::OccupancyGrid>("/map", 1000);
 
-    ROS_INFO("(New Map) Ready to be launched.");
+    ROS_INFO("(Read New Map) Ready to be launched.");
 
     std::thread t(server);
 

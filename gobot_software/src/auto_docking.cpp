@@ -372,8 +372,6 @@ int main(int argc, char* argv[]){
 
     ac = new MoveBaseClient("move_base", true);
 
-    ROS_INFO("(auto_docking::startDockingService) actionlib server ready!!");
-
     ros::ServiceServer startDockingSrv = nh.advertiseService("/gobot_function/startDocking", startDockingService);
     ros::ServiceServer stopDockingSrv = nh.advertiseService("/gobot_function/stopDocking", stopDockingService);
 

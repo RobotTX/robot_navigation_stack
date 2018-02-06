@@ -28,6 +28,9 @@ std::string getStdoutFromCommand(std::string cmd);
 
 void ledTimerCallback(const ros::TimerEvent&);
 
+/// Check MCU when startup
+bool checkSensors(void);
+
 /// Read and publish all the sensors info
 void publishSensors(void);
 

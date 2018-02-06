@@ -10,7 +10,7 @@
     <param name="MD49device" type="string" value="/dev/MD" />
     <param name="STM_RATE" type="int" value="4" />
     <param name="ODOM_RATE" type="int" value="20" />
-    <param name="STM_BYTES" type="int" value="49" />  
+    <param name="STM_BYTES" type="int" value="63" />  
     <!-- RPLIDAR RELATED -->
     <param name="serial_port" type="string" value="/dev/rplidar"/>  
     <param name="serial_baudrate" type="int" value="115200"/>

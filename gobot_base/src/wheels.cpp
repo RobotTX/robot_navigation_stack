@@ -103,7 +103,6 @@ bool getEncoders(gobot_msg_srv::GetEncoders::Request &req, gobot_msg_srv::GetEnc
 /// Set the encoders to 0
 bool resetEncoders(std_srvs::Empty::Request &req, std_srvs::Empty::Response &res){
     writeAndRead(std::vector<uint8_t>({0x00, 0x35}));
-    ros::Duration(0.5).sleep();
     return true;
 }
 

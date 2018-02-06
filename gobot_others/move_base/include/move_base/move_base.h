@@ -206,7 +206,7 @@ namespace move_base {
       double oscillation_timeout_, oscillation_distance_;
 
       double linear_spd_limit_,angular_spd_limit_;
-
+      
       MoveBaseState state_;
       RecoveryTrigger recovery_trigger_;
 
