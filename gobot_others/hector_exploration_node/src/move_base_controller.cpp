@@ -7,7 +7,7 @@ std::string map_frame;
 std::string base_frame;
 std_srvs::Empty empty_srv;
 /// Simple Action client
-std::shared_ptr<actionlib::SimpleActionClient<move_base_msgs::MoveBaseAction>> ac;
+MoveBaseClient* ac;
 
 robot_class::SetRobot SetRobot;
 
@@ -187,6 +187,12 @@ bool stopExploration(void){
     return true;
 }
 
+void mySigintHandler(int sig)
+{   
+	delete ac;
+    ros::shutdown();
+}
+
 int main(int argc, char* argv[]){
     ros::init(argc, argv, "move_base_controller");
     ros::NodeHandle nh;
@@ -212,8 +218,10 @@ int main(int argc, char* argv[]){
     //~ROS_INFO("(Exploration) no_frontier_threshold : %d", no_frontier_threshold);
 
     /// Create an actionlibClient to be able to send and monitor goals
-    ac = std::shared_ptr<actionlib::SimpleActionClient<move_base_msgs::MoveBaseAction>>(new actionlib::SimpleActionClient<move_base_msgs::MoveBaseAction>("move_base", true));
+    ac = new MoveBaseClient("move_base", true);
+    ac->waitForServer(ros::Duration(60.0));
 
+    signal(SIGINT, mySigintHandler);
     /// Launch service's servers
     //0-don't go back to starting point; 1-go back to charging station; 2-go back to normal staring point
     ros::ServiceServer startExploration = nh.advertiseService("/gobot_scan/startExploration", startExplorationSrv);

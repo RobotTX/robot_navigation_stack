@@ -398,25 +398,25 @@ void initData(){
 void mySigintHandler(int sig)
 {   
     SetRobot.setStage(stage_);
+	delete ac;
     ros::shutdown();
 }
 
 int main(int argc, char* argv[]){
-
-	ROS_INFO("(PlayPath) play path main running...");
-
 	try {
 
 		ros::init(argc, argv, "play_path");
 		ros::NodeHandle n;
-
-		signal(SIGINT, mySigintHandler);
 		
 		ros::service::waitForService("/gobot_startup/pose_ready", ros::Duration(60.0));
 		ac = new MoveBaseClient("move_base", true);
+		ac->waitForServer(ros::Duration(60.0));
 		
+		signal(SIGINT, mySigintHandler);
+
 		initData();
 
+		ROS_INFO("(PlayPath) play path main running...");
 		currentGoal.x = 0;
 		currentGoal.y = -1;
 		currentGoal.waitingTime = -1;

@@ -364,13 +364,21 @@ void startDockingParams(){
     goalStatusSub = nh.subscribe("/move_base/result",1,goalResultCallback);
 }
 
+void mySigintHandler(int sig)
+{   
+	delete ac;
+    ros::shutdown();
+}
+
 int main(int argc, char* argv[]){
     ros::init(argc, argv, "auto_docking");
     ros::NodeHandle nh;
 
     ros::service::waitForService("/gobot_startup/pose_ready", ros::Duration(60.0));
-
     ac = new MoveBaseClient("move_base", true);
+    ac->waitForServer(ros::Duration(60.0));
+
+    signal(SIGINT, mySigintHandler);
 
     ros::ServiceServer startDockingSrv = nh.advertiseService("/gobot_function/startDocking", startDockingService);
     ros::ServiceServer stopDockingSrv = nh.advertiseService("/gobot_function/stopDocking", stopDockingService);

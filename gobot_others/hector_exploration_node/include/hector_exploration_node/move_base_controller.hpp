@@ -4,6 +4,7 @@
 #include <ros/ros.h>
 #include <iostream>
 #include <string>
+#include <signal.h>
 #include <actionlib/client/simple_action_client.h>
 #include <hector_nav_msgs/GetRobotTrajectory.h>
 #include <move_base_msgs/MoveBaseAction.h>
@@ -15,6 +16,8 @@
 #include <tf/transform_listener.h>
 #include <gobot_msg_srv/set_robot_class.h>
 #include <gobot_msg_srv/GetGobotStatus.h>
+
+typedef actionlib::SimpleActionClient<move_base_msgs::MoveBaseAction> MoveBaseClient;
 
 /// Call a service to get the trajectory for exploration from the hector_exploration_planner and send the goal to move_base
 void doExploration(void);

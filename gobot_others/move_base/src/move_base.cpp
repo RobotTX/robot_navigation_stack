@@ -53,7 +53,7 @@ namespace move_base {
     blp_loader_("nav_core", "nav_core::BaseLocalPlanner"), 
     recovery_loader_("nav_core", "nav_core::RecoveryBehavior"),
     planner_plan_(NULL), latest_plan_(NULL), controller_plan_(NULL),
-    runPlanner_(false), setup_(false), p_freq_change_(false), c_freq_change_(false), new_global_plan_(false) {
+    runPlanner_(false), setup_(false), p_freq_change_(false), c_freq_change_(false), new_global_plan_(false), check_obs_dis_(false), obs_index_(-1) {
 
     as_ = new MoveBaseActionServer(ros::NodeHandle(), "move_base", boost::bind(&MoveBase::executeCb, this, _1), false);
 
@@ -115,7 +115,7 @@ namespace move_base {
     private_nh.param("local_costmap/inscribed_radius", inscribed_radius_, 0.325);
     private_nh.param("local_costmap/circumscribed_radius", circumscribed_radius_, 0.46);
     private_nh.param("clearing_radius", clearing_radius_, circumscribed_radius_);
-    private_nh.param("conservative_reset_dist", conservative_reset_dist_, 3.0);
+    private_nh.param("conservative_reset_dist", conservative_reset_dist_, 2.5);
 
     private_nh.param("shutdown_costmaps", shutdown_costmaps_, false);
     private_nh.param("clearing_rotation_allowed", clearing_rotation_allowed_, true);
@@ -596,6 +596,8 @@ namespace move_base {
         last_valid_plan_ = ros::Time::now();
         planning_retries_ = 0;
         new_global_plan_ = true;
+        check_obs_dis_ = true;
+        obs_index_ = -1;
 
         ROS_DEBUG_NAMED("move_base_plan_thread","Generated a plan from the base_global_planner");
 
@@ -628,19 +630,33 @@ namespace move_base {
         lock.unlock();
       }
       //tx//if not find path and controlling, reset state to be PLANNING
-      else{
-        unsigned int x,y;
-        for(int i=0;i<latest_plan_->size();i++){
+      else if(state_==CONTROLLING){
+        ROS_INFO("%d",obs_index_);
+        //check the nearest obstacle cell in the lastest plan
+        if(check_obs_dis_){
+          unsigned int x,y;
+          for(int i=0;i<latest_plan_->size();i++){
             planner_costmap_ros_->getCostmap()->worldToMap(latest_plan_->at(i).pose.position.x,latest_plan_->at(i).pose.position.y,x,y); 	
-            planner_costmap_ros_->getCostmap()->getCost(x,y);
+            if (planner_costmap_ros_->getCostmap()->getCost(x,y) >= costmap_2d::INSCRIBED_INFLATED_OBSTACLE){
+              obs_index_ = i;
+              check_obs_dis_ = false;
+              break;
+            }
+          }
         }
-
-        planning_retries_++;
-        
-        if (planning_retries_ > uint32_t(max_planning_retries_)){
-          state_ = PLANNING;
-          publishZeroVelocity();
-          ROS_WARN("move_base failed to find a path and state is not planning, reset state to PLANNING");
+        //check distance between robot and nearest obstacle cell
+        if(obs_index_>=0){
+          tf::Stamped<tf::Pose> global_pose;
+          planner_costmap_ros_->getRobotPose(global_pose);
+          geometry_msgs::PoseStamped current_position;
+          tf::poseStampedTFToMsg(global_pose, current_position);
+          double obs_distance = distance(current_position,latest_plan_->at(obs_index_));
+          //if distance is too near, stop the robot
+          if(obs_distance < conservative_reset_dist_){
+            state_ = PLANNING;
+            publishZeroVelocity();
+            ROS_WARN("move_base failed to find a path and state is not planning, reset state to PLANNING (distance to obstacle:%.3f",obs_distance);
+          }
         }
       }
 
@@ -724,17 +740,13 @@ namespace move_base {
           lock.unlock();
 
           //publish the goal point to the visualizer
-          ROS_INFO("move_base: move_base has received a goal of x: %.2f, y: %.2f", goal.pose.position.x, goal.pose.position.y);
+          //ROS_INFO("move_base: move_base has received a goal of x: %.2f, y: %.2f", goal.pose.position.x, goal.pose.position.y);
           current_goal_pub_.publish(goal);
           //tx//if received goal is invaild, stop robot
-          //get the starting pose of the robot
-          tf::Stamped<tf::Pose> global_pose;
-          planner_costmap_ros_->getRobotPose(global_pose);
-          geometry_msgs::PoseStamped start;
-          tf::poseStampedTFToMsg(global_pose, start);
           std::vector<geometry_msgs::PoseStamped> global_plan;
+          bool gotPlan = n.ok() && makePlan(goal, global_plan);
           //if the planner fails or returns a zero length plan, planning failed
-          if(!planner_->makePlan(start, goal, global_plan) || global_plan.empty()){
+          if(!gotPlan){
             publishZeroVelocity();
             ROS_WARN("move_base 1st time failed to find path to goal of x: %.2f, y: %.2f", goal.pose.position.x, goal.pose.position.y);
           }
@@ -839,15 +851,6 @@ namespace move_base {
     feedback.base_position = current_position;
     as_->publishFeedback(feedback);
     
-    //tx//begin
-    /*//debugging purpose
-    if(!controller_plan_->empty())
-      ROS_INFO("Controller %f,%f.",controller_plan_->back().pose.position.x,controller_plan_->back().pose.position.y);
-    if(!planner_plan_->empty())
-      ROS_INFO("Planner %f,%f.",planner_plan_->back().pose.position.x,planner_plan_->back().pose.position.y);
-    */
-    //tx//end 
-
     //check to see if we've moved far enough to reset our oscillation timeout
     if(distance(current_position, oscillation_pose_) >= oscillation_distance_)
     {

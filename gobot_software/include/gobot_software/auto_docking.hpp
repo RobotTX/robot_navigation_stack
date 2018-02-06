@@ -9,6 +9,7 @@
 #include <ctime>
 #include <chrono>
 #include <thread>
+#include <signal.h>
 #include <tf/transform_broadcaster.h>
 #include <geometry_msgs/PoseStamped.h>
 #include <actionlib_msgs/GoalStatusArray.h>

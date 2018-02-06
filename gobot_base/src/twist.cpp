@@ -188,7 +188,7 @@ void lostCallback(const std_msgs::Int8::ConstPtr& msg){
     }
     else if(msg->data==0 && lost_robot){
         lost_robot=false;
-        SetRobot.setLed(0,{"green"});
+        SetRobot.setLed(0,{"white"});
     }
 }
 
@@ -229,7 +229,7 @@ void joyCallback(const sensor_msgs::Joy::ConstPtr& joy){
             linear_limit = (linear_limit+0.1) <= 0.9 ? linear_limit+0.1 : 0.9;
         }
         else if(joy->axes[7] == -1){
-            linear_limit = (linear_limit-0.1) > 0 ? linear_limit-0.1 : 0.1;
+            linear_limit = (linear_limit-0.1) > 0.1 ? linear_limit-0.1 : 0.1;
         }
 
         //adjust angular speed
@@ -237,7 +237,7 @@ void joyCallback(const sensor_msgs::Joy::ConstPtr& joy){
             angular_limit = (angular_limit+0.1) <= 2.0 ? angular_limit+0.1 : 2.0;
         }
         else if(joy->axes[6] == 1){
-            angular_limit = (angular_limit-0.1) > 0 ? angular_limit-0.1 : 0.1;
+            angular_limit = (angular_limit-0.1) > 0.1 ? angular_limit-0.1 : 0.1;
         }
 
         //reset linear speed limit 0.4
@@ -324,6 +324,11 @@ bool initParams(){
     return true;
 }
 
+void mySigintHandler(int sig)
+{   
+	delete ac;
+    ros::shutdown();
+}
 
 int main(int argc, char **argv) {
     ros::init(argc, argv, "twist");
@@ -345,6 +350,9 @@ int main(int argc, char **argv) {
         ros::ServiceServer pauseRobot = nh.advertiseService("/gobot_base/pause_robot",pauseRobotSrvCallback);
 
         ac = new MoveBaseClient("move_base", true);
+        ac->waitForServer(ros::Duration(60.0));
+
+        signal(SIGINT, mySigintHandler);
 
         ros::spin();
     }

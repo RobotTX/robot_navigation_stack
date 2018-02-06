@@ -237,7 +237,8 @@ namespace move_base {
       move_base::MoveBaseConfig last_config_;
       move_base::MoveBaseConfig default_config_;
       bool setup_, p_freq_change_, c_freq_change_;
-      bool new_global_plan_;
+      bool new_global_plan_, check_obs_dis_;
+      int obs_index_;
   };
 };
 #endif
