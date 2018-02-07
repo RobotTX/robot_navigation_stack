@@ -188,9 +188,9 @@ namespace move_base {
 
       //tx//begin
       int32_t recovery_count_, recovery_count_threshold_;
-      bool close_to_goal_;
-      double dis_to_goal_threshold_;
-      bool closeToGoal(const geometry_msgs::PoseStamped& current_pos, const geometry_msgs::PoseStamped& goal_pos);
+      double linear_spd_limit_,angular_spd_limit_;
+      bool check_obs_dis_;
+      int obs_index_;
       //tx//end
 
       tf::Stamped<tf::Pose> global_pose_;
@@ -204,8 +204,6 @@ namespace move_base {
       ros::ServiceServer make_plan_srv_, clear_costmaps_srv_;
       bool shutdown_costmaps_, clearing_rotation_allowed_, recovery_behavior_enabled_;
       double oscillation_timeout_, oscillation_distance_;
-
-      double linear_spd_limit_,angular_spd_limit_;
       
       MoveBaseState state_;
       RecoveryTrigger recovery_trigger_;
@@ -237,8 +235,7 @@ namespace move_base {
       move_base::MoveBaseConfig last_config_;
       move_base::MoveBaseConfig default_config_;
       bool setup_, p_freq_change_, c_freq_change_;
-      bool new_global_plan_, check_obs_dis_;
-      int obs_index_;
+      bool new_global_plan_;
   };
 };
 #endif

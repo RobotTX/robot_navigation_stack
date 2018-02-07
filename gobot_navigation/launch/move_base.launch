@@ -1,8 +1,17 @@
 <?xml version="1.0"?>
 <launch>
+    <!--amcl -->
+    <node pkg="map_server" type="map_server" name="map_server" args="$(find gobot_data)/maps/used_map.yaml" required="true">
+        <param name="frame_id" type="string" value="/map" />
+    </node>
+
+    <node pkg="amcl" type="amcl" name="amcl" output="screen" respawn="true">
+        <rosparam file="$(find gobot_navigation)/params/amcl_params.yaml" command="load" />
+    </node>
 
     <node pkg="robot_pose_publisher" type="robot_pose_publisher" name="robot_pose_publisher" respawn="true"/>
 
+    <!--move_base -->
     <node pkg="move_base" type="move_base" respawn="false" name="move_base" output="screen" required="true">
 
         <rosparam file="$(find gobot_navigation)/params/costmap_params_common.yaml" command="load" ns="global_costmap" />

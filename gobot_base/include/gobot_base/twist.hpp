@@ -3,7 +3,6 @@
 #include <unistd.h>
 #include <stdio.h>
 #include <stdlib.h>
-#include <signal.h>
 #include <chrono>
 #include <thread>
 #include <signal.h>
@@ -23,9 +22,6 @@ typedef actionlib::SimpleActionClient<move_base_msgs::MoveBaseAction> MoveBaseCl
 bool continueRobotSrvCallback(std_srvs::Empty::Request &req, std_srvs::Empty::Response &res);
 
 bool pauseRobotSrvCallback(std_srvs::Empty::Request &req, std_srvs::Empty::Response &res);
-
-/// Call the service to set the speed of the wheels
-bool setSpeed(const char directionR, const int velocityR, const char directionL, const int velocityL);
 
 /// Callback of the subscriber on bumper infoso that if we bump into something, the robot top
 void newBumpersInfo(const gobot_msg_srv::BumperMsg::ConstPtr& bumpers);

@@ -196,11 +196,9 @@ void newIrSignal(const gobot_msg_srv::IrMsg::ConstPtr& irSignal){
             if (irSignal->leftSignal == 3)
                 SetRobot.setMotorSpeed('B', 5, 'F', 5);
             else if (irSignal->leftSignal == 2)
-                SetRobot.setMotorSpeed('B', 5, 'F',10);
-                /*
+                SetRobot.setMotorSpeed('B', 8, 'F',4);
             else if (irSignal->leftSignal == 1)
-                SetRobot.setMotorSpeed('B', 10, 'F', 5);
-                */
+                SetRobot.setMotorSpeed('B', 4, 'F', 8);
 
         } 
         else if (irSignal->rightSignal != 0){
@@ -209,11 +207,9 @@ void newIrSignal(const gobot_msg_srv::IrMsg::ConstPtr& irSignal){
             if (irSignal->rightSignal == 3)
                 SetRobot.setMotorSpeed('F', 5, 'B', 5);
             else if (irSignal->rightSignal == 2)
-                SetRobot.setMotorSpeed('F', 5, 'B', 10);
-                /*
+                SetRobot.setMotorSpeed('F', 8, 'B', 4);
             else if (irSignal->rightSignal == 1)
-                SetRobot.setMotorSpeed('F',10, 'B', 5);
-                */
+                SetRobot.setMotorSpeed('F',4, 'B', 8);
         }
 
         if (irSignal->rearSignal == 0){
@@ -373,12 +369,11 @@ void mySigintHandler(int sig)
 int main(int argc, char* argv[]){
     ros::init(argc, argv, "auto_docking");
     ros::NodeHandle nh;
-
+    signal(SIGINT, mySigintHandler);
+    
     ros::service::waitForService("/gobot_startup/pose_ready", ros::Duration(60.0));
     ac = new MoveBaseClient("move_base", true);
     ac->waitForServer(ros::Duration(60.0));
-
-    signal(SIGINT, mySigintHandler);
 
     ros::ServiceServer startDockingSrv = nh.advertiseService("/gobot_function/startDocking", startDockingService);
     ros::ServiceServer stopDockingSrv = nh.advertiseService("/gobot_function/stopDocking", stopDockingService);

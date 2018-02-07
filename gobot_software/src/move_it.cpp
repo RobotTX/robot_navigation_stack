@@ -44,6 +44,7 @@ void goalResultCallback(const move_base_msgs::MoveBaseActionResult::ConstPtr& ms
 			case 4:
 				SetRobot.setStage(-stage_ - 1);
 				setGobotStatus(0,"ABORTED_PATH");
+				SetRobot.setMotorSpeed('F', 0, 'F', 0);
 				break;
 			//OTHER CASE
 			default:
@@ -59,25 +60,44 @@ void goalReached(){
 	//ROS_INFO("(PlayPath::goalReached) path point reached");
 	stage_ = text_=="PLAY_PATH" ? stage_+1:stage_;
 	if(stage_ >= path.size() && text_!="PLAY_POINT"){
-		if(looping && !dockAfterPath && path.size()>1){
-			//ROS_INFO("(PlayPath:: complete path but looping!!");
+		if(looping && path.size()>1){
 			stage_ = 0;
+			if(dockAfterPath){
+				//if looping, check the last point delay status before go docking
+				interruptDelay = false;
+				SetRobot.setSound(1,1); 
+				SetRobot.setStage(stage_);
+				// reached a normal/path goal so we sleep the given time
+				checkGoalDelay();
+				std::thread([](){
+					//~ROS_INFO("(PlayPath::goalReached) battery is low, go to charging station!!");
+					ros::service::call("/gobot_command/goDock", empty_srv);
+					dockAfterPath = false;
+				}).detach();
+				return;
+			}
 		}
-		else{
+		else {
 			//ROS_INFO("(PlayPath:: complete path!");
 			setGobotStatus(0,"COMPLETE_PATH");
+			SetRobot.setSound(1,1); 
 			SetRobot.setStage(stage_);
 			if(dockAfterPath){
-				//ROS_INFO("(PlayPath::goalReached) battery is low, go to charging station!!");
-				ros::service::call("/gobot_command/goDock", empty_srv);
-				dockAfterPath = false;
+				//if not looping, go dock when reaching last point
+				std::thread([](){
+					//~ROS_INFO("(PlayPath::goalReached) battery is low, go to charging station!!");
+					ros::service::call("/gobot_command/goDock", empty_srv);
+					dockAfterPath = false;
+				}).detach();
 			}
 			return;
 		}
 	}
+
 	interruptDelay = false;
-	SetRobot.setSound(1,1); 
-	SetRobot.setStage(stage_);
+	SetRobot.setSound(1,1);
+	if (text_!="PLAY_POINT") 
+		SetRobot.setStage(stage_);
 	// reached a normal/path goal so we sleep the given time
 	checkGoalDelay();
 	if(!stop_flag){
@@ -182,7 +202,7 @@ bool playPointService(gobot_msg_srv::SetStringArray::Request &req, gobot_msg_srv
 	if(ros::service::call("/gobot_status/charging_status", arg) && arg.response.isCharging){
 		ROS_WARN("(PlayPath::playPathService) we are charging so we go straight to avoid bumping into the CS when turning");
 		SetRobot.setMotorSpeed('F', 15, 'F', 15);
-		std::this_thread::sleep_for(std::chrono::milliseconds(3000));
+		ros::Duration(2.5).sleep();
 		SetRobot.setMotorSpeed('F', 0, 'F', 0);
 	}
 
@@ -226,7 +246,7 @@ bool playPathService(std_srvs::Empty::Request &req, std_srvs::Empty::Response &r
 	if(ros::service::call("/gobot_status/charging_status", arg) && arg.response.isCharging){
 		ROS_WARN("(PlayPath::playPathService) we are charging so we go straight to avoid bumping into the CS when turning");
 		SetRobot.setMotorSpeed('F', 15, 'F', 15);
-		std::this_thread::sleep_for(std::chrono::milliseconds(2500));
+		ros::Duration(2.5).sleep();
 		SetRobot.setMotorSpeed('F', 0, 'F', 0);
 	}
 	setGobotStatus(5,"PLAY_PATH");
@@ -407,12 +427,12 @@ int main(int argc, char* argv[]){
 
 		ros::init(argc, argv, "play_path");
 		ros::NodeHandle n;
+		signal(SIGINT, mySigintHandler);
 		
 		ros::service::waitForService("/gobot_startup/pose_ready", ros::Duration(60.0));
 		ac = new MoveBaseClient("move_base", true);
 		ac->waitForServer(ros::Duration(60.0));
 		
-		signal(SIGINT, mySigintHandler);
 
 		initData();
 

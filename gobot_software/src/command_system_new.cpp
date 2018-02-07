@@ -404,19 +404,13 @@ bool startScanAndAutoExplore(const std::string ip, const std::vector<std::string
         
         ROS_INFO("(Command system) Going to scan automatically");
         ROS_INFO("(Command system) Gobot start to scan a new map");
-        gobot_msg_srv::SetStringArray keep_ip;
-        keep_ip.request.data.push_back(ip);
-        ros::service::call("/gobot_software/disconnet_servers",keep_ip);
         scanning = true;
         /// Kill gobot move so that we'll restart it with the new map
-        std::string cmd = "rosnode kill /move_base";
-        system(cmd.c_str());
-        sleep(10);
-        
+        std::string cmd = SetRobot.killList();
+        system(cmd.c_str());    
         /// Relaunch gobot_navigation
         SetRobot.runScan(simulation);
-        system(cmd.c_str());
-        sleep(5);
+
         ROS_INFO("(New Map) We relaunched gobot_scan");
 
         /// 0 : the robot doesn't go back to its starting point at the end of the scan
@@ -634,19 +628,13 @@ bool sendMapOnce(const std::string ip, const std::vector<std::string> command){
 bool startNewScan(const std::string ip, const std::vector<std::string> command){
     if(command.size() == 1) {
         ROS_INFO("(Command system) Gobot start to scan a new map");
-        gobot_msg_srv::SetStringArray keep_ip;
-        keep_ip.request.data.push_back(ip);
-        ros::service::call("/gobot_software/disconnet_servers",keep_ip);
         scanning = true;
 
         /// Kill gobot move so that we'll restart it with the new map
-        std::string cmd = "rosnode kill /move_base";
+        std::string cmd = SetRobot.killList();
         system(cmd.c_str());
-        sleep(10);
-
         /// Relaunch gobot_navigation
         SetRobot.runScan(simulation);
-        sleep(5);
         ROS_INFO("(Command system) We relaunched gobot_scan");
 
         return sendMapAutomatically(ip);
@@ -665,12 +653,11 @@ bool stopScanning(const std::string ip, const std::vector<std::string> command){
         if(std::stoi(command.at(1)) == 1){
             scanning = false;
             /// Kill gobot move so that we'll restart it with the new map
-            std::string cmd = "rosnode kill /move_base";
+            std::string cmd = SetRobot.killList();
             system(cmd.c_str());
-            sleep(10);
+ 
             /// Relaunch gobot_navigation
             SetRobot.runNavi(simulation);
-            sleep(5);
             ROS_INFO("(Command system) We relaunched gobot_navigation");
         }
 
@@ -723,10 +710,7 @@ bool setWifi(const std::vector<std::string> command){
     //1=y, 2=wifi name, 3=wifi password
     if(command.size() == 3){
         ROS_INFO("(Command system) Wifi received %s %s", command.at(1).c_str(), command.at(2).c_str());
-        if(SetRobot.setWifi(command.at(1),command.at(2))){
-            gobot_msg_srv::SetStringArray keep_ip;
-            return ros::service::call("/gobot_software/disconnet_servers",keep_ip);
-        }
+        return SetRobot.setWifi(command.at(1),command.at(2));
     } 
     else
         ROS_ERROR("(Command system) Not enough arguments, received %lu arguments, 4 arguments expected", command.size());

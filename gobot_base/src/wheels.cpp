@@ -1,18 +1,22 @@
 #include <gobot_base/wheels.hpp>
 
+bool test = false;
+int leftSpeed_=128, rightSpeed_=128;
+bool error = false;
+
+ros::ServiceServer setSpeedsSrv,getEncodersSrv,resetEncodersSrv,initialMotorSrv;
+
 std::mutex serialMutex;
 std::string MD49device;
 serial::Serial serialConnection;
-bool test = false;
-int leftSpeed_=128, rightSpeed_=128;
-ros::ServiceServer setSpeedsSrv,getEncodersSrv,resetEncodersSrv;
 
 /// Write and read informations on the serial port
 std::vector<uint8_t> writeAndRead(std::vector<uint8_t> toWrite, int bytesToRead){
     std::vector<uint8_t> buff;
+    /// Lock the mutex so no one can write at the same time
+    serialMutex.lock();
+    
     if(serialConnection.isOpen()){
-        /// Lock the mutex so no one can write at the same time
-        serialMutex.lock();
         try{
             /// Send bytes to the MD49
             size_t bytes_wrote = serialConnection.write(toWrite);
@@ -24,13 +28,13 @@ std::vector<uint8_t> writeAndRead(std::vector<uint8_t> toWrite, int bytesToRead)
         } catch (std::exception& e) {
 		    ROS_ERROR("(Wheels) exception : %s", e.what());
 	    }
-        /// Unlock the mutex
-        serialMutex.unlock();
     } 
     else {
-        initSerial();
         ROS_WARN("(wheels::writeAndRead) The serial connection is not opened, something is wrong");
     }
+
+    /// Unlock the mutex
+    serialMutex.unlock();
 
     return buff;
 }
@@ -92,9 +96,14 @@ bool getEncoders(gobot_msg_srv::GetEncoders::Request &req, gobot_msg_srv::GetEnc
     if(encoders.size() == 8){
         res.leftEncoder = (encoders.at(0) << 24) + (encoders.at(1) << 16) + (encoders.at(2) << 8) + encoders.at(3);
         res.rightEncoder = (encoders.at(4) << 24) + (encoders.at(5) << 16) + (encoders.at(6) << 8) + encoders.at(7);
+        if(error){
+            initSerial();
+            error = false;
+        }
         return true;
     } 
     else{
+        error = true;
         ROS_WARN("(wheels::getEncoders) Got the wrong number of encoders data : %lu", encoders.size());
         return false;
     }
@@ -105,6 +114,11 @@ bool resetEncoders(std_srvs::Empty::Request &req, std_srvs::Empty::Response &res
     writeAndRead(std::vector<uint8_t>({0x00, 0x35}));
     return true;
 }
+
+bool initialMotor(std_srvs::Empty::Request &req, std_srvs::Empty::Response &res){
+    return initSerial();
+}
+
 
 /// Just to test, we get the encoders and print them
 bool testEncoders(std_srvs::Empty::Request &req, std_srvs::Empty::Response &res){
@@ -187,8 +201,7 @@ bool initSerial() {
         /// First 3 bytes : set the mode (see MD49 documentation)
         /// then 2 bytes to disable the 2 sec timeout
         /// then 3 bytes to set the acceleration steps (1-10)
-        writeAndRead(std::vector<uint8_t>({0x00, 0x34, 0x00, 0x00, 0x38, 0x00, 0x33, 0x01}));
-
+        writeAndRead(std::vector<uint8_t>({0x00, 0x34, 0x00,0x00, 0x38,0x00, 0x33, 0x01}));
         ROS_INFO("(wheels::initSerial) Established connection to MD49.");
         return true;
     } 
@@ -202,6 +215,8 @@ void mySigintHandler(int sig)
     resetEncodersSrv.shutdown();
     getEncodersSrv.shutdown();
     setSpeedsSrv.shutdown();
+    initialMotorSrv.shutdown();
+    test = false;
     try{
         if(serialConnection.isOpen()){
             //set speed to 0 when shutdown
@@ -225,6 +240,7 @@ int main(int argc, char **argv) {
         setSpeedsSrv = nh.advertiseService("/gobot_motor/setSpeeds", setSpeeds);
         getEncodersSrv = nh.advertiseService("/gobot_motor/getEncoders", getEncoders);
         resetEncodersSrv = nh.advertiseService("/gobot_motor/resetEncoders", resetEncoders);
+        initialMotorSrv = nh.advertiseService("/gobot_motor/initialMotor", initialMotor);
         ros::ServiceServer testEncodersSrv = nh.advertiseService("/gobot_test/testEncoders", testEncoders);
         ros::ServiceServer testEncodersSrv2 = nh.advertiseService("/gobot_test/testEncoders2", testEncoders2);
         ros::ServiceServer stopTestsSrv = nh.advertiseService("/gobot_test/stopTestEncoder", stopTests);

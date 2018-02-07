@@ -35,6 +35,8 @@ bool getEncoders(gobot_msg_srv::GetEncoders::Request &req, gobot_msg_srv::GetEnc
 /// Set the encoders to 0
 bool resetEncoders(std_srvs::Empty::Request &req, std_srvs::Empty::Response &res);
 
+bool initialMotor(std_srvs::Empty::Request &req, std_srvs::Empty::Response &res);
+
 /// Just to test, we get the encoders and print them
 bool testEncoders(std_srvs::Empty::Request &req, std_srvs::Empty::Response &res);
 

@@ -48,8 +48,8 @@ conservative_reset_dist: 2.5
 
 TrajectoryPlannerROS:
     acc_lim_th: 0.5
-    max_rotational_vel: 1.2
-    min_in_place_rotational_vel: 1.0
+    max_rotational_vel: 1.0
+    min_in_place_rotational_vel: 0.8
 
 rotate_recovery:
     #The distance in radians between checks for obstacles when checking if an in-place rotation is safe. Defaults to 1 degree

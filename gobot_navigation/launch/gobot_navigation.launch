@@ -1,9 +1,7 @@
 <?xml version="1.0"?>
 <launch>
 	<include file="$(find gobot_base)/launch/rpmapbase.launch"/>
-    <include file="$(find gobot_software)/launch/gobot_function.launch"/>
     <include file="$(find gobot_recovery)/launch/gobot_recovery.launch"/>
     <include file="$(find gobot_sensors2pc)/launch/gobot_sensors2pc.launch"/>
-    <include file="$(find gobot_navigation)/launch/amcl.launch"/>
     <include file="$(find gobot_navigation)/launch/move_base.launch"/>
 </launch>

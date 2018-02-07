@@ -149,7 +149,7 @@ bool startExplorationSrv(hector_exploration_node::Exploration::Request &req, hec
         if(ros::service::call("/gobot_status/charging_status", isCharging) && isCharging.response.isCharging){
             ROS_WARN("(Exploration) we are charging so we go straight to avoid bumping into the CS when turning");
             SetRobot.setMotorSpeed('F', 15, 'F', 15);
-		    std::this_thread::sleep_for(std::chrono::milliseconds(3000));
+		    ros::Duration(2.5).sleep();
             SetRobot.setMotorSpeed('F', 0, 'F', 0);
         }
 
@@ -196,7 +196,8 @@ void mySigintHandler(int sig)
 int main(int argc, char* argv[]){
     ros::init(argc, argv, "move_base_controller");
     ros::NodeHandle nh;
-
+    signal(SIGINT, mySigintHandler);
+    
     //Startup begin
     ROS_INFO("(Exploration) Waiting for Robot setting hardware...");
     ros::service::waitForService("/gobot_startup/pose_ready", ros::Duration(60.0));
@@ -221,7 +222,6 @@ int main(int argc, char* argv[]){
     ac = new MoveBaseClient("move_base", true);
     ac->waitForServer(ros::Duration(60.0));
 
-    signal(SIGINT, mySigintHandler);
     /// Launch service's servers
     //0-don't go back to starting point; 1-go back to charging station; 2-go back to normal staring point
     ros::ServiceServer startExploration = nh.advertiseService("/gobot_scan/startExploration", startExplorationSrv);

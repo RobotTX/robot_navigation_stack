@@ -1,4 +1,5 @@
 #include <ros/ros.h>
+#include <signal.h>
 #include <tf/transform_broadcaster.h>
 #include <nav_msgs/Odometry.h>
 #include <gobot_msg_srv/GetEncoders.h>
@@ -9,12 +10,15 @@
 
 std_srvs::Empty arg;
 
-
+void mySigintHandler(int sig)
+{   
+    ros::shutdown();
+}
 
 int main(int argc, char** argv){
     ros::init(argc, argv, "odometry_publisher");
-
     ros::NodeHandle n;
+    signal(SIGINT, mySigintHandler);
 
     //Startup begin
     ROS_INFO("(Odom) Waiting for MD49 to be ready...");
@@ -24,8 +28,8 @@ int main(int argc, char** argv){
 
     //ros::ServiceServer getSpeedsSrv = n.advertiseService("/gobot_motor/getRealSpeeds", getRealSpeeds);
     /// The encoders should be reinitialized to 0 every time we launch odom
-    int64_t last_left_encoder = 0;
-    int64_t last_right_encoder = 0;
+    int32_t last_left_encoder = 0;
+    int32_t last_right_encoder = 0;
     
     ros::Publisher odom_pub = n.advertise<nav_msgs::Odometry>("odom", 50);
     ros::Publisher odom_test_pub = n.advertise<gobot_msg_srv::OdomTestMsg>("odom_test", 50);
@@ -55,8 +59,7 @@ int main(int argc, char** argv){
 
     ros::Rate r(ODOM_RATE); //20
     ros::service::call("/gobot_motor/resetEncoders", arg);
-    ros::service::waitForService("/gobot_motor/getEncoders",ros::Duration(30));
-    while(n.ok()){
+    while(ros::ok()){
 
         // check for incoming messages
         ros::spinOnce();
@@ -69,8 +72,18 @@ int main(int argc, char** argv){
 
             // difference of ticks compared to last time
             //122rpm, 2 rotation/sec, 980ticks/rotation, 2000ticks/sec maximum
-            int64_t delta_left_encoder = abs(encoders.response.leftEncoder - last_left_encoder)<3000/ODOM_RATE ? (encoders.response.leftEncoder - last_left_encoder) : 0;
-            int64_t delta_right_encoder = abs(encoders.response.rightEncoder - last_right_encoder)<3000/ODOM_RATE ? (encoders.response.rightEncoder - last_right_encoder) : 0;
+            //if odom reading too large, probably wrong reading.
+            //just skip them to prevent position jump
+            if(abs(encoders.response.leftEncoder - last_left_encoder)>4000/ODOM_RATE || abs(encoders.response.rightEncoder - last_right_encoder)>4000/ODOM_RATE){
+                ros::service::call("/gobot_motor/initialMotor", arg);
+                last_left_encoder = 0;
+                last_right_encoder = 0;
+                last_time = current_time;
+                continue;
+            }
+
+            int32_t delta_left_encoder = encoders.response.leftEncoder - last_left_encoder;
+            int32_t delta_right_encoder = encoders.response.rightEncoder - last_right_encoder;
 
             //ROS_INFO("right:%zu, left:%zu",delta_right_encoder,delta_left_encoder);
             last_left_encoder = encoders.response.leftEncoder;
@@ -100,14 +113,7 @@ int main(int argc, char** argv){
             real_cmd.angular.z = vth;
             real_vel_pub.publish(real_cmd);
             */
-            //if odom reading too large, probably wrong reading.
-            //just skip them to prevent position jump
-            if((fabs(delta_x)>1.5/ODOM_RATE) || (fabs(delta_y)>1.5/ODOM_RATE) || (fabs(delta_th)>5.0/ODOM_RATE)){
-                ROS_WARN("(odom) pose jump detected. %.4f,%.4f,%.4f.",fabs(delta_x),fabs(delta_y),fabs(delta_th));
-                delta_x=0;
-                delta_y=0;
-                delta_th=0;
-            }
+
             x += delta_x;
             y += delta_y;
             th += delta_th;

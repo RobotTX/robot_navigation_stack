@@ -84,10 +84,8 @@ namespace move_base {
     //tx//begin
     //Max times to try recovery behaviour
     private_nh.param("recovery_count_threshold", recovery_count_threshold_, 4);
-    private_nh.param("dis_to_goal_threshold", dis_to_goal_threshold_, 0.5);
     //How many recovery behaviours tried
     recovery_count_ = 0;
-    close_to_goal_ = false;
     //tx//end
 
     //set up plan triple buffer
@@ -587,6 +585,25 @@ namespace move_base {
       if(gotPlan){
         //ROS_INFO("move_base_plan_thread: Got Plan with %zu points!", planner_plan_->size());
         ROS_DEBUG_NAMED("move_base_plan_thread","Got Plan with %zu points!", planner_plan_->size());
+
+        //tx//assign last point of goal path further from obstacle if it is too near
+        unsigned int x,y;
+        planner_costmap_ros_->getCostmap()->worldToMap(planner_plan_->back().pose.position.x,planner_plan_->back().pose.position.y,x,y);
+        if(planner_costmap_ros_->getCostmap()->getCost(x,y) > 220){ //10cm away from obstacle edge
+          int plan_size = planner_plan_->size();
+          for (int i=plan_size-2;i>=0;i--){
+            planner_costmap_ros_->getCostmap()->worldToMap(planner_plan_->at(i).pose.position.x,planner_plan_->at(i).pose.position.y,x,y);
+            if(planner_costmap_ros_->getCostmap()->getCost(x,y)<=220){
+              planner_plan_->erase(planner_plan_->begin()+i,planner_plan_->end());
+              planner_plan_->back().pose.orientation = temp_goal.pose.orientation;
+              ROS_INFO("Test near obs goal: original size:%d, changed size: %zu; goal pose: %.2f,%.2f, changed pose:%.2f,%.2f",plan_size, planner_plan_->size(), 
+              temp_goal.pose.position.x, temp_goal.pose.position.y, planner_plan_->back().pose.position.x,planner_plan_->back().pose.position.y);
+              break;
+            }
+          }
+        }
+        //tx//end
+
         //pointer swap the plans under mutex (the controller will pull from latest_plan_)
         std::vector<geometry_msgs::PoseStamped>* temp_plan = planner_plan_;
 
@@ -598,7 +615,7 @@ namespace move_base {
         new_global_plan_ = true;
         check_obs_dis_ = true;
         obs_index_ = -1;
-
+        
         ROS_DEBUG_NAMED("move_base_plan_thread","Generated a plan from the base_global_planner");
 
         //make sure we only start the controller if we still haven't reached the goal
@@ -631,7 +648,6 @@ namespace move_base {
       }
       //tx//if not find path and controlling, reset state to be PLANNING
       else if(state_==CONTROLLING){
-        ROS_INFO("%d",obs_index_);
         //check the nearest obstacle cell in the lastest plan
         if(check_obs_dis_){
           unsigned int x,y;
@@ -652,6 +668,7 @@ namespace move_base {
           tf::poseStampedTFToMsg(global_pose, current_position);
           double obs_distance = distance(current_position,latest_plan_->at(obs_index_));
           //if distance is too near, stop the robot
+          ROS_INFO("Test obs distance :%d, %zu, %f",obs_index_, latest_plan_->size(),obs_distance);
           if(obs_distance < conservative_reset_dist_){
             state_ = PLANNING;
             publishZeroVelocity();
@@ -659,6 +676,7 @@ namespace move_base {
           }
         }
       }
+      //tx//end
 
       //take the mutex for the next iteration
       lock.lock();
@@ -757,7 +775,6 @@ namespace move_base {
           last_oscillation_reset_ = ros::Time::now();
           planning_retries_ = 0;
 
-          close_to_goal_ = false;
           recovery_count_=0;
         }
         else {
@@ -921,7 +938,7 @@ namespace move_base {
         ROS_DEBUG_NAMED("move_base","In controlling state.");
 
         //check to see if we've reached our goal
-        if(tc_->isGoalReached() || close_to_goal_){
+        if(tc_->isGoalReached()){
           ROS_DEBUG_NAMED("move_base","Goal reached!");
           resetState();
 
@@ -950,11 +967,13 @@ namespace move_base {
           ROS_DEBUG_NAMED( "move_base", "Got a valid command from the local planner: %.3lf, %.3lf, %.3lf",
                            cmd_vel.linear.x, cmd_vel.linear.y, cmd_vel.angular.z );
           last_valid_control_ = ros::Time::now();
+          //tx//start
           if (linear_spd_limit_>=0){
             //make sure that we send the velocity command to the base
             if ((cmd_vel.linear.x <0 || fabs(cmd_vel.linear.x) <linear_spd_limit_) && fabs(cmd_vel.angular.z) > angular_spd_limit_)
                   cmd_vel.linear.x = 0.0;
           }
+          //tx//end
           vel_pub_.publish(cmd_vel);
           if(recovery_trigger_ == CONTROLLING_R)
             recovery_index_ = 0;
@@ -994,35 +1013,19 @@ namespace move_base {
 
         //we'll invoke whatever recovery behavior we're currently on if they're enabled
         if(recovery_behavior_enabled_ && recovery_index_ < recovery_behaviors_.size() && recovery_count_ < recovery_count_threshold_){
+          ROS_DEBUG_NAMED("move_base_recovery","Executing behavior %u of %zu", recovery_index_, recovery_behaviors_.size());
+          recovery_behaviors_[recovery_index_]->runBehavior();
+
+          //we at least want to give the robot some time to stop oscillating after executing the behavior
+          last_oscillation_reset_ = ros::Time::now();
+
+          //update the index of the next recovery behavior that we'll try
+          recovery_index_++;
+
           //tx//begin
-          if(recovery_count_>0){
-            //Check whether goal is close enough
-            if(!planner_plan_->empty() && closeToGoal(current_position,planner_plan_->back())){
-              //Set goal state to be succeed
-              ROS_INFO("GOAL Reached!!");
-              close_to_goal_=true;
-            }
-            else{
-              close_to_goal_=false;
-            }
-          }
-
-          if(!close_to_goal_){
-            //tx//end
-            ROS_DEBUG_NAMED("move_base_recovery","Executing behavior %u of %zu", recovery_index_, recovery_behaviors_.size());
-            recovery_behaviors_[recovery_index_]->runBehavior();
-
-            //we at least want to give the robot some time to stop oscillating after executing the behavior
-            last_oscillation_reset_ = ros::Time::now();
-
-            //update the index of the next recovery behavior that we'll try
-            recovery_index_++;
-
-            //tx//begin
-            //Check whether robot is close enough to the goal but robot still try to get closer
-            recovery_count_++;
-            ROS_INFO("tried %d recovery behaviors,max try:%d",recovery_count_,recovery_count_threshold_);
-          }
+          //Check whether robot is close enough to the goal but robot still try to get closer
+          recovery_count_++;
+          ROS_INFO("tried %d recovery behaviors,max try:%d",recovery_count_,recovery_count_threshold_);
 
           //we'll check if the recovery behavior actually worked
           ROS_DEBUG_NAMED("move_base_recovery","Going back to planning state");
@@ -1075,22 +1078,6 @@ namespace move_base {
     //we aren't done yet
     return false;
   }
-
-  //tx//begin
-  //Calculte distance between current pose and planner's end point(may be different from received goal)
-  bool MoveBase::closeToGoal(const geometry_msgs::PoseStamped& current_pos, const geometry_msgs::PoseStamped& goal_pos)
-  {
-    //threshold distance
-    double to_goal_dis = sqrt(pow(current_pos.pose.position.x-goal_pos.pose.position.x,2)+pow(current_pos.pose.position.y-goal_pos.pose.position.y,2));
-    if(to_goal_dis < dis_to_goal_threshold_)
-    {
-      ROS_INFO("Current position is close enough (%.2f) to Goal positon.",to_goal_dis);
-      return true;
-    }
-    else
-      return false;
-  }
-  //tx//end
 
   bool MoveBase::loadRecoveryBehaviors(ros::NodeHandle node){
     XmlRpc::XmlRpcValue behavior_list;
@@ -1223,7 +1210,6 @@ namespace move_base {
     state_ = PLANNING;
     recovery_index_ = 0;
     recovery_trigger_ = PLANNING_R;
-    close_to_goal_ = false;
     recovery_count_=0;
     publishZeroVelocity();
 

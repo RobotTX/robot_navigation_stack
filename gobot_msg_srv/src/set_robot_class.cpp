@@ -106,7 +106,12 @@ namespace robot_class {
         ros::service::call("/gobot_base/setLed",ledCmd);
     }
 
+    std::string SetRobot::killList(){
+        return "rosnode kill /move_base /base_sensors /motor_wheels";
+    }
+
     void SetRobot::runNavi(bool simulation){
+        ros::Duration(5.0).sleep();
         std::string cmd;
         /// Relaunch gobot_navigation
        if(simulation)
@@ -114,9 +119,11 @@ namespace robot_class {
         else
             cmd = "gnome-terminal -x bash -c \"source /opt/ros/kinetic/setup.bash;source ~/catkin_ws/devel/setup.bash;roslaunch gobot_navigation gobot_navigation.launch\"";
         system(cmd.c_str());
+        ros::Duration(5.0).sleep();
     }
 
     void SetRobot::runScan(bool simulation){
+        ros::Duration(5.0).sleep();
         std::string cmd;
         /// Relaunch gobot_scan
         if(simulation)
@@ -124,6 +131,7 @@ namespace robot_class {
         else
             cmd = "gnome-terminal -x bash -c \"source /opt/ros/kinetic/setup.bash;source ~/catkin_ws/devel/setup.bash;roslaunch gobot_navigation gobot_scan.launch\"";
         system(cmd.c_str());
+        ros::Duration(5.0).sleep();
     }
 
     //this two functions only work with robot equipped with speaker and ekho & festival packages

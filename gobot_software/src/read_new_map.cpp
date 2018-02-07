@@ -170,9 +170,9 @@ void session(boost::shared_ptr<tcp::socket> sock){
                         }
 
                         /// Kill gobot move so that we'll restart it with the new map
-                        std::string cmd = "rosnode kill /move_base";
+                        std::string cmd = SetRobot.killList();
                         system(cmd.c_str());
-                        sleep(10);
+
                         ROS_INFO("(New Map) We killed gobot_navigation");
 
                         if(mapType != "EDIT"){
@@ -216,7 +216,6 @@ void session(boost::shared_ptr<tcp::socket> sock){
 
                         /// Relaunch gobot_navigation
                         SetRobot.runNavi(simulation);
-                        sleep(5);
                             
                         ROS_INFO("(New Map) We relaunched gobot_navigation");
                         message = "done 1";
