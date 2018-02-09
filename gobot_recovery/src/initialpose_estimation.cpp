@@ -16,6 +16,7 @@ ros::Publisher vel_pub,foundPose_pub,initial_pose_publisher,goal_pub,lost_pub;
 std::string lastPoseFile;
 ros::ServiceServer poseReadySrv;
 
+robot_class::SetRobot SetRobot;
 robot_class::GetRobot GetRobot;
 int robot_status_;
 std::string status_text_;
@@ -104,23 +105,6 @@ void publishInitialpose(const double position_x, const double position_y, const 
 
     initial_pose_publisher.publish(initialPose);
     //ROS_INFO("(initial_pose_publisher) initialpose published.");
-}
-
-bool initializeHomeSrcCallback(std_srvs::Empty::Request &req, std_srvs::Empty::Response &res){
-    gobot_msg_srv::IsCharging arg;
-    ros::service::call("/gobot_status/charging_status",arg);
-    if(arg.response.isCharging){
-        //get home pose
-        GetRobot.getHome(home_pos_x,home_pos_y,home_ang_x,home_ang_y,home_ang_z,home_ang_w);
-        ROS_INFO("Home: pos(%.2f,%.2f),cov(%.2f,%.2f,%.2f).",home_pos_x,home_pos_y,initial_cov_xy,initial_cov_xy,initial_cov_yaw);
-
-        publishInitialpose(home_pos_x,home_pos_y,home_ang_x,home_ang_y,home_ang_z,home_ang_w,initial_cov_xy,initial_cov_yaw);
-        //clear costmap before rotating
-        ros::service::call("/move_base/clear_costmaps",empty_srv);
-        ROS_INFO("(Initialize Pose: Robot is in the charing station");
-        found_pose=true;
-    }
-    return true;
 }
 
 bool initializePoseSrvCallback(std_srvs::Empty::Request &req, std_srvs::Empty::Response &res){
@@ -404,7 +388,6 @@ int main(int argc, char **argv) {
     lost_pub = nh.advertise<std_msgs::Int8>("/gobot_recovery/lost_robot",1);
 
     ros::Subscriber initialPose = nh.subscribe("/amcl_pose",1,getAmclPoseCallback);
-    ros::ServiceServer initializeHome = nh.advertiseService("/gobot_recovery/initialize_home",initializeHomeSrcCallback);
     ros::ServiceServer initializePose = nh.advertiseService("/gobot_recovery/initialize_pose",initializePoseSrvCallback);
     ros::ServiceServer globalizePose = nh.advertiseService("/gobot_recovery/globalize_pose",globalizePoseSrvCallback);
     ros::ServiceServer stopGlobalizePose = nh.advertiseService("/gobot_recovery/stop_globalize_pose",stopGlobalizePoseSrvCallback);

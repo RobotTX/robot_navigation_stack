@@ -16,6 +16,7 @@
 #include <thread>
 #include <gobot_msg_srv/BatteryMsg.h>
 #include <gobot_msg_srv/SetStringArray.h>
+#include <gobot_msg_srv/SetString.h>
 #include <gobot_msg_srv/get_robot_class.h>
 
 
@@ -25,7 +26,7 @@ std::string getDataToSend(void);
 
 bool disServersSrvCallback(gobot_msg_srv::SetStringArray::Request &req, gobot_msg_srv::SetStringArray::Response &res);
 
-bool updataStatusSrvCallback(std_srvs::Empty::Request &req, std_srvs::Empty::Response &res);
+bool updataStatusSrvCallback(gobot_msg_srv::SetString::Request &req, gobot_msg_srv::SetString::Response &res);
 
 void pingAllIPs(void);
 

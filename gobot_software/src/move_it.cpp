@@ -60,6 +60,7 @@ void goalReached(){
 	//ROS_INFO("(PlayPath::goalReached) path point reached");
 	stage_ = text_=="PLAY_PATH" ? stage_+1:stage_;
 	if(stage_ >= path.size() && text_!="PLAY_POINT"){
+		//complete path but looping
 		if(looping && path.size()>1){
 			stage_ = 0;
 			if(dockAfterPath){
@@ -77,10 +78,10 @@ void goalReached(){
 				return;
 			}
 		}
+		//complete path without looping
 		else {
 			//ROS_INFO("(PlayPath:: complete path!");
 			setGobotStatus(0,"COMPLETE_PATH");
-			SetRobot.setSound(1,1); 
 			SetRobot.setStage(stage_);
 			if(dockAfterPath){
 				//if not looping, go dock when reaching last point
@@ -186,16 +187,14 @@ bool savePointService(gobot_msg_srv::SetStringArray::Request &req, gobot_msg_srv
 bool playPointService(gobot_msg_srv::SetStringArray::Request &req, gobot_msg_srv::SetStringArray::Response &res){
 	if (status_==5 && (text_=="DELAY" || text_=="WAITING")){
 		stop_flag = true;
-		if (stage_>=0){
-			if(stage_==0)
-				stage_ = path.size()-1;
-			else
-				stage_ = stage_ - 1;
-		}
-		SetRobot.setStage(stage_);
 	}
 	else{
 		stop_flag = false;
+	}
+
+	if(text_=="COMPLETE_PATH"){
+		stage_--;
+		SetRobot.setStage(stage_);
 	}
 
 	gobot_msg_srv::IsCharging arg;
@@ -255,33 +254,30 @@ bool playPathService(std_srvs::Empty::Request &req, std_srvs::Empty::Response &r
 	return true;	
 }
 
-bool updatePathService(std_srvs::Empty::Request &req, std_srvs::Empty::Response &res){
+bool updatePathService(gobot_msg_srv::SetStringArray::Request &req, gobot_msg_srv::SetStringArray::Response &res){
 	stage_ = 0;
 	SetRobot.setStage(stage_);
 	path = std::vector<Point>();
-	gobot_msg_srv::GetStringArray get_path;
-	// we recreate the path to follow from the file
-	if(ros::service::call("/gobot_status/get_path", get_path)){
-		Point pathPoint;
-		for(int i=0;i<get_path.response.data.size();i++){
-			if(i!= 0 && (i-1)%5 != 0){
-        		if((i-1)%5 == 1){
-        			pathPoint.x=std::stod(get_path.response.data.at(i));
-        		} 
-				else if((i-1)%5 == 2){
-        			pathPoint.y=std::stod(get_path.response.data.at(i));
-        		} 
-				else if((i-1)%5 == 3){
-        			pathPoint.waitingTime=std::stod(get_path.response.data.at(i));
-		            pathPoint.isHome = false;
-        		} 
-				else if((i-1)%5 == 4){
-					pathPoint.yaw=std::stod(get_path.response.data.at(i));
-					path.push_back(pathPoint);
-				}
-        	}
+	Point pathPoint;
+	for(int i=0;i<req.data.size();i++){
+		if(i!= 0 && (i-1)%5 != 0){
+			if((i-1)%5 == 1){
+				pathPoint.x=std::stod(req.data.at(i));
+			} 
+			else if((i-1)%5 == 2){
+				pathPoint.y=std::stod(req.data.at(i));
+			} 
+			else if((i-1)%5 == 3){
+				pathPoint.waitingTime=std::stod(req.data.at(i));
+				pathPoint.isHome = false;
+			} 
+			else if((i-1)%5 == 4){
+				pathPoint.yaw=std::stod(req.data.at(i));
+				path.push_back(pathPoint);
+			}
 		}
 	}
+	ROS_INFO("(Gobot Function) Updated robot path");
 	
 	return true;
 }

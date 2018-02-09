@@ -2,7 +2,7 @@
 
 #Times of recovery will be tried before give up
 recovery_count_threshold: 6
-
+scan_mode: false
 NavfnROS:
     # To tell the planner not to use the unknown space as free space
     #you must also set the track_unknown_space param for that layer to be true, 

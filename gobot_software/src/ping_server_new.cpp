@@ -23,24 +23,11 @@ robot_class::GetRobot GetRobot;
  * hostname + sep + stage + sep + batteryLevel + sep + muteFlag + sep + dockStatus
  */
 std::string getDataToSend(void){
-    /// Retrieves the hostname
-
-    /// Retrieve the docking status
-    
-    /// Retrieves the path stage
-    
-    //Retrives mute or not
-    gobot_msg_srv::GetInt get_mute;
-    ros::service::call("/gobot_status/get_mute",get_mute);
-    muteFlag=(get_mute.response.data) ? 1 : 0;
-
-    //Retrives battery percentage
-    gobot_msg_srv::GetInt get_battery_percent;
-    ros::service::call("/gobot_status/battery_percent", get_battery_percent);
+    gobot_msg_srv::GetString get_update_status;
+    ros::service::call("/gobot_status/get_update_status", get_update_status);
 
     /// Form the string to send to the Qt app
-    return  GetRobot.getName() + sep + std::to_string(GetRobot.getStage()) + sep + std::to_string(get_battery_percent.response.data) + 
-            sep + std::to_string(muteFlag) + sep + std::to_string(GetRobot.getDock());
+    return  get_update_status.response.data;
 }
 
 /**
@@ -69,9 +56,9 @@ bool disServersSrvCallback(gobot_msg_srv::SetStringArray::Request &req, gobot_ms
 /**
  * Will update gobot status when receive any command
  */
-bool updataStatusSrvCallback(std_srvs::Empty::Request &req, std_srvs::Empty::Response &res){
+bool updataStatusSrvCallback(gobot_msg_srv::SetString::Request &req, gobot_msg_srv::SetString::Response &res){
     if(oldIPs.size()>0){
-        std::string dataToSend = getDataToSend();
+        std::string dataToSend = req.data;
         std::vector<std::thread> data_threads;
         ipMutex.lock();
         //ROS_INFO("(ping_server) Trying to ping everyone %lu", availableIPs.size());
@@ -81,7 +68,7 @@ bool updataStatusSrvCallback(std_srvs::Empty::Request &req, std_srvs::Empty::Res
 
         ///we wait for all the threads to be done
         for(int i = 0; i < data_threads.size(); ++i)
-            data_threads.at(i).join();          
+            data_threads.at(i).detach();          
     }
 
     return true;

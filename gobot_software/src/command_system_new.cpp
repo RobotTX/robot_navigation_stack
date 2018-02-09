@@ -90,14 +90,6 @@ bool execCommand(const std::string ip, const std::vector<std::string> command){
             ros::service::call("/gobot_function/pause_path", empty_srv);
         }
     }
-    //stopDocking
-    else if(robot_status_==11){
-        if (commandStr.at(0)=='l'){
-            ros::service::call("/gobot_function/stop_path", empty_srv);
-            ros::service::call("/move_base/clear_costmaps",empty_srv);
-            return true;
-        }
-    }
 
     switch (commandStr.at(0)) {
         /// Interrupt delay/human action

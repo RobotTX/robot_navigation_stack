@@ -9,6 +9,7 @@
 #include <gobot_msg_srv/SetGobotStatus.h>
 #include <gobot_msg_srv/SetIntArray.h>
 #include <gobot_msg_srv/SetInt.h>
+#include <gobot_msg_srv/GetInt.h>
 #include <gobot_msg_srv/SetStringArray.h>
 #include <gobot_msg_srv/SetString.h>
 #include <gobot_msg_srv/SetSpeeds.h>
@@ -46,7 +47,7 @@ namespace robot_class {
 
             void setBatteryLed();
             
-            void setSound(int num,int time_on, int time_off=1);
+            void setSound(int num,int time_on, int mute=-1);
 
             void setLed(int mode, const std::vector<std::string> &color);
             

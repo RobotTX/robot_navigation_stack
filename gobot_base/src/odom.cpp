@@ -74,8 +74,11 @@ int main(int argc, char** argv){
             //122rpm, 2 rotation/sec, 980ticks/rotation, 2000ticks/sec maximum
             //if odom reading too large, probably wrong reading.
             //just skip them to prevent position jump
-            if(abs(encoders.response.leftEncoder - last_left_encoder)>4000/ODOM_RATE || abs(encoders.response.rightEncoder - last_right_encoder)>4000/ODOM_RATE){
+            if(abs(encoders.response.leftEncoder - last_left_encoder)>500|| abs(encoders.response.rightEncoder - last_right_encoder)>500){
+                ROS_WARN("(Odom) Detect odom jump (%d,%d), re-initial motor...",
+                abs(encoders.response.leftEncoder - last_left_encoder),abs(encoders.response.rightEncoder - last_right_encoder));
                 ros::service::call("/gobot_motor/initialMotor", arg);
+                if(ros::service::call("/gobot_motor/getEncoders", encoders))
                 last_left_encoder = 0;
                 last_right_encoder = 0;
                 last_time = current_time;

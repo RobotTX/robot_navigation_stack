@@ -28,7 +28,7 @@ global_plan_viapoint_sep: 0.5 # -0.1
 
 # GoalTolerance
 xy_goal_tolerance: 0.15
-yaw_goal_tolerance: 0.1 #8.6 degrees
+yaw_goal_tolerance: 0.1 #5.7 degrees
 free_goal_vel: false
 
 # Obstacles

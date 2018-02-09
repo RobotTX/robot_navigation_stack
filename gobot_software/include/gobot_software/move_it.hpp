@@ -55,7 +55,7 @@ bool playPointService(gobot_msg_srv::SetStringArray::Request &req, gobot_msg_srv
 
 bool playPathService(std_srvs::Empty::Request &req, std_srvs::Empty::Response &res);
 
-bool updatePathService(std_srvs::Empty::Request &req, std_srvs::Empty::Response &res);
+bool updatePathService(gobot_msg_srv::SetStringArray::Request &req, gobot_msg_srv::SetStringArray::Response &res);
 
 bool stopPathService(std_srvs::Empty::Request &req, std_srvs::Empty::Response &res);
 

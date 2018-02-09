@@ -84,14 +84,22 @@ namespace robot_class {
         return ros::service::call("/gobot_motor/setSpeeds", motor_speed_);
     }
 
-    void SetRobot::setSound(int num,int time_on, int time_off){
-        gobot_msg_srv::SetIntArray sound_num;
-        sound_num.request.data.push_back(num);
-        sound_num.request.data.push_back(time_on);
-        if(time_off!=0)
-            sound_num.request.data.push_back(time_off);
+    void SetRobot::setSound(int num,int time_on, int mute){
+        if(mute == -1){
+            gobot_msg_srv::GetInt get_mute;
+            ros::service::call("/gobot_status/get_mute",get_mute);
+            mute = get_mute.response.data;
+        }
 
-        ros::service::call("/gobot_base/setSound",sound_num);
+        if(mute == 1){
+            return;
+        }
+        else if(mute == 0){
+            gobot_msg_srv::SetIntArray sound_num;
+            sound_num.request.data.push_back(num);
+            sound_num.request.data.push_back(time_on);
+            ros::service::call("/gobot_base/setSound",sound_num);
+        }
     }
     
     void SetRobot::setBatteryLed(){

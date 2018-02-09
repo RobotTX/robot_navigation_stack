@@ -58,6 +58,7 @@
 
 #include <dynamic_reconfigure/server.h>
 #include "move_base/MoveBaseConfig.h"
+#include <gobot_msg_srv/set_robot_class.h>
 
 namespace move_base {
   //typedefs to help us out with the action server so that we don't hace to type so much
@@ -173,6 +174,8 @@ namespace move_base {
        */
       void wakePlanner(const ros::TimerEvent& event);
 
+      int getPoseCost(double pose_x,double pose_y);
+      
       tf::TransformListener& tf_;
 
       MoveBaseActionServer* as_;
@@ -189,8 +192,9 @@ namespace move_base {
       //tx//begin
       int32_t recovery_count_, recovery_count_threshold_;
       double linear_spd_limit_,angular_spd_limit_;
-      bool check_obs_dis_;
-      int obs_index_;
+      int costmap_threshold_value_; //no info=255, lethal obs=254, inscribed obs=253
+      bool scan_mode_;
+      robot_class::SetRobot SetRobot;
       //tx//end
 
       tf::Stamped<tf::Pose> global_pose_;

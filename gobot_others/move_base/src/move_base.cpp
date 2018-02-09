@@ -53,7 +53,7 @@ namespace move_base {
     blp_loader_("nav_core", "nav_core::BaseLocalPlanner"), 
     recovery_loader_("nav_core", "nav_core::RecoveryBehavior"),
     planner_plan_(NULL), latest_plan_(NULL), controller_plan_(NULL),
-    runPlanner_(false), setup_(false), p_freq_change_(false), c_freq_change_(false), new_global_plan_(false), check_obs_dis_(false), obs_index_(-1) {
+    runPlanner_(false), setup_(false), p_freq_change_(false), c_freq_change_(false), new_global_plan_(false) {
 
     as_ = new MoveBaseActionServer(ros::NodeHandle(), "move_base", boost::bind(&MoveBase::executeCb, this, _1), false);
 
@@ -73,10 +73,6 @@ namespace move_base {
     private_nh.param("planner_patience", planner_patience_, 5.0);
     private_nh.param("controller_patience", controller_patience_, 15.0);
     private_nh.param("max_planning_retries", max_planning_retries_, -1);  // disabled by default
-    
-    //add these two params to smooth motion 
-    private_nh.param("linear_spd_limit_", linear_spd_limit_, 0.0); 
-    private_nh.param("angular_spd_limit_", angular_spd_limit_, 3.0); 
 
     private_nh.param("oscillation_timeout", oscillation_timeout_, 0.0);
     private_nh.param("oscillation_distance", oscillation_distance_, 0.5);
@@ -86,6 +82,12 @@ namespace move_base {
     private_nh.param("recovery_count_threshold", recovery_count_threshold_, 4);
     //How many recovery behaviours tried
     recovery_count_ = 0;
+    //add these two params to smooth motion 
+    private_nh.param("linear_spd_limit", linear_spd_limit_, 0.0); 
+    private_nh.param("angular_spd_limit", angular_spd_limit_, 3.0); 
+    //threshold value for checking end point of planned path
+    private_nh.param("costmap_threshold_value", costmap_threshold_value_, 225); 
+    private_nh.param("scan_mode", scan_mode_, false); 
     //tx//end
 
     //set up plan triple buffer
@@ -498,6 +500,14 @@ namespace move_base {
     vel_pub_.publish(cmd_vel);
   }
 
+  //tx//get costmap cost for given pose(x,y)
+  int MoveBase::getPoseCost(double pose_x,double pose_y){
+    unsigned int x,y;
+    planner_costmap_ros_->getCostmap()->worldToMap(pose_x,pose_y,x,y);
+    return planner_costmap_ros_->getCostmap()->getCost(x,y);
+  }
+  //tx
+
   bool MoveBase::isQuaternionValid(const geometry_msgs::Quaternion& q){
     //first we need to check if the quaternion has nan's or infs
     if(!std::isfinite(q.x) || !std::isfinite(q.y) || !std::isfinite(q.z) || !std::isfinite(q.w)){
@@ -587,34 +597,34 @@ namespace move_base {
         ROS_DEBUG_NAMED("move_base_plan_thread","Got Plan with %zu points!", planner_plan_->size());
 
         //tx//assign last point of goal path further from obstacle if it is too near
-        unsigned int x,y;
-        planner_costmap_ros_->getCostmap()->worldToMap(planner_plan_->back().pose.position.x,planner_plan_->back().pose.position.y,x,y);
-        if(planner_costmap_ros_->getCostmap()->getCost(x,y) > 220){ //10cm away from obstacle edge
-          int plan_size = planner_plan_->size();
-          for (int i=plan_size-2;i>=0;i--){
-            planner_costmap_ros_->getCostmap()->worldToMap(planner_plan_->at(i).pose.position.x,planner_plan_->at(i).pose.position.y,x,y);
-            if(planner_costmap_ros_->getCostmap()->getCost(x,y)<=220){
-              planner_plan_->erase(planner_plan_->begin()+i,planner_plan_->end());
-              planner_plan_->back().pose.orientation = temp_goal.pose.orientation;
-              ROS_INFO("Test near obs goal: original size:%d, changed size: %zu; goal pose: %.2f,%.2f, changed pose:%.2f,%.2f",plan_size, planner_plan_->size(), 
-              temp_goal.pose.position.x, temp_goal.pose.position.y, planner_plan_->back().pose.position.x,planner_plan_->back().pose.position.y);
-              break;
+        lock.lock();
+        if(!scan_mode_){
+          int cell_cost = getPoseCost(planner_plan_->back().pose.position.x,planner_plan_->back().pose.position.y);
+          if(cell_cost > costmap_threshold_value_){
+            int plan_size = planner_plan_->size();
+            for (int i=plan_size-2;i>0;i--){
+              cell_cost = getPoseCost(planner_plan_->at(i).pose.position.x,planner_plan_->at(i).pose.position.y);
+              if(cell_cost <= costmap_threshold_value_){
+                planner_plan_->erase(planner_plan_->begin()+i,planner_plan_->end());
+                planner_plan_->back().pose.orientation = temp_goal.pose.orientation;
+                ROS_INFO("Test near obs goal: original size:%d, changed size: %zu; goal pose: %.2f,%.2f, changed pose:%.2f,%.2f",plan_size, planner_plan_->size(), 
+                temp_goal.pose.position.x, temp_goal.pose.position.y, planner_plan_->back().pose.position.x,planner_plan_->back().pose.position.y);
+                break;
+              }
             }
           }
         }
         //tx//end
+      
 
         //pointer swap the plans under mutex (the controller will pull from latest_plan_)
         std::vector<geometry_msgs::PoseStamped>* temp_plan = planner_plan_;
 
-        lock.lock();
         planner_plan_ = latest_plan_;
         latest_plan_ = temp_plan;
         last_valid_plan_ = ros::Time::now();
         planning_retries_ = 0;
         new_global_plan_ = true;
-        check_obs_dis_ = true;
-        obs_index_ = -1;
         
         ROS_DEBUG_NAMED("move_base_plan_thread","Generated a plan from the base_global_planner");
 
@@ -649,30 +659,25 @@ namespace move_base {
       //tx//if not find path and controlling, reset state to be PLANNING
       else if(state_==CONTROLLING){
         //check the nearest obstacle cell in the lastest plan
-        if(check_obs_dis_){
-          unsigned int x,y;
-          for(int i=0;i<latest_plan_->size();i++){
-            planner_costmap_ros_->getCostmap()->worldToMap(latest_plan_->at(i).pose.position.x,latest_plan_->at(i).pose.position.y,x,y); 	
-            if (planner_costmap_ros_->getCostmap()->getCost(x,y) >= costmap_2d::INSCRIBED_INFLATED_OBSTACLE){
-              obs_index_ = i;
-              check_obs_dis_ = false;
-              break;
+        int cell_cost = 0;
+        for(int i=0;i<latest_plan_->size();i++){
+          cell_cost = getPoseCost(latest_plan_->at(i).pose.position.x,latest_plan_->at(i).pose.position.y);
+          if (cell_cost >= costmap_2d::INSCRIBED_INFLATED_OBSTACLE && cell_cost != costmap_2d::NO_INFORMATION){
+            //check distance between robot and nearest obstacle cell
+            tf::Stamped<tf::Pose> global_pose;
+            planner_costmap_ros_->getRobotPose(global_pose);
+            geometry_msgs::PoseStamped current_position;
+            tf::poseStampedTFToMsg(global_pose, current_position);
+            double obs_distance = distance(current_position,latest_plan_->at(i));
+            //if distance is too near, stop the robot
+            ROS_INFO("Test obs distance :%d, %zu, %f",i, latest_plan_->size(),obs_distance);
+            if(obs_distance < conservative_reset_dist_){
+              state_ = PLANNING;
+              publishZeroVelocity();
+              SetRobot.setSound(2,2);
+              ROS_WARN("move_base failed to find a path and state is not planning, reset state to PLANNING (distance to obstacle:%.3f",obs_distance);
             }
-          }
-        }
-        //check distance between robot and nearest obstacle cell
-        if(obs_index_>=0){
-          tf::Stamped<tf::Pose> global_pose;
-          planner_costmap_ros_->getRobotPose(global_pose);
-          geometry_msgs::PoseStamped current_position;
-          tf::poseStampedTFToMsg(global_pose, current_position);
-          double obs_distance = distance(current_position,latest_plan_->at(obs_index_));
-          //if distance is too near, stop the robot
-          ROS_INFO("Test obs distance :%d, %zu, %f",obs_index_, latest_plan_->size(),obs_distance);
-          if(obs_distance < conservative_reset_dist_){
-            state_ = PLANNING;
-            publishZeroVelocity();
-            ROS_WARN("move_base failed to find a path and state is not planning, reset state to PLANNING (distance to obstacle:%.3f",obs_distance);
+            break;
           }
         }
       }

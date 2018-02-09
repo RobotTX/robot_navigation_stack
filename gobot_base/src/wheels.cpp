@@ -1,8 +1,7 @@
 #include <gobot_base/wheels.hpp>
 
-bool test = false;
+bool testEncoder = false;
 int leftSpeed_=128, rightSpeed_=128;
-bool error = false;
 
 ros::ServiceServer setSpeedsSrv,getEncodersSrv,resetEncodersSrv,initialMotorSrv;
 
@@ -13,9 +12,9 @@ serial::Serial serialConnection;
 /// Write and read informations on the serial port
 std::vector<uint8_t> writeAndRead(std::vector<uint8_t> toWrite, int bytesToRead){
     std::vector<uint8_t> buff;
+    
     /// Lock the mutex so no one can write at the same time
     serialMutex.lock();
-    
     if(serialConnection.isOpen()){
         try{
             /// Send bytes to the MD49
@@ -23,6 +22,9 @@ std::vector<uint8_t> writeAndRead(std::vector<uint8_t> toWrite, int bytesToRead)
             /// Read any byte that we are expecting
             if(bytesToRead > 0)
                 serialConnection.read(buff, bytesToRead);
+            else
+                //clear input buffer if no expected feedback
+                serialConnection.flushInput();
 
             //serialConnection.flush();
         } catch (std::exception& e) {
@@ -96,14 +98,12 @@ bool getEncoders(gobot_msg_srv::GetEncoders::Request &req, gobot_msg_srv::GetEnc
     if(encoders.size() == 8){
         res.leftEncoder = (encoders.at(0) << 24) + (encoders.at(1) << 16) + (encoders.at(2) << 8) + encoders.at(3);
         res.rightEncoder = (encoders.at(4) << 24) + (encoders.at(5) << 16) + (encoders.at(6) << 8) + encoders.at(7);
-        if(error){
-            initSerial();
-            error = false;
+        if(testEncoder){
+            ROS_INFO("(wheels::testEncoders) %d and %d", res.leftEncoder, res.rightEncoder);
         }
         return true;
     } 
     else{
-        error = true;
         ROS_WARN("(wheels::getEncoders) Got the wrong number of encoders data : %lu", encoders.size());
         return false;
     }
@@ -116,64 +116,22 @@ bool resetEncoders(std_srvs::Empty::Request &req, std_srvs::Empty::Response &res
 }
 
 bool initialMotor(std_srvs::Empty::Request &req, std_srvs::Empty::Response &res){
+    serialMutex.lock();
+    serialConnection.close();
+    serialMutex.unlock();
     return initSerial();
 }
 
 
 /// Just to test, we get the encoders and print them
 bool testEncoders(std_srvs::Empty::Request &req, std_srvs::Empty::Response &res){
-    test = true;
-
-    std::thread([](){
-        while(ros::ok() && test){
-            std::vector<uint8_t> encoders = writeAndRead(std::vector<uint8_t>({0x00, 0x25}), 8);
-
-            if(encoders.size() == 8){
-                int32_t leftEncoder = (encoders.at(0) << 24) + (encoders.at(1) << 16) + (encoders.at(2) << 8) + encoders.at(3);
-                int32_t rightEncoder = (encoders.at(4) << 24) + (encoders.at(5) << 16) + (encoders.at(6) << 8) + encoders.at(7);
-                ROS_INFO("(wheels::testEncoders) %d and %d", leftEncoder, rightEncoder);
-            } 
-            else
-                ROS_WARN("(wheels::testEncoders) Got the wrong number of encoders data : %lu", encoders.size());
-        }
-    }).detach();
-
+    testEncoder = true;
     return true;
 }
 
-/// Get the encoders and print the difference between the new and previous encoder every 1 sec
-bool testEncoders2(std_srvs::Empty::Request &req, std_srvs::Empty::Response &res){
-    test = true;
-
-    std::thread([](){
-        int32_t last_leftEncoder = 0;
-        int32_t last_rightEncoder = 0;
-        ros::Rate r(1);
-
-        while(ros::ok() && test){
-            std::vector<uint8_t> encoders = writeAndRead(std::vector<uint8_t>({0x00, 0x25}), 8);
-
-            if(encoders.size() == 8){
-                int32_t leftEncoder = (encoders.at(0) << 24) + (encoders.at(1) << 16) + (encoders.at(2) << 8) + encoders.at(3);
-                int32_t rightEncoder = (encoders.at(4) << 24) + (encoders.at(5) << 16) + (encoders.at(6) << 8) + encoders.at(7);
-                
-                ROS_INFO("(wheels::testEncoders2) %d and %d", leftEncoder - last_leftEncoder, rightEncoder - last_rightEncoder);
-        
-                last_leftEncoder = leftEncoder;
-                last_rightEncoder = rightEncoder;
-
-            } else
-                ROS_INFO("(wheels::testEncoders2) Got the wrong number of encoders data : %lu", encoders.size());
-            r.sleep();
-        }
-    }).detach();
-
-    return true;
-}
 
 bool stopTests(std_srvs::Empty::Request &req, std_srvs::Empty::Response &res){
-    test = false;
-
+    testEncoder = false;
     return true;
 }
 
@@ -187,6 +145,7 @@ bool initSerial() {
 
     ROS_INFO("(wheels::initSerial) MD49 port : %s", port.c_str());
 
+    serialMutex.lock();
     // Set the serial port, baudrate and timeout in milliseconds
     serialConnection.setPort(port);
     //Send 1200 bytes per second
@@ -201,12 +160,17 @@ bool initSerial() {
         /// First 3 bytes : set the mode (see MD49 documentation)
         /// then 2 bytes to disable the 2 sec timeout
         /// then 3 bytes to set the acceleration steps (1-10)
-        writeAndRead(std::vector<uint8_t>({0x00, 0x34, 0x00,0x00, 0x38,0x00, 0x33, 0x01}));
+        serialConnection.write(std::vector<uint8_t>({0x00, 0x34, 0x00,0x00, 0x38,0x00, 0x33, 0x01}));
+        ///reset Encoder
+        serialConnection.write(std::vector<uint8_t>({0x00, 0x35}));
         ROS_INFO("(wheels::initSerial) Established connection to MD49.");
+        serialMutex.unlock();
         return true;
     } 
-    else
+    else{
+        serialMutex.unlock();
         return false;
+    }
 }
 
 
@@ -216,16 +180,16 @@ void mySigintHandler(int sig)
     getEncodersSrv.shutdown();
     setSpeedsSrv.shutdown();
     initialMotorSrv.shutdown();
-    test = false;
+    serialMutex.lock();
     try{
-        if(serialConnection.isOpen()){
-            //set speed to 0 when shutdown
-            writeAndRead(std::vector<uint8_t>({0x00, 0x31, 0x80, 0x00, 0x32, 0x80}));
-            serialConnection.close();
-        }
+        //set speed to 0 when shutdown
+        serialConnection.write(std::vector<uint8_t>({0x00, 0x31, 0x80, 0x00, 0x32, 0x80}));
+        serialConnection.flush();
+        serialConnection.close();
 	} catch (std::exception& e) {
 		ROS_ERROR("(Wheels) Shutdown exception : %s", e.what());
 	}
+    serialMutex.unlock();
     ros::shutdown();
 }
 
@@ -242,7 +206,6 @@ int main(int argc, char **argv) {
         resetEncodersSrv = nh.advertiseService("/gobot_motor/resetEncoders", resetEncoders);
         initialMotorSrv = nh.advertiseService("/gobot_motor/initialMotor", initialMotor);
         ros::ServiceServer testEncodersSrv = nh.advertiseService("/gobot_test/testEncoders", testEncoders);
-        ros::ServiceServer testEncodersSrv2 = nh.advertiseService("/gobot_test/testEncoders2", testEncoders2);
         ros::ServiceServer stopTestsSrv = nh.advertiseService("/gobot_test/stopTestEncoder", stopTests);
         ros::ServiceServer getSpeedsSrv = nh.advertiseService("/gobot_motor/getSpeeds", getSpeeds);
 

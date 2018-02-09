@@ -45,7 +45,7 @@ void displayBatteryLed(void);
 
 bool setLed(int mode, const std::vector<std::string> &color);
 
-bool setSound(int num,int time_on);
+bool setSound(int num,int time_on,int mute=-1);
 
 bool resetSTMSrvCallback(std_srvs::Empty::Request &req, std_srvs::Empty::Response &res);
 

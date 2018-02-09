@@ -21,7 +21,7 @@ double linear_limit = 0.4, angular_limit = 0.8;
 
 ros::Time collisionTime;
 ros::Publisher bumper_pub,bumper_collision_pub;
-ros::Subscriber cmdVelSub,bumpersSub,cliffSub;
+ros::Subscriber cmdVelSub,bumpersSub,cliffSub,lostRobot,joySub,joyConSub;
 
 MoveBaseClient* ac;
 std_srvs::Empty empty_srv;
@@ -193,7 +193,7 @@ void joyConnectionCallback(const std_msgs::Int8::ConstPtr& data){
     else if(data->data == 1){
         if(!enable_joy){
             enable_joy = true;
-            SetRobot.setSound(2,1);
+            SetRobot.setSound(1,1);
             linear_limit = 0.4;
             angular_limit = 0.8;
             SetRobot.setMotorSpeed('F', 0, 'F', 0);
@@ -319,6 +319,9 @@ void mySigintHandler(int sig)
     cmdVelSub.shutdown();
     bumpersSub.shutdown();
     cliffSub.shutdown();
+    lostRobot.shutdown();
+    joySub.shutdown();
+    joyConSub.shutdown();
 	delete ac;
     ros::shutdown();
 }
@@ -335,9 +338,9 @@ int main(int argc, char **argv) {
         cmdVelSub = nh.subscribe("cmd_vel", 1, newCmdVel);
         bumpersSub = nh.subscribe("/gobot_base/bumpers_raw_topic", 1, newBumpersInfo);
         cliffSub = nh.subscribe("/gobot_base/cliff_topic", 1, cliffCallback);
-        ros::Subscriber lostRobot = nh.subscribe("/gobot_recovery/lost_robot",1,lostCallback);
-        ros::Subscriber joySub = nh.subscribe("joy", 1, joyCallback);
-        ros::Subscriber joyConSub = nh.subscribe("joy_connection", 1, joyConnectionCallback);
+        lostRobot = nh.subscribe("/gobot_recovery/lost_robot",1,lostCallback);
+        joySub = nh.subscribe("joy", 1, joyCallback);
+        joyConSub = nh.subscribe("joy_connection", 1, joyConnectionCallback);
 
         //not in use now
         ros::ServiceServer continueRobot = nh.advertiseService("/gobot_base/continue_robot",continueRobotSrvCallback);

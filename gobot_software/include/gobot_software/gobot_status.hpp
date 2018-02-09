@@ -5,6 +5,7 @@
 #include <fstream>
 #include <iostream>
 #include <std_srvs/Empty.h>
+#include <geometry_msgs/PoseWithCovarianceStamped.h>
 #include <move_base_msgs/MoveBaseAction.h>
 #include <actionlib/client/simple_action_client.h>
 #include <gobot_msg_srv/robot_msgs.h>
@@ -15,7 +16,13 @@
 
 typedef actionlib::SimpleActionClient<move_base_msgs::MoveBaseAction> MoveBaseClient;
 
+void updateStatus(std::string &str);
+
 void robotResponse(int status, std::string text);
+
+void publishInitialpose(geometry_msgs::PoseWithCovarianceStamped pose);
+
+bool initializeHomeSrcCallback(std_srvs::Empty::Request &req, std_srvs::Empty::Response &res);
 
 bool disconnectedSrvCallback(std_srvs::Empty::Request &req, std_srvs::Empty::Response &res);
 

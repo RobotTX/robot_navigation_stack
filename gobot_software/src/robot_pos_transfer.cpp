@@ -10,8 +10,9 @@ std::map<std::string, boost::shared_ptr<tcp::socket>> sockets;
 std::string robot_string;
 std::string lastPoseFile;
 bool simulation = false;
+bool found_pose = false;
 
-double last_pos_x=0.0,last_pos_y=0.0,last_pos_yaw=0.0,last_ang_x=0.0,last_ang_y=0.0,last_ang_z=0.0,last_ang_w=0.0;
+double last_pos_x=0.0,last_pos_y=0.0,last_pos_yaw=0.0,last_ang_x=0.0,last_ang_y=0.0,last_ang_z=0.0,last_ang_w=1.0;
 
 void sendRobotPosTimer(const ros::TimerEvent&){
     if(sockets.size() > 0){
@@ -32,7 +33,7 @@ void sendRobotPosTimer(const ros::TimerEvent&){
 }
 
 void saveRobotPosTimer(const ros::TimerEvent&){
-    if(ros::service::exists("/gobot_startup/pose_ready",false)){
+    if(found_pose){
         //save pose to local file
         std::ofstream ofs(lastPoseFile, std::ofstream::out | std::ofstream::trunc);
         if(ofs.is_open()){
@@ -51,6 +52,7 @@ void getRobotPos(const geometry_msgs::Pose::ConstPtr& msg){
     last_ang_y = msg->orientation.y;
     last_ang_z = msg->orientation.z;
     last_ang_w = msg->orientation.w;
+    found_pose = true;
 }
 
 /*********************************** CONNECTION FUNCTIONS ***********************************/
@@ -97,12 +99,13 @@ void disconnect(const std::string ip){
 void mySigintHandler(int sig){ 
     timer2.stop();
     timer1.stop();
-    //save robot pose when node shuts down
-    std::ofstream ofs(lastPoseFile, std::ofstream::out | std::ofstream::trunc);
-    if(ofs.is_open()){
-        ofs << last_pos_x << " " << last_pos_y << " " << last_ang_x <<" "<< last_ang_y <<" "<< last_ang_z <<" "<< last_ang_w;
-        ofs.close();
-    
+    if(found_pose){
+        //save robot pose when node shuts down
+        std::ofstream ofs(lastPoseFile, std::ofstream::out | std::ofstream::trunc);
+        if(ofs.is_open()){
+            ofs << last_pos_x << " " << last_pos_y << " " << last_ang_x <<" "<< last_ang_y <<" "<< last_ang_z <<" "<< last_ang_w;
+            ofs.close();
+        }
     }
     ros::shutdown();
 }

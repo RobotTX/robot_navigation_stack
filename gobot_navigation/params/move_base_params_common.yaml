@@ -22,10 +22,10 @@ recovery_behaviors: [
 shutdown_costmaps: false # True
 
 # Frequency of the control loop
-controller_frequency: 8
+controller_frequency: 6
 
 # Frequency of the global planner
-planner_frequency: 2
+planner_frequency: 3
 
 recovery_behavior_enabled: true
 
@@ -41,8 +41,9 @@ oscillation_distance: 0.25 #0.5
 
 max_planning_retries: 2 #-1
 
-linear_spd_limit_: 0.0
-angular_spd_limit_: 0.2
+linear_spd_limit: 0.0
+angular_spd_limit: 0.2
+costmap_threshold_value: 230
 
 conservative_reset_dist: 2.5
 
