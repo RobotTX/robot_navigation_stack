@@ -22,9 +22,6 @@ std::vector<uint8_t> writeAndRead(std::vector<uint8_t> toWrite, int bytesToRead)
             /// Read any byte that we are expecting
             if(bytesToRead > 0)
                 serialConnection.read(buff, bytesToRead);
-            else
-                //clear input buffer if no expected feedback
-                serialConnection.flushInput();
 
             //serialConnection.flush();
         } catch (std::exception& e) {
@@ -180,11 +177,11 @@ void mySigintHandler(int sig)
     getEncodersSrv.shutdown();
     setSpeedsSrv.shutdown();
     initialMotorSrv.shutdown();
+
     serialMutex.lock();
     try{
         //set speed to 0 when shutdown
         serialConnection.write(std::vector<uint8_t>({0x00, 0x31, 0x80, 0x00, 0x32, 0x80}));
-        serialConnection.flush();
         serialConnection.close();
 	} catch (std::exception& e) {
 		ROS_ERROR("(Wheels) Shutdown exception : %s", e.what());

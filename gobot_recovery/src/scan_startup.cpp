@@ -73,7 +73,7 @@ void saveMap(){
       ROS_INFO("(startup) map id: %s.",mapId.c_str());
   }
 
-  SetRobot.setHome("0","0","0","0","0","0");
+  SetRobot.setHome("0","0","0","0","0","1");
   ROS_INFO("(Scan Startup) Home deleted");
 
   SetRobot.setLoop(0);

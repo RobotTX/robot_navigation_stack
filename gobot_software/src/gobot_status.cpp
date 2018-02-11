@@ -73,10 +73,15 @@ bool collision = false;
 robot_class::SetRobot SetRobot;
 
 //updated information for ping_server_new
-void updateStatus(std::string &str){
-    bool muteFlag = (mute_) ? 1 : 0;
-    str = hostname_ + sep + std::to_string(stage_) + sep + std::to_string(battery_percent_) + 
-          sep + std::to_string(muteFlag) + sep + std::to_string(dock_status_);
+void updateStatus(){
+    std::thread([](){
+        bool muteFlag = (mute_) ? 1 : 0;
+        gobot_msg_srv::SetString update_status;
+        update_status.request.data = hostname_ + sep + std::to_string(stage_) + sep + std::to_string(battery_percent_) + 
+                                     sep + std::to_string(muteFlag) + sep + std::to_string(dock_status_);
+        ros::service::call("/gobot_software/update_status",update_status);
+    }).detach();
+
 }
 
 //change robot led and sound to inform people its status
@@ -119,25 +124,32 @@ void publishInitialpose(geometry_msgs::PoseWithCovarianceStamped pose){
     initial_pose_publisher.publish(pose);
 }
 
+void setHomePose(){
+    geometry_msgs::PoseWithCovarianceStamped home_pose;
+    home_pose.pose.pose.position.x = std::stod(home_.at(0));
+    home_pose.pose.pose.position.y = std::stod(home_.at(1));
+    home_pose.pose.pose.orientation.z = std::stod(home_.at(2));
+    home_pose.pose.pose.orientation.z = std::stod(home_.at(3));
+    home_pose.pose.pose.orientation.z = std::stod(home_.at(4));
+    home_pose.pose.pose.orientation.w = std::stod(home_.at(5));
+    publishInitialpose(home_pose);
+    SetRobot.setSound(1,2,mute_);
+    ROS_INFO("(Gobot Status) Robot is charging, set its pose to be home pose");
+}
+
 //initialize robot to be home if charging
 bool initializeHomeSrcCallback(std_srvs::Empty::Request &req, std_srvs::Empty::Response &res){
     if(charging_){
-        geometry_msgs::PoseWithCovarianceStamped home_pose;
-        home_pose.pose.pose.position.x = std::stod(home_.at(0));
-        home_pose.pose.pose.position.y = std::stod(home_.at(1));
-        home_pose.pose.pose.orientation.z = std::stod(home_.at(2));
-        home_pose.pose.pose.orientation.z = std::stod(home_.at(3));
-        home_pose.pose.pose.orientation.z = std::stod(home_.at(4));
-        home_pose.pose.pose.orientation.w = std::stod(home_.at(5));
-        publishInitialpose(home_pose);
-        SetRobot.setSound(1,2,mute_);
+        setHomePose();
     }
     return true;
 }
 
 
 bool getUpdateStatusSrvCallback(gobot_msg_srv::GetString::Request &req, gobot_msg_srv::GetString::Response &res){
-    updateStatus(res.data);
+    bool muteFlag = (mute_) ? 1 : 0;
+    res.data = hostname_ + sep + std::to_string(stage_) + sep + std::to_string(battery_percent_) + 
+               sep + std::to_string(muteFlag) + sep + std::to_string(dock_status_);
     return true;
 }
 
@@ -290,9 +302,7 @@ bool setNameSrvCallback(gobot_msg_srv::SetString::Request &req, gobot_msg_srv::S
         ROS_INFO("(Gobot_status) Set Gobot name: %s",hostname_.c_str());
     }
 
-    gobot_msg_srv::SetString update_status;
-    updateStatus(update_status.request.data);
-    ros::service::call("/gobot_software/update_status",update_status);
+    updateStatus();
 
     return true;
 }
@@ -355,9 +365,8 @@ bool setMuteSrvCallback(gobot_msg_srv::SetInt::Request &req, gobot_msg_srv::SetI
     ROS_INFO("(Gobot_status) Set Gobot mute: %d",mute_);
     }
 
-    gobot_msg_srv::SetString update_status;
-    updateStatus(update_status.request.data);
-    ros::service::call("/gobot_software/update_status",update_status);
+    updateStatus();
+    
     return true;
 }
 
@@ -404,9 +413,7 @@ bool setStageSrvCallback(gobot_msg_srv::SetInt::Request &req, gobot_msg_srv::Set
         ROS_INFO("(Gobot_status) Set Gobot stage: %d",stage_);
     }
 
-    gobot_msg_srv::SetString update_status;
-    updateStatus(update_status.request.data);
-    ros::service::call("/gobot_software/update_status",update_status);
+    updateStatus();
 
     return true;
 }
@@ -429,23 +436,12 @@ bool setDockStatusSrvCallback(gobot_msg_srv::SetInt::Request &req, gobot_msg_srv
     
     charging_ = dock_status_==1 ? true : false;
 
-    gobot_msg_srv::SetString update_status;
-    updateStatus(update_status.request.data);
-    ros::service::call("/gobot_software/update_status",update_status);
+    updateStatus();
 
     if(dock_status_==1 && ros::service::exists("/gobot_startup/pose_ready",false)){
         if(gobot_status_!=5 || gobot_text_=="WAITING"){
             std::thread([](){
-                geometry_msgs::PoseWithCovarianceStamped home_pose;
-                home_pose.pose.pose.position.x = std::stod(home_.at(0));
-                home_pose.pose.pose.position.y = std::stod(home_.at(1));
-                home_pose.pose.pose.orientation.z = std::stod(home_.at(2));
-                home_pose.pose.pose.orientation.z = std::stod(home_.at(3));
-                home_pose.pose.pose.orientation.z = std::stod(home_.at(4));
-                home_pose.pose.pose.orientation.w = std::stod(home_.at(5));
-                publishInitialpose(home_pose);
-                SetRobot.setSound(1,2,mute_);
-                ROS_INFO("(Gobot Status) Robot is charging, set its pose to be home pose");
+                setHomePose();
             }).detach();
         }
     }

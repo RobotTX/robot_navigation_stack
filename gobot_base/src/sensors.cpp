@@ -38,9 +38,6 @@ std::vector<uint8_t> writeAndRead(std::vector<uint8_t> toWrite, int bytesToRead)
             /// Read any byte that we are expecting
             if(bytesToRead > 0)
                 serialConnection.read(buff, bytesToRead);
-            else
-                //clear input buffer if no expected feedback
-                serialConnection.flushInput();
 
             //serialConnection.flush();
         } catch (std::exception& e) {
@@ -69,10 +66,10 @@ bool displaySensorData(gobot_msg_srv::SetBattery::Request &req, gobot_msg_srv::S
 }
 
 void resetStm(void){
-    connectionMutex.lock();
-    std::vector<uint8_t> buff; 
+    connectionMutex.lock(); 
     serialConnection.write(std::vector<uint8_t>({0xD0, 0x01, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x1B}));
     /// Read any byte that we are expecting
+    std::vector<uint8_t> buff;
     serialConnection.read(buff, 5);
     /// Unlock the mutex
     ros::Duration(1.0).sleep();
@@ -139,9 +136,10 @@ void publishSensors(void){
     //ROS_INFO("(sensors::publishSensors) Info : %lu %d %d %d", buff.size(), (int) buff.at(0), (int) buff.at(1), (int) buff.at(2));
     /// check if the 16 is useful
     if(buff.size() == STM_BYTES){
-        /// First 3 bytes are the sensor address, the command and the data length, so we can ignore it
-        //7 sonars, 8 bumpers, 3 IR, 2 distance, 4 cliff, 1 battery, 1 load
-        /// Sonars data = D3-D16
+        /// First 3 bytes are: 
+        // sensor address=B0, command=B1, data length=B2, so we can ignore it
+        //D for data, B for buff
+        /// Sonars data = D1-D14 / B3-B16
         //1->front_right,2->front_left,3->back_left,4->back_right
         gobot_msg_srv::SonarMsg sonar_data;
         sonar_data.distance1 = (buff.at(3) << 8) | buff.at(4);
@@ -153,7 +151,7 @@ void publishSensors(void){
         sonar_data.distance7 = (buff.at(15) << 8) | buff.at(16);
 
 
-        /// Bumpers data = D17
+        /// Bumpers data = D15 / B17
         gobot_msg_srv::BumperMsg bumper_data;
 
         if(buff.at(17)){
@@ -171,7 +169,7 @@ void publishSensors(void){
         }
 
 
-        /// Ir signals = D18 ~ D20
+        /// Ir signals = D16-D18 / B18-B20
         gobot_msg_srv::IrMsg ir_data;
         ir_data.rearSignal = buff.at(18);
         ir_data.leftSignal = buff.at(19);
@@ -179,13 +177,13 @@ void publishSensors(void){
         //ROS_INFO("(sensors::publishSensors) Check IR data : %d %d %d", ir_data.rearSignal,ir_data.leftSignal,ir_data.rightSignal);
 
 
-        /// Proximity sensors = D21
+        /// Proximity sensors = D19 / B21
         gobot_msg_srv::ProximityMsg proximity_data;
         proximity_data.signal1 = (buff.at(21) & 0b00000001) > 0;
         proximity_data.signal2 = (buff.at(21) & 0b00000010) > 0;
 
 
-        /// Cliff sensors = D22 ~ D29
+        /// Cliff sensors = D20-D27 / B22-B29
         gobot_msg_srv::CliffMsg cliff_data;
         cliff_data.cliff1 = (buff.at(22) << 8) | buff.at(23);
         cliff_data.cliff2 = (buff.at(24) << 8) | buff.at(25);
@@ -196,9 +194,10 @@ void publishSensors(void){
         cliff_data.cliff3 = (cliff_data.cliff3>1000) ? 1 : cliff_data.cliff3;
         cliff_data.cliff4 = (cliff_data.cliff4>1000) ? 1 : cliff_data.cliff4;
         //ROS_INFO("%d,%d,%d,%d",cliff_data.cliff1,cliff_data.cliff2,cliff_data.cliff3,cliff_data.cliff4);
+        
+        //D28 / B30  MAX ERROR
 
-
-        /// Battery data
+        /// Battery data = D29-D39 / B31-B41
         gobot_msg_srv::BatteryMsg battery_data;
         battery_data.BatteryStatus  = buff.at(31);
         battery_data.BatteryVoltage = (buff.at(32) << 8) | buff.at(33);
@@ -270,24 +269,25 @@ void publishSensors(void){
         }
 
 
-        /// Weight data
+        /// Weight data = D40-D42 / B42-B44 
         gobot_msg_srv::WeightMsg weight_data;
         weight_data.weightInfo = (buff.at(42) << 16) | (buff.at(43) << 8) | buff.at(44);
 
 
-        /// External button 1-No press; 0-press
+        /// External button 1-No press; 0-press = D43 / B45
         int32_t external_button = buff.at(45);
         std_msgs::Int8 button;
         button.data = !external_button;
 
+        /// Engage point (not in use) = D44 / B46
         int32_t engage_point = buff.at(46);
 
-        /// Reset wifi button (double click power button)
+        /// Reset wifi button (double click power button) = D45 / B47
         int32_t resetwifi_button = buff.at(47);
 
+        /// Gyro+Accelerametor = D46-D57 / B48-B59
         gobot_msg_srv::GyroMsg gyro;
         std_msgs::Float32 temperature;
-        //48 - 59 gyro+acce
         //if 1st bit is 1, means negative
         gyro.gyrox =  buff.at(48)<<8 | buff.at(49);
         gyro.gyroy =  buff.at(50)<<8 | buff.at(51); 
@@ -297,9 +297,11 @@ void publishSensors(void){
         gyro.accelz = buff.at(58)<<8 | buff.at(59);
         gyro_pub.publish(gyro);
 
-        //60 - 61 temperature
+        /// Temperature = D58-D59 / B60-B61
         temperature.data = (((buff.at(60)<<8)|buff.at(61))-21)/333.87 + 21.0;
         temperature_pub.publish(temperature);
+
+        /// ACK = B62
 
         if(display_data){
             std::cout << "Sonars : " << sonar_data.distance1 << " " << sonar_data.distance2 << " " << sonar_data.distance3 << " " << sonar_data.distance4 
@@ -513,14 +515,16 @@ bool initSerial(void) {
     
     ROS_INFO("(sensors::initSerial) STM32 port : %s", port.c_str());
 
+    connectionMutex.lock();
     // Set the serial port, baudrate and timeout in milliseconds
     serialConnection.setPort(port);
     //14400 bytes per sec
     serialConnection.setBaudrate(115200);
-    serial::Timeout timeout = serial::Timeout::simpleTimeout(200);
+    serial::Timeout timeout = serial::Timeout::simpleTimeout(100);
     serialConnection.setTimeout(timeout);
     serialConnection.close();
     serialConnection.open();
+    connectionMutex.unlock();
 
     if(serialConnection.isOpen()){
         //reset STM
@@ -542,7 +546,8 @@ void mySigintHandler(int sig)
     try{
         //Turn off LED when shut down node
         serialConnection.write(std::vector<uint8_t>({0xB0,0x03,0x01,0x57,0x00,0x00,0x00,0x00,0x03,0xE8,0x1B}));
-        serialConnection.flush();
+        std::vector<uint8_t> buff; 
+        serialConnection.read(buff, 5);
         serialConnection.close();
     } catch (std::exception& e) {
 		ROS_ERROR("(Sensors) Shutdown exception : %s", e.what());

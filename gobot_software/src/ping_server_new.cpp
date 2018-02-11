@@ -12,7 +12,8 @@ double STATUS_UPDATE=5.0, IP_UPDATE=20.0;
 
 std::vector<std::string> availableIPs, connectedIPs;
 std::vector<std::pair<std::string, int>> oldIPs;
-std::mutex serverMutex, connectedMutex, ipMutex;
+std::mutex serverMutex, connectedMutex, ipMutex, sendDataMutex;
+std::thread update_date_thread_;
 ros::Publisher disco_pub;
 std_srvs::Empty empty_srv;
 
@@ -66,9 +67,11 @@ bool updataStatusSrvCallback(gobot_msg_srv::SetString::Request &req, gobot_msg_s
             data_threads.push_back(std::thread(pingIP2, oldIPs.at(i).first, dataToSend, 2.5));
         ipMutex.unlock();
 
+        sendDataMutex.lock();
         ///we wait for all the threads to be done
         for(int i = 0; i < data_threads.size(); ++i)
-            data_threads.at(i).detach();          
+            data_threads.at(i).join();  
+        sendDataMutex.unlock();
     }
 
     return true;
@@ -99,10 +102,11 @@ void pingAllIPs(void){
                 threads.push_back(std::thread(pingIP, availableIPs.at(i), dataToSend, 2.5));
             serverMutex.unlock();
 
+            sendDataMutex.lock();
             /// We join all the threads => we wait for all the threads to be done
             for(int i = 0; i < threads.size(); ++i)
                 threads.at(i).join();
-
+            sendDataMutex.unlock();
             //ROS_INFO("(ping_server) Done pinging everyone");
 
             updateIP();

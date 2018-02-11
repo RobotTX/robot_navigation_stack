@@ -22,6 +22,8 @@ void robotResponse(int status, std::string text);
 
 void publishInitialpose(geometry_msgs::PoseWithCovarianceStamped pose);
 
+void setHomePose(void);
+
 bool initializeHomeSrcCallback(std_srvs::Empty::Request &req, std_srvs::Empty::Response &res);
 
 bool disconnectedSrvCallback(std_srvs::Empty::Request &req, std_srvs::Empty::Response &res);

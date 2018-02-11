@@ -49,7 +49,6 @@ bool getRobotPos(void){
 void backToStart(){
     ROS_INFO("(Exploration) Back to start launched...");
     move_base_msgs::MoveBaseGoal goal;
-    gobot_msg_srv::SetStringArray set_home;
     switch(back_to_start_when_finished){
         case 1:
             SetRobot.setHome(std::to_string(startingPose.position.x),std::to_string(startingPose.position.y),std::to_string(startingPose.orientation.x),
