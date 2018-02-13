@@ -4,6 +4,7 @@ wififile="$2"
 defalutwifi="Robot_Hotspot_000"
 wifi=$(nmcli device status | grep wifi |cut -d ' ' -f1)
 n=1
+#read wifi infomation from local file
 while read line
 do
     if [ $n -eq 1 ]
@@ -51,6 +52,13 @@ else
         #echo "Robot connected to assigned wifi named '$wifiname'"
     fi
 fi
+#check lo inter
+if [ -z "$(ifconfig | grep lo | grep Loopback)" ]
+then
+    sudo ifup lo
+    echo "lo inter is down, up it"
+fi
+#record all available hosts in the server
 var=$(ifconfig | grep -A 1 $wifi | grep inet | cut -d ':' -f2|cut -f -3 --delimiter='.')
 fping -r 0 -g "$var.0/24" 2>/dev/null | grep alive | cut -d ' ' -f1 > $isAlive
 sed -i "/$var.164/d" $isAlive

@@ -57,56 +57,59 @@ void goalResultCallback(const move_base_msgs::MoveBaseActionResult::ConstPtr& ms
 
 // called when the last goal has been reached
 void goalReached(){
-	//ROS_INFO("(PlayPath::goalReached) path point reached");
-	stage_ = text_=="PLAY_PATH" ? stage_+1:stage_;
-	if(stage_ >= path.size() && text_!="PLAY_POINT"){
-		//complete path but looping
-		if(looping && path.size()>1){
-			stage_ = 0;
-			if(dockAfterPath){
-				//if looping, check the last point delay status before go docking
-				interruptDelay = false;
-				SetRobot.setSound(1,1); 
+	if(text_=="PLAY_POINT"){
+		setGobotStatus(0,"COMPLETE_POINT");
+	}
+	else{
+		stage_++;
+		if(stage_ >= path.size()){
+			//complete path but looping
+			if(looping && path.size()>1){
+				stage_ = 0;
+				if(dockAfterPath){
+					//if looping, check the last point delay status before go docking
+					interruptDelay = false;
+					SetRobot.setSound(1,1); 
+					SetRobot.setStage(stage_);
+					// reached a normal/path goal so we sleep the given time
+					checkGoalDelay();
+					std::thread([](){
+						//~ROS_INFO("(PlayPath::goalReached) battery is low, go to charging station!!");
+						ros::service::call("/gobot_command/goDock", empty_srv);
+						dockAfterPath = false;
+					}).detach();
+					return;
+				}
+			}
+			//complete path without looping
+			else {
+				//ROS_INFO("(PlayPath:: complete path!");
+				setGobotStatus(0,"COMPLETE_PATH");
 				SetRobot.setStage(stage_);
-				// reached a normal/path goal so we sleep the given time
-				checkGoalDelay();
-				std::thread([](){
-					//~ROS_INFO("(PlayPath::goalReached) battery is low, go to charging station!!");
-					ros::service::call("/gobot_command/goDock", empty_srv);
-					dockAfterPath = false;
-				}).detach();
+				if(dockAfterPath){
+					//if not looping, go dock when reaching last point
+					std::thread([](){
+						//~ROS_INFO("(PlayPath::goalReached) battery is low, go to charging station!!");
+						ros::service::call("/gobot_command/goDock", empty_srv);
+						dockAfterPath = false;
+					}).detach();
+				}
 				return;
 			}
 		}
-		//complete path without looping
-		else {
-			//ROS_INFO("(PlayPath:: complete path!");
-			setGobotStatus(0,"COMPLETE_PATH");
-			SetRobot.setStage(stage_);
-			if(dockAfterPath){
-				//if not looping, go dock when reaching last point
-				std::thread([](){
-					//~ROS_INFO("(PlayPath::goalReached) battery is low, go to charging station!!");
-					ros::service::call("/gobot_command/goDock", empty_srv);
-					dockAfterPath = false;
-				}).detach();
-			}
-			return;
-		}
-	}
 
-	interruptDelay = false;
-	SetRobot.setSound(1,1);
-	if (text_!="PLAY_POINT") 
+		interruptDelay = false;
+		SetRobot.setSound(1,1);
 		SetRobot.setStage(stage_);
-	// reached a normal/path goal so we sleep the given time
-	checkGoalDelay();
-	if(!stop_flag){
-		setGobotStatus(5,"PLAY_PATH");
-		goNextPoint(path.at(stage_));
+		// reached a normal/path goal so we sleep the given time
+		checkGoalDelay();
+		if(!stop_flag){
+			setGobotStatus(5,"PLAY_PATH");
+			goNextPoint(path.at(stage_));
+		}
+		else
+			stop_flag = false;
 	}
-	else
-		stop_flag = false;
 }
 
 void checkGoalDelay(){

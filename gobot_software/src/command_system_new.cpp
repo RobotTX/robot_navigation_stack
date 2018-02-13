@@ -46,7 +46,7 @@ bool execCommand(const std::string ip, const std::vector<std::string> command){
     std::string commandStr = command.at(0);
     bool status=false;
     
-    GetRobot.getStatus(robot_status_);
+    GetRobot.getStatus(robot_status_,status_text_);
     //scanning
     if(robot_status_<=25 && robot_status_>=20){
         //pausePath, newPath, 
@@ -88,6 +88,12 @@ bool execCommand(const std::string ip, const std::vector<std::string> command){
            commandStr.at(0)=='o' || commandStr.at(0)=='v'){
             ROS_WARN("(Command system) Gobot is playing path,pause it.");
             ros::service::call("/gobot_function/pause_path", empty_srv);
+        }
+        //playPoint && stopPath, then pause path
+        if(status_text_=="PLAY_POINT" && commandStr.at(0)=='l'){
+            ROS_WARN("(Command system) Gobot is playing point,pause it.");
+            ros::service::call("/gobot_function/pause_path", empty_srv);
+            return true;
         }
     }
 
@@ -955,7 +961,6 @@ void sendConnectionData(boost::shared_ptr<tcp::socket> sock){
     if(n.hasParam("map_id_file")){
         n.getParam("map_id_file", mapIdFile);
         std::ifstream ifMap(mapIdFile, std::ifstream::in);
-        
         if(ifMap){
             getline(ifMap, mapId);
             getline(ifMap, mapDate);

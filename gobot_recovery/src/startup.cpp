@@ -42,12 +42,12 @@ void getButtonCallback(const std_msgs::Int8::ConstPtr& msg){
 		buttonOn = true;
     double dt = (ros::Time::now() - action_time).toSec();
     if(dt<=5.0){
-      //play path
-      if(robot_status_==4){
+      //play path when pause, complete or stop path
+      if(robot_status_==4 || robot_status_==0 || robot_status_==1){
         ROS_INFO("Continue robot path.");
         ros::service::call("/gobot_command/play_path",empty_srv);
       }
-      //pause path
+      //pause path when play path
       else if(robot_status_==5 && status_text_!="WAITING"){
         ROS_INFO("Pause robot path.");
         ros::service::call("/gobot_command/pause_path",empty_srv);
@@ -65,11 +65,9 @@ void getButtonCallback(const std_msgs::Int8::ConstPtr& msg){
         ros::service::call("/gobot_command/stop_path",empty_srv);
       }
 
-      if(robot_status_!=5){
-        ROS_INFO("Start robot path.");
-        //play the path
-        ros::service::call("/gobot_command/play_path",empty_srv);
-      }
+      ROS_INFO("Start robot path.");
+      //play the path
+      ros::service::call("/gobot_command/play_path",empty_srv);
       
     }
     else if(dt>10.0 && dt<=15.0){

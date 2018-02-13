@@ -88,7 +88,6 @@ void session(boost::shared_ptr<tcp::socket> sock){
             }
             std::string mapIdFromFile("");
             std::ifstream ifMap(mapIdFile, std::ifstream::in);
-            
             if(ifMap){
                 getline(ifMap, mapIdFromFile);
                 ifMap.close();
@@ -252,8 +251,8 @@ void session(boost::shared_ptr<tcp::socket> sock){
                 ROS_INFO("(New Map) Message sent succesfully : %lu bytes sent", message.length());
                 //disconnect all other users to receive new map
                 ROS_INFO("(New Map) Disconnect other uses to update them new map.");
-                gobot_msg_srv::SetStringArray keep_ip;
-                ros::service::call("/gobot_software/disconnet_servers",keep_ip);
+                //disconnect all server
+                ros::service::call("/gobot_software/disconnet_servers",empty_srv);
             }   
         }
     }

@@ -5,10 +5,8 @@
 static const std::string sep = std::string(1, 31);
 std::string pingFile, ipsFile, wifiFile;
 
-std::string battery_level = "51.0";
-
 bool muteFlag = false, scanIP = false;
-double STATUS_UPDATE=5.0, IP_UPDATE=20.0;
+double STATUS_UPDATE=5.0, IP_UPDATE=20.0, WAITING_TIME=5.0;
 
 std::vector<std::string> availableIPs, connectedIPs;
 std::vector<std::pair<std::string, int>> oldIPs;
@@ -16,6 +14,8 @@ std::mutex serverMutex, connectedMutex, ipMutex, sendDataMutex;
 std::thread update_date_thread_;
 ros::Publisher disco_pub;
 std_srvs::Empty empty_srv;
+
+ros::Time disco_time;
 
 robot_class::GetRobot GetRobot;
 
@@ -34,23 +34,19 @@ std::string getDataToSend(void){
 /**
  * Will disconnet all servers for updating map/wifi
  */
-bool disServersSrvCallback(gobot_msg_srv::SetStringArray::Request &req, gobot_msg_srv::SetStringArray::Response &res){
-    std_msgs::String msg;
-    bool keep_ip;
+bool disServersSrvCallback(std_srvs::Empty::Request &req, std_srvs::Empty::Response &res){
     //disconnect all sockets when closed
     for(int i=0;i<oldIPs.size();i++){
+        std_msgs::String msg;
         msg.data = oldIPs.at(i).first;
-        keep_ip = false;
-        for(int i=0; i<req.data.size();i++){
-            if(msg.data.compare(req.data[i])==0){
-                keep_ip = true;
-                break;
-            }
-        }
-        if(!keep_ip)
-            disco_pub.publish(msg);
+        disco_pub.publish(msg);
     }
-    
+    disco_time = ros::Time::now();
+    //clear all IPs
+    serverMutex.lock();
+    availableIPs.clear();
+    serverMutex.unlock();
+
     return true;
 }
 
@@ -62,9 +58,11 @@ bool updataStatusSrvCallback(gobot_msg_srv::SetString::Request &req, gobot_msg_s
         std::string dataToSend = req.data;
         std::vector<std::thread> data_threads;
         ipMutex.lock();
-        //ROS_INFO("(ping_server) Trying to ping everyone %lu", availableIPs.size());
-        for(int i = 0; i < oldIPs.size(); ++i)
-            data_threads.push_back(std::thread(pingIP2, oldIPs.at(i).first, dataToSend, 2.5));
+        if((ros::Time::now()-disco_time).toSec()>WAITING_TIME){
+            //ROS_INFO("(ping_server) Trying to ping everyone %lu", availableIPs.size());
+            for(int i = 0; i < oldIPs.size(); ++i)
+                data_threads.push_back(std::thread(pingIP2, oldIPs.at(i).first, dataToSend, 2.5));
+        }
         ipMutex.unlock();
 
         sendDataMutex.lock();
@@ -89,7 +87,7 @@ void pingAllIPs(void){
     while(ros::ok()){ 
         threads.clear();
         connectedIPs.clear();
-        
+        //ROS_INFO("%f",(ros::Time::now()-disco_time).toSec());
         if(availableIPs.size()>0){
             /// Get the data to send to the Qt app
             std::string dataToSend = getDataToSend();
@@ -97,9 +95,11 @@ void pingAllIPs(void){
             /// We create threads to ping every IP adress
             /// => threads reduce the required time to ping from ~12 sec to 2 sec
             serverMutex.lock();
-            //ROS_INFO("(ping_server) Trying to ping everyone %lu", availableIPs.size());
-            for(int i = 0; i < availableIPs.size(); ++i)
-                threads.push_back(std::thread(pingIP, availableIPs.at(i), dataToSend, 2.5));
+            if((ros::Time::now()-disco_time).toSec()>WAITING_TIME){
+                //ROS_INFO("(ping_server) Trying to ping everyone %lu", availableIPs.size());
+                for(int i = 0; i < availableIPs.size(); ++i)
+                    threads.push_back(std::thread(pingIP, availableIPs.at(i), dataToSend, 2.5));
+            }
             serverMutex.unlock();
 
             sendDataMutex.lock();
@@ -230,11 +230,14 @@ void checkNewServers(void){
         if(ifs){
             std::string currentIP;
             serverMutex.lock();
-            /// Save all the IP addresses in an array
-            availableIPs.clear();
-            while(std::getline(ifs, currentIP) && ros::ok())
-                availableIPs.push_back(currentIP);
+            if((ros::Time::now()-disco_time).toSec()>WAITING_TIME){
+                /// Save all the IP addresses in an array
+                availableIPs.clear();
+                while(std::getline(ifs, currentIP) && ros::ok())
+                    availableIPs.push_back(currentIP);
+            }
             serverMutex.unlock();
+            ifs.close();
         }
         scanIP=false;
         //ROS_INFO("(ping_server) Available IPs: %lu, Connected IPs: %lu", availableIPs.size(),oldIPs.size());
@@ -268,6 +271,7 @@ bool initParams(){
     nh.getParam("wifi_file", wifiFile);
     nh.getParam("status_update", STATUS_UPDATE);
     nh.getParam("ip_update", IP_UPDATE);
+    nh.getParam("waiting_time", WAITING_TIME);
 
     return true;
 }
@@ -277,7 +281,8 @@ int main(int argc, char* argv[]){
     ros::init(argc, argv, "ping_server");
     ros::NodeHandle n;
     signal(SIGINT, mySigintHandler);
-    
+    disco_time = ros::Time::now();
+
     if (initParams()){
         //Startup begin
         ROS_INFO("(ping_server) Waiting for Robot finding initial pose...");

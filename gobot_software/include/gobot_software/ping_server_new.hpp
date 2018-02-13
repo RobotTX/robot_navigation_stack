@@ -24,7 +24,7 @@ using boost::asio::ip::tcp;
 
 std::string getDataToSend(void);
 
-bool disServersSrvCallback(gobot_msg_srv::SetStringArray::Request &req, gobot_msg_srv::SetStringArray::Response &res);
+bool disServersSrvCallback(std_srvs::Empty::Request &req, std_srvs::Empty::Response &res);
 
 bool updataStatusSrvCallback(gobot_msg_srv::SetString::Request &req, gobot_msg_srv::SetString::Response &res);
 

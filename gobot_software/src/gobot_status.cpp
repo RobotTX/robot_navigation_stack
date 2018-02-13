@@ -10,7 +10,7 @@ GOBOT STATUS
 5  PLAY_PATH/WAITING/DELAY
 4  PAUSE_PATH
 1  STOP_PATH
-0  COMPLETE_PATH/ABORTED_PATH
+0  COMPLETE_PATH/ABORTED_PATH/COMPLETE_POINT
 
 DOCK STATUS
 3  GO TO CHARGING
@@ -87,7 +87,7 @@ void updateStatus(){
 //change robot led and sound to inform people its status
 void robotResponse(int status, std::string text){
     //permanent green case
-    if (text=="COMPLETE_EXPLORING" || text=="COMPLETE_PATH") {
+    if (text=="COMPLETE_EXPLORING" || text=="COMPLETE_PATH" || text=="COMPLETE_POINT") {
         SetRobot.setLed(0,{"green"});
         SetRobot.setSound(1,2,mute_);
     }
@@ -163,8 +163,7 @@ bool disconnectedSrvCallback(std_srvs::Empty::Request &req, std_srvs::Empty::Res
     */
 
     //test purpose
-    gobot_msg_srv::SetStringArray keep_ip;
-    ros::service::call("/gobot_software/disconnet_servers",keep_ip);
+    ros::service::call("/gobot_software/disconnet_servers",empty_srv);
 
     return true;
 }
@@ -174,6 +173,9 @@ bool setWifiSrvCallback(gobot_msg_srv::SetStringArray::Request &req, gobot_msg_s
         ROS_INFO("(Gobot_status) Receive same wifi info: name:%s, password:%s",wifi_.at(0).c_str(),wifi_.at(1).c_str());
         return false;
     }
+    //disconnect all server
+    ros::service::call("/gobot_software/disconnet_servers",empty_srv);
+
     //if previous wifi is not empty and receive a new wifi, we delete the previous wifi in the netowrk list
     //delete previously connected wifi
     const std::string deleteWIFI_script = "sudo sh " + deleteWifi + " " + wifiFile;
@@ -630,6 +632,7 @@ void initialData(){
     std::ofstream ofsDisconnected(disconnectedFile, std::ofstream::out | std::ofstream::trunc);
     if(ofsDisconnected){
         ofsDisconnected << disconnected;
+        ofsDisconnected.close();
     }
 }
 
