@@ -14,6 +14,9 @@
 #include <gobot_msg_srv/set_robot_class.h>
 #include <gobot_msg_srv/get_robot_class.h>
 
+std::vector<uint8_t> REQUEST_DATA_CMD = {0x10, 0x01, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x1B};
+std::vector<uint8_t> RESET_MCU_CMD = {0xD0, 0x01, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x1B};
+std::vector<uint8_t> SHUT_DOWN_CMD = {0xF0, 0x01, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00 ,0x1B};
 
 
 std::vector<uint8_t> writeAndRead(std::vector<uint8_t> toWrite, int bytesToRead = 0);
@@ -33,6 +36,8 @@ bool checkSensors(void);
 
 /// Read and publish all the sensors info
 void publishSensors(void);
+
+void initData(ros::NodeHandle &nh);
 
 /// Initialize he serial connection
 bool initSerial(void);

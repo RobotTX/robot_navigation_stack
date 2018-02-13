@@ -23,6 +23,8 @@ std::mutex connectionMutex;
 std::string STMdevice;
 std::map<std::string, uint8_t> led_color_;
 
+std::string restart_file;
+
 robot_class::SetRobot SetRobot;
 robot_class::GetRobot GetRobot;
 int robot_status_;
@@ -67,7 +69,7 @@ bool displaySensorData(gobot_msg_srv::SetBattery::Request &req, gobot_msg_srv::S
 
 void resetStm(void){
     connectionMutex.lock(); 
-    serialConnection.write(std::vector<uint8_t>({0xD0, 0x01, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x1B}));
+    serialConnection.write(RESET_MCU_CMD);
     /// Read any byte that we are expecting
     std::vector<uint8_t> buff;
     serialConnection.read(buff, 5);
@@ -96,7 +98,7 @@ std::string getStdoutFromCommand(std::string cmd) {
 }
 
 bool checkSensors(){
-    std::vector<uint8_t> buff = writeAndRead(std::vector<uint8_t>({0x10, 0x01, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x1B}),STM_BYTES);
+    std::vector<uint8_t> buff = writeAndRead(REQUEST_DATA_CMD,STM_BYTES);
     if(buff.size() == STM_BYTES){
         int16_t voltage = (buff.at(32) << 8) | buff.at(33);
         int16_t temperature = (buff.at(36) << 8) | buff.at(37);
@@ -131,7 +133,7 @@ bool checkSensors(){
 void publishSensors(void){
     bool error = false;
     bool error_bumper = false;
-    std::vector<uint8_t> buff = writeAndRead(std::vector<uint8_t>({0x10, 0x01, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x1B}),STM_BYTES);
+    std::vector<uint8_t> buff = writeAndRead(REQUEST_DATA_CMD,STM_BYTES);
 
     //ROS_INFO("(sensors::publishSensors) Info : %lu %d %d %d", buff.size(), (int) buff.at(0), (int) buff.at(1), (int) buff.at(2));
     /// check if the 16 is useful
@@ -499,7 +501,7 @@ bool shutdownSrvCallback(std_srvs::Empty::Request &req, std_srvs::Empty::Respons
     //ROS_INFO("Receive a LED change request, and succeed to execute.");
     SetRobot.setMotorSpeed('F', 0, 'F', 0);
     //shutdown command
-    std::vector<uint8_t> buff = writeAndRead(std::vector<uint8_t>({0xF0,0x01,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x1B}),5);
+    std::vector<uint8_t> buff = writeAndRead(SHUT_DOWN_CMD,5);
     setLed(0,{"white"});
     setSound(2,1);
     return true;
@@ -510,7 +512,20 @@ bool sensorsReadySrvCallback(std_srvs::Empty::Request &req, std_srvs::Empty::Res
     return true;
 }
 
-bool initSerial(void) {
+void initData(ros::NodeHandle &nh){
+    nh.getParam("STM_BYTES", STM_BYTES);  //61/49
+    nh.getParam("STMdevice", STMdevice);
+    nh.getParam("STM_RATE", STM_RATE);
+    nh.getParam("USE_BUMPER", USE_BUMPER);
+    nh.getParam("USE_SONAR", USE_SONAR);
+    nh.getParam("USE_CLIFF", USE_CLIFF);
+    nh.getParam("restart_file",restart_file);
+
+    //0x52 = Blue,0x47 = Red,0x42 = Green,0x4D = Magenta,0x43 = Cyan,0x59 = Yellow,0x57 = White, 0x00 = Off
+    led_color_ = {{"green",0x42}, {"blue",0x52}, {"yellow",0x59}, {"red",0x47}, {"cyan",0x43}, {"white",0x57}, {"magenta",0x4D}, {"off",0x00}};
+}
+
+bool initSerial() {
     std::string port = STMdevice;
     
     ROS_INFO("(sensors::initSerial) STM32 port : %s", port.c_str());
@@ -568,14 +583,7 @@ int main(int argc, char **argv) {
     ROS_INFO("(Sensors) MD49 is ready.");
     //Startup end
 
-    nh.getParam("STM_BYTES", STM_BYTES);  //61/49
-    nh.getParam("STMdevice", STMdevice);
-    nh.getParam("STM_RATE", STM_RATE);
-    nh.getParam("USE_BUMPER", USE_BUMPER);
-    nh.getParam("USE_SONAR", USE_SONAR);
-    nh.getParam("USE_CLIFF", USE_CLIFF);
-    //0x52 = Blue,0x47 = Red,0x42 = Green,0x4D = Magenta,0x43 = Cyan,0x59 = Yellow,0x57 = White, 0x00 = Off
-    led_color_ = {{"green",0x42}, {"blue",0x52}, {"yellow",0x59}, {"red",0x47}, {"cyan",0x43}, {"white",0x57}, {"magenta",0x4D}, {"off",0x00}};
+    initData(nh);
 
     bumper_pub = nh.advertise<gobot_msg_srv::BumperMsg>("/gobot_base/bumpers_raw_topic", 50);
     ir_pub = nh.advertise<gobot_msg_srv::IrMsg>("/gobot_base/ir_topic", 50);
@@ -589,7 +597,7 @@ int main(int argc, char **argv) {
     temperature_pub = nh.advertise<std_msgs::Float32>("/gobot_base/temperature_topic",50);
 
     ros::ServiceServer sensorsReadySrv;
-
+    
     if(initSerial()){
         int n=0;
         ros::Rate r(STM_RATE);
@@ -602,9 +610,9 @@ int main(int argc, char **argv) {
             }
             n++;
             if(n>10){
-                ROS_ERROR("Reset STM: %d",n);
-                resetStm();
-                n=0;
+                ROS_ERROR("Restart system");
+                std::string cmd = "sudo sh " + restart_file;
+                system(cmd.c_str());
             }
             r2.sleep();
         }
@@ -627,8 +635,8 @@ int main(int argc, char **argv) {
 
         //start publish sensor information after checking procedure
         while(ros::ok()){
-            ros::spinOnce();
             publishSensors();
+            ros::spinOnce();
             r.sleep();
         }
     }

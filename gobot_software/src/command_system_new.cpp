@@ -70,14 +70,14 @@ bool execCommand(const std::string ip, const std::vector<std::string> command){
             ROS_WARN("(Command system) Gobot is docking.");
             return false;
         }
+        //newCS
+        else if(commandStr.at(0)=='n'){
+            ros::service::call("/gobot_function/stopDocking", empty_srv);
+        }
         //stopPath
         else if(commandStr.at(0)=='l'){
             ros::service::call("/gobot_function/stopDocking", empty_srv);
             return true;
-        }
-        //newCS
-        else if(commandStr.at(0)=='n'){
-            ros::service::call("/gobot_function/stopDocking", empty_srv);
         }
     }
     //moving

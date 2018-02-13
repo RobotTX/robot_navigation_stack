@@ -56,3 +56,5 @@ fping -r 0 -g "$var.0/24" 2>/dev/null | grep alive | cut -d ' ' -f1 > $isAlive
 sed -i "/$var.164/d" $isAlive
 sed -i "/$var.125/d" $isAlive
 sed -i "/$var.33/d" $isAlive
+sed -i "/$var.106/d" $isAlive
+sed -i "/$var.44/d" $isAlive

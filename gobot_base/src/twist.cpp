@@ -298,9 +298,7 @@ void newCmdVel(const geometry_msgs::Twist::ConstPtr& twist){
     }
 }
 
-bool initParams(){
-    ros::NodeHandle nh;
-
+void initParams(ros::NodeHandle &nh){
     nh.getParam("wheel_separation", wheel_separation);
     nh.getParam("wheel_radius", wheel_radius);
     nh.getParam("ticks_per_rotation", ticks_per_rotation);
@@ -310,8 +308,6 @@ bool initParams(){
     std::cout << "(twist::initParams) wheel_separation:"<<wheel_separation<<" wheel_radius:"<<wheel_radius
     <<" ticks_per_rotation:"<<ticks_per_rotation<<" collision_threshold:"<<collision_threshold
     <<" avoid_spd:"<<avoid_spd<<std::endl;
-
-    return true;
 }
 
 void mySigintHandler(int sig)
@@ -331,26 +327,31 @@ int main(int argc, char **argv) {
     ros::NodeHandle nh;
     signal(SIGINT, mySigintHandler);
     
-    if(initParams()){
-        bumper_pub = nh.advertise<gobot_msg_srv::BumperMsg>("/gobot_base/bumpers_topic", 1);
-        bumper_collision_pub = nh.advertise<gobot_msg_srv::BumperMsg>("/gobot_base/bumpers_collision", 1);
+    initParams(nh);
+    
+    ROS_INFO("(Twist) Waiting for MCU to be ready...");
+    ros::service::waitForService("/gobot_startup/sensors_ready", ros::Duration(60.0));
+    ROS_INFO("(Twist) MCU is ready.");
 
-        cmdVelSub = nh.subscribe("cmd_vel", 1, newCmdVel);
-        bumpersSub = nh.subscribe("/gobot_base/bumpers_raw_topic", 1, newBumpersInfo);
-        cliffSub = nh.subscribe("/gobot_base/cliff_topic", 1, cliffCallback);
-        lostRobot = nh.subscribe("/gobot_recovery/lost_robot",1,lostCallback);
-        joySub = nh.subscribe("joy", 1, joyCallback);
-        joyConSub = nh.subscribe("joy_connection", 1, joyConnectionCallback);
+    bumper_pub = nh.advertise<gobot_msg_srv::BumperMsg>("/gobot_base/bumpers_topic", 1);
+    bumper_collision_pub = nh.advertise<gobot_msg_srv::BumperMsg>("/gobot_base/bumpers_collision", 1);
 
-        //not in use now
-        ros::ServiceServer continueRobot = nh.advertiseService("/gobot_base/continue_robot",continueRobotSrvCallback);
-        ros::ServiceServer pauseRobot = nh.advertiseService("/gobot_base/pause_robot",pauseRobotSrvCallback);
+    cmdVelSub = nh.subscribe("cmd_vel", 1, newCmdVel);
+    bumpersSub = nh.subscribe("/gobot_base/bumpers_raw_topic", 1, newBumpersInfo);
+    cliffSub = nh.subscribe("/gobot_base/cliff_topic", 1, cliffCallback);
+    lostRobot = nh.subscribe("/gobot_recovery/lost_robot",1,lostCallback);
+    joySub = nh.subscribe("joy", 1, joyCallback);
+    joyConSub = nh.subscribe("joy_connection", 1, joyConnectionCallback);
+    
+    //not in use now
+    
+    ros::ServiceServer continueRobot = nh.advertiseService("/gobot_base/continue_robot",continueRobotSrvCallback);
+    ros::ServiceServer pauseRobot = nh.advertiseService("/gobot_base/pause_robot",pauseRobotSrvCallback);
 
-        ac = new MoveBaseClient("move_base", true);
-        ac->waitForServer(ros::Duration(60.0));
+    ac = new MoveBaseClient("move_base", true);
+    ac->waitForServer(ros::Duration(60.0));
 
-        ros::spin();
-    }
+    ros::spin();
 
     return 0;
 }

@@ -38,4 +38,4 @@ void joyCallback(const sensor_msgs::Joy::ConstPtr& joy);
 /// Callback of the subscriber on velocity commands
 void newCmdVel(const geometry_msgs::Twist::ConstPtr& twist);
 
-bool initParams(void);
+void initParams(ros::NodeHandle &nh);

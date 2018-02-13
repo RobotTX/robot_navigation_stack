@@ -60,10 +60,6 @@ int main(int argc, char** argv){
     ros::Rate r(ODOM_RATE); //20
     ros::service::call("/gobot_motor/resetEncoders", arg);
     while(ros::ok()){
-
-        // check for incoming messages
-        ros::spinOnce();
-
         gobot_msg_srv::GetEncoders encoders;
         if(ros::service::call("/gobot_motor/getEncoders", encoders)){
             current_time = ros::Time::now();
@@ -176,7 +172,8 @@ int main(int argc, char** argv){
             skipped++;
             ROS_WARN("(odom) couldn't call service /gobot_motor/getEncoders, skipping this odom pub, total skipped : %d", skipped);
         }
-
+        // check for incoming messages
+        ros::spinOnce();
         r.sleep();
     }
 

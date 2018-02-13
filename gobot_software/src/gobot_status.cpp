@@ -339,7 +339,6 @@ bool setPathSrvCallback(gobot_msg_srv::SetStringArray::Request &req, gobot_msg_s
     std::thread([](){
         ros::service::call("/gobot_function/update_path", update_path);
     }).detach();
-    
     return true;
 }
 
