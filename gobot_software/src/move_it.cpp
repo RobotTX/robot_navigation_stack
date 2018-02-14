@@ -195,11 +195,6 @@ bool playPointService(gobot_msg_srv::SetStringArray::Request &req, gobot_msg_srv
 		stop_flag = false;
 	}
 
-	if(text_=="COMPLETE_PATH"){
-		stage_--;
-		SetRobot.setStage(stage_);
-	}
-
 	gobot_msg_srv::IsCharging arg;
 	if(ros::service::call("/gobot_status/charging_status", arg) && arg.response.isCharging){
 		ROS_WARN("(PlayPath::playPathService) we are charging so we go straight to avoid bumping into the CS when turning");
@@ -428,7 +423,7 @@ int main(int argc, char* argv[]){
 		ros::NodeHandle n;
 		signal(SIGINT, mySigintHandler);
 		
-		ros::service::waitForService("/gobot_startup/pose_ready", ros::Duration(60.0));
+		ros::service::waitForService("/gobot_startup/pose_ready", ros::Duration(120.0));
 		ac = new MoveBaseClient("move_base", true);
 		ac->waitForServer(ros::Duration(60.0));
 		

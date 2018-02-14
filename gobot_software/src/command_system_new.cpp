@@ -222,14 +222,12 @@ bool execCommand(const std::string ip, const std::vector<std::string> command){
             status = shutdownRobot(command);
         break;
 
-        /// NOT USED NOW
-        /// command to pause during the recovery of a robot's position
+        /// Not mute robot
         case 'w':
             status = muteOff(command);
         break;
 
-        /// NOT USED NOW
-        /// command to stop recovering the robot's position
+        /// Mute robot
         case 'x':
             status = muteOn(command);
         break;
@@ -694,7 +692,7 @@ bool muteOff(const std::vector<std::string> command){
 
 /// First param = x
 bool muteOn(const std::vector<std::string> command){
-if(command.size() == 1) {
+    if(command.size() == 1) {
         ROS_INFO("(Command system) Enable mute");
         return SetRobot.setMute(1);
     }
@@ -1182,7 +1180,7 @@ int main(int argc, char* argv[]){
         n.getParam("simulation", simulation);
         ROS_INFO("(Command system) simulation : %d", simulation);
         //Startup begin
-        ros::service::waitForService("/gobot_startup/pose_ready", ros::Duration(60.0));
+        ros::service::waitForService("/gobot_startup/pose_ready", ros::Duration(120.0));
         //Startup end
 
         ros::Subscriber sub = n.subscribe("/gobot_software/server_disconnected", 1000, serverDisconnected);

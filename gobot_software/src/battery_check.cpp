@@ -35,7 +35,7 @@ int main(int argc, char* argv[]){
     ros::init(argc, argv, "battery_check");
     ros::NodeHandle nh;
     
-    ros::service::waitForService("/gobot_startup/pose_ready", ros::Duration(60.0));
+    ros::service::waitForService("/gobot_startup/pose_ready", ros::Duration(120.0));
 
     ros::ServiceServer testAutoDockingService = nh.advertiseService("/gobot_test/testAutoDocking", testAutoDocking);
 

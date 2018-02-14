@@ -466,7 +466,9 @@ bool setGobotStatusSrvCallback(gobot_msg_srv::SetGobotStatus::Request &req, gobo
     gobot_text_ = req.text;
     gobotStatusMutex.unlock();
     ROS_INFO("(Gobot_status) Set Gobot status: %d,%s",gobot_status_,gobot_text_.c_str());
-    robotResponse(gobot_status_,gobot_text_);
+    std::thread([](){
+        robotResponse(gobot_status_,gobot_text_);
+    }).detach();
     return true;
 }
 
@@ -501,13 +503,17 @@ void bumpersCallback(const gobot_msg_srv::BumperMsg::ConstPtr& bumpers){
         if(front || back){
             if(!collision){
                 collision = true;
-                SetRobot.setLed(1,{"red","white"});
-                SetRobot.setSound(3,1,mute_);
+                std::thread([](){
+                    SetRobot.setLed(1,{"red","white"});
+                    SetRobot.setSound(3,1,mute_);
+                }).detach();
             }
         }
         else if(collision){
             collision = false;
-            SetRobot.setSound(1,1,mute_);
+            std::thread([](){
+                SetRobot.setSound(1,1,mute_);
+            }).detach();
         }
     }
 }

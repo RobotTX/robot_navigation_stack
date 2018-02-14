@@ -54,17 +54,18 @@ bool disServersSrvCallback(std_srvs::Empty::Request &req, std_srvs::Empty::Respo
  * Will update gobot status when receive any command
  */
 bool updataStatusSrvCallback(gobot_msg_srv::SetString::Request &req, gobot_msg_srv::SetString::Response &res){
+    std::vector<std::thread> data_threads;
+    ipMutex.lock();
     if(oldIPs.size()>0){
         std::string dataToSend = req.data;
-        std::vector<std::thread> data_threads;
-        ipMutex.lock();
         if((ros::Time::now()-disco_time).toSec()>WAITING_TIME){
-            //ROS_INFO("(ping_server) Trying to ping everyone %lu", availableIPs.size());
             for(int i = 0; i < oldIPs.size(); ++i)
                 data_threads.push_back(std::thread(pingIP2, oldIPs.at(i).first, dataToSend, 2.5));
         }
-        ipMutex.unlock();
-
+    }
+    ipMutex.unlock();
+    
+    if(data_threads.size()>0){
         sendDataMutex.lock();
         ///we wait for all the threads to be done
         for(int i = 0; i < data_threads.size(); ++i)
@@ -88,20 +89,22 @@ void pingAllIPs(void){
         threads.clear();
         connectedIPs.clear();
         //ROS_INFO("%f",(ros::Time::now()-disco_time).toSec());
+        serverMutex.lock();
         if(availableIPs.size()>0){
             /// Get the data to send to the Qt app
             std::string dataToSend = getDataToSend();
             //ROS_INFO("(ping_server) Data to send : %s", dataToSend.c_str());
             /// We create threads to ping every IP adress
             /// => threads reduce the required time to ping from ~12 sec to 2 sec
-            serverMutex.lock();
             if((ros::Time::now()-disco_time).toSec()>WAITING_TIME){
                 //ROS_INFO("(ping_server) Trying to ping everyone %lu", availableIPs.size());
                 for(int i = 0; i < availableIPs.size(); ++i)
                     threads.push_back(std::thread(pingIP, availableIPs.at(i), dataToSend, 2.5));
             }
-            serverMutex.unlock();
+        }
+        serverMutex.unlock();
 
+        if(threads.size()>0){
             sendDataMutex.lock();
             /// We join all the threads => we wait for all the threads to be done
             for(int i = 0; i < threads.size(); ++i)
@@ -248,6 +251,7 @@ void checkNewServers(void){
 
 void mySigintHandler(int sig)
 {   
+    disco_time = ros::Time::now();
     ipMutex.lock();
     //disconnect all sockets when closed
     for(int i=0;i<oldIPs.size();i++){
@@ -272,7 +276,8 @@ bool initParams(){
     nh.getParam("status_update", STATUS_UPDATE);
     nh.getParam("ip_update", IP_UPDATE);
     nh.getParam("waiting_time", WAITING_TIME);
-
+    disco_time = ros::Time::now();
+    
     return true;
 }
 
@@ -281,12 +286,11 @@ int main(int argc, char* argv[]){
     ros::init(argc, argv, "ping_server");
     ros::NodeHandle n;
     signal(SIGINT, mySigintHandler);
-    disco_time = ros::Time::now();
 
     if (initParams()){
         //Startup begin
         ROS_INFO("(ping_server) Waiting for Robot finding initial pose...");
-        ros::service::waitForService("/gobot_startup/pose_ready", ros::Duration(60.0));
+        ros::service::waitForService("/gobot_startup/pose_ready", ros::Duration(120.0));
         ROS_INFO("(ping_server) Robot finding initial pose is ready.");
         //Startup end
 

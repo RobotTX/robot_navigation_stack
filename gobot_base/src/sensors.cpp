@@ -45,7 +45,6 @@ std::vector<uint8_t> writeAndRead(std::vector<uint8_t> toWrite, int bytesToRead)
         } catch (std::exception& e) {
             ROS_ERROR("(Sensors) exception : %s", e.what());
         }
-        /// Unlock the mutex
     }
     else {
         ROS_WARN("(wheels::writeAndRead) The serial connection is not opened, something is wrong");
@@ -100,15 +99,19 @@ std::string getStdoutFromCommand(std::string cmd) {
 bool checkSensors(){
     std::vector<uint8_t> buff = writeAndRead(REQUEST_DATA_CMD,STM_BYTES);
     if(buff.size() == STM_BYTES){
-        int16_t voltage = (buff.at(32) << 8) | buff.at(33);
-        int16_t temperature = (buff.at(36) << 8) | buff.at(37);
-        
-        if(voltage>0 && temperature>0){
-            last_charging_current = (buff.at(34) << 8) | buff.at(35);
-            return true;
+        if(buff.at(17)){
+            int16_t voltage = (buff.at(32) << 8) | buff.at(33);
+            int16_t temperature = (buff.at(36) << 8) | buff.at(37);
+            
+            if(voltage>0 && temperature>0){
+                last_charging_current = (buff.at(34) << 8) | buff.at(35);
+                return true;
+            }
+            else
+                ROS_ERROR("(sensors::CheckSensors) Check battery data : Voltage:%d, Temperature:%d", voltage,temperature);
         }
         else
-            ROS_ERROR("(sensors::CheckSensors) Check battery data : Voltage:%d, Temperature:%d", voltage,temperature);
+            ROS_ERROR("(sensors::CheckSensors) Bumpers information is wrong");
     }
     else
         ROS_ERROR("(sensors::CheckSensors) Wrong size : %zu", buff.size());
@@ -168,6 +171,7 @@ void publishSensors(void){
         } 
         else{
             error_bumper = true;
+            error = true;
         }
 
 
@@ -218,6 +222,7 @@ void publishSensors(void){
             //battery data update slower than requesting rate
             if(abs(battery_data.ChargingCurrent-last_charging_current) > 5){
                 int current_diff = battery_data.ChargingCurrent - last_charging_current;
+                //if not fully charged
                 if(battery_data.BatteryStatus<100){
                     if(battery_data.ChargingCurrent >2500){
                         battery_data.ChargingFlag = true;
@@ -235,13 +240,9 @@ void publishSensors(void){
                         battery_data.ChargingFlag = current_diff>200 ? true : false;
                     }
                 }
+                //if fully charged
                 else{
-                    if (battery_data.ChargingCurrent>0){
-                        battery_data.ChargingFlag = current_diff<-200 ? false : true;
-                    }
-                    else if (battery_data.ChargingCurrent<0){
-                        battery_data.ChargingFlag = current_diff>200 ? true : false;
-                    }
+                    battery_data.ChargingFlag = battery_data.ChargingCurrent<-300 ? false : true;
                 }
                 if(!charging){
                     charge_check = battery_data.ChargingFlag ? charge_check+1 : 0;
@@ -341,8 +342,6 @@ void publishSensors(void){
                 
             if(USE_BUMPER && !error_bumper)
                 bumper_pub.publish(bumper_data);
-            else if(error_bumper)
-                ROS_ERROR("(sensors::publishSensors ERROR) All bumpers got a collision");
         
             if(resetwifi_button==1 && (ros::Time::now()-reset_wifi_time).toSec()>1.0){
                 reset_wifi_time = ros::Time::now();
@@ -361,6 +360,8 @@ void publishSensors(void){
                 }
             }
         }
+        else if (error_bumper)
+            ROS_ERROR("(sensors::publishSensors ERROR) All bumpers got a collision");
     } 
     else {
         //ROS_ERROR("(sensors::publishSensors) Wrong buff size : %lu, error count: %d", buff.size(),error_count);
@@ -500,10 +501,15 @@ void ledTimerCallback(const ros::TimerEvent&){
 bool shutdownSrvCallback(std_srvs::Empty::Request &req, std_srvs::Empty::Response &res){
     //ROS_INFO("Receive a LED change request, and succeed to execute.");
     SetRobot.setMotorSpeed('F', 0, 'F', 0);
-    //shutdown command
-    std::vector<uint8_t> buff = writeAndRead(SHUT_DOWN_CMD,5);
     setLed(0,{"white"});
     setSound(2,1);
+    //shutdown command
+    std::vector<uint8_t> buff = writeAndRead(SHUT_DOWN_CMD,5);
+    while(buff.size()!=5){
+        ROS_INFO("(sensors::Shutdown) Shutdown system. Received %lu bytes", buff.size());
+        buff = writeAndRead(SHUT_DOWN_CMD,5);
+        ros::Duration(1.0).sleep();
+    }
     return true;
 }
 
@@ -527,10 +533,10 @@ void initData(ros::NodeHandle &nh){
 
 bool initSerial() {
     std::string port = STMdevice;
-    
+    if(serialConnection.isOpen()){
+        serialConnection.close();
+    }
     ROS_INFO("(sensors::initSerial) STM32 port : %s", port.c_str());
-
-    connectionMutex.lock();
     // Set the serial port, baudrate and timeout in milliseconds
     serialConnection.setPort(port);
     //14400 bytes per sec
@@ -539,12 +545,20 @@ bool initSerial() {
     serialConnection.setTimeout(timeout);
     serialConnection.close();
     serialConnection.open();
-    connectionMutex.unlock();
 
     if(serialConnection.isOpen()){
         //reset STM
-        resetStm();
-        ROS_INFO("Established connection to STM32.");
+        serialConnection.write(RESET_MCU_CMD);
+        /// Read any byte that we are expecting
+        std::vector<uint8_t> buff;
+        serialConnection.read(buff, 5);
+        ROS_INFO("(sensors::Initial) Reseted STM32. Received %lu bytes", buff.size());
+        if(buff.size() != 5){
+            ROS_INFO("(Sensors::Initial) Receive wrong ACK from STM32.");
+            return false;
+        }
+        ROS_INFO("(Sensors::Initial)  Established connection to STM32.");
+        ros::Duration(1.0).sleep();
         return true;
     }
     else{
@@ -598,47 +612,55 @@ int main(int argc, char **argv) {
 
     ros::ServiceServer sensorsReadySrv;
     
-    if(initSerial()){
-        int n=0;
-        ros::Rate r(STM_RATE);
-        ros::Rate r2(2);
-        //checking procedure
-        while(STM_CHECK<3 && ros::ok()){
-            if (checkSensors()){
-                STM_CHECK++;
-                ROS_INFO("Iteration:%d, CC:%d", STM_CHECK,last_charging_current);
-            }
-            n++;
-            if(n>10){
-                ROS_ERROR("Restart system");
-                std::string cmd = "sudo sh " + restart_file;
-                system(cmd.c_str());
-            }
-            r2.sleep();
-        }
+    bool inital_flag = initSerial();
+    while(!inital_flag && ros::ok()){
+        inital_flag = initSerial();
+    }
 
-        //Declare service server after checking MCU
-        setLedSrv = nh.advertiseService("/gobot_base/setLed", setLedSrvCallback);
-        setSoundSrv = nh.advertiseService("/gobot_base/setSound", setSoundSrvCallback);
-        ros::ServiceServer shutdownSrv = nh.advertiseService("/gobot_base/shutdown_robot", shutdownSrvCallback);
-        ros::ServiceServer displayDataSrv = nh.advertiseService("/gobot_base/displaySensorData", displaySensorData);
-        ros::ServiceServer resetSTMSrv = nh.advertiseService("/gobot_base/reset_STM", resetSTMSrvCallback);
-        ros::ServiceServer showBatteryLed = nh.advertiseService("/gobot_base/show_Battery_LED", showBatteryLedsrvCallback);
-        ros::Timer ledTimer = nh.createTimer(ros::Duration(30), ledTimerCallback);
-        last_led_time = ros::Time::now();
-        reset_wifi_time = ros::Time::now();
-        
-        //Startup begin
-        sensorsReadySrv = nh.advertiseService("/gobot_startup/sensors_ready", sensorsReadySrvCallback);
-        SetRobot.setStatus(-1,"HARDWARE_READY");
-        //Startup end
-
-        //start publish sensor information after checking procedure
-        while(ros::ok()){
-            publishSensors();
-            ros::spinOnce();
-            r.sleep();
+    int n=0;
+    ros::Rate r(STM_RATE);
+    ros::Rate r2(2);
+    //checking procedure
+    while(STM_CHECK<3 && ros::ok()){
+        if (checkSensors()){
+            STM_CHECK++;
+            ROS_INFO("Check Iteration:%d, CC:%d", STM_CHECK,last_charging_current);
         }
+        n++;
+        if(n>10){
+            initSerial();
+            n=0;
+            /*
+            ROS_ERROR("Restart system");
+            std::string cmd = "sudo sh " + restart_file + " &";
+            system(cmd.c_str());
+            n=-999;
+            */
+        }
+        r2.sleep();
+    }
+
+    //Declare service server after checking MCU
+    setLedSrv = nh.advertiseService("/gobot_base/setLed", setLedSrvCallback);
+    setSoundSrv = nh.advertiseService("/gobot_base/setSound", setSoundSrvCallback);
+    ros::ServiceServer shutdownSrv = nh.advertiseService("/gobot_base/shutdown_robot", shutdownSrvCallback);
+    ros::ServiceServer displayDataSrv = nh.advertiseService("/gobot_base/displaySensorData", displaySensorData);
+    ros::ServiceServer resetSTMSrv = nh.advertiseService("/gobot_base/reset_STM", resetSTMSrvCallback);
+    ros::ServiceServer showBatteryLed = nh.advertiseService("/gobot_base/show_Battery_LED", showBatteryLedsrvCallback);
+    ros::Timer ledTimer = nh.createTimer(ros::Duration(30), ledTimerCallback);
+    last_led_time = ros::Time::now();
+    reset_wifi_time = ros::Time::now();
+    
+    //Startup begin
+    sensorsReadySrv = nh.advertiseService("/gobot_startup/sensors_ready", sensorsReadySrvCallback);
+    SetRobot.setStatus(-1,"HARDWARE_READY");
+    //Startup end
+
+    //start publish sensor information after checking procedure
+    while(ros::ok()){
+        publishSensors();
+        ros::spinOnce();
+        r.sleep();
     }
 
     return 0;

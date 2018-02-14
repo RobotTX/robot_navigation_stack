@@ -127,7 +127,7 @@ int main(int argc, char **argv){
 
     if (initParams()){
         //Startup begin
-        ros::service::waitForService("/gobot_startup/pose_ready", ros::Duration(60.0));
+        ros::service::waitForService("/gobot_startup/pose_ready", ros::Duration(120.0));
         //Startup end
         
         ros::Subscriber sub = n.subscribe("/gobot_software/server_disconnected", 1000, serverDisconnected);

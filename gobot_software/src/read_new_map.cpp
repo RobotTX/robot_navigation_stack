@@ -315,7 +315,7 @@ int main(int argc, char **argv){
     n.getParam("simulation", simulation);
     ROS_INFO("(New Map) simulation : %d", simulation);
     //Startup begin
-    ros::service::waitForService("/gobot_startup/pose_ready", ros::Duration(60.0));
+    ros::service::waitForService("/gobot_startup/pose_ready", ros::Duration(120.0));
     //Startup end
 
     /// Subscribe to know when we disconnected from the server

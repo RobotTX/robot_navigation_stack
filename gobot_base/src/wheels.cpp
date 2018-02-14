@@ -139,7 +139,9 @@ bool motorReadySrvCallback(std_srvs::Empty::Request &req, std_srvs::Empty::Respo
 bool initSerial() {
     /// Get the port in which our device is connected
     std::string port = MD49device;
-
+    if(serialConnection.isOpen()){
+        serialConnection.close();
+    }
     ROS_INFO("(wheels::initSerial) MD49 port : %s", port.c_str());
 
     serialMutex.lock();
