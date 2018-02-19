@@ -1,6 +1,8 @@
 #!/bin/bash
 #IFS=$'\n'
-wififile=$1
+echo "###########Delete Wifi Start###########"
+wififile="$1"
+wifi=$(nmcli device status | grep wifi |cut -d ' ' -f1)
 n=1
 while read line
 do
@@ -14,10 +16,17 @@ do
 done  < $wififile
 if [ -z "$wifiname" ]
 then 
-    wifiname="Hotspot"
+    nmcli device disconnect $wifi
+    echo "Disconnect robot Hotspot"
+else
+    if [ "$(nmcli connection show | grep "$wifiname")" ]
+    then
+        nmcli connection delete "$wifiname"
+        echo Deleted WIFIs name:$wifiname
+    fi
 fi
-if [ "$(nmcli connection show | grep "$wifiname")" ]
-then
-    nmcli connection delete "$wifiname"
-    echo Deleted WIFIs name:$wifiname
-fi
+sudo service network-manager restart 
+echo "Restart network-manager"
+sudo ifup lo
+echo "Re-up lo inter"
+echo "###########Delete Wifi End###########"

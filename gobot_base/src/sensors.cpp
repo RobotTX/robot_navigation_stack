@@ -501,7 +501,6 @@ void ledTimerCallback(const ros::TimerEvent&){
 bool shutdownSrvCallback(std_srvs::Empty::Request &req, std_srvs::Empty::Response &res){
     //ROS_INFO("Receive a LED change request, and succeed to execute.");
     SetRobot.setMotorSpeed('F', 0, 'F', 0);
-    setLed(0,{"white"});
     setSound(2,1);
     //shutdown command
     std::vector<uint8_t> buff = writeAndRead(SHUT_DOWN_CMD,5);
@@ -609,8 +608,6 @@ int main(int argc, char **argv) {
     button_pub = nh.advertise<std_msgs::Int8>("/gobot_base/button_topic",50);
     gyro_pub = nh.advertise<gobot_msg_srv::GyroMsg>("/gobot_base/gyro_topic",50);
     temperature_pub = nh.advertise<std_msgs::Float32>("/gobot_base/temperature_topic",50);
-
-    ros::ServiceServer sensorsReadySrv;
     
     bool inital_flag = initSerial();
     while(!inital_flag && ros::ok()){
@@ -621,12 +618,14 @@ int main(int argc, char **argv) {
     ros::Rate r(STM_RATE);
     ros::Rate r2(2);
     //checking procedure
-    while(STM_CHECK<3 && ros::ok()){
+    while(STM_CHECK<4 && ros::ok()){
         if (checkSensors()){
             STM_CHECK++;
-            ROS_INFO("Check Iteration:%d, CC:%d", STM_CHECK,last_charging_current);
+            ROS_INFO("(Sensors::StartUp) Check Iteration:%d, CC:%d", STM_CHECK,last_charging_current);
         }
-        n++;
+        else{
+            n++;
+        }
         if(n>10){
             initSerial();
             n=0;
@@ -652,8 +651,7 @@ int main(int argc, char **argv) {
     reset_wifi_time = ros::Time::now();
     
     //Startup begin
-    sensorsReadySrv = nh.advertiseService("/gobot_startup/sensors_ready", sensorsReadySrvCallback);
-    SetRobot.setStatus(-1,"HARDWARE_READY");
+    ros::ServiceServer sensorsReadySrv = nh.advertiseService("/gobot_startup/sensors_ready", sensorsReadySrvCallback);
     //Startup end
 
     //start publish sensor information after checking procedure

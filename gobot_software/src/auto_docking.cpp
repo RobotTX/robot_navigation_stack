@@ -45,8 +45,8 @@ bool startDocking(void){
         landingYaw = tf::getYaw(tf::Quaternion(oriX , oriY , oriZ, oriW));
 
         /// We want to go 1 metre in front of the charging station
-        landingPointX = x + 0.6 * std::cos(landingYaw);
-        landingPointY = y + 0.6 * std::sin(landingYaw);
+        landingPointX = x + 0.5 * std::cos(landingYaw);
+        landingPointY = y + 0.5 * std::sin(landingYaw);
         //~ROS_INFO("(auto_docking::startDocking) landing point : [%f, %f, %f]", landingPointX, landingPointY, landingYaw);
 
         /// Create the goal
@@ -112,8 +112,8 @@ void findChargingStation(void){
     bumperSub = nh.subscribe("/gobot_base/bumpers_topic", 1, newBumpersInfo);
 
     /// Pid control with the ir signal
-    lastIrSignalTime = ros::Time::now();
     irSub = nh.subscribe("/gobot_base/ir_topic", 1, newIrSignal);
+    lastIrSignalTime = ros::Time::now();
 }
 
 void newBatteryInfo(const gobot_msg_srv::BatteryMsg::ConstPtr& batteryInfo){

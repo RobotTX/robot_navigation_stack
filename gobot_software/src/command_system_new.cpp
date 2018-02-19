@@ -298,7 +298,6 @@ bool adjustBatteryLvl(const std::vector<std::string> command){
 
 /// Command : a, second param = new name 
 bool renameRobot(const std::vector<std::string> command){
-    ros::NodeHandle n;
     if(command.size() == 2){
         ROS_INFO("(Command system) New name : %s", command.at(1).c_str());
         return SetRobot.setName(command.at(1));
@@ -402,7 +401,7 @@ bool startScanAndAutoExplore(const std::string ip, const std::vector<std::string
         ROS_INFO("(Command system) Gobot start to scan a new map");
         scanning = true;
         /// Kill gobot move so that we'll restart it with the new map
-        std::string cmd = SetRobot.killList();
+        std::string cmd = SetRobot.killList(simulation);
         system(cmd.c_str());    
         /// Relaunch gobot_navigation
         SetRobot.runScan(simulation);
@@ -442,7 +441,6 @@ bool robotStartup(const std::vector<std::string> command){
 
 /// First param = i, then the path name, then quadriplets of parameters to represent path points (path point name, posX, posY, waiting time,prientation) 
 bool newPath(const std::vector<std::string> command){
-    ros::NodeHandle n;
     if(command.size() >= 6 && command.size()%5 == 2){  
         ROS_INFO("(Command system) New path received");
         gobot_msg_srv::SetStringArray set_path;
@@ -505,7 +503,6 @@ bool stopPath(const std::vector<std::string> command){
 
 /// First param = m
 bool stopAndDeletePath(const std::vector<std::string> command){
-    ros::NodeHandle n;
     if(command.size() == 1) {
         ROS_INFO("(Command system) Stop the robot and delete its path");
         if(SetRobot.clearPath()){
@@ -518,7 +515,6 @@ bool stopAndDeletePath(const std::vector<std::string> command){
 
 /// First param = n, 2nd is the home x coordinate, 3rd is the home y coordinate, 4th is the orientation of the home
 bool newChargingStation(const std::vector<std::string> command){
-    ros::NodeHandle n;
     if(command.size() == 4){
         // TODO send an angle from the application and convert it to store it in home.txt
         ROS_INFO("(Command system) Home received %s %s %s", command.at(1).c_str(), command.at(2).c_str(), command.at(3).c_str());
@@ -627,7 +623,7 @@ bool startNewScan(const std::string ip, const std::vector<std::string> command){
         scanning = true;
 
         /// Kill gobot move so that we'll restart it with the new map
-        std::string cmd = SetRobot.killList();
+        std::string cmd = SetRobot.killList(simulation);
         system(cmd.c_str());
         /// Relaunch gobot_navigation
         SetRobot.runScan(simulation);
@@ -649,7 +645,7 @@ bool stopScanning(const std::string ip, const std::vector<std::string> command){
         if(std::stoi(command.at(1)) == 1){
             scanning = false;
             /// Kill gobot move so that we'll restart it with the new map
-            std::string cmd = SetRobot.killList();
+            std::string cmd = SetRobot.killList(simulation);
             system(cmd.c_str());
  
             /// Relaunch gobot_navigation
@@ -701,8 +697,7 @@ bool muteOn(const std::vector<std::string> command){
 }
 
 /// First param = y
-bool setWifi(const std::vector<std::string> command){
-    ros::NodeHandle n;
+bool setWifi(const std::vector<std::string> command){;
     //1=y, 2=wifi name, 3=wifi password
     if(command.size() == 3){
         ROS_INFO("(Command system) Wifi received %s %s", command.at(1).c_str(), command.at(2).c_str());
@@ -1180,7 +1175,7 @@ int main(int argc, char* argv[]){
         n.getParam("simulation", simulation);
         ROS_INFO("(Command system) simulation : %d", simulation);
         //Startup begin
-        ros::service::waitForService("/gobot_startup/pose_ready", ros::Duration(120.0));
+        ros::service::waitForService("/gobot_startup/network_ready", ros::Duration(120.0));
         //Startup end
 
         ros::Subscriber sub = n.subscribe("/gobot_software/server_disconnected", 1000, serverDisconnected);

@@ -90,7 +90,7 @@ void disconnect(const std::string ip){
     if(sockets.count(ip)){
         sockets.at(ip)->close();
         sockets.erase(ip);
-        ROS_WARN("(Robot Pos) The ip %s just disconnected", ip.c_str());
+        //ROS_WARN("(Robot Pos) The ip %s just disconnected", ip.c_str());
     }
     socketsMutex.unlock();
 }
@@ -127,7 +127,7 @@ int main(int argc, char **argv){
 
     if (initParams()){
         //Startup begin
-        ros::service::waitForService("/gobot_startup/pose_ready", ros::Duration(120.0));
+        ros::service::waitForService("/gobot_startup/network_ready", ros::Duration(120.0));
         //Startup end
         
         ros::Subscriber sub = n.subscribe("/gobot_software/server_disconnected", 1000, serverDisconnected);

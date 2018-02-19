@@ -51,7 +51,7 @@ namespace robot_class {
 
             void setLed(int mode, const std::vector<std::string> &color);
             
-            std::string killList(void);
+            std::string killList(bool simulation);
 
             void runNavi(bool simulation);
 

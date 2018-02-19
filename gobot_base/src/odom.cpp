@@ -7,8 +7,29 @@
 #include <gobot_msg_srv/GetGobotStatus.h>
 #include <std_srvs/Empty.h>
 #include <geometry_msgs/Twist.h>
+#include <mutex>
 
 std_srvs::Empty arg;
+int32_t last_left_encoder = 0;
+int32_t last_right_encoder = 0;
+double x = 0.0;
+double y = 0.0;
+double th = 0.0;
+ros::Time current_time, last_time;
+std::mutex dataMutex;
+
+bool resetOdom(std_srvs::Empty::Request &req, std_srvs::Empty::Response &res){
+    ros::service::call("/gobot_motor/resetEncoders", arg);
+    dataMutex.lock();
+    last_left_encoder = 0;
+    last_right_encoder = 0;
+    x=0;
+    y=0;
+    th=0;
+    last_time = current_time;
+    dataMutex.unlock();
+    return true;
+}
 
 void mySigintHandler(int sig)
 {   
@@ -26,63 +47,57 @@ int main(int argc, char** argv){
     ROS_INFO("(Odom) MD49 is ready.");
     //Startup end
 
+    ros::ServiceServer resetOdomSrv = n.advertiseService("/gobot_motor/resetOdom", resetOdom);
+
     //ros::ServiceServer getSpeedsSrv = n.advertiseService("/gobot_motor/getRealSpeeds", getRealSpeeds);
     /// The encoders should be reinitialized to 0 every time we launch odom
-    int32_t last_left_encoder = 0;
-    int32_t last_right_encoder = 0;
     
     ros::Publisher odom_pub = n.advertise<nav_msgs::Odometry>("odom", 50);
     ros::Publisher odom_test_pub = n.advertise<gobot_msg_srv::OdomTestMsg>("odom_test", 50);
     ros::Publisher real_vel_pub = n.advertise<geometry_msgs::Twist>("real_vel", 50);
     tf::TransformBroadcaster odom_broadcaster;
-
-    double x = 0.0;
-    double y = 0.0;
-    double th = 0.0;
-
-    ros::Time current_time, last_time;
     last_time = ros::Time::now();
 
     int skipped = 0;
 
     /// Params robot dependents
-    double wheel_separation;
+    double wheel_separation,wheel_radius,ticks_per_rotation;
     n.getParam("wheel_separation", wheel_separation);
-    double wheel_radius;
     n.getParam("wheel_radius", wheel_radius);
-    double ticks_per_rotation;
     n.getParam("ticks_per_rotation", ticks_per_rotation);
     int ODOM_RATE=10;
     n.getParam("ODOM_RATE", ODOM_RATE);
 
     double pi = 3.1415926;
+    double distance_limit = 3 * 2.0 * wheel_radius * pi * 2.0 / ODOM_RATE;
+    int encoder_limit = 3 * 2000/ ODOM_RATE;
 
     ros::Rate r(ODOM_RATE); //20
     ros::service::call("/gobot_motor/resetEncoders", arg);
     while(ros::ok()){
         gobot_msg_srv::GetEncoders encoders;
         if(ros::service::call("/gobot_motor/getEncoders", encoders)){
+            dataMutex.lock();
+            
             current_time = ros::Time::now();
-
             double dt = (current_time - last_time).toSec();
+
+            int32_t delta_left_encoder = encoders.response.leftEncoder - last_left_encoder;
+            int32_t delta_right_encoder = encoders.response.rightEncoder - last_right_encoder;
 
             // difference of ticks compared to last time
             //122rpm, 2 rotation/sec, 980ticks/rotation, 2000ticks/sec maximum
             //if odom reading too large, probably wrong reading.
             //just skip them to prevent position jump
-            if(abs(encoders.response.leftEncoder - last_left_encoder)>500|| abs(encoders.response.rightEncoder - last_right_encoder)>500){
+            if(abs(delta_left_encoder)>encoder_limit|| abs(delta_right_encoder)>encoder_limit){
                 ROS_WARN("(Odom) Detect odom jump (%d,%d), re-initial motor...",
-                abs(encoders.response.leftEncoder - last_left_encoder),abs(encoders.response.rightEncoder - last_right_encoder));
+                abs(delta_left_encoder),abs(delta_right_encoder));
                 ros::service::call("/gobot_motor/initialMotor", arg);
-                if(ros::service::call("/gobot_motor/getEncoders", encoders))
                 last_left_encoder = 0;
                 last_right_encoder = 0;
                 last_time = current_time;
                 continue;
             }
-
-            int32_t delta_left_encoder = encoders.response.leftEncoder - last_left_encoder;
-            int32_t delta_right_encoder = encoders.response.rightEncoder - last_right_encoder;
 
             //ROS_INFO("right:%zu, left:%zu",delta_right_encoder,delta_left_encoder);
             last_left_encoder = encoders.response.leftEncoder;
@@ -91,6 +106,13 @@ int main(int argc, char** argv){
             // distance travelled by each wheel
             double left_dist = (delta_left_encoder / ticks_per_rotation) * 2.0 * wheel_radius * pi;
             double right_dist = (delta_right_encoder / ticks_per_rotation) * 2.0 * wheel_radius * pi;
+
+            //if calculated distance is too large, probably wrong reading from motor
+            //just skip them to prevent position jump
+            if(fabs(left_dist)>distance_limit || fabs(right_dist)>distance_limit){
+                left_dist = 0.0;
+                right_dist = 0.0;
+            }
 
             // velocity of each wheel
             double left_vel = left_dist / dt;
@@ -115,8 +137,7 @@ int main(int argc, char** argv){
 
             x += delta_x;
             y += delta_y;
-            th += delta_th;
-
+            th += delta_th;  
             //ROS_INFO("%.5f,%.5f, %.5f",delta_x,delta_y,delta_th);
             
             //since all odometry is 6DOF we'll need a quaternion created from yaw
@@ -165,8 +186,8 @@ int main(int argc, char** argv){
             odom_test_pub.publish(odomTest);
             */
 
-
             last_time = current_time;
+            dataMutex.unlock();
         } 
         else {
             skipped++;

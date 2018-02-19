@@ -114,32 +114,40 @@ namespace robot_class {
         ros::service::call("/gobot_base/setLed",ledCmd);
     }
 
-    std::string SetRobot::killList(){
-        return "rosnode kill /move_base /base_sensors /motor_wheels";
+    std::string SetRobot::killList(bool simulation){
+        return "rosnode kill /move_base"; 
     }
 
     void SetRobot::runNavi(bool simulation){
-        ros::Duration(5.0).sleep();
+        setMotorSpeed('F', 0, 'F', 0);
+        setLed(0,{"white"});
+        ros::service::call("/gobot_motor/resetOdom",empty_srv);
+
         std::string cmd;
+        ros::Duration(5.0).sleep();
         /// Relaunch gobot_navigation
        if(simulation)
             cmd = "gnome-terminal -x bash -c \"source /opt/ros/kinetic/setup.bash;source ~/catkin_ws/devel/setup.bash;roslaunch gobot_gazebo gazebo_slam.launch\"";
         else
             cmd = "gnome-terminal -x bash -c \"source /opt/ros/kinetic/setup.bash;source ~/catkin_ws/devel/setup.bash;roslaunch gobot_navigation gobot_navigation.launch\"";
         system(cmd.c_str());
-        ros::Duration(5.0).sleep();
+        ros::Duration(3.0).sleep();
     }
 
     void SetRobot::runScan(bool simulation){
-        ros::Duration(5.0).sleep();
+        setMotorSpeed('F', 0, 'F', 0);
+        setLed(0,{"white"});
+        ros::service::call("/gobot_motor/resetOdom",empty_srv);
+        
         std::string cmd;
+        ros::Duration(5.0).sleep();
         /// Relaunch gobot_scan
         if(simulation)
             cmd = "gnome-terminal -x bash -c \"source /opt/ros/kinetic/setup.bash;source ~/catkin_ws/devel/setup.bash;roslaunch gobot_gazebo gazebo_scan.launch\"";
         else
             cmd = "gnome-terminal -x bash -c \"source /opt/ros/kinetic/setup.bash;source ~/catkin_ws/devel/setup.bash;roslaunch gobot_navigation gobot_scan.launch\"";
         system(cmd.c_str());
-        ros::Duration(5.0).sleep();
+        ros::Duration(3.0).sleep();
     }
 
     //this two functions only work with robot equipped with speaker and ekho & festival packages

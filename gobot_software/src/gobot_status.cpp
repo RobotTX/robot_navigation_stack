@@ -169,6 +169,10 @@ bool disconnectedSrvCallback(std_srvs::Empty::Request &req, std_srvs::Empty::Res
 }
 
 bool setWifiSrvCallback(gobot_msg_srv::SetStringArray::Request &req, gobot_msg_srv::SetStringArray::Response &res){    
+    if(req.data.size()!=2){
+        ROS_ERROR("(Gobot_status) Receive wrong wifi information");
+        return false;
+    }
     if(wifi_.at(0)==req.data[0] && wifi_.at(1)==req.data[1]){
         ROS_INFO("(Gobot_status) Receive same wifi info: name:%s, password:%s",wifi_.at(0).c_str(),wifi_.at(1).c_str());
         return false;
@@ -208,6 +212,11 @@ bool getWifiSrvCallback(gobot_msg_srv::GetStringArray::Request &req, gobot_msg_s
 
 
 bool setHomeSrvCallback(gobot_msg_srv::SetStringArray::Request &req, gobot_msg_srv::SetStringArray::Response &res){
+    if(req.data.size()!=6){
+        ROS_ERROR("(Gobot_status) Receive wrong home information");
+        return false;
+    }
+    
     homeMutex.lock();
     home_.clear();
     for(int i=0;i<req.data.size();i++)
@@ -256,6 +265,11 @@ bool getBatterySrvCallback(gobot_msg_srv::GetString::Request &req, gobot_msg_srv
 }
 
 bool setSpeedSrvCallback(gobot_msg_srv::SetStringArray::Request &req, gobot_msg_srv::SetStringArray::Response &res){
+    if(req.data.size()!=2){
+        ROS_ERROR("(Gobot_status) Receive wrong set_speed information");
+        return false;
+    }
+    
     speedMutex.lock();
     linear_spd_=req.data[0];
     angular_spd_=req.data[1];

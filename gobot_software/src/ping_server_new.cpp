@@ -248,6 +248,22 @@ void checkNewServers(void){
     }
 }
 
+bool initParams(){
+    ros::NodeHandle nh;
+    nh.getParam("ips_file", ipsFile);
+    nh.getParam("ping_file", pingFile);
+    nh.getParam("wifi_file", wifiFile);
+    nh.getParam("status_update", STATUS_UPDATE);
+    nh.getParam("ip_update", IP_UPDATE);
+    nh.getParam("waiting_time", WAITING_TIME);
+    disco_time = ros::Time::now();
+    
+    return true;
+}
+
+bool networkReadySrvCallback(std_srvs::Empty::Request &req, std_srvs::Empty::Response &res){
+    return true;
+}
 
 void mySigintHandler(int sig)
 {   
@@ -268,19 +284,6 @@ void mySigintHandler(int sig)
     ros::shutdown();
 }
 
-bool initParams(){
-    ros::NodeHandle nh;
-    nh.getParam("ips_file", ipsFile);
-    nh.getParam("ping_file", pingFile);
-    nh.getParam("wifi_file", wifiFile);
-    nh.getParam("status_update", STATUS_UPDATE);
-    nh.getParam("ip_update", IP_UPDATE);
-    nh.getParam("waiting_time", WAITING_TIME);
-    disco_time = ros::Time::now();
-    
-    return true;
-}
-
 int main(int argc, char* argv[]){
 
     ros::init(argc, argv, "ping_server");
@@ -292,12 +295,20 @@ int main(int argc, char* argv[]){
         ROS_INFO("(ping_server) Waiting for Robot finding initial pose...");
         ros::service::waitForService("/gobot_startup/pose_ready", ros::Duration(120.0));
         ROS_INFO("(ping_server) Robot finding initial pose is ready.");
+
+        //start network-manager when startup
+        std::string cmd = "sudo service network-manager start";
+        system(cmd.c_str());
+
+        ros::ServiceServer networkReadySrv = n.advertiseService("/gobot_startup/network_ready", networkReadySrvCallback);
         //Startup end
+
 
         disco_pub = n.advertise<std_msgs::String>("/gobot_software/server_disconnected", 10);
         ros::ServiceServer updataStatusSrv = n.advertiseService("/gobot_software/update_status", updataStatusSrvCallback);
         ros::ServiceServer disServersSrv = n.advertiseService("/gobot_software/disconnet_servers", disServersSrvCallback);
 
+        
         /// Thread which will get an array of potential servers
         std::thread t1(checkNewServers);
         ROS_INFO("(ping_server) checkNewServers thread launched");

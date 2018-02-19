@@ -1,15 +1,19 @@
 #!/bin/bash
-var=$(rosclean check | cut -d 'M' -f1 | cut -d 'K' -f1)
-if [ "$var" -gt 1025 ] 
+var=$(rosclean check | grep 'G')
+if [ ! -z "$var" ] 
 then
     echo "y" | rosclean purge
-    echo "Cleaned ros log data:"$var"M"
+    echo "Cleaned ros log data:"$var"G"
 fi
 if [ -z "$(rosnode list | grep rosout)" ] 
 then
 echo "start roscore"
-    gnome-terminal -x bash -c "source /opt/ros/kinetic/setup.bash;roscore;exec bash;"
+    gnome-terminal -x bash -c "source /opt/ros/kinetic/setup.bash;sudo service network-manager stop;roscore;exec bash;"
 sleep 3s
+fi
+if [ -z "$(rosnode list | grep base_sensors)" ]
+then
+    gnome-terminal -x bash -c "source /opt/ros/kinetic/setup.bash;source ~/catkin_ws/devel/setup.bash;roslaunch gobot_base gobot_base.launch;exec bash;"
 fi
 if [ -z "$(rosnode list | grep move_base)" ]
 then

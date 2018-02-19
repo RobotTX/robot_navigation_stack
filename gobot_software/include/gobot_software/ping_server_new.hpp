@@ -40,5 +40,7 @@ void updateIP(void);
 
 bool initParams(void);
 
+bool networkReadySrvCallback(std_srvs::Empty::Request &req, std_srvs::Empty::Response &res);
+
 void mySigintHandler(int sig);
 #endif

@@ -1,12 +1,13 @@
 #!/bin/bash
-var=$(rosclean check | cut -d 'M' -f1 | cut -d 'K' -f1)
-if [ "$var" -gt 1025 ] 
+var=$(rosclean check | grep 'G')
+if [ ! -z "$var" ] 
 then
     echo "y" | rosclean purge
-    echo "Cleaned ros log data:"$var"M"
+    echo "Cleaned ros log data:"$var"G"
 fi
 source /opt/ros/kinetic/setup.bash
 source ~/catkin_ws/devel/setup.bash
+sudo service network-manager stop
 roscore &
 sleep 3s
 roslaunch gobot_navigation gobot_navigation.launch &

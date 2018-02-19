@@ -169,7 +169,7 @@ void session(boost::shared_ptr<tcp::socket> sock){
                         }
 
                         /// Kill gobot move so that we'll restart it with the new map
-                        std::string cmd = SetRobot.killList();
+                        std::string cmd = SetRobot.killList(simulation);
                         system(cmd.c_str());
 
                         ROS_INFO("(New Map) We killed gobot_navigation");
@@ -315,7 +315,7 @@ int main(int argc, char **argv){
     n.getParam("simulation", simulation);
     ROS_INFO("(New Map) simulation : %d", simulation);
     //Startup begin
-    ros::service::waitForService("/gobot_startup/pose_ready", ros::Duration(120.0));
+    ros::service::waitForService("/gobot_startup/network_ready", ros::Duration(120.0));
     //Startup end
 
     /// Subscribe to know when we disconnected from the server

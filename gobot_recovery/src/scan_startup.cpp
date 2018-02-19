@@ -115,7 +115,15 @@ int main(int argc, char **argv) {
     ros::service::waitForService("/gobot_startup/sensors_ready", ros::Duration(60.0));
     ros::service::waitForService("/move_base/clear_costmaps", ros::Duration(60.0));
     ROS_INFO("(startup) Robot setting hardware is ready.");
+    
+    ros::service::call("/gobot_base/show_Battery_LED",empty_srv);
 
+    SetRobot.setStatus(-1,"ROBOT_READY");
+    ros::ServiceServer poseReadySrv = nh.advertiseService("/gobot_startup/pose_ready", poseReadySrvCallback);
+    //Startup end
+
+    ROS_INFO("Started Robot.");
+    
     nh.getParam("map_path", map_path);
     ROS_INFO("(startup) map_path: %s.",map_path.c_str());
 
@@ -124,13 +132,6 @@ int main(int argc, char **argv) {
     ros::ServiceServer saveMapSrv = nh.advertiseService("/gobot_scan/save_map", saveMapSrvCallback);
 
     ros::Subscriber button_sub = nh.subscribe("/gobot_base/button_topic",1,getButtonCallback);
-    
-    ros::service::call("/gobot_base/show_Battery_LED",empty_srv);
-    
-    ROS_INFO("Started Robot.");
-    
-    ros::ServiceServer poseReadySrv = nh.advertiseService("/gobot_startup/pose_ready", poseReadySrvCallback);
-    //Startup end
     
     ros::spin();
     return 0;

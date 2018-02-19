@@ -190,21 +190,13 @@ void joyConnectionCallback(const std_msgs::Int8::ConstPtr& data){
             SetRobot.setMotorSpeed('F', 0, 'F', 0);
         }
     }
-    else if(data->data == 1){
-        if(!enable_joy){
-            enable_joy = true;
-            SetRobot.setSound(1,1);
-            linear_limit = 0.4;
-            angular_limit = 0.8;
-            SetRobot.setMotorSpeed('F', 0, 'F', 0);
-        }
-    }
 }
 
 void joyCallback(const sensor_msgs::Joy::ConstPtr& joy){
     //start -> enable manual control
     if(joy->buttons[7]){
         enable_joy = true;
+        SetRobot.setMotorSpeed('F', 0, 'F', 0);
         SetRobot.setBatteryLed();
     }
     //back -> disable manual control
@@ -227,7 +219,7 @@ void joyCallback(const sensor_msgs::Joy::ConstPtr& joy){
             angular_limit = (angular_limit+0.1) <= 2.0 ? angular_limit+0.1 : 2.0;
         }
         else if(joy->axes[6] == 1){
-            angular_limit = (angular_limit-0.1) > 0.1 ? angular_limit-0.1 : 0.1;
+            angular_limit = (angular_limit-0.1) > 0.2 ? angular_limit-0.1 : 0.2;
         }
 
         //reset linear speed limit 0.4

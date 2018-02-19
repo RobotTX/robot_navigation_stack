@@ -332,7 +332,7 @@ int main(int argc, char **argv){
 	signal(SIGINT, mySigintHandler);
 
 	//Startup begin
-	ros::service::waitForService("/gobot_startup/pose_ready", ros::Duration(120.0));
+	ros::service::waitForService("/gobot_startup/network_ready", ros::Duration(120.0));
 	//Startup end
 
 	ros::ServiceServer send_once_service = n.advertiseService("/gobot_function/send_once_map_sender", sendOnceMap);
