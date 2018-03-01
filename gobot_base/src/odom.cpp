@@ -9,6 +9,8 @@
 #include <geometry_msgs/Twist.h>
 #include <mutex>
 
+/////No longer use this node to publish odom info. Instead, it will be published in the wheel node to avoid network interfere
+
 std_srvs::Empty arg;
 int32_t last_left_encoder = 0;
 int32_t last_right_encoder = 0;
@@ -72,7 +74,7 @@ int main(int argc, char** argv){
     double distance_limit = 3 * 2.0 * wheel_radius * pi * 2.0 / ODOM_RATE;
     int encoder_limit = 3 * 2000/ ODOM_RATE;
 
-    ros::Rate r(ODOM_RATE); //20
+    ros::Rate r(ODOM_RATE);
     ros::service::call("/gobot_motor/resetEncoders", arg);
     while(ros::ok()){
         gobot_msg_srv::GetEncoders encoders;
@@ -154,12 +156,13 @@ int main(int argc, char** argv){
             odom_trans.transform.translation.z = 0.0;
             odom_trans.transform.rotation = odom_quat;
 
+            
             //send the transform
             odom_broadcaster.sendTransform(odom_trans);
 
             //next, we'll publish the odometry message over ROS
             nav_msgs::Odometry odom;
-            odom.header.stamp = current_time;
+            odom.header.stamp = ros::Time::now();;
             odom.header.frame_id = "odom";
 
             //set the position

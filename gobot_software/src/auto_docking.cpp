@@ -129,6 +129,7 @@ void newBatteryInfo(const gobot_msg_srv::BatteryMsg::ConstPtr& batteryInfo){
 }
 
 void newBumpersInfo(const gobot_msg_srv::BumperMsg::ConstPtr& bumpers){
+    int base_spd = 2;
     /// 0 : collision; 1 : no collision
     if(docking){
         bool back = !(bumpers->bumper5 && bumpers->bumper6 && bumpers->bumper7 && bumpers->bumper8);
@@ -137,28 +138,29 @@ void newBumpersInfo(const gobot_msg_srv::BumperMsg::ConstPtr& bumpers){
             irSub.shutdown();
             collision = true;
             move_from_collision = false;
-            SetRobot.setMotorSpeed('F', 0, 'F', 0);
             ROS_WARN("(auto_docking::newBumpersInfo) just got a new collision:%d,%d,%d,%d",bumpers->bumper5,bumpers->bumper6,bumpers->bumper7,bumpers->bumper8);
             //turn right
             if(bumpers->bumper8==0 && bumpers->bumper5==1 && bumpers->bumper6==1 && bumpers->bumper7==1)
-                SetRobot.setMotorSpeed('B', 4, 'F', 2);
+                SetRobot.setMotorSpeed('B', base_spd*2, 'F', base_spd);
             //turn left
             else if(bumpers->bumper5==0 && bumpers->bumper6==1 && bumpers->bumper7==1 && bumpers->bumper8==1)
-                SetRobot.setMotorSpeed('F', 2, 'B', 4);
+                SetRobot.setMotorSpeed('F', base_spd, 'B', base_spd*2);
             //turn a bit left
             else if(bumpers->bumper5==0 && bumpers->bumper6==0 && bumpers->bumper7==1 && bumpers->bumper8==1)
-                SetRobot.setMotorSpeed('F', 3, 'B', 4);
+                SetRobot.setMotorSpeed('F', base_spd, 'B', 0);
             //turn a bit right
             else if(bumpers->bumper7==0 && bumpers->bumper8==0 && bumpers->bumper5==1 && bumpers->bumper6==1)
-                SetRobot.setMotorSpeed('B', 4, 'F', 3);
+                SetRobot.setMotorSpeed('B', 0, 'F', base_spd);
             //forward
             else
-                SetRobot.setMotorSpeed('F', 3, 'F', 3);
+                SetRobot.setMotorSpeed('F', base_spd, 'F', base_spd);
         }
         else{ 
             if (!move_from_collision && collision){
                 if(!charging){
                     move_from_collision = true;
+                    SetRobot.setMotorSpeed('F', 1, 'F', 1);
+                    ros::Duration(0.5).sleep();
                     SetRobot.setMotorSpeed('F', 0, 'F', 0);
                     finishedDocking();
                 }
@@ -170,44 +172,45 @@ void newBumpersInfo(const gobot_msg_srv::BumperMsg::ConstPtr& bumpers){
 /// The pid control functioncharging
 void newIrSignal(const gobot_msg_srv::IrMsg::ConstPtr& irSignal){
     /// if we are charging
+    int base_spd = 8;
     if(docking && !collision){
         if (irSignal->rearSignal != 0){
             lostIrSignal = false;
             /// rear ir received 1 and 2 signal, so robot goes backward
             if (irSignal->rearSignal == 3){
-                SetRobot.setMotorSpeed('B', 5, 'B', 5);
+                SetRobot.setMotorSpeed('B', base_spd, 'B', base_spd);
             }
             else if (irSignal->rearSignal == 2){
                 leftFlag = false;
                 /// rear ir received signal 2, so robot turns left
-                SetRobot.setMotorSpeed('F', 0, 'B', 5);
+                SetRobot.setMotorSpeed('F', 0, 'B', base_spd);
             }
             else if (irSignal->rearSignal == 1){
                 leftFlag = true;
                 /// rear ir received signal 1, so robot turns right
-                SetRobot.setMotorSpeed('B', 5, 'F', 0);
+                SetRobot.setMotorSpeed('B', base_spd, 'F', 0);
             }
         }
         else if (irSignal->leftSignal != 0){
             /// received left signal
             leftFlag = true;
             if (irSignal->leftSignal == 3)
-                SetRobot.setMotorSpeed('B', 5, 'F', 5);
+                SetRobot.setMotorSpeed('B', base_spd, 'F', base_spd);
             else if (irSignal->leftSignal == 2)
-                SetRobot.setMotorSpeed('B', 6, 'F', 4);
+                SetRobot.setMotorSpeed('B', base_spd, 'F', base_spd/2);
             else if (irSignal->leftSignal == 1)
-                SetRobot.setMotorSpeed('B', 4, 'F', 6);
+                SetRobot.setMotorSpeed('B', base_spd/2, 'F', base_spd);
 
         } 
         else if (irSignal->rightSignal != 0){
             /// received right signal
             leftFlag = false;
             if (irSignal->rightSignal == 3)
-                SetRobot.setMotorSpeed('F', 5, 'B', 5);
+                SetRobot.setMotorSpeed('F', base_spd, 'B', base_spd);
             else if (irSignal->rightSignal == 2)
-                SetRobot.setMotorSpeed('F', 6, 'B', 4);
+                SetRobot.setMotorSpeed('F', base_spd, 'B', base_spd/2);
             else if (irSignal->rightSignal == 1)
-                SetRobot.setMotorSpeed('F', 4, 'B', 6);
+                SetRobot.setMotorSpeed('F', base_spd/2, 'B', base_spd);
         }
 
         if (irSignal->rearSignal == 0){
@@ -218,9 +221,9 @@ void newIrSignal(const gobot_msg_srv::IrMsg::ConstPtr& irSignal){
                 /// make the robot turn on itself
                 if(leftFlag)
                     //if the left sensor is the last which saw the ir signal
-                    SetRobot.setMotorSpeed('B', 5, 'F', 5);
+                    SetRobot.setMotorSpeed('B', base_spd, 'F', base_spd);
                 else
-                    SetRobot.setMotorSpeed('F', 5, 'B', 5);
+                    SetRobot.setMotorSpeed('F', base_spd, 'B', base_spd);
             } 
             else{
                 /// if we lost the signal for more than 30 seconds, we failed docking, else, the robot should still be turning on itself
@@ -269,7 +272,7 @@ void finishedDocking(){
     ros::NodeHandle nh;
     gobot_msg_srv::IsCharging arg;
     resetDockingParams();
-    ros::Duration(5.0).sleep();
+    ros::Duration(4.0).sleep();
     if(ros::service::call("/gobot_status/charging_status", arg) && arg.response.isCharging){
         dock_status = 1;
         SetRobot.setStatus(11,"COMPLETE_DOCKING");
@@ -367,6 +370,8 @@ void mySigintHandler(int sig)
 int main(int argc, char* argv[]){
     ros::init(argc, argv, "auto_docking");
     ros::NodeHandle nh;
+
+    SetRobot.initialize();
     signal(SIGINT, mySigintHandler);
     
     ros::service::waitForService("/gobot_startup/pose_ready", ros::Duration(120.0));

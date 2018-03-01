@@ -14,7 +14,7 @@ find_package(catkin REQUIRED COMPONENTS
     message_generation
     actionlib
     actionlib_msgs
-
+    costmap_2d
 )
 
 ## System dependencies are found with CMake's conventions
@@ -58,10 +58,14 @@ add_message_files(
     CliffMsg.msg
     IrMsg.msg
     OdomTestMsg.msg
+    EncodersMsg.msg
     ProximityMsg.msg
     SonarMsg.msg
     WeightMsg.msg
     GyroMsg.msg
+    MotorSpeedMsg.msg
+    LedMsg.msg
+    SoundMsg.msg
 )
 
 ## Generate services in the 'srv' folder

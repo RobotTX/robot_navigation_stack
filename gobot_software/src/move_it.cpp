@@ -421,6 +421,8 @@ int main(int argc, char* argv[]){
 
 		ros::init(argc, argv, "play_path");
 		ros::NodeHandle n;
+
+		SetRobot.initialize();
 		signal(SIGINT, mySigintHandler);
 		
 		ros::service::waitForService("/gobot_startup/pose_ready", ros::Duration(120.0));

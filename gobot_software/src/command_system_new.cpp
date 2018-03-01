@@ -831,8 +831,10 @@ void sendCommand(const std::string ip, const std::vector<std::string> command, s
     std::string msg;
     commandMutex.lock();
     bool command_feedback = execCommand(ip, command);
-    if (command_feedback)
-        SetRobot.setSound(1,1);
+    if (command_feedback )
+        //g=scan, t=newscan, u=stopscan, n=receivemap
+        if (command.at(0)!="g" && command.at(0)!="t" && command.at(0)!="u" && command.at(0)!="n")
+            SetRobot.setSound(1,1);
 
     msg = (command_feedback ? "done" : "failed") + sep + commandStr;
     sendMessageToAll(msg);
@@ -1170,6 +1172,7 @@ int main(int argc, char* argv[]){
     try{
         ros::init(argc, argv, "command_system");
         ros::NodeHandle n;
+        SetRobot.initialize();
         signal(SIGINT, mySigintHandler);
 
         n.getParam("simulation", simulation);

@@ -310,6 +310,7 @@ int main(int argc, char **argv){
 
     ros::init(argc, argv, "read_new_map");
     ros::NodeHandle n;
+    SetRobot.initialize();
     signal(SIGINT, mySigintHandler);
 
     n.getParam("simulation", simulation);

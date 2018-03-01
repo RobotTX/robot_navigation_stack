@@ -5,6 +5,9 @@
 #include <string>
 #include <stdio.h>
 #include <std_srvs/Empty.h>
+#include <gobot_msg_srv/MotorSpeedMsg.h>
+#include <gobot_msg_srv/LedMsg.h>
+#include <gobot_msg_srv/SoundMsg.h>
 #include <gobot_msg_srv/LedStrip.h>
 #include <gobot_msg_srv/SetGobotStatus.h>
 #include <gobot_msg_srv/SetIntArray.h>
@@ -21,6 +24,8 @@ namespace robot_class {
         public:
             SetRobot();
             ~SetRobot();
+            void initialize();
+
             bool setStatus(int status,std::string text);
             
             bool setDock(int status);
@@ -47,7 +52,7 @@ namespace robot_class {
 
             void setBatteryLed();
             
-            void setSound(int num,int time_on, int mute=-1);
+            void setSound(int num,int time_on);
 
             void setLed(int mode, const std::vector<std::string> &color);
             
@@ -66,7 +71,8 @@ namespace robot_class {
             std_srvs::Empty empty_srv;
             gobot_msg_srv::SetGobotStatus set_gobot_status_;
             gobot_msg_srv::SetInt set_dock_status_,set_stage_,set_loop_;
-            gobot_msg_srv::SetSpeeds motor_speed_;
+            gobot_msg_srv::MotorSpeedMsg motor_speed_;
+            ros::Publisher speed_pub_, sound_pub_, led_pub_;
     };
 };
 

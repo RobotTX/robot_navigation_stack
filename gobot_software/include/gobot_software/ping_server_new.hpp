@@ -14,6 +14,7 @@
 #include <gobot_software/timeout_blocking_tcp_client.h>
 #include <mutex>
 #include <thread>
+#include <std_msgs/String.h>
 #include <gobot_msg_srv/BatteryMsg.h>
 #include <gobot_msg_srv/SetStringArray.h>
 #include <gobot_msg_srv/SetString.h>

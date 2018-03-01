@@ -195,6 +195,8 @@ void mySigintHandler(int sig)
 int main(int argc, char* argv[]){
     ros::init(argc, argv, "move_base_controller");
     ros::NodeHandle nh;
+    
+    SetRobot.initialize();
     signal(SIGINT, mySigintHandler);
     
     //Startup begin

@@ -19,7 +19,7 @@ then
     nmcli device disconnect $wifi
     echo "Disconnect robot Hotspot"
 else
-    if [ "$(nmcli connection show | grep "$wifiname")" ]
+    if [ "$(nmcli connection show | grep -w "$wifiname")" ]
     then
         nmcli connection delete "$wifiname"
         echo Deleted WIFIs name:$wifiname
@@ -27,6 +27,4 @@ else
 fi
 sudo service network-manager restart 
 echo "Restart network-manager"
-sudo ifup lo
-echo "Re-up lo inter"
 echo "###########Delete Wifi End###########"

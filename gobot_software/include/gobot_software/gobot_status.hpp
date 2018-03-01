@@ -5,6 +5,8 @@
 #include <fstream>
 #include <iostream>
 #include <std_srvs/Empty.h>
+#include <std_msgs/Int8.h>
+#include <std_msgs/String.h>
 #include <geometry_msgs/PoseWithCovarianceStamped.h>
 #include <move_base_msgs/MoveBaseAction.h>
 #include <actionlib/client/simple_action_client.h>
@@ -16,6 +18,8 @@
 
 typedef actionlib::SimpleActionClient<move_base_msgs::MoveBaseAction> MoveBaseClient;
 
+std::string getCurrentTime();
+
 void updateStatus(std::string &str);
 
 void robotResponse(int status, std::string text);
@@ -25,8 +29,6 @@ void publishInitialpose(geometry_msgs::PoseWithCovarianceStamped pose);
 void setHomePose(void);
 
 bool initializeHomeSrcCallback(std_srvs::Empty::Request &req, std_srvs::Empty::Response &res);
-
-bool disconnectedSrvCallback(std_srvs::Empty::Request &req, std_srvs::Empty::Response &res);
 
 bool setWifiSrvCallback(gobot_msg_srv::SetStringArray::Request &req, gobot_msg_srv::SetStringArray::Response &res);
 bool getWifiSrvCallback(gobot_msg_srv::GetStringArray::Request &req, gobot_msg_srv::GetStringArray::Response &res);
@@ -64,6 +66,10 @@ bool setLoopSrvCallback(gobot_msg_srv::SetInt::Request &req, gobot_msg_srv::SetI
 bool isChargingService(gobot_msg_srv::IsCharging::Request &req, gobot_msg_srv::IsCharging::Response &res);
 
 bool PercentService(gobot_msg_srv::GetInt::Request &req, gobot_msg_srv::GetInt::Response &res);
+
+bool disconnectedSrvCallback(std_srvs::Empty::Request &req, std_srvs::Empty::Response &res);
+
+bool recordBatterySrvCallback(gobot_msg_srv::SetInt::Request &req, gobot_msg_srv::SetInt::Response &res);
 
 void batteryCallback(const gobot_msg_srv::BatteryMsg::ConstPtr& msg);
 

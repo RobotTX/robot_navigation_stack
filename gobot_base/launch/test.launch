@@ -17,6 +17,5 @@
     -->
     <node pkg="rplidar_ros" type="rplidarNode" name="rplidarNode" output="screen" required="true"/>
     <node pkg="gobot_base" type="sensors" name="base_sensors" output="screen" required="true"/>
-    <node pkg="gobot_base" type="wheels" name="motor_wheels" output="screen" required="true"/>
-    <node pkg="gobot_base" type="odom" name="motor_odometry" output="screen" required="true"/>
+    <node pkg="gobot_base" type="wheels" name="motor_wheels" output="screen" required="true"/>"/>
 </launch>

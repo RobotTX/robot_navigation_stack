@@ -1,7 +1,7 @@
 #include <gobot_base/twist.hpp>
 
 #define CLIFF_THRESHOLD 170
-#define CLIFF_OUTRANGE 0
+#define CLIFF_OUTRANGE 1
 
 bool collision = false, moved_from_collision = true, pause_robot = false;
 double wheel_separation, wheel_radius, ticks_per_rotation, collision_threshold, avoid_spd;
@@ -19,9 +19,11 @@ bool lost_robot = false;
 bool enable_joy = false;
 double linear_limit = 0.4, angular_limit = 0.8; 
 
+int left_speed = 0, right_speed = 0;
+
 ros::Time collisionTime;
 ros::Publisher bumper_pub,bumper_collision_pub;
-ros::Subscriber cmdVelSub,bumpersSub,cliffSub,lostRobot,joySub,joyConSub;
+ros::Subscriber cmdVelSub,bumpersSub,cliffSub,lostRobot,joySub,joyConSub,motorSpdSubscriber;
 
 MoveBaseClient* ac;
 std_srvs::Empty empty_srv;
@@ -44,10 +46,8 @@ bool pauseRobotSrvCallback(std_srvs::Empty::Request &req, std_srvs::Empty::Respo
 void cliffCallback(const gobot_msg_srv::CliffMsg::ConstPtr& cliff){
     if((cliff->cliff1>CLIFF_THRESHOLD) || (cliff->cliff1==CLIFF_OUTRANGE) || (cliff->cliff2>CLIFF_THRESHOLD) || (cliff->cliff2==CLIFF_OUTRANGE)){
         if(moved_from_front_cliff){
-            gobot_msg_srv::GetIntArray get_speed;
-            ros::service::call("/gobot_motor/getSpeeds",get_speed);
             //if robot is moving
-            if(get_speed.response.data[0]!=128 || get_speed.response.data[1]!=128){
+            if(left_speed != 0 || right_speed != 0){
                 if(!bumper_on){
                     moved_from_front_cliff = false;
                     SetRobot.setSound(3,1);
@@ -64,15 +64,14 @@ void cliffCallback(const gobot_msg_srv::CliffMsg::ConstPtr& cliff){
 
     if((cliff->cliff3>CLIFF_THRESHOLD) || (cliff->cliff3==CLIFF_OUTRANGE) || (cliff->cliff4>CLIFF_THRESHOLD) || (cliff->cliff4==CLIFF_OUTRANGE)){
         if(moved_from_back_cliff){
-            gobot_msg_srv::GetIntArray get_speed;
-            ros::service::call("/gobot_motor/getSpeeds",get_speed);
             //if robot is moving
-            if(get_speed.response.data[0]!=128 || get_speed.response.data[1]!=128)
+            if(left_speed != 0 || right_speed != 0){
                 if(!bumper_on){
                     moved_from_back_cliff = false;
                     SetRobot.setSound(3,1);
                     SetRobot.setMotorSpeed('F', avoid_spd, 'F', avoid_spd);
                 }
+            }
         }
     }
     else if(!moved_from_back_cliff){
@@ -290,6 +289,11 @@ void newCmdVel(const geometry_msgs::Twist::ConstPtr& twist){
     }
 }
 
+void motorSpdCallback(const gobot_msg_srv::MotorSpeedMsg::ConstPtr& speed){
+    left_speed = speed->velocityL;
+    right_speed = speed->velocityR;
+}
+
 void initParams(ros::NodeHandle &nh){
     nh.getParam("wheel_separation", wheel_separation);
     nh.getParam("wheel_radius", wheel_radius);
@@ -310,6 +314,7 @@ void mySigintHandler(int sig)
     lostRobot.shutdown();
     joySub.shutdown();
     joyConSub.shutdown();
+    motorSpdSubscriber.shutdown();
 	delete ac;
     ros::shutdown();
 }
@@ -317,6 +322,7 @@ void mySigintHandler(int sig)
 int main(int argc, char **argv) {
     ros::init(argc, argv, "twist");
     ros::NodeHandle nh;
+    SetRobot.initialize();
     signal(SIGINT, mySigintHandler);
     
     initParams(nh);
@@ -334,7 +340,8 @@ int main(int argc, char **argv) {
     lostRobot = nh.subscribe("/gobot_recovery/lost_robot",1,lostCallback);
     joySub = nh.subscribe("joy", 1, joyCallback);
     joyConSub = nh.subscribe("joy_connection", 1, joyConnectionCallback);
-    
+    motorSpdSubscriber = nh.subscribe("/gobot_motor/motor_speed", 1, motorSpdCallback);
+
     //not in use now
     
     ros::ServiceServer continueRobot = nh.advertiseService("/gobot_base/continue_robot",continueRobotSrvCallback);

@@ -88,6 +88,7 @@ namespace move_base {
     //threshold value for checking end point of planned path
     private_nh.param("costmap_threshold_value", costmap_threshold_value_, 225); 
     private_nh.param("scan_mode", scan_mode_, false); 
+    SetRobot.initialize();
     //tx//end
 
     //set up plan triple buffer

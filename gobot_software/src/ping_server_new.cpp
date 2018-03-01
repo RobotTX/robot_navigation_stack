@@ -53,11 +53,11 @@ bool disServersSrvCallback(std_srvs::Empty::Request &req, std_srvs::Empty::Respo
 /**
  * Will update gobot status when receive any command
  */
-bool updataStatusSrvCallback(gobot_msg_srv::SetString::Request &req, gobot_msg_srv::SetString::Response &res){
+void updateInfoCallback(const std_msgs::String::ConstPtr& update_status){
     std::vector<std::thread> data_threads;
     ipMutex.lock();
     if(oldIPs.size()>0){
-        std::string dataToSend = req.data;
+        std::string dataToSend = update_status->data;
         if((ros::Time::now()-disco_time).toSec()>WAITING_TIME){
             for(int i = 0; i < oldIPs.size(); ++i)
                 data_threads.push_back(std::thread(pingIP2, oldIPs.at(i).first, dataToSend, 2.5));
@@ -72,8 +72,6 @@ bool updataStatusSrvCallback(gobot_msg_srv::SetString::Request &req, gobot_msg_s
             data_threads.at(i).join();  
         sendDataMutex.unlock();
     }
-
-    return true;
 }
 
 /**
@@ -221,13 +219,11 @@ void checkNewServers(void){
     ros::Rate loop_rate(1/IP_UPDATE);
 
     while(ros::ok()){ 
-        ros::spinOnce();
         scanIP=true;
         //ROS_INFO("(ping_server) Refreshing the list of potential servers");
         /// Script which will check all the IP on the local network and put them in a file
         const std::string ping_script = "sudo sh " + pingFile + " " + ipsFile +" " +wifiFile;
         system(ping_script.c_str());
-
         /// Get the file with the available IP addresses
         std::ifstream ifs(ipsFile, std::ifstream::in);
         if(ifs){
@@ -279,7 +275,6 @@ void mySigintHandler(int sig)
 
     while(scanIP){
         ros::Duration(0.5).sleep();
-        ros::spinOnce();
     }
     ros::shutdown();
 }
@@ -303,9 +298,10 @@ int main(int argc, char* argv[]){
         ros::ServiceServer networkReadySrv = n.advertiseService("/gobot_startup/network_ready", networkReadySrvCallback);
         //Startup end
 
-
         disco_pub = n.advertise<std_msgs::String>("/gobot_software/server_disconnected", 10);
-        ros::ServiceServer updataStatusSrv = n.advertiseService("/gobot_software/update_status", updataStatusSrvCallback);
+
+        ros::Subscriber updateInfoSubscriber = n.subscribe("/gobot_status/update_information", 1, updateInfoCallback);
+
         ros::ServiceServer disServersSrv = n.advertiseService("/gobot_software/disconnet_servers", disServersSrvCallback);
 
         

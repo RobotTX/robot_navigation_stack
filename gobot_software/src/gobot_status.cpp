@@ -19,7 +19,7 @@ DOCK STATUS
 -1 FAILED TO GO TO CHARGING
 */
 
-ros::Publisher disco_pub,initial_pose_publisher;
+ros::Publisher disco_pub,initial_pose_publisher, mute_pub, update_info_pub, status_pub;
 
 static const std::string sep = std::string(1, 31);
 
@@ -68,20 +68,30 @@ int disconnected = 0;
 bool charging_ = false;
 int battery_percent_ = 51;
 
+std::string recordBatteryFile;
+int charging_current_ = 0;
+ros::Time record_time_;
+int record_battery_ = 0;
+
 bool collision = false;
 
 robot_class::SetRobot SetRobot;
 
+
+std::string getCurrentTime(){
+  std::time_t now = std::time(0);
+  std::stringstream transTime;
+  transTime << std::put_time(localtime(&now), "%F-%H:%M:%S");
+  return transTime.str();
+}
+
 //updated information for ping_server_new
 void updateStatus(){
-    std::thread([](){
-        bool muteFlag = (mute_) ? 1 : 0;
-        gobot_msg_srv::SetString update_status;
-        update_status.request.data = hostname_ + sep + std::to_string(stage_) + sep + std::to_string(battery_percent_) + 
-                                     sep + std::to_string(muteFlag) + sep + std::to_string(dock_status_);
-        ros::service::call("/gobot_software/update_status",update_status);
-    }).detach();
-
+    bool muteFlag = (mute_) ? 1 : 0;
+    std_msgs::String update_status;
+    update_status.data = hostname_ + sep + std::to_string(stage_) + sep + std::to_string(battery_percent_) + 
+                                    sep + std::to_string(muteFlag) + sep + std::to_string(dock_status_);
+    update_info_pub.publish(update_status);
 }
 
 //change robot led and sound to inform people its status
@@ -89,14 +99,14 @@ void robotResponse(int status, std::string text){
     //permanent green case
     if (text=="COMPLETE_EXPLORING" || text=="COMPLETE_PATH" || text=="COMPLETE_POINT") {
         SetRobot.setLed(0,{"green"});
-        SetRobot.setSound(1,2,mute_);
+        SetRobot.setSound(1,2);
     }
     else if(text=="STOP_EXPLORING" || text=="STOP_DOCKING" || text=="STOP_PATH" || text=="PAUSE_PATH"){
         SetRobot.setLed(0,{"blue"});
     }
     else if(text=="FAIL_DOCKING" || text=="ABORTED_PATH"){
         SetRobot.setLed(0,{"red"});
-        SetRobot.setSound(3,2,mute_);
+        SetRobot.setSound(3,2);
     }
     else if(text=="PLAY_PATH" || text=="PLAY_POINT" || text=="EXPLORING"){
         SetRobot.setLed(1,{"green","white"});
@@ -106,6 +116,9 @@ void robotResponse(int status, std::string text){
     }
     else if(text=="DOCKING"){
         SetRobot.setLed(1,{"yellow","cyan"});
+    }
+    else if(text=="COMPLETE_DOCKING"){
+        SetRobot.setSound(1,2);
     }
 }
 
@@ -133,7 +146,6 @@ void setHomePose(){
     home_pose.pose.pose.orientation.z = std::stod(home_.at(4));
     home_pose.pose.pose.orientation.w = std::stod(home_.at(5));
     publishInitialpose(home_pose);
-    SetRobot.setSound(1,2,mute_);
     ROS_INFO("(Gobot Status) Robot is charging, set its pose to be home pose");
 }
 
@@ -141,6 +153,7 @@ void setHomePose(){
 bool initializeHomeSrcCallback(std_srvs::Empty::Request &req, std_srvs::Empty::Response &res){
     if(charging_){
         setHomePose();
+        SetRobot.setSound(1,2);
     }
     return true;
 }
@@ -150,21 +163,6 @@ bool getUpdateStatusSrvCallback(gobot_msg_srv::GetString::Request &req, gobot_ms
     bool muteFlag = (mute_) ? 1 : 0;
     res.data = hostname_ + sep + std::to_string(stage_) + sep + std::to_string(battery_percent_) + 
                sep + std::to_string(muteFlag) + sep + std::to_string(dock_status_);
-    return true;
-}
-
-
-bool disconnectedSrvCallback(std_srvs::Empty::Request &req, std_srvs::Empty::Response &res){
-    /*
-    disconnected++;
-    std::ofstream ofsDisconnected(disconnectedFile, std::ofstream::out | std::ofstream::trunc);
-    if(ofsDisconnected)
-        ofsDisconnected << disconnected;
-    */
-
-    //test purpose
-    ros::service::call("/gobot_software/disconnet_servers",empty_srv);
-
     return true;
 }
 
@@ -371,6 +369,10 @@ bool getPathSrvCallback(gobot_msg_srv::GetStringArray::Request &req, gobot_msg_s
 bool setMuteSrvCallback(gobot_msg_srv::SetInt::Request &req, gobot_msg_srv::SetInt::Response &res){
     muteMutex.lock();
     mute_ = req.data;
+
+    std_msgs::Int8 data;
+    data.data = mute_;
+    mute_pub.publish(data);
     muteMutex.unlock();
 
     std::ofstream ofsMute(muteFile, std::ofstream::out | std::ofstream::trunc);
@@ -379,7 +381,6 @@ bool setMuteSrvCallback(gobot_msg_srv::SetInt::Request &req, gobot_msg_srv::SetI
         ofsMute.close();
     ROS_INFO("(Gobot_status) Set Gobot mute: %d",mute_);
     }
-
     updateStatus();
     
     return true;
@@ -427,7 +428,7 @@ bool setStageSrvCallback(gobot_msg_srv::SetInt::Request &req, gobot_msg_srv::Set
         ofsStage.close();
         ROS_INFO("(Gobot_status) Set Gobot stage: %d",stage_);
     }
-
+    
     updateStatus();
 
     return true;
@@ -450,14 +451,12 @@ bool setDockStatusSrvCallback(gobot_msg_srv::SetInt::Request &req, gobot_msg_srv
     ROS_INFO("(Gobot_status) Set Dock status: %d", dock_status_);
     
     charging_ = dock_status_==1 ? true : false;
-
+    
     updateStatus();
 
     if(dock_status_==1 && ros::service::exists("/gobot_startup/pose_ready",false)){
         if(gobot_status_!=5 || gobot_text_=="WAITING"){
-            std::thread([](){
-                setHomePose();
-            }).detach();
+            setHomePose();
         }
     }
     
@@ -478,11 +477,14 @@ bool setGobotStatusSrvCallback(gobot_msg_srv::SetGobotStatus::Request &req, gobo
     gobotStatusMutex.lock();
     gobot_status_ = req.status;
     gobot_text_ = req.text;
+    robotResponse(gobot_status_,gobot_text_);
+
+    std_msgs::Int8 data;
+    data.data = gobot_status_;
+    status_pub.publish(data);
     gobotStatusMutex.unlock();
+    
     ROS_INFO("(Gobot_status) Set Gobot status: %d,%s",gobot_status_,gobot_text_.c_str());
-    std::thread([](){
-        robotResponse(gobot_status_,gobot_text_);
-    }).detach();
     return true;
 }
 
@@ -504,9 +506,44 @@ bool PercentService(gobot_msg_srv::GetInt::Request &req, gobot_msg_srv::GetInt::
     return true;
 }
 
+bool disconnectedSrvCallback(std_srvs::Empty::Request &req, std_srvs::Empty::Response &res){
+    /*
+    disconnected++;
+    std::ofstream ofsDisconnected(disconnectedFile, std::ofstream::out | std::ofstream::trunc);
+    if(ofsDisconnected)
+        ofsDisconnected << disconnected;
+    */
+
+    //test purpose
+    ros::service::call("/gobot_software/disconnet_servers",empty_srv);
+    return true;
+}
+
+bool recordBatterySrvCallback(gobot_msg_srv::SetInt::Request &req, gobot_msg_srv::SetInt::Response &res){
+    record_battery_ = req.data;
+    if (record_battery_==-1){
+        std::ofstream ofsStage(recordBatteryFile, std::ofstream::out | std::ofstream::trunc);
+        if(ofsStage){
+            ofsStage.close();
+        }
+    }
+    return true;
+}
 
 void batteryCallback(const gobot_msg_srv::BatteryMsg::ConstPtr& msg){
     battery_percent_ = msg->BatteryStatus;
+    charging_current_ = msg->ChargingCurrent;
+    //for recording test purpose
+    if(record_battery_==1 && (ros::Time::now() - record_time_).toSec() >= 5.0){
+        std::string record_date = getCurrentTime();
+        std::ofstream ofsStage(recordBatteryFile, std::ofstream::out | std::ofstream::app);
+        if(ofsStage){
+            ofsStage << record_date << "  " <<charging_current_<<std::endl;
+            ofsStage.close();
+            ROS_INFO("(Gobot_status) Recorded battery data: %s  %d",record_date.c_str(),charging_current_);
+            record_time_ = ros::Time::now();
+        }
+    }
 }
 
 //for changing led/sound purpose. There should be no change when docking
@@ -517,17 +554,13 @@ void bumpersCallback(const gobot_msg_srv::BumperMsg::ConstPtr& bumpers){
         if(front || back){
             if(!collision){
                 collision = true;
-                std::thread([](){
-                    SetRobot.setLed(1,{"red","white"});
-                    SetRobot.setSound(3,1,mute_);
-                }).detach();
+                SetRobot.setLed(1,{"red","white"});
+                SetRobot.setSound(3,1);
             }
         }
         else if(collision){
             collision = false;
-            std::thread([](){
-                SetRobot.setSound(1,1,mute_);
-            }).detach();
+            SetRobot.setSound(1,1);
         }
     }
 }
@@ -565,6 +598,9 @@ void initialData(){
         ifsMute >> mute_;
         ifsMute.close();
         ROS_INFO("(Gobot_status) Read Gobot mute: %d",mute_);
+        std_msgs::Int8 data;
+        data.data = mute_;
+        mute_pub.publish(data);
     } 
 
     //read loop
@@ -654,6 +690,8 @@ void initialData(){
         ofsDisconnected << disconnected;
         ofsDisconnected.close();
     }
+
+    n.getParam("record_battery_file", recordBatteryFile);
 }
 
 int main(int argc, char* argv[]){
@@ -661,6 +699,11 @@ int main(int argc, char* argv[]){
     try{
         ros::init(argc, argv, "gobot_status");
         ros::NodeHandle n;
+
+        SetRobot.initialize();
+        mute_pub = n.advertise<std_msgs::Int8>("/gobot_status/mute", 1, true);
+        update_info_pub = n.advertise<std_msgs::String>("/gobot_status/update_information", 1, true);
+        status_pub = n.advertise<std_msgs::Int8>("/gobot_status/gobot_status", 1, true);
 
         initialData();
 
@@ -707,6 +750,7 @@ int main(int argc, char* argv[]){
         ros::ServiceServer getUpdateStatusSrv = n.advertiseService("/gobot_status/get_update_status", getUpdateStatusSrvCallback);
 
         ros::ServiceServer disconnectedSrv = n.advertiseService("/gobot_test/disconnected", disconnectedSrvCallback);
+        ros::ServiceServer recordBatterySrv = n.advertiseService("/gobot_test/record_battery", recordBatterySrvCallback);
 
         ros::Subscriber battery = n.subscribe("/gobot_base/battery_topic",1, batteryCallback);
         ros::Subscriber bumpers = n.subscribe("/gobot_base/bumpers_topic",1, bumpersCallback);

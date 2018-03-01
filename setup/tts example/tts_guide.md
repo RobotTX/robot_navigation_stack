@@ -13,7 +13,6 @@ add (set! voice_default 'voice_cmu_us_slt_arctic_clunits) to the end
 
 * ekho chinese - ekho "string"
 ekho -v Cantonese "煲冬瓜" #用粤语说
-
 sudo apt-get install libespeak-dev
 sudo apt-get install libsndfile1-dev 
 sudo apt-get install libpulse-dev

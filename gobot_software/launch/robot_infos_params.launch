@@ -3,7 +3,7 @@
     <!--COMMON PARAMETERS -->
     <param name="simulation" type="bool" value="false" />
     <param name="status_update" type="double" value="5.0" />
-    <param name="ip_update" type="double" value="15.0" />
+    <param name="ip_update" type="double" value="60.0" />
     <param name="waiting_time" type="double" value="6.0" />
     <!-- MAP RELATED -->
 		<param name="map_image_used" type="string" value="$(find gobot_data)/maps/used_map.pgm" />
@@ -22,6 +22,7 @@
     <param name="home_file" type="string" value="$(find gobot_data)/data/home.txt" />
     <param name="robot_name_file" type="string" value="$(find gobot_data)/data/name.txt" />
     <param name="low_battery_file" type="string" value="$(find gobot_data)/data/low_battery.txt" />
+    <param name="record_battery_file" type="string" value="$(find gobot_data)/data/record_battery.txt" />
     <param name="speed_file" type="string" value="$(find gobot_data)/data/speed.txt" />
     <!--WIFI RELATED -->
     <param name="ping_file" type="string" value="$(find gobot_data)/IP/ping.sh" />

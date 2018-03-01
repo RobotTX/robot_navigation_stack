@@ -108,6 +108,7 @@ void mySigintHandler(int sig)
 int main(int argc, char **argv) {
     ros::init(argc, argv, "scan_startup");
     ros::NodeHandle nh;
+    SetRobot.initialize();
     signal(SIGINT, mySigintHandler);
 
     //Startup begin
@@ -116,7 +117,7 @@ int main(int argc, char **argv) {
     ros::service::waitForService("/move_base/clear_costmaps", ros::Duration(60.0));
     ROS_INFO("(startup) Robot setting hardware is ready.");
     
-    ros::service::call("/gobot_base/show_Battery_LED",empty_srv);
+    SetRobot.setBatteryLed();
 
     SetRobot.setStatus(-1,"ROBOT_READY");
     ros::ServiceServer poseReadySrv = nh.advertiseService("/gobot_startup/pose_ready", poseReadySrvCallback);

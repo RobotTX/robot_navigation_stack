@@ -5,20 +5,10 @@
 double CLIFF_THRESHOLD=170, CLIFF_OUTRANGE=0;
 
 ros::Publisher cliffFRPublisher,cliffFLPublisher,cliffBRPublisher,cliffBLPublisher;
+int left_speed = 0, right_speed = 0;
 
 std::string front_left_cliff_frame, front_right_cliff_frame, back_left_cliff_frame, back_right_cliff_frame;
 bool FLcliff_on = false,FRcliff_on = false,BLcliff_on = false,BRcliff_on = false;
-
-bool setSpeed(const char directionR, const int velocityR, const char directionL, const int velocityL){
-    //ROS_INFO("(auto_docking::setSpeed) %c %d %c %d", directionR , velocityR, directionL, velocityL);
-    gobot_msg_srv::SetSpeeds speed; 
-    speed.request.directionR = std::string(1, directionR);
-    speed.request.velocityR = velocityR;
-    speed.request.directionL = std::string(1, directionL);
-    speed.request.velocityL = velocityL;
-
-    return ros::service::call("/gobot_motor/setSpeeds", speed);
-}
 
 bool cliffToCloud(double CliffData,pcl::PointCloud<pcl::PointXYZ> &cloudData, bool cliff_on){
     if(CliffData>CLIFF_THRESHOLD  || CliffData==CLIFF_OUTRANGE){
@@ -30,6 +20,11 @@ bool cliffToCloud(double CliffData,pcl::PointCloud<pcl::PointXYZ> &cloudData, bo
     }
 }
 
+void motorSpdCallback(const gobot_msg_srv::MotorSpeedMsg::ConstPtr& speed){
+    left_speed = speed->velocityL;
+    right_speed = speed->velocityR;
+}
+
 //see from front view/back view
 //cliff1->front right, cliff2->front left, cliff3->back right, cliff4->back left
 void cliffCallback(const gobot_msg_srv::CliffMsg::ConstPtr& cliff){
@@ -38,10 +33,8 @@ void cliffCallback(const gobot_msg_srv::CliffMsg::ConstPtr& cliff){
     FLcliffCloud.header.frame_id = front_left_cliff_frame;
     BRcliffCloud.header.frame_id = back_right_cliff_frame;
     BLcliffCloud.header.frame_id = back_left_cliff_frame;
-    gobot_msg_srv::GetIntArray get_speed;
-    ros::service::call("/gobot_motor/getSpeeds",get_speed);
     //if robot is moving
-    if(get_speed.response.data[0]!=128 || get_speed.response.data[1]!=128){
+    if(left_speed != 0 || right_speed != 0){
         if (cliffToCloud(cliff->cliff1,FRcliffCloud,FRcliff_on)){
             if(!FRcliff_on)
                 FRcliff_on = true; 
@@ -109,6 +102,7 @@ int main(int argc, char* argv[]){
         cliffBLPublisher = nh.advertise<pcl::PointCloud<pcl::PointXYZ> >("/gobot_pc/BL_cliff_pc", 10);
         // get the sonars information
         ros::Subscriber cliffSub = nh.subscribe("/gobot_base/cliff_topic", 1, cliffCallback);
+        ros::Subscriber motorSpdSubscriber = nh.subscribe("/gobot_motor/motor_speed", 1, motorSpdCallback);
 
         ros::spin();
     }

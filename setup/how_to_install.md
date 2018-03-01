@@ -28,7 +28,7 @@ alias cat_make='cd ~/catkin_ws/ && catkin_make && source devel/setup.bash && . ~
 source /opt/ros/kinetic/setup.bash
 source ~/catkin_ws/devel/setup.bash
 export ROS_PACKAGE_PATH=$ROS_PACKAGE_PATH:~/catkin_ws/src
-
+export ROS_MASTER_URI=http://localhost:11311
 
 #install Driver Packages
 sudo sh ~/catkin_ws/src/gobot_navigation_stack/setup/install_script.sh
@@ -55,3 +55,6 @@ all settings->user accounts->automatic login
 #robot startup
 startup application->add
 sudo sh /home/gtdollar/catkin_ws/src/gobot_navigation_stack/gobot_data/command/start_robot.sh
+
+#tts
+refer to tts example/tts_guide.md for installment

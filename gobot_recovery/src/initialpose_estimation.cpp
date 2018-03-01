@@ -190,7 +190,7 @@ bool initializePoseSrvCallback(std_srvs::Empty::Request &req, std_srvs::Empty::R
                  ros::NodeHandle nh;
                  SetRobot.setStatus(-1,"ROBOT_READY");
                  poseReadySrv = nh.advertiseService("/gobot_startup/pose_ready", poseReadySrvCallback);
-                 ros::service::call("/gobot_base/show_Battery_LED",empty_srv);
+                 SetRobot.setBatteryLed();
                  //Startup end
             }
             running = false;
@@ -380,7 +380,8 @@ void getPose(){
 int main(int argc, char **argv) {
     ros::init(argc, argv, "initialpose_estimation");
     ros::NodeHandle nh;
-
+    SetRobot.initialize();
+    
     vel_pub = nh.advertise<geometry_msgs::Twist>("/cmd_vel",10);
     initial_pose_publisher = nh.advertise<geometry_msgs::PoseWithCovarianceStamped>("/initialpose", 1);
     goal_pub = nh.advertise<geometry_msgs::PoseStamped>("/move_base_simple/goal",1);

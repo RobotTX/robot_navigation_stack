@@ -8,11 +8,17 @@
 #include <thread>
 #include <signal.h>
 #include <std_srvs/Empty.h>
+#include <serial/serial.h>
+#include <geometry_msgs/Twist.h>
+#include <tf/transform_broadcaster.h>
+#include <nav_msgs/Odometry.h>
+#include <gobot_msg_srv/OdomTestMsg.h>
 #include <gobot_msg_srv/GetEncoders.h>
 #include <gobot_msg_srv/SetSpeeds.h>
 #include <gobot_msg_srv/SetGobotStatus.h>
 #include <gobot_msg_srv/GetIntArray.h>
-#include <serial/serial.h>
+#include <gobot_msg_srv/MotorSpeedMsg.h>
+#include <gobot_msg_srv/EncodersMsg.h>
 
 
 /// Write and read informations on the serial port
@@ -31,6 +37,10 @@ bool setSpeeds(gobot_msg_srv::SetSpeeds::Request &req, gobot_msg_srv::SetSpeeds:
 
 /// Get the encoders position
 bool getEncoders(gobot_msg_srv::GetEncoders::Request &req, gobot_msg_srv::GetEncoders::Response &res);
+
+void motorSpdCallback(const gobot_msg_srv::MotorSpeedMsg::ConstPtr& speed);
+
+bool resetOdom(std_srvs::Empty::Request &req, std_srvs::Empty::Response &res);
 
 /// Set the encoders to 0
 bool resetEncoders(std_srvs::Empty::Request &req, std_srvs::Empty::Response &res);
