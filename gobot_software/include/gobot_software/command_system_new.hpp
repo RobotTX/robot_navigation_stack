@@ -154,7 +154,11 @@ bool stopGoDockSrvCallback(std_srvs::Empty::Request &req, std_srvs::Empty::Respo
     
 bool lowBatterySrvCallback(std_srvs::Empty::Request &req, std_srvs::Empty::Response &res);
 
+bool playPointSrvCallback(gobot_msg_srv::SetStringArray::Request &req, gobot_msg_srv::SetStringArray::Response &res);
 
+bool setPathSrvCallback(gobot_msg_srv::SetStringArray::Request &req, gobot_msg_srv::SetStringArray::Response &res);
+
+bool shutdownSrvCallback(std_srvs::Empty::Request &req, std_srvs::Empty::Response &res);
 /*********************************** COMMUNICATION FUNCTIONS ***********************************/
 
 void sendConnectionData(boost::shared_ptr<tcp::socket> sock);

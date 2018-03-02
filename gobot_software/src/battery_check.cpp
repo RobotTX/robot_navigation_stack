@@ -18,8 +18,8 @@ void timerCallback(const ros::TimerEvent&){
     ros::service::call("/gobot_status/battery_percent", battery_percent);
 
     if(!isCharging.response.isCharging){
-           gobot_msg_srv::GetString get_battery;
-           ros::service::call("/gobot_status/get_battery",get_battery);
+        gobot_msg_srv::GetString get_battery;
+        ros::service::call("/gobot_status/get_battery",get_battery);
         if(canGoCharge && (battery_percent.response.data < std::stod(get_battery.response.data) || test == 0)){
             ROS_WARN("(Battery check) Battery below percentage: %d ", battery_percent.response.data);
             std_srvs::Empty arg;

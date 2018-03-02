@@ -439,7 +439,7 @@ bool robotStartup(const std::vector<std::string> command){
     return false;
 }
 
-/// First param = i, then the path name, then quadriplets of parameters to represent path points (path point name, posX, posY, waiting time,prientation) 
+/// First param = i, then the path name, then quadriplets of parameters to represent path points (path name, point name, posX, posY, waiting time,orientation) 
 bool newPath(const std::vector<std::string> command){
     if(command.size() >= 6 && command.size()%5 == 2){  
         ROS_INFO("(Command system) New path received");
@@ -921,6 +921,34 @@ bool lowBatterySrvCallback(std_srvs::Empty::Request &req, std_srvs::Empty::Respo
     return true;
 }
 
+bool playPointSrvCallback(gobot_msg_srv::SetStringArray::Request &req, gobot_msg_srv::SetStringArray::Response &res){
+    std::vector<std::string> command({"k"});
+    std::string commandStr = command.at(0) + sep;
+    for (int i=0;i<req.data.size();i++){
+        commandStr = commandStr + req.data[i] + sep;
+        command.push_back(req.data[i]);
+    }
+    sendCommand("",command,commandStr);
+    return true;
+}
+
+bool setPathSrvCallback(gobot_msg_srv::SetStringArray::Request &req, gobot_msg_srv::SetStringArray::Response &res){
+    std::vector<std::string> command({"i"});
+    std::string commandStr = command.at(0) + sep;
+    for (int i=0;i<req.data.size();i++){
+        commandStr = commandStr + req.data[i] + sep;
+        command.push_back(req.data[i]);
+    }
+    sendCommand("",command,commandStr);
+    return true;
+}
+
+bool shutdownSrvCallback(std_srvs::Empty::Request &req, std_srvs::Empty::Response &res){
+    std::vector<std::string> command({"v"});
+    std::string commandStr = command.at(0) + sep;
+    sendCommand("",command,commandStr);
+    return true;
+}
 
 
 /*********************************** COMMUNICATION FUNCTIONS ***********************************/
@@ -1190,11 +1218,14 @@ int main(int argc, char* argv[]){
         ros::ServiceServer lowBatterySrv = n.advertiseService("/gobot_command/lowBattery", lowBatterySrvCallback);
         ros::ServiceServer goDockSrv = n.advertiseService("/gobot_command/goDock", goDockSrvCallback);
         ros::ServiceServer stopGoDockSrv = n.advertiseService("/gobot_command/stopGoDock", stopGoDockSrvCallback);
-        ros::ServiceServer pausePathSrv = n.advertiseService("/gobot_command/pause_path", pausePathSrvCallback);
         ros::ServiceServer playPathSrv = n.advertiseService("/gobot_command/play_path", playPathSrvCallback);
+        ros::ServiceServer pausePathSrv = n.advertiseService("/gobot_command/pause_path", pausePathSrvCallback);
         ros::ServiceServer stopPathSrv = n.advertiseService("/gobot_command/stop_path", stopPathSrvCallback);
         ros::ServiceServer startExploreSrv = n.advertiseService("/gobot_command/start_explore", startExploreSrvCallback);
         ros::ServiceServer stopExploreSrv = n.advertiseService("/gobot_command/stop_explore", stopExploreSrvCallback);
+        ros::ServiceServer playPointSrv = n.advertiseService("/gobot_command/play_point", playPointSrvCallback);
+        ros::ServiceServer setPathSrv = n.advertiseService("/gobot_command/set_path", setPathSrvCallback);
+        ros::ServiceServer shutdownSrv = n.advertiseService("/gobot_command/shutdown", shutdownSrvCallback);
 
         ROS_INFO("(Command system) Ready to be launched.");
 

@@ -15,6 +15,9 @@ find_package(catkin REQUIRED COMPONENTS
     actionlib
     actionlib_msgs
     costmap_2d
+    sensor_msgs
+    geometry_msgs
+    nav_msgs
 )
 
 ## System dependencies are found with CMake's conventions
@@ -114,6 +117,9 @@ catkin_package(
         message_runtime
         actionlib
         actionlib_msgs
+        sensor_msgs
+        geometry_msgs
+        nav_msgs
 #  DEPENDS system_lib
 )
 
