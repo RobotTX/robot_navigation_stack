@@ -298,12 +298,12 @@ void publishSensors(void){
         gobot_msg_srv::GyroMsg gyro;
         std_msgs::Float32 temperature;
         //if 1st bit is 1, means negative
-        gyro.gyrox =  buff.at(48)<<8 | buff.at(49);
-        gyro.gyroy =  buff.at(50)<<8 | buff.at(51); 
-        gyro.gyroz =  buff.at(52)<<8 | buff.at(53);
-        gyro.accelx = buff.at(54)<<8 | buff.at(55);
-        gyro.accely = buff.at(56)<<8 | buff.at(57); 
-        gyro.accelz = buff.at(58)<<8 | buff.at(59);
+        gyro.accelx =  buff.at(48)<<8 | buff.at(49);
+        gyro.accely =  buff.at(50)<<8 | buff.at(51); 
+        gyro.accelz =  buff.at(52)<<8 | buff.at(53);
+        gyro.gyrox = buff.at(54)<<8 | buff.at(55);
+        gyro.gyroy = buff.at(56)<<8 | buff.at(57); 
+        gyro.gyroz = buff.at(58)<<8 | buff.at(59);
         gyro_pub.publish(gyro);
 
         /// Temperature = D58-D59 / B60-B61

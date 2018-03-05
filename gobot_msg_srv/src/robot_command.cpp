@@ -3,13 +3,35 @@
 
 namespace robot_class {
 
+    /**
+    * @BRIEFT  Class constructor
+    */
     RobotCommand::RobotCommand(): global_costmap_(NULL), tf_(NULL), initialized_(false), 
     left_encoder_(0), right_encoder_(0), left_speed_(0), right_speed_(0), 
-    battery_percent_(-1), charging_current_(-1), charging_flag_(false) {} 
+    battery_percent_(-1), charging_current_(-1), charging_flag_(false),
+    goal_status_(-1), map_received_(false) {} 
 
-    RobotCommand::~RobotCommand(){};
+    /**
+    * @BRIEFT  Class destructor
+    */
+    RobotCommand::~RobotCommand(){
+        encoder_sub_.shutdown();
+        speed_sub_.shutdown();
+        battery_sub_.shutdown();
+        laser_sub_.shutdown();
+        global_path_sub_.shutdown();
+        goal_sub_.shutdown();
+        sonar_sub_.shutdown();
+        gyro_sub_.shutdown();
+        goal_status_sub_.shutdown();
+        delete tf_;
+        delete global_costmap_;
+    }
 
-    //@Initialization
+
+    /**
+    * @BRIEFT  Initialize class object
+    */
     void RobotCommand::initialize(){
         if(!initialized_){
             tf_ = new tf::TransformListener(ros::Duration(60));
@@ -27,7 +49,15 @@ namespace robot_class {
             global_path_sub_ = nh.subscribe<nav_msgs::Path>("/move_base/NavfnROS/plan", 1, &RobotCommand::globalPathCallback,this);
             goal_sub_ = nh.subscribe<move_base_msgs::MoveBaseActionGoal>("/move_base/goal", 1, &RobotCommand::goalCallback,this);
             sonar_sub_ = nh.subscribe<gobot_msg_srv::SonarMsg>("/gobot_base/sonar_topic", 1, &RobotCommand::sonarCallback,this);
+            gyro_sub_ = nh.subscribe<gobot_msg_srv::GyroMsg>("/gobot_base/gyro_topic", 1, &RobotCommand::gyroCallback,this);
+            goal_status_sub_ = nh.subscribe<actionlib_msgs::GoalStatusArray>("/move_base/status", 1, &RobotCommand::goalStatusCallback,this);
+            map_sub_ = nh.subscribe<nav_msgs::MapMetaData>("/map_metadata", 1, &RobotCommand::mapDataCallback,this);
 
+            ros::Rate r(5);
+            while (!map_received_ && nh.ok()){
+            ros::spinOnce();
+            r.sleep();
+            }
             initialized_ = true;
         }
         else{
@@ -35,7 +65,10 @@ namespace robot_class {
         }
     }
 
-    //@Subscriber callback
+
+    /**
+    * @BRIEFT  Subscribers callback
+    */
     void RobotCommand::encodersCallback(const gobot_msg_srv::EncodersMsg::ConstPtr& msg){
         left_encoder_ = msg->left_encoder;
         right_encoder_ = msg->right_encoder;
@@ -69,6 +102,7 @@ namespace robot_class {
     }
 
     void RobotCommand::goalCallback(const move_base_msgs::MoveBaseActionGoal::ConstPtr& msg){
+        ROS_INFO("Robot_Lib::Received a new goal");
         current_goal_ = msg->goal.target_pose;
     }
 
@@ -76,18 +110,49 @@ namespace robot_class {
         sonar_data_ = msg;
     }
 
+    void RobotCommand::gyroCallback(const gobot_msg_srv::GyroMsg::ConstPtr& msg){
+        gyro_data_.gyrox = msg->gyrox;
+        gyro_data_.gyroy = msg->gyroy;
+        gyro_data_.gyroz = msg->gyroz;
+        gyro_data_.accelx = msg->accelx;
+        gyro_data_.accely = msg->accely;
+        gyro_data_.accelz = msg->accelz;
+    }
 
-    //@Programmable voice
-    void RobotCommand::speakEnglish(std::string str){
+    void RobotCommand::goalStatusCallback(const actionlib_msgs::GoalStatusArray::ConstPtr& msg){
+        if(msg->status_list.size()==0)
+            goal_status_ = -1;
+        else
+            goal_status_ = msg->status_list.back().status;
+    }
+
+    void RobotCommand::mapDataCallback(const nav_msgs::MapMetaData::ConstPtr& msg){
+        map_data_.resolution = msg->resolution;
+        map_data_.pixel_width = msg->width;
+        map_data_.pixel_height = msg->height;
+        map_data_.meter_width = map_data_.resolution * map_data_.pixel_width;
+        map_data_.meter_height = map_data_.resolution * map_data_.pixel_height;
+        map_data_.origin.x = msg->origin.position.x;
+        map_data_.origin.y = msg->origin.position.y;
+        getYaw(map_data_.origin.theta,msg->origin.orientation);
+        map_received_ = true;
+    }
+    
+    /**
+    * @BRIEFT  Programmable voice
+    */
+    void RobotCommand::ttsEnglish(std::string str){
         set_robot_.speakEnglish(str);
     }
 
-    void RobotCommand::speakChinese(std::string str){
+    void RobotCommand::ttsChinese(std::string str){
         set_robot_.speakChinese(str);
     }
     
 
-    //@Interact with base sensors such as color and sound
+    /**
+    * @BRIEFT  Interact with base sensors such as color, sound and sensors data
+    */
     void RobotCommand::setLed(int mode, const std::vector<std::string> &color){
         set_robot_.setLed(mode,color);
     }
@@ -108,9 +173,15 @@ namespace robot_class {
         return charging_flag_;
     }
 
+    void RobotCommand::getGyro(Gyro &gyro_data){
+        gyro_data = gyro_data_;
+    }
 
-    //@Interact with base motors such as speed and encoder
-    void RobotCommand::setMotorSpeed(const char directionR, const int velocityR, const char directionL, const int velocityL){ 
+
+    /**
+    * @BRIEFT  Interact with base motors such as get/set motor speeds and encoders
+    */
+    void RobotCommand::setMotorSpeed(const char directionL, const int velocityL, const char directionR, const int velocityR){ 
         set_robot_.setMotorSpeed(directionR,velocityR,directionL,velocityL);
     }
 
@@ -136,7 +207,9 @@ namespace robot_class {
     }
 
 
-    //@RPY - Quaternion conversion
+    /**
+    * @BRIEFT  Quaternion and yaw conversion
+    */
     void RobotCommand::getYaw(double &yaw, const geometry_msgs::Quaternion &q){
         yaw = tf::getYaw(tf::Quaternion(q.x,q.y,q.z,q.w));
     }
@@ -146,7 +219,9 @@ namespace robot_class {
     }
 
     
-    //@Localization 
+    /**
+    * @BRIEFT  Localization
+    */
     void RobotCommand::getCurrentPose(Pose &pose){
         tf::Stamped<tf::Pose> global_pose;
         global_costmap_->getRobotPose(global_pose);
@@ -164,7 +239,9 @@ namespace robot_class {
     }
 
 
-    //@Map
+    /**
+    * @BRIEFT  Map
+    */
     //rosrun map_server map_saver [-f mapname]
     void RobotCommand::saveMapTo(std::string path){
         std::string cmd;
@@ -177,35 +254,50 @@ namespace robot_class {
         system(cmd.c_str());
     }
 
+    void RobotCommand::getMapMetadata(Map &data){
+        data = map_data_;
+    }
 
-    //@Target Points || Routes
+    /**
+    * @BRIEFT  Target Points || Routes
+    */
     //get the point cost in costmap
     //costmap_2d::FREE_SPACE=0, costmap_2d::INSCRIBED_INFLATED_OBSTACLE=253, costmap_2d::LETHAL_OBSTACLE=254, costmap_2d::NO_INFORMATION=255
-    int RobotCommand::getPointCost(const int point_x,const int point_y){
+    int RobotCommand::getPointCost(const double point_x,const double point_y){
         unsigned int x,y;
-        global_costmap_->getCostmap()->worldToMap(point_x,point_y,x,y); 	
-        int cost = global_costmap_->getCostmap()->getCost(x,y);
-        return cost;
+        if(global_costmap_->getCostmap()->worldToMap(point_x,point_y,x,y)){	
+            int cost = global_costmap_->getCostmap()->getCost(x,y);
+            return cost;
+        }
+        else{
+            return 255;
+        }
     }
     //assign targeted point to robot, and play assigned point
     //First param = k, 2nd is point name, 3rd is x coordinate, 4th is y coordinate, 5th is orientation, 6th is home bool
     bool RobotCommand::setTargetPoint(const Pose &point){
-        if (getPointCost(point.x,point.y) >= costmap_2d::INSCRIBED_INFLATED_OBSTACLE)
+        if (getPointCost(point.x,point.y) >= costmap_2d::INSCRIBED_INFLATED_OBSTACLE){
+            ROS_WARN("Robot_Lib::Assigned point can not be reached.");
             return false;
+        }
 
         gobot_msg_srv::SetStringArray msg;
         msg.request.data.push_back("robot_lib");
         msg.request.data.push_back(std::to_string(point.x));
         msg.request.data.push_back(std::to_string(point.y));
-        msg.request.data.push_back(std::to_string(point.theta));
+        //rads
+        double theta = (-point.theta-1.57079)*180/3.1415926;
+        msg.request.data.push_back(std::to_string(theta));
         msg.request.data.push_back("0");
         ros::service::call("/gobot_command/play_point",msg);
         return true;
     }
 
     bool RobotCommand::setTargetPoint(const geometry_msgs::PoseStamped &point){
-        if (getPointCost(point.pose.position.x,point.pose.position.y) >= costmap_2d::INSCRIBED_INFLATED_OBSTACLE)
+        if (getPointCost(point.pose.position.x,point.pose.position.y) >= costmap_2d::INSCRIBED_INFLATED_OBSTACLE){
+            ROS_WARN("Robot_Lib::Assigned point can not be reached.");
             return false;
+        }
 
         gobot_msg_srv::SetStringArray msg;
         msg.request.data.push_back("robot_lib");
@@ -213,6 +305,7 @@ namespace robot_class {
         msg.request.data.push_back(std::to_string(point.pose.position.y));
         double yaw;
         getYaw(yaw,point.pose.orientation);
+        yaw = (-yaw-1.57079)*180/3.1415926;
         msg.request.data.push_back(std::to_string(yaw));
         msg.request.data.push_back("0");
         ros::service::call("/gobot_command/play_point",msg);
@@ -226,13 +319,18 @@ namespace robot_class {
         msg.request.data.push_back(path_name);
         for(int i=0;i<path.size();i++){
             //if point is unreachable, return false
-            if (getPointCost(path[i].x,path[i].y) >= costmap_2d::INSCRIBED_INFLATED_OBSTACLE)
+            if (getPointCost(path[i].x,path[i].y) >= costmap_2d::INSCRIBED_INFLATED_OBSTACLE){
+                ROS_WARN("Robot_Lib::Assigned %d point of route can not be reached.", i);
                 return false;
-            msg.request.data.push_back(path[i].name);
+            }
+            std::string name = path[i].name == "" ? std::to_string(i+1) : path[i].name;
+            msg.request.data.push_back(name);
             msg.request.data.push_back(std::to_string(path[i].x));
             msg.request.data.push_back(std::to_string(path[i].y));
             msg.request.data.push_back(std::to_string(path[i].waiting));
-            msg.request.data.push_back(std::to_string(path[i].theta));
+            //rads
+            double theta = (-path[i].theta-1.57079)*180/3.1415926;
+            msg.request.data.push_back(std::to_string(theta));
         }
         ros::service::call("/gobot_command/set_path",msg);
         return true;
@@ -243,7 +341,15 @@ namespace robot_class {
         goal = current_goal_;
     }
 
-    //@Control robot motion (play, pause, stop)
+    //get goal status
+    int RobotCommand::getGoalStatus(){
+        return goal_status_;
+    }
+
+
+    /**
+    * @BRIEFT  Control robot motion
+    */
     //play assigned path
     void RobotCommand::playTargetPath(){
         ros::service::call("/gobot_command/play_path",empty_srv_);
@@ -275,7 +381,9 @@ namespace robot_class {
     }
 
 
-    //@Obstacle Detection & Avoidance
+    /**
+    * @BRIEFT  Obstacle Detection & Avoidance
+    */
     //get laser raw data (detection of obstacles depends on the laser range)
     void RobotCommand::getLaserData(sensor_msgs::LaserScan &data){
         data = laser_data_;
@@ -298,25 +406,27 @@ namespace robot_class {
     }   
 
     //make plan for any two points in the map, and give a plan path if have
-    void RobotCommand::makePlanPath(const geometry_msgs::PoseStamped &start,const geometry_msgs::PoseStamped &goal,std::vector<geometry_msgs::PoseStamped> &plan_path){
+    bool RobotCommand::makePlanPath(const geometry_msgs::PoseStamped &start,const geometry_msgs::PoseStamped &goal,std::vector<geometry_msgs::PoseStamped> &plan_path){
         nav_msgs::GetPlan get_plan;
         get_plan.request.start = start;
         get_plan.request.goal = goal;
         get_plan.request.tolerance = 0.5;
-        ros::service::call("/move_base/make_plan",get_plan);
+        bool gotPlan = ros::service::call("/move_base/make_plan",get_plan);
         plan_path.clear();
         for(int i=0;i<get_plan.response.plan.poses.size();i++)
             plan_path.push_back(get_plan.response.plan.poses[i]);
+        return gotPlan;
     }
 
-    void RobotCommand::makePlanPath(const geometry_msgs::PoseStamped &goal,std::vector<geometry_msgs::PoseStamped> &plan_path){
+    bool RobotCommand::makePlanPath(const geometry_msgs::PoseStamped &goal,std::vector<geometry_msgs::PoseStamped> &plan_path){
         nav_msgs::GetPlan get_plan;
         get_plan.request.goal = goal;
         get_plan.request.tolerance = 0.5;
-        ros::service::call("/move_base/make_plan",get_plan);
+        bool gotPlan = ros::service::call("/move_base/make_plan",get_plan);
         plan_path.clear();
         for(int i=0;i<get_plan.response.plan.poses.size();i++)
             plan_path.push_back(get_plan.response.plan.poses[i]);
+        return gotPlan;
     }
 
     //clear costmap 
