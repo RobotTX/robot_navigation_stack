@@ -15,9 +15,9 @@
  *     copyright notice, this list of conditions and the following
  *     disclaimer in the documentation and/or other materials provided
  *     with the distribution.
- *   * Neither the name of Willow Garage, Inc. nor the names of its
- *     contributors may be used to endorse or promote products derived
- *     from this software without specific prior written permission.
+ *   * The names of its contributors may be used to endorse or promote 
+ *     products derived from this software without specific prior written 
+ *     permission.
  *
  *  THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
  *  "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
@@ -113,6 +113,16 @@ namespace robot_class {
             //void initialize(tf::TransformListener* tf,costmap_2d::Costmap2DROS* global_costmap);
             void initialize();
 
+            /**
+            * @brief stops costmap updates and unsubscribes from sensor topics. 
+            */
+            void stopCostmap();
+
+            /**
+            * @brief subscribes to sensor topics if necessary and starts costmap updates
+            */
+            void startCostmap();
+
 
             /**
             * @BRIEFT  Subscribers callback
@@ -184,7 +194,7 @@ namespace robot_class {
             /**
             * @param mode: 0 means permanent LED display; 1 means running LED display
             * @param color: LED colors to display (mode 0 needs only 1 color input, and mode 2 needs at least 2 colors input)
-            * color value: "green", "blue", "yellow", "red", "cyan", "white", "magenta", "off"
+            * *color value: "green", "blue", "yellow", "red", "cyan", "white", "magenta", "off"
             */
             void setLed(int mode, const std::vector<std::string> &color);
 
@@ -201,7 +211,7 @@ namespace robot_class {
 
             /**
             * @brief return current battery charging current (integer); 
-            *  usually positive values when charging, and negative values when not charging;
+            * *usually positive values when charging, and negative values when not charging;
             */
             int getBatteryChargingCurrent();
 
@@ -222,8 +232,8 @@ namespace robot_class {
 
             /**
             * @brief two ways to set robot moving speed:
-            *  1. set direction and velocity for the robot's each wheel
-            *  2. set linear and angular velocities for the whole robot
+            * *1.set direction and velocity for the robot's each wheel
+            * *2.set linear and angular velocities for the whole robot
             */
             /**
             * @param directionR: set turning direction for right wheel, where 'F' indicates forward; 'B' indicates backwards;
@@ -279,8 +289,8 @@ namespace robot_class {
 
             /**
             * @brief two ways to get robot current pose in the global frame:
-            *  1. self-defined data type 'Pose'
-            *  2. ROS-defined data type 'geometry_msgs::PoseStamped'
+            * *1.self-defined data type 'Pose'
+            * *2.ROS-defined data type 'geometry_msgs::PoseStamped'
             */
             /**
             * @param pose: get the current pose as type 'Pose' 
@@ -303,7 +313,7 @@ namespace robot_class {
 
             /**
             * @param data: get current map's data such as resolution, width, height and origin
-            *  if map is not initialized, return false
+            * *if map is not initialized, return false
             */
             void getMapMetadata(Map &data);
 
@@ -317,17 +327,17 @@ namespace robot_class {
             * @param x: x coordinate for given position
             * @param y: y coordinate for given position
             * @comment: cost value ranges from 0 to 255, meaning: 
-            *  costmap_2d::FREE_SPACE=0, 
-            *  costmap_2d::INSCRIBED_INFLATED_OBSTACLE=253, 
-            *  costmap_2d::LETHAL_OBSTACLE=254, 
-            *  costmap_2d::NO_INFORMATION=255
+            * *costmap_2d::FREE_SPACE=0, 
+            * *costmap_2d::INSCRIBED_INFLATED_OBSTACLE=253, 
+            * *costmap_2d::LETHAL_OBSTACLE=254, 
+            * *costmap_2d::NO_INFORMATION=255
             */
             int getPointCost(const double x,const double y);
 
             /**
             * @brief two ways to send a goal point for robot:
-            *  1. self-defined data type 'Pose'
-            *  2. ROS-defined data type 'geometry_msgs::PoseStamped'
+            * *1.self-defined data type 'Pose'
+            * *2.ROS-defined data type 'geometry_msgs::PoseStamped'
             */
             /**
             * @param point: set the goal point as type 'Pose' 
@@ -354,10 +364,10 @@ namespace robot_class {
 
             /**
             * @brief return goal status
-            *-1 - No goal
-            * 1 - Goal active
-            * 3 - Goal complete
-            * 4 - Goal aborted
+            * *-1 - No goal
+            * * 1 - Goal active
+            * * 3 - Goal complete
+            * * 4 - Goal aborted
             */
             int getGoalStatus();
 
@@ -421,23 +431,23 @@ namespace robot_class {
 
             /**
             * @brief plan path for given start pose and goal pose
-            *  return true if have plan 
-            *  return false if no plan
+            * *return true if have plan 
+            * *return false if no plan
             * @param plan_path: get the planned path consisting of 'geometry_msgs::PoseStamped' points
             */
             bool makePlanPath(const geometry_msgs::PoseStamped &start,const geometry_msgs::PoseStamped &goal,std::vector<geometry_msgs::PoseStamped> &plan_path);
 
             /**
             * @brief get planned path from current pose to given goal pose if have
-            *  return true if have plan 
-            *  return false if no plan
+            * *return true if have plan 
+            * *return false if no plan
             * @param plan_path: get the planned path consisting of 'geometry_msgs::PoseStamped' points
             */
             bool makePlanPath(const geometry_msgs::PoseStamped &goal,std::vector<geometry_msgs::PoseStamped> &plan_path);
 
             /**
             * @brief clear obstacles information in costmap. 
-            *  As a result, only static map information will be kept after calling this function
+            * *As a result, only static map information will be kept after calling this function
             */
             void clearCostMap();
 
@@ -457,14 +467,14 @@ namespace robot_class {
             costmap_2d::Costmap2DROS* global_costmap_;
             tf::TransformListener* tf_;
             nav_msgs::Path global_path_;
-            gobot_msg_srv::SonarMsg sonar_data_;
-
+            sensor_msgs::LaserScan laser_data_;
+            geometry_msgs::PoseStamped current_goal_;
+            
             robot_class::SetRobot set_robot_;
             Pose robot_pose_, goal_pose_;
             Map map_data_;
             Gyro gyro_data_;
-            sensor_msgs::LaserScan laser_data_;
-            geometry_msgs::PoseStamped current_goal_;
+            gobot_msg_srv::SonarMsg sonar_data_;
     };
 };
 

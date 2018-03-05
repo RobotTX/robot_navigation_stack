@@ -550,7 +550,7 @@ void initData(ros::NodeHandle &nh){
     led_color_ = {{"green",0x42}, {"blue",0x52}, {"yellow",0x59}, {"red",0x47}, {"cyan",0x43}, {"white",0x57}, {"magenta",0x4D}, {"off",0x00}};
 }
 
-bool initSerial() {
+bool initSerial(){
     connectionMutex.lock(); 
     std::string port = STMdevice;
     if(serialConnection.isOpen()){
@@ -589,8 +589,7 @@ bool initSerial() {
     return false;
 }
 
-void mySigintHandler(int sig)
-{   
+void mySigintHandler(int sig){   
     setLedSrv.shutdown();
     setSoundSrv.shutdown();
 

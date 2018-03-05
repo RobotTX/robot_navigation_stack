@@ -1,9 +1,9 @@
 #!/usr/bin/expect
 #sudo apt install expect
 set timeout 30
-spawn sudo ssh gtdollar@192.168.100.48
+spawn sudo ssh username@192.168.100.48
 expect {
 "*yes/no" { send "yes\r"; exp_continue }
-"*password:" { send "gtdollar123\r" }
+"*password:" { send "user_password\r" }
 }
 interact

@@ -306,8 +306,7 @@ void initParams(ros::NodeHandle &nh){
     <<" avoid_spd:"<<avoid_spd<<std::endl;
 }
 
-void mySigintHandler(int sig)
-{   
+void mySigintHandler(int sig){   
     cmdVelSub.shutdown();
     bumpersSub.shutdown();
     cliffSub.shutdown();

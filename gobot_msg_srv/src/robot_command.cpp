@@ -61,7 +61,33 @@ namespace robot_class {
             initialized_ = true;
         }
         else{
-            ROS_WARN("(Robot_Command::You should not call initialize twice on this object, doing nothing");
+            ROS_WARN("Robot_Command::You should not call initialize twice on this object, doing nothing");
+        }
+    }
+
+    /**
+    * @brief stops costmap updates and unsubscribes from sensor topics. 
+    */
+    void RobotCommand::stopCostmap(){
+        if(initialized_){
+            global_costmap_->stop();
+            ROS_INFO("Robot_Command::Costmap update stopped.");
+        }
+        else{
+            ROS_WARN("Robot_Command::You should initialize this object before calling this function");
+        }
+    }
+
+    /**
+    * @brief subscribes to sensor topics if necessary and starts costmap updates
+    */
+    void RobotCommand::startCostmap(){
+        if(initialized_){
+            global_costmap_->start();
+            ROS_INFO("Robot_Command::Costmap update started.");
+        }
+        else{
+            ROS_WARN("Robot_Command::You should initialize this object before calling this function");
         }
     }
 
@@ -224,18 +250,20 @@ namespace robot_class {
     */
     void RobotCommand::getCurrentPose(Pose &pose){
         tf::Stamped<tf::Pose> global_pose;
-        global_costmap_->getRobotPose(global_pose);
-        geometry_msgs::PoseStamped temp_position;
-        tf::poseStampedTFToMsg(global_pose, temp_position);
-        pose.x = temp_position.pose.position.x;
-        pose.y = temp_position.pose.position.y;
-        getYaw(pose.theta,temp_position.pose.orientation);
+        if (global_costmap_->getRobotPose(global_pose)){
+            geometry_msgs::PoseStamped temp_position;
+            tf::poseStampedTFToMsg(global_pose, temp_position);
+            pose.x = temp_position.pose.position.x;
+            pose.y = temp_position.pose.position.y;
+            getYaw(pose.theta,temp_position.pose.orientation);
+        }
     }
 
     void RobotCommand::getCurrentPose(geometry_msgs::PoseStamped &pose){
         tf::Stamped<tf::Pose> global_pose;
-        global_costmap_->getRobotPose(global_pose);
-        tf::poseStampedTFToMsg(global_pose, pose);
+        if (global_costmap_->getRobotPose(global_pose)){
+            tf::poseStampedTFToMsg(global_pose, pose);
+        }
     }
 
 

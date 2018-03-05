@@ -175,7 +175,7 @@ bool motorReadySrvCallback(std_srvs::Empty::Request &req, std_srvs::Empty::Respo
 }
 
 
-bool initSerial() {
+bool initSerial(){
     /// Get the port in which our device is connected
     std::string port = MD49device;
     ROS_INFO("(wheels::initSerial) MD49 port : %s", port.c_str());
@@ -212,8 +212,7 @@ bool initSerial() {
 }
 
 
-void mySigintHandler(int sig)
-{   
+void mySigintHandler(int sig){   
     resetEncodersSrv.shutdown();
     getEncodersSrv.shutdown();
     setSpeedsSrv.shutdown();
@@ -263,10 +262,10 @@ int main(int argc, char **argv) {
         nh.getParam("ticks_per_rotation", ticks_per_rotation);
         nh.getParam("ODOM_RATE", ODOM_RATE);
 
-        ros::Publisher odom_pub = nh.advertise<nav_msgs::Odometry>("odom", 50);
-        ros::Publisher odom_test_pub = nh.advertise<gobot_msg_srv::OdomTestMsg>("odom_test", 50);
-        ros::Publisher encoder_pub = nh.advertise<gobot_msg_srv::EncodersMsg>("encoders", 50);
-        ros::Publisher real_vel_pub = nh.advertise<geometry_msgs::Twist>("real_vel", 50);
+        ros::Publisher odom_pub = nh.advertise<nav_msgs::Odometry>("/odom", 50);
+        ros::Publisher odom_test_pub = nh.advertise<gobot_msg_srv::OdomTestMsg>("/odom_test", 50);
+        ros::Publisher encoder_pub = nh.advertise<gobot_msg_srv::EncodersMsg>("/encoders", 50);
+        ros::Publisher real_vel_pub = nh.advertise<geometry_msgs::Twist>("/real_vel", 50);
         
         ros::Subscriber motorSpdSubscriber = nh.subscribe("/gobot_motor/motor_speed", 1, motorSpdCallback);
 

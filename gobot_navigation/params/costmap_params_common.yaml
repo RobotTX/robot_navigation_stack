@@ -11,15 +11,6 @@ footprint_padding: 0.0001
 resolution: 0.04
 transform_tolerance: 0.5
 
-#plugins:
-    # Add the data from the map to the costmap
-    #- {name: static_map, type: "costmap_2d::StaticLayer"}
-    # Track the obstacle from the sensors and add them to the costmap
-    #- {name: obstacle_layer, type: "costmap_2d::ObstacleLayer"} # 2D costmap
-    #- {name: obstacles, type: "costmap_2d::VoxelLayer"} # 3D costmap
-    # Add inflation around the obstacles
-    #- {name: inflation_layer, type: "costmap_2d::InflationLayer"}
-
 static_map:
     map_topic: /map
     #If true, unknown values in the map messages are translated directly to the layer. 
@@ -32,7 +23,6 @@ static_map:
 obstacles:
     observation_sources: laser_scan_sensor bumpers frontRight_cliff frontLeft_cliff backRight_cliff backLeft_cliff 
     #frontRight_sonar frontLeft_sonar rearRight_sonar rearLeft_sonar 
-    #left_sonar right_sonar top_sonar mid_sonar
     #If false, each pixel has one of 2 states: lethal obstacle or free. 
     #If true, each pixel has one of 3 states: lethal obstacle, free, or unknown.
     #default:false 

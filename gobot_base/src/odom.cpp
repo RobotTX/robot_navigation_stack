@@ -33,8 +33,7 @@ bool resetOdom(std_srvs::Empty::Request &req, std_srvs::Empty::Response &res){
     return true;
 }
 
-void mySigintHandler(int sig)
-{   
+void mySigintHandler(int sig){   
     ros::shutdown();
 }
 

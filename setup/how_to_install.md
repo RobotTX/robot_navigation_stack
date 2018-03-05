@@ -44,7 +44,7 @@ Then catkin_make, then add the packages above to the src, then catkin_make again
 ### To Configure The System ###
 #avoid password for sudo cmd
 sudo visudo 
-gtdollar ALL=(ALL) NOPASSWD: ALL
+username ALL=(ALL) NOPASSWD: ALL
 
 #avoid sudo chmod for /dev/tty
 sudo sh ~/catkin_ws/src/gobot_navigation_stack/setup/create_udevrules_script.sh
@@ -54,7 +54,7 @@ all settings->user accounts->automatic login
 
 #robot startup
 startup application->add
-sudo sh /home/gtdollar/catkin_ws/src/gobot_navigation_stack/gobot_data/command/start_robot.sh
+sudo sh /home/username/catkin_ws/src/gobot_navigation_stack/gobot_data/command/start_robot.sh
 
 #tts
 refer to tts example/tts_guide.md for installment

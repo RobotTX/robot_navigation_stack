@@ -91,7 +91,7 @@ gmapping_params.yaml
 ### To Configure The System ###
 #avoid password for sudo cmd
 sudo visudo 
-gtdollar ALL=(ALL) NOPASSWD: ALL
+username ALL=(ALL) NOPASSWD: ALL
 
 #avoid sudo chmod for /dev/tty
 udevadm info -a -p $(udevadm info -q path -n /dev/ttyUSB0) | grep KERNELS | grep "-" | grep ":" | cut -d '"' -f2
@@ -102,7 +102,7 @@ all settings->user accounts->automatic login
 
 #robot startup
 startup application->add
-sudo sh /home/gtdollar/catkin_ws/src/gobot_navigation_stack/gobot_data/command/start_robot.sh
+sudo sh /home/username/catkin_ws/src/gobot_navigation_stack/gobot_data/command/start_robot.sh
 
 #allow fping
 #*
