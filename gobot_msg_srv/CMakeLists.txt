@@ -139,7 +139,7 @@ add_library(robot_class
                 src/set_robot_class.cpp
                 src/robot_command.cpp)
 add_dependencies(robot_class ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
-target_link_libraries(robot_class ${catkin_LIBRARIES} ${Boost_FILESYSTEM_LIBRARY} ${Boost_SYSTEM_LIBRARY} )
+target_link_libraries(robot_class ${catkin_LIBRARIES} ${Boost_FILESYSTEM_LIBRARY} ${Boost_SYSTEM_LIBRARY})
 
 
 install(TARGETS

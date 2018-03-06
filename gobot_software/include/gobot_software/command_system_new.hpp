@@ -158,6 +158,8 @@ bool playPointSrvCallback(gobot_msg_srv::SetStringArray::Request &req, gobot_msg
 
 bool setPathSrvCallback(gobot_msg_srv::SetStringArray::Request &req, gobot_msg_srv::SetStringArray::Response &res);
 
+bool setSpeedSrvCallback(gobot_msg_srv::SetStringArray::Request &req, gobot_msg_srv::SetStringArray::Response &res);
+    
 bool shutdownSrvCallback(std_srvs::Empty::Request &req, std_srvs::Empty::Response &res);
 /*********************************** COMMUNICATION FUNCTIONS ***********************************/
 

@@ -97,18 +97,18 @@ namespace robot_class {
     class RobotCommand {
         public:
             /**
-            * @BRIEFT  Class constructor
+            * @BRIEF  Class constructor
             */
             RobotCommand();
 
             /**
-            * @BRIEFT  Class destructor
+            * @BRIEF  Class destructor
             */
             ~RobotCommand();
 
 
             /**
-            * @BRIEFT  Initialize class object
+            * @BRIEF  Initialize class object
             */
             //void initialize(tf::TransformListener* tf,costmap_2d::Costmap2DROS* global_costmap);
             void initialize();
@@ -125,7 +125,7 @@ namespace robot_class {
 
 
             /**
-            * @BRIEFT  Subscribers callback
+            * @BRIEF  Subscribers callback
             */
 
             /**
@@ -180,7 +180,38 @@ namespace robot_class {
 
 
             /**
-            * @BRIEFT  Programmable voice
+            * @BRIEF  Some functions
+            */
+
+            /**
+            * @brief quaternion to yaw conversion
+            * @param yaw: get the yaw by converting given quaternion
+            * @param q: set the quaternion for yaw convertion
+            */
+            void getYaw(double &yaw, const geometry_msgs::Quaternion &q);
+
+            /**
+            * @brief yaw to quaternion conversion
+            * @param q: get the quaternion by converting given yaw
+            * @param yaw: set the yaw for quaternion convertion
+            */
+            void getQuaternion(geometry_msgs::Quaternion &q, const double &yaw);
+
+            /**
+            * @brief degree to radian conversion
+            * @param degree: degree value that going to be converted to radian
+            */
+            double getRadian(const double degree);
+
+            /**
+            * @brief radian to yaw conversion
+            * @param rad: radian value that going to be converted to degree
+            */
+            double getDegree(const double rad);
+
+
+            /**
+            * @BRIEF  Programmable voice
             * @param str: text for robot to convert to speech
             */
             void ttsEnglish(std::string str);
@@ -188,7 +219,7 @@ namespace robot_class {
 
 
             /**
-            * @BRIEFT  Interact with base sensors such as color, sound and sensors data
+            * @BRIEF  Interact with base sensors such as color, sound and sensors data
             */
 
             /**
@@ -227,7 +258,7 @@ namespace robot_class {
 
 
             /**
-            * @BRIEFT  Interact with base motors such as get/set motor speeds and encoders
+            * @BRIEF  Interact with base motors such as get/set motor speeds and encoders
             */
 
             /**
@@ -251,7 +282,7 @@ namespace robot_class {
             * @param linear: set limit for linear velocity with unit m/s (recommanded value: 0.4m/s)
             * @param angular: set limit for angular velocity with unit rad/s (recommanded value: 0.8 rad/s)
             */
-            void setSpeedLimit(std::string linear, std::string angular);
+            void setSpeedLimit(double linear, double angular);
 
             /**
             * @param left_encoder: get left encoder's accumulated reading
@@ -267,24 +298,7 @@ namespace robot_class {
 
 
             /**
-            * @BRIEFT  Quaternion and yaw conversion
-            */
-
-            /**
-            * @param yaw: get the yaw by converting given quaternion
-            * @param q: set the quaternion for yaw convertion
-            */
-            void getYaw(double &yaw, const geometry_msgs::Quaternion &q);
-
-            /**
-            * @param q: get the quaternion by converting given yaw
-            * @param yaw: set the yaw for quaternion convertion
-            */
-            void getQuaternion(geometry_msgs::Quaternion &q, const double &yaw);
-
-
-            /**
-            * @BRIEFT  Localization
+            * @BRIEF  Localization
             */
 
             /**
@@ -303,11 +317,11 @@ namespace robot_class {
             void getCurrentPose(geometry_msgs::PoseStamped &pose);
 
             /**
-            * @BRIEFT  Map
+            * @BRIEF  Map
             */
 
             /**
-            * @param path: set the path to store robot's map to; if no path given, save map to the same path as the node's
+            * @param path: set the path to store robot's map to; if no path given, save map to /home/username/map.pgm
             */
             void saveMapTo(std::string path = "");
 
@@ -319,7 +333,7 @@ namespace robot_class {
 
 
             /**
-            * @BRIEFT  Target Points || Routes
+            * @BRIEF  Target Points || Routes
             */
 
             /**
@@ -366,6 +380,7 @@ namespace robot_class {
             * @brief return goal status
             * *-1 - No goal
             * * 1 - Goal active
+            * * 2 - Goal cancel
             * * 3 - Goal complete
             * * 4 - Goal aborted
             */
@@ -373,7 +388,7 @@ namespace robot_class {
 
 
             /**
-            * @BRIEFT  Control robot motion
+            * @BRIEF  Control robot motion
             */
 
             /**
@@ -408,7 +423,7 @@ namespace robot_class {
 
 
             /**
-            * @BRIEFT  Obstacle Detection & Avoidance
+            * @BRIEF  Obstacle Detection & Avoidance
             */
 
             /**
@@ -460,7 +475,7 @@ namespace robot_class {
             int battery_percent_, charging_current_; 
             int goal_status_;
 
-            ros::Publisher vel_pub_;
+            ros::Publisher vel_pub_, make_plan_pub_;
             ros::Subscriber encoder_sub_, speed_sub_, battery_sub_, laser_sub_, global_path_sub_, goal_sub_, sonar_sub_, gyro_sub_, goal_status_sub_, map_sub_;
 
             std_srvs::Empty empty_srv_;

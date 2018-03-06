@@ -943,6 +943,17 @@ bool setPathSrvCallback(gobot_msg_srv::SetStringArray::Request &req, gobot_msg_s
     return true;
 }
 
+bool setSpeedSrvCallback(gobot_msg_srv::SetStringArray::Request &req, gobot_msg_srv::SetStringArray::Response &res){
+    std::vector<std::string> command({"1"});
+    std::string commandStr = command.at(0) + sep;
+    for (int i=0;i<req.data.size();i++){
+        commandStr = commandStr + req.data[i] + sep;
+        command.push_back(req.data[i]);
+    }
+    sendCommand("",command,commandStr);
+    return true;
+}
+
 bool shutdownSrvCallback(std_srvs::Empty::Request &req, std_srvs::Empty::Response &res){
     std::vector<std::string> command({"v"});
     std::string commandStr = command.at(0) + sep;
@@ -1226,6 +1237,7 @@ int main(int argc, char* argv[]){
         ros::ServiceServer playPointSrv = n.advertiseService("/gobot_command/play_point", playPointSrvCallback);
         ros::ServiceServer setPathSrv = n.advertiseService("/gobot_command/set_path", setPathSrvCallback);
         ros::ServiceServer shutdownSrv = n.advertiseService("/gobot_command/shutdown", shutdownSrvCallback);
+        ros::ServiceServer setSpeedSrv = n.advertiseService("/gobot_command/set_speed", setSpeedSrvCallback);
 
         ROS_INFO("(Command system) Ready to be launched.");
 

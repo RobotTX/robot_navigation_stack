@@ -4,15 +4,16 @@
 namespace robot_class {
 
     /**
-    * @BRIEFT  Class constructor
+    * @BRIEF  Class constructor
     */
     RobotCommand::RobotCommand(): global_costmap_(NULL), tf_(NULL), initialized_(false), 
     left_encoder_(0), right_encoder_(0), left_speed_(0), right_speed_(0), 
     battery_percent_(-1), charging_current_(-1), charging_flag_(false),
     goal_status_(-1), map_received_(false) {} 
 
+
     /**
-    * @BRIEFT  Class destructor
+    * @BRIEF  Class destructor
     */
     RobotCommand::~RobotCommand(){
         encoder_sub_.shutdown();
@@ -24,13 +25,13 @@ namespace robot_class {
         sonar_sub_.shutdown();
         gyro_sub_.shutdown();
         goal_status_sub_.shutdown();
-        delete tf_;
         delete global_costmap_;
+        delete tf_;
     }
 
 
     /**
-    * @BRIEFT  Initialize class object
+    * @BRIEF  Initialize class object
     */
     void RobotCommand::initialize(){
         if(!initialized_){
@@ -41,6 +42,7 @@ namespace robot_class {
             ros::NodeHandle nh;
             //Publishers
             vel_pub_ = nh.advertise<geometry_msgs::Twist>("/cmd_vel", 1);
+            make_plan_pub_ = nh.advertise<nav_msgs::Path>("/robot_lib/make_path_plan",1,true);
             //Subscribers
             encoder_sub_ = nh.subscribe<gobot_msg_srv::EncodersMsg>("/encoders", 50, &RobotCommand::encodersCallback, this);
             speed_sub_ = nh.subscribe<gobot_msg_srv::MotorSpeedMsg>("/gobot_motor/motor_speed", 1, &RobotCommand::motorSpdCallback,this);
@@ -59,6 +61,7 @@ namespace robot_class {
             r.sleep();
             }
             initialized_ = true;
+            ROS_INFO("Robot_Command::Object is successfully initialized.");
         }
         else{
             ROS_WARN("Robot_Command::You should not call initialize twice on this object, doing nothing");
@@ -93,7 +96,7 @@ namespace robot_class {
 
 
     /**
-    * @BRIEFT  Subscribers callback
+    * @BRIEF  Subscribers callback
     */
     void RobotCommand::encodersCallback(const gobot_msg_srv::EncodersMsg::ConstPtr& msg){
         left_encoder_ = msg->left_encoder;
@@ -104,8 +107,8 @@ namespace robot_class {
     //motor speed ranges from 0 to 128. Positive indicates forward, and negative indicates backward
     void RobotCommand::motorSpdCallback(const gobot_msg_srv::MotorSpeedMsg::ConstPtr& speed){
         if(speed->velocityL <= 127 && speed->velocityR <= 127){
-             left_speed_ = speed->directionL.compare("F") == 0 ? -speed->velocityL : speed->velocityL;
-             right_speed_ = speed->directionR.compare("F") == 0 ? -speed->velocityR : speed->velocityR;
+             left_speed_ = speed->directionL.compare("F") == 0 ? speed->velocityL : -speed->velocityL;
+             right_speed_ = speed->directionR.compare("F") == 0 ? speed->velocityR : -speed->velocityR;
         }
         else{
             left_speed_ = 128;
@@ -164,8 +167,29 @@ namespace robot_class {
         map_received_ = true;
     }
     
+
     /**
-    * @BRIEFT  Programmable voice
+    * @BRIEF  Some functions
+    */
+    void RobotCommand::getYaw(double &yaw, const geometry_msgs::Quaternion &q){
+        yaw = tf::getYaw(tf::Quaternion(q.x,q.y,q.z,q.w));
+    }
+
+    void RobotCommand::getQuaternion(geometry_msgs::Quaternion &q, const double &yaw){
+        q = tf::createQuaternionMsgFromYaw(yaw);
+    }
+
+    double RobotCommand::getRadian(const double degree){
+        return degree*3.1415926/180.0;
+    }
+
+    double RobotCommand::getDegree(const double rad){
+        return rad*180.0/3.1415926;
+    }
+
+
+    /**
+    * @BRIEF  Programmable voice
     */
     void RobotCommand::ttsEnglish(std::string str){
         set_robot_.speakEnglish(str);
@@ -177,7 +201,7 @@ namespace robot_class {
     
 
     /**
-    * @BRIEFT  Interact with base sensors such as color, sound and sensors data
+    * @BRIEF  Interact with base sensors such as color, sound and sensors data
     */
     void RobotCommand::setLed(int mode, const std::vector<std::string> &color){
         set_robot_.setLed(mode,color);
@@ -205,7 +229,7 @@ namespace robot_class {
 
 
     /**
-    * @BRIEFT  Interact with base motors such as get/set motor speeds and encoders
+    * @BRIEF  Interact with base motors such as get/set motor speeds and encoders
     */
     void RobotCommand::setMotorSpeed(const char directionL, const int velocityL, const char directionR, const int velocityR){ 
         set_robot_.setMotorSpeed(directionR,velocityR,directionL,velocityL);
@@ -218,8 +242,11 @@ namespace robot_class {
         vel_pub_.publish(vel);
     }
 
-    void RobotCommand::setSpeedLimit(std::string linear, std::string angular){
-        set_robot_.setSpeed(linear,angular);
+    void RobotCommand::setSpeedLimit(double linear, double angular){
+        gobot_msg_srv::SetStringArray set_speed;
+        set_speed.request.data.push_back(std::to_string(linear));
+        set_speed.request.data.push_back(std::to_string(getDegree(angular)));
+        ros::service::call("/gobot_command/set_speed",set_speed);
     }
 
     void RobotCommand::getEncoder(int &left_encoder, int &right_encoder){
@@ -232,21 +259,9 @@ namespace robot_class {
         right_speed = right_speed_;   
     }
 
-
-    /**
-    * @BRIEFT  Quaternion and yaw conversion
-    */
-    void RobotCommand::getYaw(double &yaw, const geometry_msgs::Quaternion &q){
-        yaw = tf::getYaw(tf::Quaternion(q.x,q.y,q.z,q.w));
-    }
-
-    void RobotCommand::getQuaternion(geometry_msgs::Quaternion &q, const double &yaw){
-        q = tf::createQuaternionMsgFromYaw(yaw);
-    }
-
     
     /**
-    * @BRIEFT  Localization
+    * @BRIEF  Localization
     */
     void RobotCommand::getCurrentPose(Pose &pose){
         tf::Stamped<tf::Pose> global_pose;
@@ -268,13 +283,13 @@ namespace robot_class {
 
 
     /**
-    * @BRIEFT  Map
+    * @BRIEF  Map
     */
     //rosrun map_server map_saver [-f mapname]
     void RobotCommand::saveMapTo(std::string path){
         std::string cmd;
         if (path == ""){
-            cmd = "rosrun map_server map_saver &";
+            cmd = "rosrun map_server map_saver -f ~/map &";
         }
         else{
             cmd = "rosrun map_server map_saver -f "+ path +" &";
@@ -287,7 +302,7 @@ namespace robot_class {
     }
 
     /**
-    * @BRIEFT  Target Points || Routes
+    * @BRIEF  Target Points || Routes
     */
     //get the point cost in costmap
     //costmap_2d::FREE_SPACE=0, costmap_2d::INSCRIBED_INFLATED_OBSTACLE=253, costmap_2d::LETHAL_OBSTACLE=254, costmap_2d::NO_INFORMATION=255
@@ -314,7 +329,7 @@ namespace robot_class {
         msg.request.data.push_back(std::to_string(point.x));
         msg.request.data.push_back(std::to_string(point.y));
         //rads
-        double theta = (-point.theta-1.57079)*180/3.1415926;
+        double theta = getDegree(-point.theta-1.57079);
         msg.request.data.push_back(std::to_string(theta));
         msg.request.data.push_back("0");
         ros::service::call("/gobot_command/play_point",msg);
@@ -333,7 +348,7 @@ namespace robot_class {
         msg.request.data.push_back(std::to_string(point.pose.position.y));
         double yaw;
         getYaw(yaw,point.pose.orientation);
-        yaw = (-yaw-1.57079)*180/3.1415926;
+        yaw = getDegree(-yaw-1.57079);
         msg.request.data.push_back(std::to_string(yaw));
         msg.request.data.push_back("0");
         ros::service::call("/gobot_command/play_point",msg);
@@ -357,7 +372,7 @@ namespace robot_class {
             msg.request.data.push_back(std::to_string(path[i].y));
             msg.request.data.push_back(std::to_string(path[i].waiting));
             //rads
-            double theta = (-path[i].theta-1.57079)*180/3.1415926;
+            double theta = getDegree(-path[i].theta-1.57079);
             msg.request.data.push_back(std::to_string(theta));
         }
         ros::service::call("/gobot_command/set_path",msg);
@@ -376,7 +391,7 @@ namespace robot_class {
 
 
     /**
-    * @BRIEFT  Control robot motion
+    * @BRIEF  Control robot motion
     */
     //play assigned path
     void RobotCommand::playTargetPath(){
@@ -410,7 +425,7 @@ namespace robot_class {
 
 
     /**
-    * @BRIEFT  Obstacle Detection & Avoidance
+    * @BRIEF  Obstacle Detection & Avoidance
     */
     //get laser raw data (detection of obstacles depends on the laser range)
     void RobotCommand::getLaserData(sensor_msgs::LaserScan &data){
@@ -438,23 +453,40 @@ namespace robot_class {
         nav_msgs::GetPlan get_plan;
         get_plan.request.start = start;
         get_plan.request.goal = goal;
-        get_plan.request.tolerance = 0.5;
+        get_plan.request.tolerance = 0.05;
         bool gotPlan = ros::service::call("/move_base/make_plan",get_plan);
         plan_path.clear();
+        if(!gotPlan)
+            return false;
         for(int i=0;i<get_plan.response.plan.poses.size();i++)
             plan_path.push_back(get_plan.response.plan.poses[i]);
-        return gotPlan;
+        if(start.pose.position.x!=goal.pose.position.x || start.pose.position.y!=goal.pose.position.y 
+        || start.pose.orientation.z!=goal.pose.orientation.z || start.pose.orientation.w!=goal.pose.orientation.w){
+            if(plan_path.size()!=0)
+                return true;
+            else
+                return false;
+        }
+        else{
+            return true;
+        }
     }
 
     bool RobotCommand::makePlanPath(const geometry_msgs::PoseStamped &goal,std::vector<geometry_msgs::PoseStamped> &plan_path){
         nav_msgs::GetPlan get_plan;
         get_plan.request.goal = goal;
-        get_plan.request.tolerance = 0.5;
+        get_plan.request.tolerance = 0.05;
         bool gotPlan = ros::service::call("/move_base/make_plan",get_plan);
         plan_path.clear();
+        if(!gotPlan)
+            return false;
         for(int i=0;i<get_plan.response.plan.poses.size();i++)
             plan_path.push_back(get_plan.response.plan.poses[i]);
-        return gotPlan;
+
+        if(plan_path.size()!=0)
+            return true;
+        else
+            return false;
     }
 
     //clear costmap 

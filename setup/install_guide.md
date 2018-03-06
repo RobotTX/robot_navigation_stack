@@ -116,6 +116,10 @@ sudo apt install openssh-server openssh-client
 #*
 sudo apt install network-manager
 
+#permission denied when TAB after roslaunch
+sudo umount /home/useraccount/.gvfs
+sudo rm -rf .gvfs/
+
 ### Optional Configuration ###
 
 #remote desktop control
