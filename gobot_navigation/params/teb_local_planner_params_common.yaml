@@ -12,11 +12,11 @@ acc_lim_theta: 0.6  #0.8
 
 ####Key params that affect motion####
 weight_max_vel_x: 1.0 #default:2
-weight_max_vel_theta: 1.0 #default:1
+weight_max_vel_theta: 4.0 #default:1
 weight_acc_lim_x: 1.0 #default:1
 weight_acc_lim_theta: 3.0 #default:1
 
-weight_kinematics_nh: 1000.0
+weight_kinematics_nh: 3000.0
 weight_kinematics_forward_drive: 999.0
 weight_viapoint: 75.0 # 1.0
 weight_obstacle: 25.0
@@ -43,6 +43,7 @@ weight_dynamic_obstacle: 50.0
 dynamic_obstacle_inflation_dist: 0.6
 include_dynamic_obstacles: false
 
+weight_kinematics_turning_radius: 0.0
 
 # Trajectory
 teb_autosize: True

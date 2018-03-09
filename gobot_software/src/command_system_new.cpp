@@ -832,8 +832,8 @@ void sendCommand(const std::string ip, const std::vector<std::string> command, s
     commandMutex.lock();
     bool command_feedback = execCommand(ip, command);
     if (command_feedback )
-        //g=scan, t=newscan, u=stopscan, n=receivemap
-        if (command.at(0)!="g" && command.at(0)!="t" && command.at(0)!="u" && command.at(0)!="n")
+        //g=scan, t=newscan, u=stopscan, n=receivemap, v=shutdown
+        if (command.at(0)!="g" && command.at(0)!="t" && command.at(0)!="u" && command.at(0)!="n" && command.at(0)!="v")
             SetRobot.setSound(1,1);
 
     msg = (command_feedback ? "done" : "failed") + sep + commandStr;

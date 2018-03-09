@@ -1,1 +1,1 @@
-int32 weightInfo
+float32 weight

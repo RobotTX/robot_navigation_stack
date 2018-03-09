@@ -3,33 +3,36 @@
 ros::Publisher pcPublisher;
 
 double space, bumpers_height,dimension_x, dimension_y;
+bool use_pc = true;
 std::string pc_frame;
 
 
 
 /// Convert the bumpers info to a pointcloud and publish it
 void newBumpersInfo(const gobot_msg_srv::BumperMsg::ConstPtr& bumpers){
-    pcl::PointCloud<pcl::PointXYZ> cloud;
-    cloud.header.frame_id = pc_frame;
+    if(use_pc){
+        pcl::PointCloud<pcl::PointXYZ> cloud;
+        cloud.header.frame_id = pc_frame;
 
-    if(!bumpers->bumper1)
-        cloud.push_back(pcl::PointXYZ(dimension_x, dimension_y, bumpers_height));
-    if(!bumpers->bumper2)
-        cloud.push_back(pcl::PointXYZ(dimension_x, dimension_y/2, bumpers_height));
-    if(!bumpers->bumper3)
-        cloud.push_back(pcl::PointXYZ(dimension_x, -dimension_y/2, bumpers_height));
-    if(!bumpers->bumper4)
-        cloud.push_back(pcl::PointXYZ(dimension_x, -dimension_y, bumpers_height));
-    if(!bumpers->bumper5)
-        cloud.push_back(pcl::PointXYZ(-dimension_x, -dimension_y, bumpers_height));
-    if(!bumpers->bumper6)
-        cloud.push_back(pcl::PointXYZ(-dimension_x, -dimension_y/2, bumpers_height));
-    if(!bumpers->bumper7)
-        cloud.push_back(pcl::PointXYZ(-dimension_x, dimension_y/2, bumpers_height));
-    if(!bumpers->bumper8)
-        cloud.push_back(pcl::PointXYZ(-dimension_x, dimension_y, bumpers_height));
+        if(!bumpers->bumper1)
+            cloud.push_back(pcl::PointXYZ(dimension_x, dimension_y, bumpers_height));
+        if(!bumpers->bumper2)
+            cloud.push_back(pcl::PointXYZ(dimension_x, dimension_y/2, bumpers_height));
+        if(!bumpers->bumper3)
+            cloud.push_back(pcl::PointXYZ(dimension_x, -dimension_y/2, bumpers_height));
+        if(!bumpers->bumper4)
+            cloud.push_back(pcl::PointXYZ(dimension_x, -dimension_y, bumpers_height));
+        if(!bumpers->bumper5)
+            cloud.push_back(pcl::PointXYZ(-dimension_x, -dimension_y, bumpers_height));
+        if(!bumpers->bumper6)
+            cloud.push_back(pcl::PointXYZ(-dimension_x, -dimension_y/2, bumpers_height));
+        if(!bumpers->bumper7)
+            cloud.push_back(pcl::PointXYZ(-dimension_x, dimension_y/2, bumpers_height));
+        if(!bumpers->bumper8)
+            cloud.push_back(pcl::PointXYZ(-dimension_x, dimension_y, bumpers_height));
 
-    pcPublisher.publish(cloud);
+        pcPublisher.publish(cloud);
+    }
 }
 
 /// Initialize the global parameters
@@ -41,6 +44,7 @@ bool initParams(){
     nh.getParam("bumpers_height", bumpers_height);
     nh.getParam("dimension_x", dimension_x);
     nh.getParam("dimension_y", dimension_y);
+    nh.getParam("USE_BUMPER_PC", use_pc);
     std::cout <<  "(bumpers2pc::initParams) bumpers height:"<<bumpers_height<<" dimension_x:"<<dimension_x<<" dimension_y:"<<dimension_y<<std::endl;
 
     return true;

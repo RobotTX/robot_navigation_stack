@@ -14,6 +14,8 @@ bool USE_BUMPER=true,USE_SONAR=true,USE_CLIFF=true;
 
 int mute_=0;
 
+int max_weight = 200000;
+
 ros::Publisher bumper_pub, ir_pub, proximity_pub, sonar_pub, weight_pub, battery_pub, cliff_pub, button_pub, gyro_pub, temperature_pub;
 ros::ServiceServer setLedSrv, setSoundSrv;
 ros::Time last_led_time, reset_wifi_time;
@@ -138,6 +140,7 @@ bool checkSensors(){
 void publishSensors(void){
     bool error = false;
     bool error_bumper = false;
+    bool error_weight = false;
     std::vector<uint8_t> buff = writeAndRead(REQUEST_DATA_CMD,STM_BYTES);
 
     //ROS_INFO("(sensors::publishSensors) Info : %lu %d %d %d", buff.size(), (int) buff.at(0), (int) buff.at(1), (int) buff.at(2));
@@ -279,20 +282,29 @@ void publishSensors(void){
 
 
         /// Weight data = D40-D42 / B42-B44 
+        int32_t load_weight = (buff.at(42) << 16) | (buff.at(43) << 8) | buff.at(44);
+        if(load_weight > 2*max_weight){
+            error_weight = true;
+            load_weight = 0;
+        }
+        else{
+            load_weight = load_weight > max_weight ? -(load_weight-max_weight): load_weight;
+        }
         gobot_msg_srv::WeightMsg weight_data;
-        weight_data.weightInfo = (buff.at(42) << 16) | (buff.at(43) << 8) | buff.at(44);
+        //gram -> kg
+        weight_data.weight = load_weight/1000.0; 
 
 
         /// External button 1-No press; 0-press = D43 / B45
-        int32_t external_button = buff.at(45);
+        int8_t external_button = buff.at(45);
         std_msgs::Int8 button;
         button.data = !external_button;
 
         /// Engage point (not in use) = D44 / B46
-        int32_t engage_point = buff.at(46);
+        int8_t engage_point = buff.at(46);
 
         /// Reset wifi button (double click power button) = D45 / B47
-        int32_t resetwifi_button = buff.at(47);
+        int8_t resetwifi_button = buff.at(47);
 
         /// Gyro+Accelerametor = D46-D57 / B48-B59
         gobot_msg_srv::GyroMsg gyro;
@@ -322,7 +334,7 @@ void publishSensors(void){
             "\nCliff : " << cliff_data.cliff1 << " " << cliff_data.cliff2 << " " << cliff_data.cliff3 << " " << cliff_data.cliff4 <<
             "\nBattery : " << battery_data.BatteryStatus << " " << battery_data.BatteryVoltage << " " << battery_data.ChargingCurrent << " " << battery_data.Temperature 
             << " " << battery_data.RemainCapacity << " " << battery_data.FullCapacity << " " << battery_data.ChargingFlag <<
-            "\nWeight : " << weight_data.weightInfo << " " <<
+            "\nWeight : " << weight_data.weight << " " <<
             "\nExternal button : " << external_button << " " <<
             "\nResetwifi button : " << resetwifi_button << " " << 
             "\nengage point : " << engage_point << " " <<
@@ -336,18 +348,20 @@ void publishSensors(void){
             //If no error, publish sensor data
             ir_pub.publish(ir_data);
             proximity_pub.publish(proximity_data);
-            weight_pub.publish(weight_data);
             button_pub.publish(button);
             battery_pub.publish(battery_data);
+
+            if (!error_weight)
+                weight_pub.publish(weight_data);
+            
+            if(USE_BUMPER && !error_bumper)
+                bumper_pub.publish(bumper_data);
 
             if (USE_SONAR)
                 sonar_pub.publish(sonar_data);
 
             if (USE_CLIFF && !battery_data.ChargingFlag)
                 cliff_pub.publish(cliff_data);
-                
-            if(USE_BUMPER && !error_bumper)
-                bumper_pub.publish(bumper_data);
         
             if(resetwifi_button==1 && (ros::Time::now()-reset_wifi_time).toSec()>1.0){
                 reset_wifi_time = ros::Time::now();
@@ -545,7 +559,8 @@ void initData(ros::NodeHandle &nh){
     nh.getParam("USE_SONAR", USE_SONAR);
     nh.getParam("USE_CLIFF", USE_CLIFF);
     nh.getParam("restart_file",restart_file);
-
+    nh.getParam("max_weight",max_weight);
+    
     //0x52 = Blue,0x47 = Red,0x42 = Green,0x4D = Magenta,0x43 = Cyan,0x59 = Yellow,0x57 = White, 0x00 = Off
     led_color_ = {{"green",0x42}, {"blue",0x52}, {"yellow",0x59}, {"red",0x47}, {"cyan",0x43}, {"white",0x57}, {"magenta",0x4D}, {"off",0x00}};
 }

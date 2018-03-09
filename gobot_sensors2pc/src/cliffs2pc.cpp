@@ -5,10 +5,11 @@
 double CLIFF_THRESHOLD=170, CLIFF_OUTRANGE=0;
 
 ros::Publisher cliffFRPublisher,cliffFLPublisher,cliffBRPublisher,cliffBLPublisher;
-int left_speed = 0, right_speed = 0;
+int left_speed_ = 0, right_speed_ = 0;
 
 std::string front_left_cliff_frame, front_right_cliff_frame, back_left_cliff_frame, back_right_cliff_frame;
 bool FLcliff_on = false,FRcliff_on = false,BLcliff_on = false,BRcliff_on = false;
+bool use_pc = true;
 
 bool cliffToCloud(double CliffData,pcl::PointCloud<pcl::PointXYZ> &cloudData, bool cliff_on){
     if(CliffData>CLIFF_THRESHOLD  || CliffData==CLIFF_OUTRANGE){
@@ -21,57 +22,59 @@ bool cliffToCloud(double CliffData,pcl::PointCloud<pcl::PointXYZ> &cloudData, bo
 }
 
 void motorSpdCallback(const gobot_msg_srv::MotorSpeedMsg::ConstPtr& speed){
-    left_speed = speed->velocityL;
-    right_speed = speed->velocityR;
+    left_speed_ = speed->velocityL;
+    right_speed_ = speed->velocityR;
 }
 
 //see from front view/back view
 //cliff1->front right, cliff2->front left, cliff3->back right, cliff4->back left
 void cliffCallback(const gobot_msg_srv::CliffMsg::ConstPtr& cliff){
-    pcl::PointCloud<pcl::PointXYZ> FRcliffCloud,FLcliffCloud,BRcliffCloud,BLcliffCloud;
-    FRcliffCloud.header.frame_id = front_right_cliff_frame;
-    FLcliffCloud.header.frame_id = front_left_cliff_frame;
-    BRcliffCloud.header.frame_id = back_right_cliff_frame;
-    BLcliffCloud.header.frame_id = back_left_cliff_frame;
-    //if robot is moving
-    if(left_speed != 0 || right_speed != 0){
-        if (cliffToCloud(cliff->cliff1,FRcliffCloud,FRcliff_on)){
-            if(!FRcliff_on)
-                FRcliff_on = true; 
-        }
-        else if(FRcliff_on){
-            FRcliff_on = false;
+    if(use_pc){
+        pcl::PointCloud<pcl::PointXYZ> FRcliffCloud,FLcliffCloud,BRcliffCloud,BLcliffCloud;
+        FRcliffCloud.header.frame_id = front_right_cliff_frame;
+        FLcliffCloud.header.frame_id = front_left_cliff_frame;
+        BRcliffCloud.header.frame_id = back_right_cliff_frame;
+        BLcliffCloud.header.frame_id = back_left_cliff_frame;
+        //if robot is moving
+        if(left_speed_ != 0 || right_speed_ != 0){
+            if (cliffToCloud(cliff->cliff1,FRcliffCloud,FRcliff_on)){
+                if(!FRcliff_on)
+                    FRcliff_on = true; 
+            }
+            else if(FRcliff_on){
+                FRcliff_on = false;
+            }
+
+            if (cliffToCloud(cliff->cliff2,FLcliffCloud,FLcliff_on)){
+                if(!FLcliff_on)
+                    FLcliff_on = true; 
+            }
+            else if(FLcliff_on){
+                FLcliff_on = false;
+            }
+
+            if (cliffToCloud(cliff->cliff4,BRcliffCloud,BRcliff_on)){
+                if(!BRcliff_on)
+                    BRcliff_on = true; 
+            }
+            else if(BRcliff_on){
+                BRcliff_on = false;
+            }
+
+            if (cliffToCloud(cliff->cliff3,BLcliffCloud,BLcliff_on)){
+                if(!BLcliff_on)
+                    BLcliff_on = true; 
+            }
+            else if(BLcliff_on){
+                BLcliff_on = false;
+            }
         }
 
-        if (cliffToCloud(cliff->cliff2,FLcliffCloud,FLcliff_on)){
-            if(!FLcliff_on)
-                FLcliff_on = true; 
-        }
-        else if(FLcliff_on){
-            FLcliff_on = false;
-        }
-
-        if (cliffToCloud(cliff->cliff4,BRcliffCloud,BRcliff_on)){
-            if(!BRcliff_on)
-                BRcliff_on = true; 
-        }
-        else if(BRcliff_on){
-            BRcliff_on = false;
-        }
-
-        if (cliffToCloud(cliff->cliff3,BLcliffCloud,BLcliff_on)){
-            if(!BLcliff_on)
-                BLcliff_on = true; 
-        }
-        else if(BLcliff_on){
-            BLcliff_on = false;
-        }
+        cliffFRPublisher.publish(FRcliffCloud);
+        cliffFLPublisher.publish(FLcliffCloud);
+        cliffBRPublisher.publish(BRcliffCloud);
+        cliffBLPublisher.publish(BLcliffCloud);
     }
-
-    cliffFRPublisher.publish(FRcliffCloud);
-    cliffFLPublisher.publish(FLcliffCloud);
-    cliffBRPublisher.publish(BRcliffCloud);
-    cliffBLPublisher.publish(BLcliffCloud);
 }
 
 bool initParams(){
@@ -85,6 +88,7 @@ bool initParams(){
 
     nh.getParam("CLIFF_THRESHOLD", CLIFF_THRESHOLD);
     nh.getParam("CLIFF_OUTRANGE", CLIFF_OUTRANGE);
+    nh.getParam("USE_CLIFF_PC", use_pc);
     std::cout << "(cliff2pc::initParams) CLIFF THRESHOLD:"<<CLIFF_THRESHOLD<<" CLIFF OUTRANGE:"<<CLIFF_OUTRANGE<<std::endl;
 
 
