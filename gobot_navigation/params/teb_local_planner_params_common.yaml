@@ -16,7 +16,7 @@ weight_max_vel_theta: 4.0 #default:1
 weight_acc_lim_x: 1.0 #default:1
 weight_acc_lim_theta: 3.0 #default:1
 
-weight_kinematics_nh: 3000.0
+weight_kinematics_nh: 2500.0
 weight_kinematics_forward_drive: 999.0
 weight_viapoint: 75.0 # 1.0
 weight_obstacle: 25.0
