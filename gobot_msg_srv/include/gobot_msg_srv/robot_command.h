@@ -178,6 +178,10 @@ namespace robot_class {
             */
             void mapDataCallback(const nav_msgs::MapMetaData::ConstPtr& msg);
 
+            /**
+            * @brief load weight callback function
+            */
+            void weightCallback(const gobot_msg_srv::WeightMsg::ConstPtr& msg);
 
             /**
             * @BRIEF  Some functions
@@ -223,6 +227,7 @@ namespace robot_class {
             */
 
             /**
+            * @brief change robot led color
             * @param mode: 0 means permanent LED display; 1 means running LED display
             * @param color: LED colors to display (mode 0 needs only 1 color input, and mode 2 needs at least 2 colors input)
             * *color value: "green", "blue", "yellow", "red", "cyan", "white", "magenta", "off"
@@ -230,6 +235,7 @@ namespace robot_class {
             void setLed(int mode, const std::vector<std::string> &color);
 
             /**
+            * @brief make robot buzzer beep
             * @param num: how many times of beeps for the buzzer 
             * @param time_on: how long each beep last for
             */
@@ -252,10 +258,15 @@ namespace robot_class {
             bool getBatteryCharging();
 
             /**
+            * @brief get gyro data
             * @param gyro: get the current gyroscope and accelerometer data (self-defined type 'GyroMsg')
             */
             void getGyro(Gyro &gyro_data);
 
+            /**
+            * @brief return load weight data (unit:kg)
+            */
+            float getWeight();
 
             /**
             * @BRIEF  Interact with base motors such as get/set motor speeds and encoders
@@ -474,9 +485,11 @@ namespace robot_class {
             int left_speed_, right_speed_;
             int battery_percent_, charging_current_; 
             int goal_status_;
+            float load_weight_;
 
             ros::Publisher vel_pub_, make_plan_pub_;
-            ros::Subscriber encoder_sub_, speed_sub_, battery_sub_, laser_sub_, global_path_sub_, goal_sub_, sonar_sub_, gyro_sub_, goal_status_sub_, map_sub_;
+            ros::Subscriber encoder_sub_, speed_sub_, battery_sub_, laser_sub_, 
+            global_path_sub_, goal_sub_, sonar_sub_, gyro_sub_, goal_status_sub_, map_sub_, weight_sub_;
 
             std_srvs::Empty empty_srv_;
             costmap_2d::Costmap2DROS* global_costmap_;

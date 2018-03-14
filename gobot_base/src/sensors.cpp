@@ -156,9 +156,14 @@ void publishSensors(void){
         sonar_data.distance2 = (buff.at(5) << 8) | buff.at(6);
         sonar_data.distance3 = (buff.at(7) << 8) | buff.at(8);
         sonar_data.distance4 = (buff.at(9) << 8) | buff.at(10);
+        /*
         sonar_data.distance5 = (buff.at(11) << 8) | buff.at(12);
         sonar_data.distance6 = (buff.at(13) << 8) | buff.at(14);
         sonar_data.distance7 = (buff.at(15) << 8) | buff.at(16);
+        */
+        sonar_data.distance5 = -1;
+        sonar_data.distance6 = -1;
+        sonar_data.distance7 = -1;
 
 
         /// Bumpers data = D15 / B17

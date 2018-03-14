@@ -7,8 +7,8 @@ then
 fi
 source /opt/ros/kinetic/setup.bash
 source ~/catkin_ws/devel/setup.bash
-sudo service network-manager stop
-roscore &
+roslaunch gobot_base gobot_base.launch &
 sleep 3s
-roslaunch gobot_navigation gobot_navigation.launch &
 roslaunch gobot_software gobot_software.launch &
+sleep 5s
+roslaunch gobot_navigation gobot_navigation.launch &

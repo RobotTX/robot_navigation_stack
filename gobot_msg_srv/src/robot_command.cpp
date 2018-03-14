@@ -9,7 +9,7 @@ namespace robot_class {
     RobotCommand::RobotCommand(): global_costmap_(NULL), tf_(NULL), initialized_(false), 
     left_encoder_(0), right_encoder_(0), left_speed_(0), right_speed_(0), 
     battery_percent_(-1), charging_current_(-1), charging_flag_(false),
-    goal_status_(-1), map_received_(false) {} 
+    goal_status_(-1), map_received_(false), load_weight_(0) {} 
 
 
     /**
@@ -54,6 +54,7 @@ namespace robot_class {
             gyro_sub_ = nh.subscribe<gobot_msg_srv::GyroMsg>("/gobot_base/gyro_topic", 1, &RobotCommand::gyroCallback,this);
             goal_status_sub_ = nh.subscribe<actionlib_msgs::GoalStatusArray>("/move_base/status", 1, &RobotCommand::goalStatusCallback,this);
             map_sub_ = nh.subscribe<nav_msgs::MapMetaData>("/map_metadata", 1, &RobotCommand::mapDataCallback,this);
+            weight_sub_ = nh.subscribe<gobot_msg_srv::WeightMsg>("/gobot_base/weight_topic", 1, &RobotCommand::weightCallback,this);
 
             ros::Rate r(5);
             while (!map_received_ && nh.ok()){
@@ -167,6 +168,10 @@ namespace robot_class {
         getYaw(map_data_.origin.theta,msg->origin.orientation);
         map_received_ = true;
     }
+
+    void RobotCommand::weightCallback(const gobot_msg_srv::WeightMsg::ConstPtr& msg){
+        load_weight_ = msg->weight;
+    }
     
 
     /**
@@ -226,6 +231,10 @@ namespace robot_class {
 
     void RobotCommand::getGyro(Gyro &gyro_data){
         gyro_data = gyro_data_;
+    }
+
+    float RobotCommand::getWeight(){
+        return load_weight_;
     }
 
 

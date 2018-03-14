@@ -157,7 +157,7 @@ namespace robot_class {
     }
 
     void SetRobot::speakChinese(std::string str){
-        tts_ch_ = "ekho -s -40 \"" + str + "\"";
+        tts_ch_ = "ekho -s -25 \"" + str + "\"";
         system(tts_ch_.c_str());
     }
     //this two functions only work with robot equipped with speaker and ekho & festival packages

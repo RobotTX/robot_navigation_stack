@@ -20,6 +20,8 @@ std::mutex commandMutex;
 
 std::map<std::string, boost::shared_ptr<tcp::socket>> sockets;
 
+std::string tts_text_;
+
 std_srvs::Empty empty_srv;
 
 ros::Publisher disco_pub;
@@ -98,6 +100,10 @@ bool execCommand(const std::string ip, const std::vector<std::string> command){
     }
 
     switch (commandStr.at(0)) {
+        /// Interrupt delay/human action
+        case '4':
+            status = textToSpeech(command);
+        break;
         /// Interrupt delay/human action
         case '3':
             status = interruptDelay(command);
@@ -270,6 +276,18 @@ bool execCommand(const std::string ip, const std::vector<std::string> command){
 }
 
 /*********************************** COMMAND FUNCTIONS ***********************************/
+// Command: 4, 2nd param=text to be converted to speech
+bool textToSpeech(const std::vector<std::string> command){
+    if(command.size() == 2){
+        tts_text_ = command.at(1);
+        std::thread([](){
+            SetRobot.speakChinese(tts_text_);
+        }).detach();
+        return true;
+    }
+    return false;
+}
+
 // Command: 3, 2nd param=interrupt flag
 bool interruptDelay(const std::vector<std::string> command){
     if(command.size() == 2){
