@@ -5,6 +5,8 @@ if [ ! -z "$var" ]
 then
     echo "y" | rosclean purge
 fi
+#set speaker volume to be 80%
+amixer -M set Master 80%
 sleep 15s
 gnome-terminal -x bash -c "source /opt/ros/kinetic/setup.bash;source ~/catkin_ws/devel/setup.bash;roslaunch gobot_software gobot_software.launch;exec bash;"
 sleep 3s

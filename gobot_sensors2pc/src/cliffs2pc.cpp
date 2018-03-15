@@ -12,7 +12,7 @@ bool FLcliff_on = false,FRcliff_on = false,BLcliff_on = false,BRcliff_on = false
 bool use_pc = true;
 
 bool cliffToCloud(double CliffData,pcl::PointCloud<pcl::PointXYZ> &cloudData, bool cliff_on){
-    if(CliffData>CLIFF_THRESHOLD  || CliffData==CLIFF_OUTRANGE){
+    if(CliffData>CLIFF_THRESHOLD){  //&& CliffData==CLIFF_OUTRANGE){   //CLIFF_OUTRANGE probably back wheel blocked cliff sensors
         cloudData.push_back(pcl::PointXYZ(0, 0, 0));
         return true;
     }

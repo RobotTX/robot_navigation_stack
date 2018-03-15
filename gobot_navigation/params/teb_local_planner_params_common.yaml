@@ -18,7 +18,7 @@ weight_acc_lim_theta: 3.0 #default:1
 
 weight_kinematics_nh: 2500.0
 weight_kinematics_forward_drive: 999.0
-weight_viapoint: 75.0 # 1.0
+weight_viapoint: 100.0 # 1.0
 weight_obstacle: 25.0
 weight_optimaltime: 4.0 #2
 
@@ -27,7 +27,7 @@ max_global_plan_lookahead_dist: 2.0
 global_plan_viapoint_sep: 0.5 # -0.1
 
 # GoalTolerance
-xy_goal_tolerance: 0.15
+xy_goal_tolerance: 0.2
 yaw_goal_tolerance: 0.1 #5.7 degrees
 free_goal_vel: false
 

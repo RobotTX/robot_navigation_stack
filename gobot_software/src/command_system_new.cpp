@@ -280,9 +280,7 @@ bool execCommand(const std::string ip, const std::vector<std::string> command){
 bool textToSpeech(const std::vector<std::string> command){
     if(command.size() == 2){
         tts_text_ = command.at(1);
-        std::thread([](){
-            SetRobot.speakChinese(tts_text_);
-        }).detach();
+        SetRobot.speakChinese(tts_text_);
         return true;
     }
     return false;

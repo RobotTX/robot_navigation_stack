@@ -576,6 +576,7 @@ bool initSerial(){
     if(serialConnection.isOpen()){
         serialConnection.close();
     }
+    ros::Duration(2.0).sleep();
     ROS_INFO("(sensors::initSerial) STM32 port : %s", port.c_str());
     // Set the serial port, baudrate and timeout in milliseconds
     serialConnection.setPort(port);
@@ -594,7 +595,7 @@ bool initSerial(){
         serialConnection.read(buff, 5);
         ROS_INFO("(sensors::Initial) Reseted STM32. Received %lu bytes", buff.size());
         //we need wait for a while when startup robot and initilize STM
-        ros::Duration(1.0).sleep();
+        ros::Duration(2.0).sleep();
         if(buff.size() != 5){
             ROS_INFO("(Sensors::Initial) Receive wrong ACK from STM32.");
             connectionMutex.unlock(); 
@@ -657,7 +658,6 @@ int main(int argc, char **argv) {
     initSerial();
 
     int n=0;
-    ros::Rate r(STM_RATE);
     ros::Rate r2(2);
     //checking procedure
     while(STM_CHECK<4 && ros::ok()){
@@ -697,6 +697,7 @@ int main(int argc, char **argv) {
     ros::ServiceServer sensorsReadySrv = nh.advertiseService("/gobot_startup/sensors_ready", sensorsReadySrvCallback);
     //Startup end
 
+    ros::Rate r(STM_RATE);
     //start publish sensor information after checking procedure
     while(ros::ok()){
         publishSensors();

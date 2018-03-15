@@ -608,8 +608,8 @@ namespace move_base {
               if(cell_cost <= costmap_threshold_value_){
                 planner_plan_->erase(planner_plan_->begin()+i,planner_plan_->end());
                 planner_plan_->back().pose.orientation = temp_goal.pose.orientation;
-                ROS_INFO("Test near obs goal: original size:%d, changed size: %zu; goal pose: %.2f,%.2f, changed pose:%.2f,%.2f",plan_size, planner_plan_->size(), 
-                temp_goal.pose.position.x, temp_goal.pose.position.y, planner_plan_->back().pose.position.x,planner_plan_->back().pose.position.y);
+                //ROS_INFO("Test near obs goal: original size:%d, changed size: %zu; goal pose: %.2f,%.2f, changed pose:%.2f,%.2f",plan_size, planner_plan_->size(), 
+                //temp_goal.pose.position.x, temp_goal.pose.position.y, planner_plan_->back().pose.position.x,planner_plan_->back().pose.position.y);
                 break;
               }
             }
@@ -638,16 +638,23 @@ namespace move_base {
       }
       //if we didn't get a plan and we are in the planning state (the robot isn't moving)
       else if(state_==PLANNING){
-        ROS_DEBUG_NAMED("move_base_plan_thread","No Plan...");
-        ros::Time attempt_end = last_valid_plan_ + ros::Duration(planner_patience_);
+        ros::Time attempt_end = last_valid_plan_;
+        //tx//faster to apply first recovery behavior (clear certain distance costmap)
+        if(recovery_index_ == 0){
+          attempt_end += ros::Duration(1.0);
+        }
+        //tx//end
+        else{
+          ROS_DEBUG_NAMED("move_base_plan_thread","No Plan...");
+          attempt_end += ros::Duration(planner_patience_);
+        }
 
         //check if we've tried to make a plan for over our time limit or our maximum number of retries
         //issue #496: we stop planning when one of the conditions is true, but if max_planning_retries_
         //is negative (the default), it is just ignored and we have the same behavior as ever
         lock.lock();
         planning_retries_++;
-        if(runPlanner_ &&
-           (ros::Time::now() > attempt_end)){ //|| planning_retries_ > uint32_t(max_planning_retries_))){
+        if(runPlanner_ && (ros::Time::now() > attempt_end)){ //|| planning_retries_ > uint32_t(max_planning_retries_))){
           //we'll move into our obstacle clearing mode
           state_ = CLEARING;
           runPlanner_ = false;  // proper solution for issue #523
@@ -671,7 +678,7 @@ namespace move_base {
             tf::poseStampedTFToMsg(global_pose, current_position);
             double obs_distance = distance(current_position,latest_plan_->at(i));
             //if distance is too near, stop the robot
-            ROS_INFO("Test obs distance :%d, %zu, %f",i, latest_plan_->size(),obs_distance);
+            //ROS_INFO("Test obs distance :%d, %zu, %f",i, latest_plan_->size(),obs_distance);
             if(obs_distance < conservative_reset_dist_){
               state_ = PLANNING;
               publishZeroVelocity();
@@ -985,8 +992,16 @@ namespace move_base {
             recovery_index_ = 0;
         }
         else {
-          ROS_DEBUG_NAMED("move_base", "The local planner could not find a valid plan.");
-          ros::Time attempt_end = last_valid_control_ + ros::Duration(controller_patience_);
+          ros::Time attempt_end = last_valid_control_;
+          //tx//faster to apply first recovery behavior (clear certain distance costmap)
+          if(recovery_index_ == 0){
+            attempt_end +=  ros::Duration(1.0);
+          }
+          //tx//end
+          else{
+            ROS_DEBUG_NAMED("move_base", "The local planner could not find a valid plan.");
+            attempt_end += ros::Duration(controller_patience_);
+          }
 
           //check if we've tried to find a valid control for longer than our time limit
           if(ros::Time::now() > attempt_end){

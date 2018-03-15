@@ -84,89 +84,94 @@ void cliffCallback(const gobot_msg_srv::CliffMsg::ConstPtr& cliff){
 
 void newBumpersInfo(const gobot_msg_srv::BumperMsg::ConstPtr& bumpers){
     if(moved_from_collision){
-        bool broken = bumpers_broken[0]||bumpers_broken[1]||bumpers_broken[2]||bumpers_broken[3]
-        ||bumpers_broken[4]||bumpers_broken[5]||bumpers_broken[6]||bumpers_broken[7];
+        if(bumpers_broken[0] && bumpers->bumper1)
+            bumpers_broken[0] = false;
+        if(bumpers_broken[1] && bumpers->bumper2)
+            bumpers_broken[1] = false;
+        if(bumpers_broken[2] && bumpers->bumper3)
+            bumpers_broken[2] = false;
+        if(bumpers_broken[3] && bumpers->bumper4)
+            bumpers_broken[3] = false;
+        if(bumpers_broken[4] && bumpers->bumper5)
+            bumpers_broken[4] = false;
+        if(bumpers_broken[5] && bumpers->bumper6)
+            bumpers_broken[5] = false;
+        if(bumpers_broken[6] && bumpers->bumper7)
+            bumpers_broken[6] = false;
+        if(bumpers_broken[7] && bumpers->bumper8)
+            bumpers_broken[7] = false;
 
-        bool no_collision = bumpers->bumper1&&bumpers->bumper2&&bumpers->bumper3&&bumpers->bumper4&&
-                            bumpers->bumper5&&bumpers->bumper6&&bumpers->bumper7&&bumpers->bumper8;
+        /// 0 : collision; 1 : no collision
+        bumpers_data.bumper1 = bumpers_broken[0] || bumpers->bumper1;
+        bumpers_data.bumper2 = bumpers_broken[1] || bumpers->bumper2;
+        bumpers_data.bumper3 = bumpers_broken[2] || bumpers->bumper3;
+        bumpers_data.bumper4 = bumpers_broken[3] || bumpers->bumper4;
+        bumpers_data.bumper5 = bumpers_broken[4] || bumpers->bumper5;
+        bumpers_data.bumper6 = bumpers_broken[5] || bumpers->bumper6;
+        bumpers_data.bumper7 = bumpers_broken[6] || bumpers->bumper7;
+        bumpers_data.bumper8 = bumpers_broken[7] || bumpers->bumper8;
 
-        if(broken && no_collision){
-            for(int i=0;i<sizeof(bumpers_broken);i++)
-                bumpers_broken[i]=false; 
-        }
-    }
-    /// 0 : collision; 1 : no collision
-    bumpers_data.bumper1 = bumpers_broken[0] || bumpers->bumper1;
-    bumpers_data.bumper2 = bumpers_broken[1] || bumpers->bumper2;
-    bumpers_data.bumper3 = bumpers_broken[2] || bumpers->bumper3;
-    bumpers_data.bumper4 = bumpers_broken[3] || bumpers->bumper4;
-    bumpers_data.bumper5 = bumpers_broken[4] || bumpers->bumper5;
-    bumpers_data.bumper6 = bumpers_broken[5] || bumpers->bumper6;
-    bumpers_data.bumper7 = bumpers_broken[6] || bumpers->bumper7;
-    bumpers_data.bumper8 = bumpers_broken[7] || bumpers->bumper8;
+        bool front = !(bumpers_data.bumper1 && bumpers_data.bumper2 && bumpers_data.bumper3 && bumpers_data.bumper4);
+        bool back = !(bumpers_data.bumper5 && bumpers_data.bumper6 && bumpers_data.bumper7 && bumpers_data.bumper8);
+        bumper_on = front || back;
 
-    bool front = !(bumpers_data.bumper1 && bumpers_data.bumper2 && bumpers_data.bumper3 && bumpers_data.bumper4);
-    bool back = !(bumpers_data.bumper5 && bumpers_data.bumper6 && bumpers_data.bumper7 && bumpers_data.bumper8);
-    bumper_on = front || back;
+        //publish bumper data after detecting broken bumpers
+        bumper_pub.publish(bumpers_data);
 
-    //publish bumper data after detecting broken bumpers
-    bumper_pub.publish(bumpers_data);
-
-    /// check if we have a collision
-    if(bumper_on){
-        /// if it's a new collision, we stop the robot
-        if(!collision){
-            SetRobot.setMotorSpeed('F', 0, 'F', 0);
-            ROS_WARN("(twist::newBumpersInfo) just got a new collision");
-            collision = true;
-            collisionTime = ros::Time::now();
-        } 
-        else if((ros::Time::now() - collisionTime).toSec()>collision_threshold && moved_from_collision){
-        /// if after 5 seconds, the obstacle is still there, we go to the opposite direction
-            moved_from_collision = false;
-            bumper_collision_pub.publish(bumpers_data);
-            /// We create a thread that will make the robot go into the opposite direction, then sleep for 2 seconds and make the robot stop
-            if(front && !back){  
-                bumpers_broken[0] = !bumpers_data.bumper1;
-                bumpers_broken[1] = !bumpers_data.bumper2;
-                bumpers_broken[2] = !bumpers_data.bumper3;
-                bumpers_broken[3] = !bumpers_data.bumper4;
-                std::thread([](){
-                    ROS_WARN("(twist::newBumpersInfo) Launching thread to move away from front obstacle");
-                    SetRobot.setMotorSpeed('B', avoid_spd, 'B', avoid_spd);
-                    ros::Duration(1.5).sleep();
-                    SetRobot.setMotorSpeed('F', 0, 'F', 0);
-                    if(bumpers_broken[0] || bumpers_broken[1] || bumpers_broken[2] || bumpers_broken[3])
-                        ROS_INFO("Front bumper broken: %d,%d,%d,%d",bumpers_broken[0],bumpers_broken[1],bumpers_broken[2],bumpers_broken[3]);
-                    collisionTime = ros::Time::now();
-                    moved_from_collision = true;
-                }).detach();
+        /// check if we have a collision
+        if(bumper_on){
+            /// if it's a new collision, we stop the robot
+            if(!collision){
+                SetRobot.setMotorSpeed('F', 0, 'F', 0);
+                ROS_WARN("(twist::newBumpersInfo) just got a new collision");
+                collision = true;
+                collisionTime = ros::Time::now();
             } 
-            else if(back && !front){
-                bumpers_broken[4] = !bumpers_data.bumper5;
-                bumpers_broken[5] = !bumpers_data.bumper6;
-                bumpers_broken[6] = !bumpers_data.bumper7;
-                bumpers_broken[7] = !bumpers_data.bumper8;
-                std::thread([](){
-                    ROS_WARN("(twist::newBumpersInfo) Launching thread to move away from back obstacle");
-                    SetRobot.setMotorSpeed('F', avoid_spd, 'F', avoid_spd);
-                    ros::Duration(1.5).sleep();
-                    SetRobot.setMotorSpeed('F', 0, 'F', 0);
-                    if(bumpers_broken[4] || bumpers_broken[5] || bumpers_broken[6] || bumpers_broken[7])
+            else if((ros::Time::now() - collisionTime).toSec()>collision_threshold){
+            /// if after 5 seconds, the obstacle is still there, we go to the opposite direction
+                moved_from_collision = false;
+                bumper_collision_pub.publish(bumpers_data);
+                /// We create a thread that will make the robot go into the opposite direction, then sleep for 2 seconds and make the robot stop
+                if(front && !back){  
+                    bumpers_broken[0] = !bumpers_data.bumper1;
+                    bumpers_broken[1] = !bumpers_data.bumper2;
+                    bumpers_broken[2] = !bumpers_data.bumper3;
+                    bumpers_broken[3] = !bumpers_data.bumper4;
+                    std::thread([](){
+                        ROS_WARN("(twist::newBumpersInfo) Launching thread to move away from front obstacle");
+                        SetRobot.setMotorSpeed('B', avoid_spd, 'B', avoid_spd);
+                        ros::Duration(1.5).sleep();
+                        SetRobot.setMotorSpeed('F', 0, 'F', 0);
+                        ROS_INFO("Front bumper broken: %d,%d,%d,%d",bumpers_broken[0],bumpers_broken[1],bumpers_broken[2],bumpers_broken[3]);
+                        collisionTime = ros::Time::now();
+                        moved_from_collision = true;
+                    }).detach();
+                } 
+                else if(back && !front){
+                    bumpers_broken[4] = !bumpers_data.bumper5;
+                    bumpers_broken[5] = !bumpers_data.bumper6;
+                    bumpers_broken[6] = !bumpers_data.bumper7;
+                    bumpers_broken[7] = !bumpers_data.bumper8;
+                    std::thread([](){
+                        ROS_WARN("(twist::newBumpersInfo) Launching thread to move away from back obstacle");
+                        SetRobot.setMotorSpeed('F', avoid_spd, 'F', avoid_spd);
+                        ros::Duration(1.5).sleep();
+                        SetRobot.setMotorSpeed('F', 0, 'F', 0);
                         ROS_INFO("Back bumper broken: %d,%d,%d,%d",bumpers_broken[4],bumpers_broken[5],bumpers_broken[6],bumpers_broken[7]);
-                    collisionTime = ros::Time::now();
-                    moved_from_collision = true;
-                }).detach();
+                        collisionTime = ros::Time::now();
+                        moved_from_collision = true;
+                    }).detach();
+                }
             }
+        } 
+        else if(collision){
+            /// if we had a collision and the obstacle left
+            ROS_INFO("(twist::newBumpersInfo) Obstacle left after %f seconds",(ros::Time::now() - collisionTime).toSec());
+            ROS_INFO("Front bumper broken: %d,%d,%d,%d",bumpers_broken[0],bumpers_broken[1],bumpers_broken[2],bumpers_broken[3]);
+            ROS_INFO("Back bumper broken: %d,%d,%d,%d",bumpers_broken[4],bumpers_broken[5],bumpers_broken[6],bumpers_broken[7]);
+            collision = false;
+            bumper_collision_pub.publish(bumpers_data);
         }
-    } 
-    else if(collision && moved_from_collision){
-        /// if we had a collision and the obstacle left
-        ROS_INFO("(twist::newBumpersInfo) Obstacle left after %f seconds",(ros::Time::now() - collisionTime).toSec());
-        ROS_INFO("Front bumper broken: %d,%d,%d,%d",bumpers_broken[0],bumpers_broken[1],bumpers_broken[2],bumpers_broken[3]);
-        ROS_INFO("Back bumper broken: %d,%d,%d,%d",bumpers_broken[4],bumpers_broken[5],bumpers_broken[6],bumpers_broken[7]);
-        collision = false;
-        bumper_collision_pub.publish(bumpers_data);
     }
 }
 

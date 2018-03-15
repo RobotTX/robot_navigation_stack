@@ -152,12 +152,12 @@ namespace robot_class {
 
     //this two functions only work with robot equipped with speaker and ekho & festival packages
     void SetRobot::speakEnglish(std::string str){
-        tts_en_ = "echo \"" + str + "\" | festival --tts";
+        tts_en_ = "echo \"" + str + "\" | festival --tts &";
         system(tts_en_.c_str());
     }
 
     void SetRobot::speakChinese(std::string str){
-        tts_ch_ = "ekho -s -25 \"" + str + "\"";
+        tts_ch_ = "ekho -s -30 \"" + str + "\" &";
         system(tts_ch_.c_str());
     }
     //this two functions only work with robot equipped with speaker and ekho & festival packages
