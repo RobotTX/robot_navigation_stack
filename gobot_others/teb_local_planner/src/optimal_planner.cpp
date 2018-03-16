@@ -1104,11 +1104,32 @@ bool TebOptimalPlanner::getVelocityCommand(double& vx, double& vy, double& omega
     omega = 0;
     return false;
   }
-	  
+
   // Get velocity from the first two configurations
   extractVelocity(teb_.Pose(0), teb_.Pose(1), dt, vx, vy, omega);
+
+  //tx//begin//in-place rotation priority
+  if (teb_.sizePoses()>5 && omega!=0.0){
+    double dis_diff = (teb_.Pose(5).position()-teb_.Pose(0).position()).norm();
+    double yaw_diff = teb_.Pose(5).theta()-teb_.Pose(0).theta();
+    if(yaw_diff>3.14159)
+      yaw_diff = yaw_diff - 2*3.14159;
+    else if(yaw_diff <-3.14159)
+      yaw_diff = yaw_diff + 2*3.14159;
+
+    if (dis_diff<0.1 && fabs(yaw_diff)>0.6){
+      vx = 0;
+      vy = 0;
+      omega = omega>0 ? cfg_->robot.max_vel_theta : -cfg_->robot.max_vel_theta;
+      ROS_INFO("%.2f; #%.2f",dis_diff,yaw_diff);
+      return true;
+    }
+  }
+  //tx//end
+  
   return true;
 }
+
 
 void TebOptimalPlanner::getVelocityProfile(std::vector<geometry_msgs::Twist>& velocity_profile) const
 {

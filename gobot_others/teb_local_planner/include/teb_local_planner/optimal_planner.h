@@ -213,8 +213,8 @@ public:
    * @return \c true if command is valid, \c false otherwise
    */
   virtual bool getVelocityCommand(double& vx, double& vy, double& omega) const;
-  
-  
+
+
   /**
    * @brief Optimize a previously initialized trajectory (actual TEB optimization loop).
    * 
