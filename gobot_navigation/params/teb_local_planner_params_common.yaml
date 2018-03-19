@@ -6,7 +6,7 @@ odom_topic: odom
 map_frame: map
 
 #MAX_ACC_LINEAR=ACC_STEP*0.45m/s^2
-acc_lim_x: 0.2
+acc_lim_x: 0.3
 #MAX_ACC_ANGULAR=ACC_STEP*2.35rad/s^2
 acc_lim_theta: 0.6  #0.8
 
@@ -37,7 +37,7 @@ include_costmap_obstacles: true
 costmap_obstacles_behind_robot_dist: 1.0
 obstacle_poses_affected: 30
 inflation_dist: 0.55
-oscillation_recovery: true
+oscillation_recovery: false
 #Not in use
 weight_dynamic_obstacle: 50.0
 dynamic_obstacle_inflation_dist: 0.6

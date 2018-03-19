@@ -1108,25 +1108,67 @@ bool TebOptimalPlanner::getVelocityCommand(double& vx, double& vy, double& omega
   // Get velocity from the first two configurations
   extractVelocity(teb_.Pose(0), teb_.Pose(1), dt, vx, vy, omega);
 
-  //tx//begin//in-place rotation priority
-  if (teb_.sizePoses()>5 && omega!=0.0){
-    double dis_diff = (teb_.Pose(5).position()-teb_.Pose(0).position()).norm();
-    double yaw_diff = teb_.Pose(5).theta()-teb_.Pose(0).theta();
+  //tx//begin//increase in-place rotation priority when turning angle is big
+  /*//1:/depend on consecutive poses's distance and heading difference
+  int n = 3;
+  if (teb_.sizePoses()>n && omega!=0.0){
+    double dis_diff, yaw_diff;
+    double prev_yaw_diff = teb_.Pose(1).theta()-teb_.Pose(0).theta();
+    if(prev_yaw_diff>3.14159)
+      prev_yaw_diff = prev_yaw_diff - 2*3.14159;
+    else if(yaw_diff <-3.14159)
+      prev_yaw_diff = prev_yaw_diff + 2*3.14159;
+
+    bool in_place = true;
+    for(int i=1;i<=n;i++){
+      dis_diff = (teb_.Pose(i).position()-teb_.Pose(i-1).position()).norm();
+      yaw_diff = teb_.Pose(i).theta()-teb_.Pose(i-1).theta();
+      if(yaw_diff>3.14159)
+        yaw_diff = yaw_diff - 2*3.14159;
+      else if(yaw_diff <-3.14159)
+        yaw_diff = yaw_diff + 2*3.14159;
+
+      if(dis_diff > 0.1){
+        in_place = false;
+        break;
+      }
+      if(yaw_diff<0 && prev_yaw_diff>0){
+        in_place = false;
+        break;
+      }
+      if(yaw_diff>0 && prev_yaw_diff<0){
+        in_place = false;
+        break;
+      }
+      prev_yaw_diff = yaw_diff;
+    }
+
+    if(in_place){
+      vx = 0;
+      vy = 0;
+      omega = omega>0 ? cfg_->robot.max_vel_theta : -cfg_->robot.max_vel_theta;
+      ROS_INFO("in-place rotation");
+    }
+  */
+  //2:/depend on distance and heading differences between current pose and the nth pose
+  int n = 4;
+  if (teb_.sizePoses()>n && omega!=0.0){
+    double dis_diff = (teb_.Pose(n).position()-teb_.Pose(0).position()).norm(), 
+           yaw_diff = teb_.Pose(n).theta()-teb_.Pose(0).theta();
     if(yaw_diff>3.14159)
       yaw_diff = yaw_diff - 2*3.14159;
     else if(yaw_diff <-3.14159)
       yaw_diff = yaw_diff + 2*3.14159;
 
-    if (dis_diff<0.1 && fabs(yaw_diff)>0.6){
+    if(dis_diff<0.1 && fabs(yaw_diff)>0.436){ //0.436rad = 25deg
       vx = 0;
       vy = 0;
       omega = omega>0 ? cfg_->robot.max_vel_theta : -cfg_->robot.max_vel_theta;
-      ROS_INFO("%.2f; #%.2f",dis_diff,yaw_diff);
-      return true;
+      //ROS_INFO("in-place rotation");
     }
   }
   //tx//end
-  
+
   return true;
 }
 

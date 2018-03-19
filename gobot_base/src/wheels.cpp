@@ -13,6 +13,7 @@ serial::Serial serialConnection;
 std_srvs::Empty arg;
 int32_t last_left_encoder = 0;
 int32_t last_right_encoder = 0;
+int ACC_STEP = 0;
 double x = 0.0;
 double y = 0.0;
 double th = 0.0;
@@ -85,6 +86,14 @@ bool setSpeeds(gobot_msg_srv::SetSpeeds::Request &req, gobot_msg_srv::SetSpeeds:
 
         uint8_t leftSpeed = req.directionL.compare("F") == 0 ? 128 + req.velocityL : 128 - req.velocityL;
         uint8_t rightSpeed = req.directionR.compare("F") == 0 ? 128 + req.velocityR : 128 - req.velocityR;
+
+        if(leftSpeed!=128 || rightSpeed!=128){
+            //smoothing the speed due to the MD49 acceleration step limitation
+            if(abs(leftSpeed-leftSpeed_) > ACC_STEP)
+                leftSpeed = leftSpeed_>leftSpeed ? leftSpeed_-ACC_STEP : leftSpeed_+ACC_STEP;
+            if(abs(rightSpeed-rightSpeed_) > ACC_STEP)
+                rightSpeed = rightSpeed_>rightSpeed ? rightSpeed_-ACC_STEP : rightSpeed_+ACC_STEP;
+        }
 
         leftSpeed_ = leftSpeed;
         rightSpeed_ = rightSpeed;
@@ -162,10 +171,19 @@ void motorSpdCallback(const gobot_msg_srv::MotorSpeedMsg::ConstPtr& speed){
         uint8_t leftSpeed = speed->directionL.compare("F") == 0 ? 128 + speed->velocityL : 128 - speed->velocityL;
         uint8_t rightSpeed = speed->directionR.compare("F") == 0 ? 128 + speed->velocityR : 128 - speed->velocityR;
 
+        if(leftSpeed!=128 || rightSpeed!=128){
+            //smoothing the speed due to the MD49 acceleration step limitation
+            if(abs(leftSpeed-leftSpeed_) > ACC_STEP)
+                leftSpeed = leftSpeed_>leftSpeed ? leftSpeed_-ACC_STEP : leftSpeed_+ACC_STEP;
+            if(abs(rightSpeed-rightSpeed_) > ACC_STEP)
+                rightSpeed = rightSpeed_>rightSpeed ? rightSpeed_-ACC_STEP : rightSpeed_+ACC_STEP;
+        }
+
+
         leftSpeed_ = leftSpeed;
         rightSpeed_ = rightSpeed;
         //ROS_INFO("(wheels::setSpeeds) Data : %s %d %s %d", req.directionL.c_str(), (int) req.velocityL, req.directionR.c_str(), (int) req.velocityR);
-        
+        //ROS_INFO("(wheels::setSpeeds) Left:%d    Right:%d", leftSpeed_,rightSpeed_);
         writeAndRead(std::vector<uint8_t>({0x00, 0x31, leftSpeed, 0x00, 0x32, rightSpeed}));
     } 
 }
@@ -261,6 +279,7 @@ int main(int argc, char **argv) {
         nh.getParam("wheel_radius", wheel_radius);
         nh.getParam("ticks_per_rotation", ticks_per_rotation);
         nh.getParam("ODOM_RATE", ODOM_RATE);
+        nh.getParam("ACC_STEP", ACC_STEP);
 
         ros::Publisher odom_pub = nh.advertise<nav_msgs::Odometry>("/odom", 50);
         ros::Publisher odom_test_pub = nh.advertise<gobot_msg_srv::OdomTestMsg>("/odom_test", 50);
