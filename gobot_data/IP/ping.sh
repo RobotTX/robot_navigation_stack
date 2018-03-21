@@ -30,9 +30,12 @@ then
             nmcli connection up "Hotspot"
             echo "(Ping_Servers) Robot connecting to its own wifi named '$defalutwifi'"
         fi
-    #else
-        #echo "(Ping_Servers) Robot connected to its own wifi named '$defalutwifi' as there is no assgined wifi"
+    else
+        echo "(Ping_Servers) Robot connected to its own wifi named '$defalutwifi' as there is no assgined wifi"
     fi
+    #record all available hosts in the server
+    var=$(ifconfig | grep -A 1 $wifi | grep inet | cut -d ':' -f2|cut -f -3 --delimiter='.')
+    fping -r 0 -g "$var.0/24" 2>/dev/null | grep alive | cut -d ' ' -f1 > $isAlive
 else 
     if [ "$(nmcli device wifi list | grep -w "$wifiname")" ] #if able to find wifi in the list
     then     
@@ -51,18 +54,25 @@ else
                 nmcli connection up "$wifiname"
                 echo "(Ping_Servers) Robot connecting to assigned wifi named '$wifiname'"
             fi
-        #else
-            #echo "(Ping_Servers) Robot connected to assigned wifi named '$wifiname'"
+        else
+            echo "(Ping_Servers) Robot connected to assigned wifi named '$wifiname'"
         fi
+        #record all available hosts in the server
+        var=$(ifconfig | grep -A 1 $wifi | grep inet | cut -d ':' -f2|cut -f -3 --delimiter='.')
+        fping -r 0 -g "$var.0/24" 2>/dev/null | grep alive | cut -d ' ' -f1 > $isAlive
+        servers=$(wc -l $isAlive | cut -d ' ' -f1)
+        echo "found $servers servers including myself"
+        if [ $servers -lt 2 ]  #if no. of servers smaller than 2, network has connection issue
+        then
+            echo "restart network-mangager due to connection issue"
+            sudo service network-manager restart #restart network-manager if has issue
+        fi
+        #delete servers that we don't want to connect
+        sed -i "/$var.33/d" $isAlive
     else
         echo "(Ping_Servers) Unable to find assigned wifi:'$wifiname' in the scan list"
     fi
 fi
-#record all available hosts in the server
-var=$(ifconfig | grep -A 1 $wifi | grep inet | cut -d ':' -f2|cut -f -3 --delimiter='.')
-fping -r 0 -g "$var.0/24" 2>/dev/null | grep alive | cut -d ' ' -f1 > $isAlive
-#delete servers that we don't want to connect
-sed -i "/$var.33/d" $isAlive
 #check USB tethering connection
 usb_tether=$(route -n | grep enp | grep UG | cut -d ' ' -f10)
 if [ "$usb_tether" ]

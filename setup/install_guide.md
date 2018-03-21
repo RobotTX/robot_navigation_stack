@@ -101,8 +101,14 @@ create_udevrules_script.sh
 all settings->user accounts->automatic login
 
 #robot startup
-startup application->add
+* 1.startup application->add
 sudo sh /home/username/catkin_ws/src/gobot_navigation_stack/gobot_data/command/start_robot.sh
+* 2./etc/rc.local （failed)
+username="gtdollar"
+cd /home/$username/catkin_ws/src/gobot_navigation_stack/gobot_data/command
+./start_robot.sh $username
+before exit0
+    
 
 #allow fping
 #*

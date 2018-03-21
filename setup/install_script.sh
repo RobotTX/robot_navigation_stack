@@ -35,6 +35,10 @@ echo "[fping] installing..."
 echo "y" | sudo apt install fping
 echo "[fping] installed!"
 sleep 2s
+echo "[wmctrl] installing..."
+echo "y" | sudo apt install wmctrl
+echo "[wmctrl] installed!"
+sleep 2s
 echo "[openssh] installing..."
 echo "y" | sudo apt install openssh-server openssh-client
 echo "[openssh] installed!"
@@ -56,4 +60,5 @@ echo "#################################"
 echo "start changing udev rules..."
 path=$(cd `dirname $0`; pwd)
 sudo sh $path/create_udevrules_script.sh
+sleep 2s
 echo "#################################"
