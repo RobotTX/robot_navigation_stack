@@ -32,7 +32,7 @@ yaw_goal_tolerance: 0.1 #5.7 degrees
 free_goal_vel: false
 
 # Obstacles
-min_obstacle_dist: 0.1
+min_obstacle_dist: 0.06
 include_costmap_obstacles: true
 costmap_obstacles_behind_robot_dist: 1.0
 obstacle_poses_affected: 30

@@ -127,6 +127,16 @@ sudo umount /home/useraccount/.gvfs
 sudo rm -rf .gvfs/
 
 ### Optional Configuration ###
+##modbus Setup
+Install all dependencies from packages or from sources:
+* sudo apt-get install python-pymodbus
+* sudo apt-get install python-pyasn1 python-twisted-conch
+
+#dd clone system
+dd if=/dev/sdb  of=/dev/sdc
+dd bs=512 count=[fdisk命令中最大的end数+1] if=/dev/sdb of=name.img
+* Monitor
+sudo watch -n 60 killall -USR1 dd
 
 #remote desktop control
 configure "Desktop sharing" to allow "Remmina Remote Desktop Client"

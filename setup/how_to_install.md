@@ -3,7 +3,7 @@
 install Ubuntu 16.04 LTS using USB drive
 
 #space allocation
-swap=4GB,ext4/boot=2GB,ext4/=20GB,ext4/home=rest
+swap=2GB (L),ext4/boot=500MB (L),ext4/=15GB (P),ext4/home=10GB (L)
 
 ### To install ROS ###
 

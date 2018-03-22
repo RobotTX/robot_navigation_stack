@@ -68,7 +68,7 @@ else
             sudo service network-manager restart #restart network-manager if has issue
         fi
         #delete servers that we don't want to connect
-        sed -i "/$var.33/d" $isAlive
+        #sed -i "/$var.33/d" $isAlive
     else
         echo "(Ping_Servers) Unable to find assigned wifi:'$wifiname' in the scan list"
     fi
