@@ -42,8 +42,8 @@ void getButtonCallback(const std_msgs::Int8::ConstPtr& msg){
 		buttonOn = true;
     double dt = (ros::Time::now() - action_time).toSec();
     if(dt<=5.0){
-      //play path when pause, complete or stop path
-      if(robot_status_==4 || robot_status_==0 || robot_status_==1){
+      //play path when pause, complete or stop path/docking
+      if(robot_status_==4 || robot_status_==0 || robot_status_==1 || (robot_status_==11 && status_text_=="STOP_DOCKING")){
         ROS_INFO("Continue robot path.");
         ros::service::call("/gobot_command/play_path",empty_srv);
       }

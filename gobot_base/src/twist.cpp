@@ -276,8 +276,8 @@ void newCmdVel(const geometry_msgs::Twist::ConstPtr& twist){
             SetRobot.setMotorSpeed('F', 0, 'F', 0);
         else {
             /// calculate the speed of each wheel in m/s
-            double right_vel_m_per_sec = twist->linear.x + twist->angular.z * wheel_separation / (double)2;
-            double left_vel_m_per_sec = twist->linear.x - twist->angular.z * wheel_separation / (double)2;
+            double right_vel_m_per_sec = twist->linear.x + twist->angular.z * wheel_separation / 2.0;
+            double left_vel_m_per_sec = twist->linear.x - twist->angular.z * wheel_separation / 2.0;
 
             /// calculate the real value we need to give the MD49
             double right_vel_speed = ((right_vel_m_per_sec * ticks_per_rotation) / (2 * pi * wheel_radius) - b ) / a;

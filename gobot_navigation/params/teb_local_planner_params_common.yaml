@@ -12,7 +12,7 @@ acc_lim_theta: 0.6  #0.8
 
 ####Key params that affect motion####
 weight_max_vel_x: 1.0 #default:2
-weight_max_vel_theta: 4.0 #default:1
+weight_max_vel_theta: 3.0 #default:1
 weight_acc_lim_x: 1.0 #default:1
 weight_acc_lim_theta: 3.0 #default:1
 

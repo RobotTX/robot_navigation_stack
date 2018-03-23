@@ -1,9 +1,9 @@
 #include <gobot_base/wheels.hpp>
 
 bool testEncoder = false;
-int leftSpeed_=128, rightSpeed_=128;
+uint8_t leftSpeed_=128, rightSpeed_=128;
 
-ros::ServiceServer setSpeedsSrv,getEncodersSrv,resetEncodersSrv,initialMotorSrv;
+ros::ServiceServer setSpeedsSrv,getEncodersSrv,resetEncodersSrv,initialMotorSrv,getSpeedsSrv;
 
 std::mutex serialMutex;
 std::string MD49device;
@@ -77,34 +77,26 @@ bool getSpeeds(gobot_msg_srv::GetIntArray::Request &req, gobot_msg_srv::GetIntAr
 /// Set the speed, 0 (full reverse)  128 (stop)   255 (full forward)
 //tx//('B',127)=0, ('F/B',0)=128,('F',127)=255
 bool setSpeeds(gobot_msg_srv::SetSpeeds::Request &req, gobot_msg_srv::SetSpeeds::Response &res){
-    if(req.velocityL <= 127 && req.velocityR <= 127){
-        //x=condition?x1:x2   
-        //condition=true,x=x1; condition=false,x=x2.
-        //for larger dimension gobot
-        //uint8_t leftSpeed = req.directionL.compare("F") == 0 ? 128 - req.velocityL : 128 + req.velocityL;
-        //uint8_t rightSpeed = req.directionR.compare("F") == 0 ? 128 - req.velocityR : 128 + req.velocityR;
+    //x=condition?x1:x2   
+    //condition=true,x=x1; condition=false,x=x2.
+    uint8_t leftSpeed, rightSpeed;
+    if(req.velocityL <= 127)
+        leftSpeed = req.directionL.compare("F") == 0 ? 128 + req.velocityL : 128 - req.velocityL;  
+    else
+        leftSpeed = req.directionL.compare("F") == 0 ? 255 : 0;
 
-        uint8_t leftSpeed = req.directionL.compare("F") == 0 ? 128 + req.velocityL : 128 - req.velocityL;
-        uint8_t rightSpeed = req.directionR.compare("F") == 0 ? 128 + req.velocityR : 128 - req.velocityR;
+    if(req.velocityR <= 127)
+        rightSpeed = req.directionR.compare("F") == 0 ? 128 + req.velocityR : 128 - req.velocityR;
+    else
+        rightSpeed = req.directionL.compare("F") == 0 ? 255 : 0;
 
-        if(leftSpeed!=128 || rightSpeed!=128){
-            //smoothing the speed due to the MD49 acceleration step limitation
-            if(abs(leftSpeed-leftSpeed_) > ACC_STEP)
-                leftSpeed = leftSpeed_>leftSpeed ? leftSpeed_-ACC_STEP : leftSpeed_+ACC_STEP;
-            if(abs(rightSpeed-rightSpeed_) > ACC_STEP)
-                rightSpeed = rightSpeed_>rightSpeed ? rightSpeed_-ACC_STEP : rightSpeed_+ACC_STEP;
-        }
+    leftSpeed_ = leftSpeed;
+    rightSpeed_ = rightSpeed;
+    //ROS_INFO("(wheels::setSpeeds) Data : %s %d %s %d", req.directionL.c_str(), (int) req.velocityL, req.directionR.c_str(), (int) req.velocityR);
+    
+    writeAndRead(std::vector<uint8_t>({0x00, 0x31, leftSpeed, 0x00, 0x32, rightSpeed}));
 
-        leftSpeed_ = leftSpeed;
-        rightSpeed_ = rightSpeed;
-        //ROS_INFO("(wheels::setSpeeds) Data : %s %d %s %d", req.directionL.c_str(), (int) req.velocityL, req.directionR.c_str(), (int) req.velocityR);
-        
-        writeAndRead(std::vector<uint8_t>({0x00, 0x31, leftSpeed, 0x00, 0x32, rightSpeed}));
-
-        return true;
-    } 
-    else 
-        return false;
+    return true;
 }
 
 /// Get the encoders position
@@ -161,31 +153,33 @@ bool resetOdom(std_srvs::Empty::Request &req, std_srvs::Empty::Response &res){
 }
 
 void motorSpdCallback(const gobot_msg_srv::MotorSpeedMsg::ConstPtr& speed){
-    if(speed->velocityL <= 127 && speed->velocityR <= 127){
-        //x=condition?x1:x2   
-        //condition=true,x=x1; condition=false,x=x2.
-        //for larger dimension gobot
-        //uint8_t leftSpeed = req.directionL.compare("F") == 0 ? 128 - req.velocityL : 128 + req.velocityL;
-        //uint8_t rightSpeed = req.directionR.compare("F") == 0 ? 128 - req.velocityR : 128 + req.velocityR;
+    uint8_t leftSpeed, rightSpeed;
+    //x=condition?x1:x2   
+    //condition=true,x=x1; condition=false,x=x2.
+    if(speed->velocityL <= 127)
+        leftSpeed = speed->directionL.compare("F") == 0 ? 128 + speed->velocityL : 128 - speed->velocityL;  
+    else
+        leftSpeed = speed->directionL.compare("F") == 0 ? 255 : 0;
 
-        uint8_t leftSpeed = speed->directionL.compare("F") == 0 ? 128 + speed->velocityL : 128 - speed->velocityL;
-        uint8_t rightSpeed = speed->directionR.compare("F") == 0 ? 128 + speed->velocityR : 128 - speed->velocityR;
-
-        if(leftSpeed!=128 || rightSpeed!=128){
-            //smoothing the speed due to the MD49 acceleration step limitation
-            if(abs(leftSpeed-leftSpeed_) > ACC_STEP)
-                leftSpeed = leftSpeed_>leftSpeed ? leftSpeed_-ACC_STEP : leftSpeed_+ACC_STEP;
-            if(abs(rightSpeed-rightSpeed_) > ACC_STEP)
-                rightSpeed = rightSpeed_>rightSpeed ? rightSpeed_-ACC_STEP : rightSpeed_+ACC_STEP;
-        }
+    if(speed->velocityR <= 127)
+        rightSpeed = speed->directionR.compare("F") == 0 ? 128 + speed->velocityR : 128 - speed->velocityR;
+    else
+        rightSpeed = speed->directionL.compare("F") == 0 ? 255 : 0;
 
 
-        leftSpeed_ = leftSpeed;
-        rightSpeed_ = rightSpeed;
-        //ROS_INFO("(wheels::setSpeeds) Data : %s %d %s %d", req.directionL.c_str(), (int) req.velocityL, req.directionR.c_str(), (int) req.velocityR);
-        //ROS_INFO("(wheels::setSpeeds) Left:%d    Right:%d", leftSpeed_,rightSpeed_);
-        writeAndRead(std::vector<uint8_t>({0x00, 0x31, leftSpeed, 0x00, 0x32, rightSpeed}));
-    } 
+    if(leftSpeed!=128 || rightSpeed!=128){
+        //smoothing the speed due to the MD49 acceleration step limitation
+        if(abs(leftSpeed-leftSpeed_) > ACC_STEP)
+            leftSpeed = leftSpeed_>leftSpeed ? leftSpeed_-ACC_STEP : leftSpeed_+ACC_STEP;
+        if(abs(rightSpeed-rightSpeed_) > ACC_STEP)
+            rightSpeed = rightSpeed_>rightSpeed ? rightSpeed_-ACC_STEP : rightSpeed_+ACC_STEP;
+    }
+
+    leftSpeed_ = leftSpeed;
+    rightSpeed_ = rightSpeed;
+    //ROS_INFO("(wheels::setSpeeds) Data : %s %d %s %d", req.directionL.c_str(), (int) req.velocityL, req.directionR.c_str(), (int) req.velocityR);
+    //ROS_INFO("(wheels::setSpeeds) Left:%d    Right:%d", leftSpeed_,rightSpeed_);
+    writeAndRead(std::vector<uint8_t>({0x00, 0x31, leftSpeed, 0x00, 0x32, rightSpeed})); 
 }
 
 bool motorReadySrvCallback(std_srvs::Empty::Request &req, std_srvs::Empty::Response &res){
@@ -258,7 +252,7 @@ int main(int argc, char **argv) {
     if(initSerial()){
         ////Replace these services with publisher & subscriber
         setSpeedsSrv = nh.advertiseService("/gobot_motor/setSpeeds", setSpeeds);
-        ros::ServiceServer getSpeedsSrv = nh.advertiseService("/gobot_motor/getSpeeds", getSpeeds);
+        getSpeedsSrv = nh.advertiseService("/gobot_motor/getSpeeds", getSpeeds);
         getEncodersSrv = nh.advertiseService("/gobot_motor/getEncoders", getEncoders);
         resetEncodersSrv = nh.advertiseService("/gobot_motor/resetEncoders", resetEncoders);
         initialMotorSrv = nh.advertiseService("/gobot_motor/initialMotor", initialMotor);
@@ -299,7 +293,6 @@ int main(int argc, char **argv) {
         
         while(ros::ok()){
             dataMutex.lock();
-
             std::vector<uint8_t> encoders = writeAndRead(std::vector<uint8_t>({0x00, 0x25}), 8);
 
             if(encoders.size() == 8){

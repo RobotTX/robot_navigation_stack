@@ -42,7 +42,8 @@ void goalResultCallback(const move_base_msgs::MoveBaseActionResult::ConstPtr& ms
 				break;
 			//ABORTED
 			case 4:
-				SetRobot.setStage(-stage_ - 1);
+				if(text_=="PLAY_PATH")
+					SetRobot.setStage(-stage_ - 1);
 				setGobotStatus(0,"ABORTED_PATH");
 				SetRobot.setMotorSpeed('F', 0, 'F', 0);
 				break;

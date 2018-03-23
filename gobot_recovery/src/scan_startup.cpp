@@ -42,7 +42,7 @@ void getButtonCallback(const std_msgs::Int8::ConstPtr& msg){
       }
     }
     else if(dt>5.0){
-      //exploration
+      //exploration startup, then start auto-exploration
       if(robot_status_==20){
         ROS_INFO("Start robot exploration.");
         ros::service::call("/gobot_command/start_explore",empty_srv);
