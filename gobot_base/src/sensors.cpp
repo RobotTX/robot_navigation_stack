@@ -233,7 +233,7 @@ void publishSensors(void){
             if(abs(battery_data.ChargingCurrent-last_charging_current) > 5){
                 int current_diff = battery_data.ChargingCurrent - last_charging_current;
                 //if not fully charged
-                if(battery_data.BatteryStatus<100){
+                if(battery_data.BatteryStatus<93){
                     if(battery_data.ChargingCurrent >2500){
                         battery_data.ChargingFlag = true;
                     }

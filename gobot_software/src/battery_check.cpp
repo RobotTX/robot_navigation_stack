@@ -20,15 +20,16 @@ void timerCallback(const ros::TimerEvent&){
     if(!isCharging.response.isCharging){
         gobot_msg_srv::GetString get_battery;
         ros::service::call("/gobot_status/get_battery",get_battery);
-        if(canGoCharge && (battery_percent.response.data < std::stod(get_battery.response.data) || test == 0)){
-            ROS_WARN("(Battery check) Battery below percentage: %d ", battery_percent.response.data);
+        if(canGoCharge && (battery_percent.response.data < std::stoi(get_battery.response.data) || test == 0)){
+            ROS_WARN("(Battery check) Battery current percentage:%d, auto-charging percentage: %d ", battery_percent.response.data,std::stoi(get_battery.response.data));
             std_srvs::Empty arg;
             ros::service::call("/gobot_command/lowBattery", arg);
             canGoCharge = false;
         }
     }
-    //reset canGocharge flag when battery has lot percent
-    canGoCharge = battery_percent.response.data>75 ? true : false;
+    if(!canGoCharge)
+        //reset canGocharge flag when battery has lot percent
+        canGoCharge = battery_percent.response.data>75 ? true : false;
 }
 
 int main(int argc, char* argv[]){

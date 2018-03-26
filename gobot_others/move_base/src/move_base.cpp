@@ -586,6 +586,7 @@ namespace move_base {
 
       //time to plan! get a copy of the goal and unlock the mutex
       geometry_msgs::PoseStamped temp_goal = planner_goal_;
+
       lock.unlock();
       ROS_DEBUG_NAMED("move_base_plan_thread","Planning...");
 
@@ -596,13 +597,15 @@ namespace move_base {
       if(gotPlan){
         //ROS_INFO("move_base_plan_thread: Got Plan with %zu points!", planner_plan_->size());
         ROS_DEBUG_NAMED("move_base_plan_thread","Got Plan with %zu points!", planner_plan_->size());
-
         //tx//assign last point of goal path further from obstacle if it is too near
         lock.lock();
         if(!scan_mode_){
+          //if temp_goal pose cost value is too high to reach
           int cell_cost = getPoseCost(planner_plan_->back().pose.position.x,planner_plan_->back().pose.position.y);
+          //ROS_INFO("Got Plan with %zu points!Last pose cost: %d", planner_plan_->size(),cell_cost);
           if(cell_cost > costmap_threshold_value_){
             int plan_size = planner_plan_->size();
+            bool found_pose = false;
             for (int i=plan_size-2;i>0;i--){
               cell_cost = getPoseCost(planner_plan_->at(i).pose.position.x,planner_plan_->at(i).pose.position.y);
               if(cell_cost <= costmap_threshold_value_){
@@ -610,8 +613,14 @@ namespace move_base {
                 planner_plan_->back().pose.orientation = temp_goal.pose.orientation;
                 //ROS_INFO("Test near obs goal: original size:%d, changed size: %zu; goal pose: %.2f,%.2f, changed pose:%.2f,%.2f",plan_size, planner_plan_->size(), 
                 //temp_goal.pose.position.x, temp_goal.pose.position.y, planner_plan_->back().pose.position.x,planner_plan_->back().pose.position.y);
+                found_pose = true;
                 break;
               }
+            }
+            //if all the points along the planed path has a large cost value, then stop the robot in the current position
+            if(!found_pose){
+              planner_plan_->erase(planner_plan_->begin()+1,planner_plan_->end());
+              planner_plan_->back().pose.orientation = temp_goal.pose.orientation;
             }
           }
         }
