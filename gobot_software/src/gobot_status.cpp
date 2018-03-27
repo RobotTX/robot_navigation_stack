@@ -478,11 +478,11 @@ bool setGobotStatusSrvCallback(gobot_msg_srv::SetGobotStatus::Request &req, gobo
     gobotStatusMutex.lock();
     gobot_status_ = req.status;
     gobot_text_ = req.text;
-    robotResponse(gobot_status_,gobot_text_);
-
     std_msgs::Int8 data;
     data.data = gobot_status_;
     status_pub.publish(data);
+    robotResponse(gobot_status_,gobot_text_);
+
     gobotStatusMutex.unlock();
     
     ROS_INFO("(Gobot_status) Set Gobot status: %d,%s",gobot_status_,gobot_text_.c_str());

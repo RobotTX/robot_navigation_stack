@@ -193,9 +193,9 @@ bool initSerial(){
     ROS_INFO("(wheels::initSerial) MD49 port : %s", port.c_str());
 
     serialMutex.lock();
-    if(serialConnection.isOpen()){
+    if(serialConnection.isOpen())
         serialConnection.close();
-    }
+
     // Set the serial port, baudrate and timeout in milliseconds
     serialConnection.setPort(port);
     //Send 1200 bytes per second
@@ -211,6 +211,8 @@ bool initSerial(){
         /// then 2 bytes to disable the 2 sec timeout
         /// then 3 bytes to set the acceleration steps (1-10)
         serialConnection.write(std::vector<uint8_t>({0x00, 0x34, 0x00,0x00, 0x38,0x00, 0x33, 0x01}));
+        //set speed to 0 when initialize
+        serialConnection.write(std::vector<uint8_t>({0x00, 0x31, 0x80, 0x00, 0x32, 0x80}));
         ///reset Encoder
         serialConnection.write(std::vector<uint8_t>({0x00, 0x35}));
         ROS_INFO("(wheels::initSerial) Established connection to MD49.");
@@ -308,6 +310,7 @@ int main(int argc, char **argv) {
                 //122rpm, 2 rotation/sec, 980ticks/rotation, 2000ticks/sec maximum
                 //if odom reading too large, probably wrong reading.
                 //just skip them to prevent position jump
+                //if(abs(delta_left_encoder/dt)>encoder_limit|| abs(delta_right_encoder/dt)>encoder_limit){
                 if(abs(delta_left_encoder/dt)>encoder_limit|| abs(delta_right_encoder/dt)>encoder_limit){
                     ROS_WARN("(wheels::Odom) Detect odom jump (%d,%d), re-initial motor...",
                     abs(delta_left_encoder/dt),abs(delta_right_encoder/dt));
@@ -315,97 +318,97 @@ int main(int argc, char **argv) {
                     last_left_encoder = 0;
                     last_right_encoder = 0;
                     last_time = current_time;
-                    continue;
                 }
+                else{
+                    //ROS_INFO("right:%d, left:%d",delta_right_encoder,delta_left_encoder);
+                    last_left_encoder = leftEncoder;
+                    last_right_encoder = rightEncoder;
 
-                //ROS_INFO("right:%zu, left:%zu",delta_right_encoder,delta_left_encoder);
-                last_left_encoder = leftEncoder;
-                last_right_encoder = rightEncoder;
+                    // distance travelled by each wheel
+                    double left_dist = (delta_left_encoder / ticks_per_rotation) * 2.0 * wheel_radius * pi;
+                    double right_dist = (delta_right_encoder / ticks_per_rotation) * 2.0 * wheel_radius * pi;
 
-                // distance travelled by each wheel
-                double left_dist = (delta_left_encoder / ticks_per_rotation) * 2.0 * wheel_radius * pi;
-                double right_dist = (delta_right_encoder / ticks_per_rotation) * 2.0 * wheel_radius * pi;
+                    // velocity of each wheel
+                    double left_vel = left_dist / dt;
+                    double right_vel = right_dist / dt;
+                    //compute odometry in a typical way given the velocities of the robot
+                    double vel = (right_vel + left_vel) / 2.0;
+                    double vx = vel * cos(th);
+                    double vy = vel * sin(th);
+                    double vth = (right_vel - left_vel) / wheel_separation;
+                    //ROS_INFO("Linear vel:%.3f, Angular vel:%.3f",vel,vth);
 
-                // velocity of each wheel
-                double left_vel = left_dist / dt;
-                double right_vel = right_dist / dt;
-                //compute odometry in a typical way given the velocities of the robot
-                double vel = (right_vel + left_vel) / 2.0;
-                double vx = vel * cos(th);
-                double vy = vel * sin(th);
-                double vth = (right_vel - left_vel) / wheel_separation;
-                //ROS_INFO("Linear vel:%.3f, Angular vel:%.3f",vel,vth);
+                    double delta_x = vx * dt;
+                    double delta_y = vy * dt;
+                    double delta_th = vth * dt;
 
-                double delta_x = vx * dt;
-                double delta_y = vy * dt;
-                double delta_th = vth * dt;
+                    /*TEST REAL VELOCITY: angular speed varying
+                    geometry_msgs::Twist real_cmd;
+                    real_cmd.linear.x = vel;
+                    real_cmd.angular.z = vth;
+                    real_vel_pub.publish(real_cmd);
+                    */
 
-                /*TEST REAL VELOCITY: angular speed varying
-                geometry_msgs::Twist real_cmd;
-                real_cmd.linear.x = vel;
-                real_cmd.angular.z = vth;
-                real_vel_pub.publish(real_cmd);
-                */
+                    x += delta_x;
+                    y += delta_y;
+                    th += delta_th;  
+                    //ROS_INFO("%.5f,%.5f, %.5f",delta_x,delta_y,delta_th);
+                    
+                    //since all odometry is 6DOF we'll need a quaternion created from yaw
+                    geometry_msgs::Quaternion odom_quat = tf::createQuaternionMsgFromYaw(th);
 
-                x += delta_x;
-                y += delta_y;
-                th += delta_th;  
-                //ROS_INFO("%.5f,%.5f, %.5f",delta_x,delta_y,delta_th);
-                
-                //since all odometry is 6DOF we'll need a quaternion created from yaw
-                geometry_msgs::Quaternion odom_quat = tf::createQuaternionMsgFromYaw(th);
+                    //first, we'll publish the transform over tf
+                    geometry_msgs::TransformStamped odom_trans;
+                    odom_trans.header.stamp = current_time;
+                    odom_trans.header.frame_id = "odom";
+                    odom_trans.child_frame_id = "base_link";
 
-                //first, we'll publish the transform over tf
-                geometry_msgs::TransformStamped odom_trans;
-                odom_trans.header.stamp = current_time;
-                odom_trans.header.frame_id = "odom";
-                odom_trans.child_frame_id = "base_link";
+                    odom_trans.transform.translation.x = x;
+                    odom_trans.transform.translation.y = y;
+                    odom_trans.transform.translation.z = 0.0;
+                    odom_trans.transform.rotation = odom_quat;
 
-                odom_trans.transform.translation.x = x;
-                odom_trans.transform.translation.y = y;
-                odom_trans.transform.translation.z = 0.0;
-                odom_trans.transform.rotation = odom_quat;
+                    
+                    //send the transform
+                    odom_broadcaster.sendTransform(odom_trans);
 
-                
-                //send the transform
-                odom_broadcaster.sendTransform(odom_trans);
+                    //next, we'll publish the odometry message over ROS
+                    nav_msgs::Odometry odom;
+                    odom.header.stamp = ros::Time::now();;
+                    odom.header.frame_id = "odom";
 
-                //next, we'll publish the odometry message over ROS
-                nav_msgs::Odometry odom;
-                odom.header.stamp = ros::Time::now();;
-                odom.header.frame_id = "odom";
+                    //set the position
+                    odom.pose.pose.position.x = x;
+                    odom.pose.pose.position.y = y;
+                    odom.pose.pose.position.z = 0.0;
+                    odom.pose.pose.orientation = odom_quat;
 
-                //set the position
-                odom.pose.pose.position.x = x;
-                odom.pose.pose.position.y = y;
-                odom.pose.pose.position.z = 0.0;
-                odom.pose.pose.orientation = odom_quat;
+                    //set the velocity
+                    odom.child_frame_id = "base_link";
+                    odom.twist.twist.linear.x = vel;
+                    odom.twist.twist.linear.y = 0.0;
+                    odom.twist.twist.angular.z = vth;
 
-                //set the velocity
-                odom.child_frame_id = "base_link";
-                odom.twist.twist.linear.x = vel;
-                odom.twist.twist.linear.y = 0.0;
-                odom.twist.twist.angular.z = vth;
+                    //publish the message
+                    odom_pub.publish(odom);
 
-                //publish the message
-                odom_pub.publish(odom);
+                    //publish encoders
+                    gobot_msg_srv::EncodersMsg encoder_msg;
+                    encoder_msg.left_encoder = leftEncoder;
+                    encoder_msg.right_encoder = rightEncoder;
+                    encoder_pub.publish(encoder_msg);
+                    /*
+                    /// some test
+                    gobot_msg_srv::OdomTestMsg odomTest;
+                    odomTest.x = x;
+                    odomTest.y = y;
+                    odomTest.yaw = th;
+                    odom_test_pub.publish(odomTest);
+                    */
 
-                //publish encoders
-                gobot_msg_srv::EncodersMsg encoder_msg;
-                encoder_msg.left_encoder = leftEncoder;
-                encoder_msg.right_encoder = rightEncoder;
-                encoder_pub.publish(encoder_msg);
-                /*
-                /// some test
-                gobot_msg_srv::OdomTestMsg odomTest;
-                odomTest.x = x;
-                odomTest.y = y;
-                odomTest.yaw = th;
-                odom_test_pub.publish(odomTest);
-                */
-
-                last_time = current_time;
-                // check for incoming messages
+                    last_time = current_time;
+                    // check for incoming messages
+                }
             }
             else{
                 ROS_WARN("(wheels::getEncoders) Got the wrong number of encoders data : %lu", encoders.size());

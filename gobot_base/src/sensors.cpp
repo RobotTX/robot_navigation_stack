@@ -435,6 +435,7 @@ bool setSoundSrvCallback(gobot_msg_srv::SetIntArray::Request &req, gobot_msg_srv
 
 bool setLedSrvCallback(gobot_msg_srv::LedStrip::Request &req, gobot_msg_srv::LedStrip::Response &res){
     //if low battery and not charging, only show magenta color to warn user
+    //if charging, but robot received move command, color also changed
     if(!low_battery && !charging){
         //ROS_INFO("Receive a LED change request, and succeed to execute.");
         return setLed(req.mode,req.color);

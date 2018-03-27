@@ -602,10 +602,10 @@ namespace move_base {
         if(!scan_mode_){
           //if temp_goal pose cost value is too high to reach
           int cell_cost = getPoseCost(planner_plan_->back().pose.position.x,planner_plan_->back().pose.position.y);
-          //ROS_INFO("Got Plan with %zu points!Last pose cost: %d", planner_plan_->size(),cell_cost);
+          size_t plan_size = planner_plan_->size();
+          bool found_pose = false;
+          //ROS_INFO("Got Plan with %zu points!Last pose cost: %d", plan_size,cell_cost);
           if(cell_cost > costmap_threshold_value_){
-            int plan_size = planner_plan_->size();
-            bool found_pose = false;
             for (int i=plan_size-2;i>0;i--){
               cell_cost = getPoseCost(planner_plan_->at(i).pose.position.x,planner_plan_->at(i).pose.position.y);
               if(cell_cost <= costmap_threshold_value_){
@@ -617,11 +617,12 @@ namespace move_base {
                 break;
               }
             }
-            //if all the points along the planed path has a large cost value, then stop the robot in the current position
-            if(!found_pose){
-              planner_plan_->erase(planner_plan_->begin()+1,planner_plan_->end());
-              planner_plan_->back().pose.orientation = temp_goal.pose.orientation;
-            }
+          }
+          //if all points along the path is high cost value, assume the robot alrd reached the nearest position to the goal pose
+          if(!found_pose && plan_size<30){
+            planner_plan_->erase(planner_plan_->begin()+1,planner_plan_->end());
+            planner_plan_->back().pose.orientation = temp_goal.pose.orientation;
+            //ROS_INFO("No low cost value pose found along planned path. Stop robot on the current spot");
           }
         }
         //tx//end
@@ -649,7 +650,7 @@ namespace move_base {
       else if(state_==PLANNING){
         ros::Time attempt_end = last_valid_plan_;
         //tx//faster to apply first recovery behavior (clear certain distance costmap)
-        if(recovery_index_ == 0){
+        if(recovery_count_ == 0){
           attempt_end += ros::Duration(1.0);
         }
         //tx//end
@@ -797,7 +798,7 @@ namespace move_base {
           last_oscillation_reset_ = ros::Time::now();
           planning_retries_ = 0;
 
-          recovery_count_=0;
+          recovery_count_ = 0;
         }
         else {
           //if we've been preempted explicitly we need to shut things down
@@ -1003,7 +1004,7 @@ namespace move_base {
         else {
           ros::Time attempt_end = last_valid_control_;
           //tx//faster to apply first recovery behavior (clear certain distance costmap)
-          if(recovery_index_ == 0){
+          if(recovery_count_ == 0){
             attempt_end +=  ros::Duration(1.0);
           }
           //tx//end
@@ -1240,7 +1241,7 @@ namespace move_base {
     state_ = PLANNING;
     recovery_index_ = 0;
     recovery_trigger_ = PLANNING_R;
-    recovery_count_=0;
+    recovery_count_ = 0;
     publishZeroVelocity();
 
     //if we shutdown our costmaps when we're deactivated... we'll do that now

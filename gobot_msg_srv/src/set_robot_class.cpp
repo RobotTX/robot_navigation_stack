@@ -86,9 +86,10 @@ namespace robot_class {
     //Do remember to initilize class after ros::init if setMotorSpeed is used
     bool SetRobot::setMotorSpeed(const char directionR, const int velocityR, const char directionL, const int velocityL){ 
         motor_speed_.directionR = std::string(1, directionR);
-        motor_speed_.velocityR = velocityR;
+        //maximum of int8 is 127
+        motor_speed_.velocityR = velocityR>127 ? 127 : velocityR;
         motor_speed_.directionL = std::string(1, directionL);
-        motor_speed_.velocityL = velocityL;
+        motor_speed_.velocityL = velocityL>127 ? 127 : velocityL;
         speed_pub_.publish(motor_speed_);
         return true;
     }

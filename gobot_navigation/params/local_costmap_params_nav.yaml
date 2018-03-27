@@ -2,7 +2,7 @@ local_costmap:
     map_type: costmap
     global_frame: odom
     robot_base_frame: base_link
-    update_frequency: 8.0
+    update_frequency: 6.0
     publish_frequency: 0.5
     static_map: false
     rolling_window: true
