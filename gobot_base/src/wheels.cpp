@@ -5,7 +5,7 @@ uint8_t leftSpeed_=128, rightSpeed_=128;
 
 ros::ServiceServer setSpeedsSrv,getEncodersSrv,resetEncodersSrv,initialMotorSrv,getSpeedsSrv;
 
-std::mutex serialMutex;
+std::mutex serialMutex, dataMutex;
 std::string MD49device;
 serial::Serial serialConnection;
 
@@ -17,7 +17,6 @@ int ACC_STEP = 0;
 double x = 0.0;
 double y = 0.0;
 double th = 0.0;
-std::mutex dataMutex;
 ros::Time current_time, last_time;
 
 /// Write and read informations on the serial port
@@ -228,6 +227,7 @@ bool initSerial(){
 
 void mySigintHandler(int sig){   
     resetEncodersSrv.shutdown();
+    getSpeedsSrv.shutdown();
     getEncodersSrv.shutdown();
     setSpeedsSrv.shutdown();
     initialMotorSrv.shutdown();

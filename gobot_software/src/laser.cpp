@@ -90,6 +90,11 @@ void serverDisconnected(const std_msgs::String::ConstPtr& msg){
 
 /*********************************** MAIN ***********************************/
 
+void mySigintHandler(int sig){  
+    sub_laser.shutdown();
+    ros::shutdown();
+}
+
 int main(int argc, char **argv){
 
     ros::init(argc, argv, "laser_data_transfer");

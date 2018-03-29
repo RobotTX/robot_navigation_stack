@@ -100,11 +100,6 @@ target_link_libraries(send_laser_data ${catkin_LIBRARIES} ${gobot_software} ${Bo
 add_dependencies(send_laser_data ${${gobot_msg_srv}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
 
 
-add_executable(recover_position src/recover_position.cpp)
-target_link_libraries(recover_position ${catkin_LIBRARIES} ${gobot_software} ${Boost_FILESYSTEM_LIBRARY} ${Boost_SYSTEM_LIBRARY} )
-add_dependencies(recover_position ${${gobot_msg_srv}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
-
-
 add_executable(battery_check src/battery_check.cpp)
 target_link_libraries(battery_check ${catkin_LIBRARIES} ${gobot_software} )
 add_dependencies(battery_check ${${gobot_msg_srv}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})

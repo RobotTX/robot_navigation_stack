@@ -317,7 +317,7 @@ void disconnect(const std::string ip){
 }
 /*********************************** SHUT DOWN ***********************************/
 void mySigintHandler(int sig){ 
-
+	sub_map.shutdown();
     ros::shutdown();
 }
 

@@ -60,7 +60,7 @@ void updateInfoCallback(const std_msgs::String::ConstPtr& update_status){
         std::string dataToSend = update_status->data;
         if((ros::Time::now()-disco_time).toSec()>WAITING_TIME){
             for(int i = 0; i < oldIPs.size(); ++i)
-                data_threads.push_back(std::thread(pingIP2, oldIPs.at(i).first, dataToSend, 2.5));
+                data_threads.push_back(std::thread(pingIP2, oldIPs.at(i).first, dataToSend, 3.0));
         }
     }
     ipMutex.unlock();
@@ -97,7 +97,7 @@ void pingAllIPs(void){
             if((ros::Time::now()-disco_time).toSec()>WAITING_TIME){
                 //ROS_INFO("(ping_server) Trying to ping everyone %lu", availableIPs.size());
                 for(int i = 0; i < availableIPs.size(); ++i)
-                    threads.push_back(std::thread(pingIP, availableIPs.at(i), dataToSend, 2.5));
+                    threads.push_back(std::thread(pingIP, availableIPs.at(i), dataToSend, 3.0));
             }
         }
         serverMutex.unlock();
@@ -175,7 +175,7 @@ void pingIP(std::string ip, std::string dataToSend, double sec){
         std::string read = client.read_some();
         if(read.compare("OK") == 0){
             /// Send the required data
-            client.write_line(dataToSend, boost::posix_time::seconds(sec));
+            client.write_line(dataToSend, boost::posix_time::seconds(2.0));
             /// Save the IP we just connected to in an array for later
             connectedMutex.lock();
             connectedIPs.push_back(ip);
@@ -200,7 +200,7 @@ void pingIP2(std::string ip, std::string dataToSend, double sec){
         std::string read = client.read_some();
         if(read.compare("OK") == 0){
             /// Send the required data
-            client.write_line(dataToSend, boost::posix_time::seconds(sec));
+            client.write_line(dataToSend, boost::posix_time::seconds(2.0));
             //ROS_INFO("(ping_server) Connected to %s", ip.c_str());
         } 
 
@@ -235,8 +235,8 @@ void checkNewServers(void){
                 while(std::getline(ifs, currentIP) && ros::ok())
                     availableIPs.push_back(currentIP);
             }
-            serverMutex.unlock();
             ifs.close();
+            serverMutex.unlock();
         }
         scanIP=false;
         //ROS_INFO("(ping_server) Available IPs: %lu, Connected IPs: %lu", availableIPs.size(),oldIPs.size());

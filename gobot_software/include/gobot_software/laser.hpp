@@ -8,6 +8,7 @@
 #include <iostream>
 #include <string>
 #include <vector>
+#include <signal.h>
 #include <std_srvs/Empty.h>
 #include <std_msgs/Float32.h>
 #include <mutex>
@@ -30,6 +31,8 @@ bool stopSendLaserService(std_srvs::Empty::Request &req, std_srvs::Empty::Respon
 void server(void);
 
 /*********************************** DISCONNECTION FUNCTIONS ***********************************/
+
+void mySigintHandler(int sig);
 
 void serverDisconnected(const std_msgs::String::ConstPtr& msg);
 

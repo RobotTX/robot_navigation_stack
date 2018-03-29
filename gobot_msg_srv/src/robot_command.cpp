@@ -25,6 +25,8 @@ namespace robot_class {
         sonar_sub_.shutdown();
         gyro_sub_.shutdown();
         goal_status_sub_.shutdown();
+        map_sub_.shutdown();
+        weight_sub_.shutdown();
         delete global_costmap_;
         delete tf_;
     }

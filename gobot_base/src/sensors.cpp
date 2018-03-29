@@ -252,7 +252,7 @@ void publishSensors(void){
                 }
                 //if fully charged
                 else{
-                    battery_data.ChargingFlag = battery_data.ChargingCurrent<-250 ? false : true;
+                    battery_data.ChargingFlag = battery_data.ChargingCurrent<-400 ? false : true;
                 }
                 if(!charging){
                     charge_check = battery_data.ChargingFlag ? charge_check+1 : 0;

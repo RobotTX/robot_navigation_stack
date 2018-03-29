@@ -413,6 +413,7 @@ void initData(){
 void mySigintHandler(int sig)
 {   
     SetRobot.setStage(stage_);
+	button_sub.shutdown();
 	delete ac;
     ros::shutdown();
 }

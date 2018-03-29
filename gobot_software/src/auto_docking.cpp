@@ -33,9 +33,6 @@ robot_class::GetRobot GetRobot;
 /// Service to start docking
 bool startDocking(void){
     ros::NodeHandle nh;
-
-    ros::spinOnce();
-
     /// Get the charging station position from the home file
     GetRobot.getHome(x,y,oriX,oriY,oriZ,oriW);
 
@@ -227,7 +224,7 @@ void newIrSignal(const gobot_msg_srv::IrMsg::ConstPtr& irSignal){
             } 
             else{
                 /// if we lost the signal for more than 30 seconds, we failed docking, else, the robot should still be turning on itself
-                if((ros::Time::now() - lastIrSignalTime).toSec() > 30.0){
+                if((ros::Time::now() - lastIrSignalTime).toSec() > 20.0){
                     SetRobot.setMotorSpeed('F', 0, 'F', 0);
                     finishedDocking();
                 }
@@ -362,7 +359,11 @@ void startDockingParams(){
 }
 
 void mySigintHandler(int sig)
-{   
+{   goalStatusSub.shutdown();
+    bumperSub.shutdown();
+    irSub.shutdown();
+    batterySub.shutdown();
+    proximitySub.shutdown();;
 	delete ac;
     ros::shutdown();
 }

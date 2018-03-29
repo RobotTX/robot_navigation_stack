@@ -46,10 +46,16 @@ bool allowTebSrvCallback(std_srvs::Empty::Request &req, std_srvs::Empty::Respons
     }
 }
 
+void mySigintHandler(int sig){  
+    goalResult.shutdown();
+    ros::shutdown();
+}
+
 int main(int argc, char **argv) {
     ros::init(argc, argv, "wheels");
     ros::NodeHandle nh;
-
+    signal(SIGINT, mySigintHandler);
+    
     ros::ServiceServer allowTebSrv = nh.advertiseService("/gobot_recovery/allow_teb_initBack",allowTebSrvCallback);
 
     ros::spin();

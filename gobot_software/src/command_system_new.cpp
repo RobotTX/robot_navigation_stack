@@ -27,7 +27,6 @@ std_srvs::Empty empty_srv;
 ros::Publisher disco_pub;
 ros::Publisher go_pub;
 ros::Publisher teleop_pub;
-ros::ServiceClient getDockStatusSrv;
 
 robot_class::SetRobot SetRobot;
 robot_class::GetRobot GetRobot;
