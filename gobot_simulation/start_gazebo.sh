@@ -19,7 +19,7 @@ then
 echo "start gazebo_slam"
 gnome-terminal -x bash -c "source /opt/ros/kinetic/setup.bash;source ~/catkin_ws/devel/setup.bash;roslaunch gobot_gazebo gazebo_slam.launch;exec bash;"
 fi
-var0=$(rosnode list | grep ping_server_new)
+var0=$(rosnode list | grep software_ping_servers)
 if [ $? -ne 0 ]
 then
 echo "start gazebo_software"

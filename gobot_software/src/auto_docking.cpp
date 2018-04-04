@@ -135,7 +135,7 @@ void newBumpersInfo(const gobot_msg_srv::BumperMsg::ConstPtr& bumpers){
             irSub.shutdown();
             collision = true;
             move_from_collision = false;
-            ROS_WARN("(auto_docking::newBumpersInfo) just got a new collision:%d,%d,%d,%d",bumpers->bumper5,bumpers->bumper6,bumpers->bumper7,bumpers->bumper8);
+            ROS_WARN("(auto_docking::newBumpersInfo) Detect back collision:%d,%d,%d,%d",bumpers->bumper5,bumpers->bumper6,bumpers->bumper7,bumpers->bumper8);
             //turn right
             if(bumpers->bumper8==0 && bumpers->bumper5==1 && bumpers->bumper6==1 && bumpers->bumper7==1)
                 SetRobot.setMotorSpeed('B', base_spd*2, 'F', base_spd);

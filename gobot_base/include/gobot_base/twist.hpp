@@ -13,11 +13,9 @@
 #include <geometry_msgs/Twist.h>
 #include <sensor_msgs/Joy.h>
 #include <gobot_msg_srv/set_robot_class.h>
+#include <gobot_msg_srv/get_robot_class.h>
 #include <gobot_msg_srv/robot_msgs.h>
 #include <gobot_msg_srv/GetIntArray.h>
-
-
-typedef actionlib::SimpleActionClient<move_base_msgs::MoveBaseAction> MoveBaseClient;
 
 bool continueRobotSrvCallback(std_srvs::Empty::Request &req, std_srvs::Empty::Response &res);
 
@@ -32,10 +30,11 @@ void lostCallback(const std_msgs::Int8::ConstPtr& msg);
 
 void joyConnectionCallback(const std_msgs::Int8::ConstPtr& data);
 
-
 void joyCallback(const sensor_msgs::Joy::ConstPtr& joy);
 
 /// Callback of the subscriber on velocity commands
 void newCmdVel(const geometry_msgs::Twist::ConstPtr& twist);
 
+void statusCallback(const std_msgs::Int8::ConstPtr& msg);
+    
 void initParams(ros::NodeHandle &nh);

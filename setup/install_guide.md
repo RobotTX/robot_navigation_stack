@@ -103,8 +103,9 @@ all settings->user accounts->automatic login
 #robot startup
 * 1.startup application->add
 sudo sh /home/username/catkin_ws/src/gobot_navigation_stack/gobot_data/command/start_robot.sh
+
 * 2./etc/rc.local （failed)
-username="gtdollar"
+username="robot"
 cd /home/$username/catkin_ws/src/gobot_navigation_stack/gobot_data/command
 ./start_robot.sh $username
 before exit0
@@ -144,7 +145,7 @@ remmina remote desktop client
 protocol: VNC
 
 #create hotspot
-nmcli d wifi hotspot ssid "GTrobotwifi" password "gt123456"
+nmcli d wifi hotspot ssid "wifiname" password "wifipassword"
 
 #screen split
 settings >> appearance >> behavior

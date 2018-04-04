@@ -44,8 +44,6 @@ bool initSerial(void);
 
 bool shutdownSrvCallback(std_srvs::Empty::Request &req, std_srvs::Empty::Response &res);
 
-bool setLedSrvCallback(gobot_msg_srv::LedStrip::Request &req, gobot_msg_srv::LedStrip::Response &res);
-
 void displayBatteryLed(void);
 
 bool setLed(int mode, const std::vector<std::string> &color);

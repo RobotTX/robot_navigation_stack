@@ -7,7 +7,7 @@ GOBOT STATUS
 20 EXPLORATION
 15 DOCKING
 11 STOP_DOCKING/FAIL_DOKCING/COMPLETE_DOCKING
-5  PLAY_PATH/WAITING/DELAY
+5  PLAY_PATH/WAITING/DELAY/PLAY_POINT
 4  PAUSE_PATH
 1  STOP_PATH
 0  COMPLETE_PATH/ABORTED_PATH/COMPLETE_POINT
@@ -86,7 +86,7 @@ std::string getCurrentTime(){
   return transTime.str();
 }
 
-//updated information for ping_server_new
+//updated information for ping_servers
 void updateStatus(){
     bool muteFlag = (mute_) ? 1 : 0;
     std_msgs::String update_status;
@@ -131,7 +131,7 @@ void publishInitialpose(geometry_msgs::PoseWithCovarianceStamped pose){
     pose.pose.covariance[0] = 0.01;
     pose.pose.covariance[7] = 0.01;
     pose.pose.covariance[35] = 0.01;
-    if(pose.pose.pose.position.x == 0 && pose.pose.pose.position.y == 0 && pose.pose.pose.orientation.w == 0){
+    if(pose.pose.pose.position.x == 0 && pose.pose.pose.position.y == 0 && pose.pose.pose.orientation.z == 0&& pose.pose.pose.orientation.w == 0){
         ROS_ERROR("(gobot_status) Robot probably got no home, set it position to map origin");
         pose.pose.pose.orientation.w = 1.0;
     }

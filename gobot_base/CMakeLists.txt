@@ -152,11 +152,6 @@ include_directories(
 #   ${catkin_LIBRARIES}
 # )
 
-
-add_executable(odom src/odom.cpp)
-target_link_libraries(odom ${catkin_LIBRARIES})
-add_dependencies(odom ${${gobot_msg_srv}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
-
 add_executable(wheels src/wheels.cpp)
 target_link_libraries(wheels ${catkin_LIBRARIES})
 add_dependencies(wheels ${${gobot_msg_srv}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})

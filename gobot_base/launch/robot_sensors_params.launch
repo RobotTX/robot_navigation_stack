@@ -10,9 +10,10 @@
     <param name="STMdevice" type="string" value="/dev/STM" />
     <param name="MD49device" type="string" value="/dev/MD" />
     <param name="STM_RATE" type="int" value="4" />
-    <param name="ODOM_RATE" type="int" value="15" />
+    <param name="ODOM_RATE" type="int" value="10" />
     <param name="STM_BYTES" type="int" value="63" />  
-    <param name="ACC_STEP" type="int" value="12" />  <!-- ACC_STEP=1000ms/16ms/velocity_frequency -->
+    <param name="ACC_RATE" type="int" value="16" />  <!-- ACC_STEP=16ms -->
+    <param name="ROLLING_WINDOW_SIZE" type="int" value="5" />
     <!-- RPLIDAR RELATED -->
     <param name="serial_port" type="string" value="/dev/rplidar"/>  
     <param name="serial_baudrate" type="int" value="115200"/>

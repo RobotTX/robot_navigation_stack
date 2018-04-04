@@ -69,6 +69,7 @@ add_message_files(
     MotorSpeedMsg.msg
     LedMsg.msg
     SoundMsg.msg
+    StringArrayMsg.msg
 )
 
 ## Generate services in the 'srv' folder

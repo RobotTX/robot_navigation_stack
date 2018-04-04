@@ -23,13 +23,12 @@ int left_speed = 0, right_speed = 0;
 
 ros::Time collisionTime;
 ros::Publisher bumper_pub,bumper_collision_pub;
-ros::Subscriber cmdVelSub,bumpersSub,cliffSub,lostRobot,joySub,joyConSub,motorSpdSubscriber;
 
-MoveBaseClient* ac;
 std_srvs::Empty empty_srv;
 gobot_msg_srv::BumperMsg bumpers_data;
 
 robot_class::SetRobot SetRobot;
+int robot_status_ = -1;
 
 bool continueRobotSrvCallback(std_srvs::Empty::Request &req, std_srvs::Empty::Response &res){
     pause_robot=false;
@@ -83,43 +82,43 @@ void cliffCallback(const gobot_msg_srv::CliffMsg::ConstPtr& cliff){
 }
 
 void newBumpersInfo(const gobot_msg_srv::BumperMsg::ConstPtr& bumpers){
+    /// 0 : collision; 1 : no collision
+    if(bumpers_broken[0] && bumpers->bumper1)
+        bumpers_broken[0] = false;
+    if(bumpers_broken[1] && bumpers->bumper2)
+        bumpers_broken[1] = false;
+    if(bumpers_broken[2] && bumpers->bumper3)
+        bumpers_broken[2] = false;
+    if(bumpers_broken[3] && bumpers->bumper4)
+        bumpers_broken[3] = false;
+    if(bumpers_broken[4] && bumpers->bumper5)
+        bumpers_broken[4] = false;
+    if(bumpers_broken[5] && bumpers->bumper6)
+        bumpers_broken[5] = false;
+    if(bumpers_broken[6] && bumpers->bumper7)
+        bumpers_broken[6] = false;
+    if(bumpers_broken[7] && bumpers->bumper8)
+        bumpers_broken[7] = false;
+
+    bumpers_data.bumper1 = bumpers_broken[0] || bumpers->bumper1;
+    bumpers_data.bumper2 = bumpers_broken[1] || bumpers->bumper2;
+    bumpers_data.bumper3 = bumpers_broken[2] || bumpers->bumper3;
+    bumpers_data.bumper4 = bumpers_broken[3] || bumpers->bumper4;
+    bumpers_data.bumper5 = bumpers_broken[4] || bumpers->bumper5;
+    bumpers_data.bumper6 = bumpers_broken[5] || bumpers->bumper6;
+    bumpers_data.bumper7 = bumpers_broken[6] || bumpers->bumper7;
+    bumpers_data.bumper8 = bumpers_broken[7] || bumpers->bumper8;
+
+    //publish bumper data after detecting broken bumpers
+    bumper_pub.publish(bumpers_data);
+
     if(moved_from_collision){
-        if(bumpers_broken[0] && bumpers->bumper1)
-            bumpers_broken[0] = false;
-        if(bumpers_broken[1] && bumpers->bumper2)
-            bumpers_broken[1] = false;
-        if(bumpers_broken[2] && bumpers->bumper3)
-            bumpers_broken[2] = false;
-        if(bumpers_broken[3] && bumpers->bumper4)
-            bumpers_broken[3] = false;
-        if(bumpers_broken[4] && bumpers->bumper5)
-            bumpers_broken[4] = false;
-        if(bumpers_broken[5] && bumpers->bumper6)
-            bumpers_broken[5] = false;
-        if(bumpers_broken[6] && bumpers->bumper7)
-            bumpers_broken[6] = false;
-        if(bumpers_broken[7] && bumpers->bumper8)
-            bumpers_broken[7] = false;
-
-        /// 0 : collision; 1 : no collision
-        bumpers_data.bumper1 = bumpers_broken[0] || bumpers->bumper1;
-        bumpers_data.bumper2 = bumpers_broken[1] || bumpers->bumper2;
-        bumpers_data.bumper3 = bumpers_broken[2] || bumpers->bumper3;
-        bumpers_data.bumper4 = bumpers_broken[3] || bumpers->bumper4;
-        bumpers_data.bumper5 = bumpers_broken[4] || bumpers->bumper5;
-        bumpers_data.bumper6 = bumpers_broken[5] || bumpers->bumper6;
-        bumpers_data.bumper7 = bumpers_broken[6] || bumpers->bumper7;
-        bumpers_data.bumper8 = bumpers_broken[7] || bumpers->bumper8;
-
         bool front = !(bumpers_data.bumper1 && bumpers_data.bumper2 && bumpers_data.bumper3 && bumpers_data.bumper4);
         bool back = !(bumpers_data.bumper5 && bumpers_data.bumper6 && bumpers_data.bumper7 && bumpers_data.bumper8);
         bumper_on = front || back;
 
-        //publish bumper data after detecting broken bumpers
-        bumper_pub.publish(bumpers_data);
-
         /// check if we have a collision
-        if(bumper_on){
+        if(front || back){
             /// if it's a new collision, we stop the robot
             if(!collision){
                 SetRobot.setMotorSpeed('F', 0, 'F', 0);
@@ -128,39 +127,46 @@ void newBumpersInfo(const gobot_msg_srv::BumperMsg::ConstPtr& bumpers){
                 collisionTime = ros::Time::now();
             } 
             else if((ros::Time::now() - collisionTime).toSec()>collision_threshold){
-            /// if after 5 seconds, the obstacle is still there, we go to the opposite direction
-                moved_from_collision = false;
-                bumper_collision_pub.publish(bumpers_data);
-                /// We create a thread that will make the robot go into the opposite direction, then sleep for 2 seconds and make the robot stop
-                if(front && !back){  
-                    bumpers_broken[0] = !bumpers_data.bumper1;
-                    bumpers_broken[1] = !bumpers_data.bumper2;
-                    bumpers_broken[2] = !bumpers_data.bumper3;
-                    bumpers_broken[3] = !bumpers_data.bumper4;
+                bumper_collision_pub.publish(bumpers_data); 
+                moved_from_collision = false; 
+                /// if after collision_threshold seconds, the obstacle is still there, we go to the opposite direction
+                //if front bumpers are trigered
+                if(front && !back){
                     std::thread([](){
+                        bumpers_broken[0] = !bumpers_data.bumper1;
+                        bumpers_broken[1] = !bumpers_data.bumper2;
+                        bumpers_broken[2] = !bumpers_data.bumper3;
+                        bumpers_broken[3] = !bumpers_data.bumper4;
                         ROS_WARN("(twist::newBumpersInfo) Launching thread to move away from front obstacle");
                         SetRobot.setMotorSpeed('B', avoid_spd, 'B', avoid_spd);
                         ros::Duration(1.5).sleep();
                         SetRobot.setMotorSpeed('F', 0, 'F', 0);
-                        ROS_INFO("Front bumper broken: %d,%d,%d,%d",bumpers_broken[0],bumpers_broken[1],bumpers_broken[2],bumpers_broken[3]);
+                        //ROS_INFO("Front bumper broken: %d,%d,%d,%d",bumpers_broken[0],bumpers_broken[1],bumpers_broken[2],bumpers_broken[3]);
                         collisionTime = ros::Time::now();
                         moved_from_collision = true;
                     }).detach();
                 } 
+                //if back bumpers are trigered
                 else if(back && !front){
-                    bumpers_broken[4] = !bumpers_data.bumper5;
-                    bumpers_broken[5] = !bumpers_data.bumper6;
-                    bumpers_broken[6] = !bumpers_data.bumper7;
-                    bumpers_broken[7] = !bumpers_data.bumper8;
                     std::thread([](){
+                        bumpers_broken[4] = !bumpers_data.bumper5;
+                        bumpers_broken[5] = !bumpers_data.bumper6;
+                        bumpers_broken[6] = !bumpers_data.bumper7;
+                        bumpers_broken[7] = !bumpers_data.bumper8;
                         ROS_WARN("(twist::newBumpersInfo) Launching thread to move away from back obstacle");
                         SetRobot.setMotorSpeed('F', avoid_spd, 'F', avoid_spd);
                         ros::Duration(1.5).sleep();
                         SetRobot.setMotorSpeed('F', 0, 'F', 0);
-                        ROS_INFO("Back bumper broken: %d,%d,%d,%d",bumpers_broken[4],bumpers_broken[5],bumpers_broken[6],bumpers_broken[7]);
+                        //ROS_INFO("Back bumper broken: %d,%d,%d,%d",bumpers_broken[4],bumpers_broken[5],bumpers_broken[6],bumpers_broken[7]);
                         collisionTime = ros::Time::now();
                         moved_from_collision = true;
                     }).detach();
+                }
+                //somehow, we are in this stage
+                else{
+                    collision = false;
+                    moved_from_collision = true;
+                    collisionTime = ros::Time::now();
                 }
             }
         } 
@@ -245,7 +251,7 @@ void joyCallback(const sensor_msgs::Joy::ConstPtr& joy){
         if(joy->buttons[3])
             SetRobot.setLed(0,{"yellow"});
 
-        if(!collision && !cliff_on){
+        if(!bumper_on && !cliff_on){
             if(joy->axes[1] == 0 && joy->axes[3] == 0)
                 SetRobot.setMotorSpeed('F', 0, 'F', 0);
             else {
@@ -265,11 +271,15 @@ void joyCallback(const sensor_msgs::Joy::ConstPtr& joy){
 
 void newCmdVel(const geometry_msgs::Twist::ConstPtr& twist){
     if(enable_joy){
-        if(ac->isServerConnected())
-            ac->cancelAllGoals();
+        if(robot_status_==5)
+            ros::service::call("/gobot_command/pause_path",empty_srv);
+        else if(robot_status_==15)
+            ros::service::call("/gobot_command/stopGoDock",empty_srv);
+        else if(robot_status_==25)
+            ros::service::call("/gobot_command/stop_explore",empty_srv);
     }
     /// Received a new velocity cmd
-    else if(!collision && !pause_robot && !cliff_on){
+    else if(!bumper_on && !cliff_on){
         /// if the velocity cmd is to tell the robot to stop, we just give 0 and don't calculate
         /// because with the linear regression function we would get a speed of ~0.002 m/s
         if(twist->linear.x == 0 && twist->angular.z == 0)
@@ -299,27 +309,19 @@ void motorSpdCallback(const gobot_msg_srv::MotorSpeedMsg::ConstPtr& speed){
     right_speed = speed->velocityR;
 }
 
+void statusCallback(const std_msgs::Int8::ConstPtr& msg){
+    robot_status_ = msg->data;
+}
+
 void initParams(ros::NodeHandle &nh){
     nh.getParam("wheel_separation", wheel_separation);
     nh.getParam("wheel_radius", wheel_radius);
     nh.getParam("ticks_per_rotation", ticks_per_rotation);
     nh.getParam("collision_threshold", collision_threshold);
     nh.getParam("avoid_spd", avoid_spd);
-
-    std::cout << "(twist::initParams) wheel_separation:"<<wheel_separation<<" wheel_radius:"<<wheel_radius
-    <<" ticks_per_rotation:"<<ticks_per_rotation<<" collision_threshold:"<<collision_threshold
-    <<" avoid_spd:"<<avoid_spd<<std::endl;
 }
 
 void mySigintHandler(int sig){   
-    cmdVelSub.shutdown();
-    bumpersSub.shutdown();
-    cliffSub.shutdown();
-    lostRobot.shutdown();
-    joySub.shutdown();
-    joyConSub.shutdown();
-    motorSpdSubscriber.shutdown();
-	delete ac;
     ros::shutdown();
 }
 
@@ -338,23 +340,22 @@ int main(int argc, char **argv) {
     bumper_pub = nh.advertise<gobot_msg_srv::BumperMsg>("/gobot_base/bumpers_topic", 1);
     bumper_collision_pub = nh.advertise<gobot_msg_srv::BumperMsg>("/gobot_base/bumpers_collision", 1);
 
-    cmdVelSub = nh.subscribe("cmd_vel", 1, newCmdVel);
-    bumpersSub = nh.subscribe("/gobot_base/bumpers_raw_topic", 1, newBumpersInfo);
-    cliffSub = nh.subscribe("/gobot_base/cliff_topic", 1, cliffCallback);
-    lostRobot = nh.subscribe("/gobot_recovery/lost_robot",1,lostCallback);
-    joySub = nh.subscribe("joy", 1, joyCallback);
-    joyConSub = nh.subscribe("joy_connection", 1, joyConnectionCallback);
-    motorSpdSubscriber = nh.subscribe("/gobot_motor/motor_speed", 1, motorSpdCallback);
+    ros::Subscriber cmdVelSub = nh.subscribe("cmd_vel", 1, newCmdVel);
+    ros::Subscriber bumpersSub = nh.subscribe("/gobot_base/bumpers_raw_topic", 1, newBumpersInfo);
+    ros::Subscriber cliffSub = nh.subscribe("/gobot_base/cliff_topic", 1, cliffCallback);
+    ros::Subscriber lostRobot = nh.subscribe("/gobot_recovery/lost_robot",1,lostCallback);
+    ros::Subscriber joySub = nh.subscribe("joy", 1, joyCallback);
+    ros::Subscriber joyConSub = nh.subscribe("joy_connection", 1, joyConnectionCallback);
+    ros::Subscriber motorSpdSubscriber = nh.subscribe("/gobot_motor/motor_speed", 1, motorSpdCallback);
+    ros::Subscriber statusSubscriber = nh.subscribe("/gobot_status/gobot_status", 1, statusCallback);
 
     //not in use now
     
     ros::ServiceServer continueRobot = nh.advertiseService("/gobot_base/continue_robot",continueRobotSrvCallback);
     ros::ServiceServer pauseRobot = nh.advertiseService("/gobot_base/pause_robot",pauseRobotSrvCallback);
 
-    ac = new MoveBaseClient("move_base", true);
-    ac->waitForServer(ros::Duration(60.0));
-
-    ros::spin();
-
+    ros::AsyncSpinner spinner(3); // Use 3 threads
+    spinner.start();
+    ros::waitForShutdown();
     return 0;
 }

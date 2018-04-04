@@ -24,6 +24,8 @@ laser_max_range: -1.0
 #240 degree/ 48 = 5 degree
 laser_max_beams: 40 #30
 
+use_map_topic: true
+
 # Odometry model parameters
 odom_model_type: diff-corrected
 #From online, depends on the odom model
@@ -33,7 +35,7 @@ odom_alpha2: 0.02
 odom_alpha3: 0.01
 odom_alpha4: 0.02
 odom_alpha5: 0.003
-odom_frame_id: /odom
-base_frame_id: /base_link
+odom_frame_id: odom
+base_frame_id: base_link
 global_frame_id: /map
 tf_broadcast: true

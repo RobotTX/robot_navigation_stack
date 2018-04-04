@@ -82,8 +82,6 @@ void backToStart(){
 void doExploration(void){
     ROS_INFO("(Exploration) Starting exploration...");
 
-    exploring = true;
-
     ros::Rate loop_rate(2);
     while(ros::ok() && exploring){
         /// We want to refresh the goal after a certain time or when we reached it
@@ -125,12 +123,13 @@ void doExploration(void){
                         ROS_INFO("(Exploration) Exploration finished");
                     }
                 }
-
-                count = 1;
-            } else
+            } 
+            else
                 ROS_WARN("(Exploration) get_exploration_path service call failed");
-        } else
+        } 
+        else
             count++;
+
         ros::spinOnce();
         loop_rate.sleep();
     }
@@ -141,6 +140,7 @@ bool startExplorationSrv(hector_exploration_node::Exploration::Request &req, hec
     if(!exploring){
         back_to_start_when_finished = req.backToStartWhenFinished;
 
+        //1-auto charging when complete.  2-go back to starting position when complete.  others-stop when complete
         if(back_to_start_when_finished==1){
             getRobotPos();
         }
@@ -151,13 +151,16 @@ bool startExplorationSrv(hector_exploration_node::Exploration::Request &req, hec
 		    ros::Duration(2.5).sleep();
             SetRobot.setMotorSpeed('F', 0, 'F', 0);
         }
-
+        //reset count to start exploration fast
+        count = 0;
+        exploring = true;
         std::thread(doExploration).detach();
         return true;
 
     } 
-    else
+    else{
         ROS_WARN("(Exploration) We were already exploring");
+    }
     return true;
 
 }
@@ -180,8 +183,9 @@ bool stopExploration(void){
         exploring = false;
         ac->cancelAllGoals();
     } 
-    else
+    else{
         ROS_WARN("(Exploration) We were not exploring");
+    }
     
     return true;
 }

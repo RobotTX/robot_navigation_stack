@@ -7,6 +7,7 @@
 #include <mutex>
 #include <thread>
 #include <signal.h>
+#include <numeric> 
 #include <std_srvs/Empty.h>
 #include <serial/serial.h>
 #include <geometry_msgs/Twist.h>
@@ -30,13 +31,7 @@ std::string getStdoutFromCommand(std::string cmd);
 /// Initialize the serial connection
 bool initSerial(void);
 
-bool getSpeeds(gobot_msg_srv::GetIntArray::Request &req, gobot_msg_srv::GetIntArray::Response &res);
-
-/// Set the speed, 0 (full reverse)  128 (stop)   255 (full forward)
-bool setSpeeds(gobot_msg_srv::SetSpeeds::Request &req, gobot_msg_srv::SetSpeeds::Response &res);
-
-/// Get the encoders position
-bool getEncoders(gobot_msg_srv::GetEncoders::Request &req, gobot_msg_srv::GetEncoders::Response &res);
+void initParams(ros::NodeHandle &nh);
 
 void motorSpdCallback(const gobot_msg_srv::MotorSpeedMsg::ConstPtr& speed);
 

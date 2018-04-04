@@ -1,7 +1,7 @@
 #http://wiki.ros.org/costmap_2d
 global_costmap:
     map_type: costmap
-    global_frame: map
+    global_frame: /map
     robot_base_frame: base_link
     update_frequency: 1.0 # 2.0
     publish_frequency: 0.0

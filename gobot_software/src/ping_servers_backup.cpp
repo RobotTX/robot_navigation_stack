@@ -1,4 +1,4 @@
-#include "gobot_software/ping_server_new.hpp"
+#include "gobot_software/ping_servers.hpp"
 
 #define PING_THRESHOLD 5
 
@@ -35,13 +35,18 @@ std::string getDataToSend(void){
  * Will disconnet all servers for updating map/wifi
  */
 bool disServersSrvCallback(std_srvs::Empty::Request &req, std_srvs::Empty::Response &res){
+    ipMutex.lock();
     //disconnect all sockets when closed
     for(int i=0;i<oldIPs.size();i++){
         std_msgs::String msg;
         msg.data = oldIPs.at(i).first;
         disco_pub.publish(msg);
     }
+    oldIPs.clear();
+    ipMutex.unlock();
+
     disco_time = ros::Time::now();
+
     //clear all IPs
     serverMutex.lock();
     availableIPs.clear();
@@ -65,13 +70,13 @@ void updateInfoCallback(const std_msgs::String::ConstPtr& update_status){
     }
     ipMutex.unlock();
     
+    sendDataMutex.lock();
     if(data_threads.size()>0){
-        sendDataMutex.lock();
         ///we wait for all the threads to be done
         for(int i = 0; i < data_threads.size(); ++i)
             data_threads.at(i).join();  
-        sendDataMutex.unlock();
     }
+    sendDataMutex.unlock();
 }
 
 /**
@@ -102,16 +107,15 @@ void pingAllIPs(void){
         }
         serverMutex.unlock();
 
+        sendDataMutex.lock();
         if(threads.size()>0){
-            sendDataMutex.lock();
             /// We join all the threads => we wait for all the threads to be done
             for(int i = 0; i < threads.size(); ++i)
                 threads.at(i).join();
-            sendDataMutex.unlock();
             //ROS_INFO("(ping_server) Done pinging everyone");
-
             updateIP();
         }
+        sendDataMutex.unlock();
 
         loop_rate.sleep();        
     }
@@ -124,9 +128,12 @@ void updateIP(){
     ipMutex.lock();
     for(int i = 0; i < oldIPs.size(); ++i){
         bool still_connected = false;
-        for(int j = 0; j < connectedIPs.size(); ++j)
-            if(oldIPs.at(i).first.compare(connectedIPs.at(j)) == 0)
+        for(int j = 0; j < connectedIPs.size(); ++j){
+            if(oldIPs.at(i).first.compare(connectedIPs.at(j)) == 0){
                 still_connected = true;
+                break;
+            }
+        }
         if(still_connected)
             oldIPs.at(i).second = 0;
         else {
@@ -152,9 +159,12 @@ void updateIP(){
     /// We had the newly connectedIPs to the oldIPs vector
     for(int i = 0; i < connectedIPs.size(); ++i){
         bool hasIP = false;
-        for(int j = 0; j < oldIPs.size(); ++j)
-            if(connectedIPs.at(i).compare(oldIPs.at(j).first) == 0)
+        for(int j = 0; j < oldIPs.size(); ++j){
+            if(connectedIPs.at(i).compare(oldIPs.at(j).first) == 0){
                 hasIP = true;
+                break;
+            }
+        }
         if(!hasIP)
             oldIPs.push_back(std::pair<std::string, int>(connectedIPs.at(i), 0));
     }
@@ -298,12 +308,11 @@ int main(int argc, char* argv[]){
         ros::ServiceServer networkReadySrv = n.advertiseService("/gobot_startup/network_ready", networkReadySrvCallback);
         //Startup end
 
+        ros::ServiceServer disServersSrv = n.advertiseService("/gobot_software/disconnet_servers", disServersSrvCallback);
+
         disco_pub = n.advertise<std_msgs::String>("/gobot_software/server_disconnected", 10);
 
         ros::Subscriber updateInfoSubscriber = n.subscribe("/gobot_status/update_information", 1, updateInfoCallback);
-
-        ros::ServiceServer disServersSrv = n.advertiseService("/gobot_software/disconnet_servers", disServersSrvCallback);
-
         
         /// Thread which will get an array of potential servers
         std::thread t1(checkNewServers);

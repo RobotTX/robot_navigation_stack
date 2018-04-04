@@ -1,4 +1,4 @@
-#include "gobot_software/command_system_new.hpp"
+#include "gobot_software/command_system.hpp"
 
 const int max_length = 1024;
 
@@ -350,8 +350,6 @@ bool newGoal(const std::vector<std::string> command){
         twist.angular.z = 0;
 
         teleop_pub.publish(twist);
-
-        ros::spinOnce();
 
         /// Send the goal
         geometry_msgs::PoseStamped msg;
@@ -848,7 +846,7 @@ void sendCommand(const std::string ip, const std::vector<std::string> command, s
     bool command_feedback = execCommand(ip, command);
     if (command_feedback )
         //g=scan, t=newscan, u=stopscan, n=receivemap, v=shutdown
-        if (command.at(0)!="g" && command.at(0)!="t" && command.at(0)!="u" && command.at(0)!="n" && command.at(0)!="v")
+        if (command.at(0)!="g" && command.at(0)!="t" && command.at(0)!="u" && command.at(0)!="s" && command.at(0)!="v")
             SetRobot.setSound(1,1);
 
     msg = (command_feedback ? "done" : "failed") + sep + commandStr;
@@ -1129,7 +1127,8 @@ void session(boost::shared_ptr<tcp::socket> sock){
                         ROS_INFO("(Command system) Read command complete %s", ip.c_str());
                         finishedCmd = 1;
                         i = length;
-                    } else
+                    } 
+                    else
                         commandStr += data[i];
                 }
             }
@@ -1222,47 +1221,64 @@ void mySigintHandler(int sig){
 /*********************************** MAIN ***********************************/
 
 int main(int argc, char* argv[]){
+    ros::init(argc, argv, "command_system");
+    ros::NodeHandle n;
+    SetRobot.initialize();
+    signal(SIGINT, mySigintHandler);
 
-    try{
-        ros::init(argc, argv, "command_system");
-        ros::NodeHandle n;
-        SetRobot.initialize();
-        signal(SIGINT, mySigintHandler);
+    n.getParam("simulation", simulation);
+    ROS_INFO("(Command system) simulation : %d", simulation);
+    //Startup begin
+    ros::service::waitForService("/gobot_startup/network_ready", ros::Duration(120.0));
+    //Startup end
 
-        n.getParam("simulation", simulation);
-        ROS_INFO("(Command system) simulation : %d", simulation);
-        //Startup begin
-        ros::service::waitForService("/gobot_startup/network_ready", ros::Duration(120.0));
-        //Startup end
+    ros::Subscriber sub = n.subscribe("/gobot_software/server_disconnected", 1000, serverDisconnected);
 
-        ros::Subscriber sub = n.subscribe("/gobot_software/server_disconnected", 1000, serverDisconnected);
+    disco_pub = n.advertise<std_msgs::String>("/gobot_software/server_disconnected", 10);
+    go_pub = n.advertise<geometry_msgs::PoseStamped>("/move_base_simple/goal", 1000);
+    teleop_pub = n.advertise<geometry_msgs::Twist>("/cmd_vel", 1000);
+    
+    ros::ServiceServer lowBatterySrv = n.advertiseService("/gobot_command/lowBattery", lowBatterySrvCallback);
+    ros::ServiceServer goDockSrv = n.advertiseService("/gobot_command/goDock", goDockSrvCallback);
+    ros::ServiceServer stopGoDockSrv = n.advertiseService("/gobot_command/stopGoDock", stopGoDockSrvCallback);
+    ros::ServiceServer playPathSrv = n.advertiseService("/gobot_command/play_path", playPathSrvCallback);
+    ros::ServiceServer pausePathSrv = n.advertiseService("/gobot_command/pause_path", pausePathSrvCallback);
+    ros::ServiceServer stopPathSrv = n.advertiseService("/gobot_command/stop_path", stopPathSrvCallback);
+    ros::ServiceServer startExploreSrv = n.advertiseService("/gobot_command/start_explore", startExploreSrvCallback);
+    ros::ServiceServer stopExploreSrv = n.advertiseService("/gobot_command/stop_explore", stopExploreSrvCallback);
+    ros::ServiceServer playPointSrv = n.advertiseService("/gobot_command/play_point", playPointSrvCallback);
+    ros::ServiceServer setPathSrv = n.advertiseService("/gobot_command/set_path", setPathSrvCallback);
+    ros::ServiceServer shutdownSrv = n.advertiseService("/gobot_command/shutdown", shutdownSrvCallback);
+    ros::ServiceServer setSpeedSrv = n.advertiseService("/gobot_command/set_speed", setSpeedSrvCallback);
 
-        disco_pub = n.advertise<std_msgs::String>("/gobot_software/server_disconnected", 10);
-        go_pub = n.advertise<geometry_msgs::PoseStamped>("/move_base_simple/goal", 1000);
-        teleop_pub = n.advertise<geometry_msgs::Twist>("/cmd_vel", 1000);
-        
-        ros::ServiceServer lowBatterySrv = n.advertiseService("/gobot_command/lowBattery", lowBatterySrvCallback);
-        ros::ServiceServer goDockSrv = n.advertiseService("/gobot_command/goDock", goDockSrvCallback);
-        ros::ServiceServer stopGoDockSrv = n.advertiseService("/gobot_command/stopGoDock", stopGoDockSrvCallback);
-        ros::ServiceServer playPathSrv = n.advertiseService("/gobot_command/play_path", playPathSrvCallback);
-        ros::ServiceServer pausePathSrv = n.advertiseService("/gobot_command/pause_path", pausePathSrvCallback);
-        ros::ServiceServer stopPathSrv = n.advertiseService("/gobot_command/stop_path", stopPathSrvCallback);
-        ros::ServiceServer startExploreSrv = n.advertiseService("/gobot_command/start_explore", startExploreSrvCallback);
-        ros::ServiceServer stopExploreSrv = n.advertiseService("/gobot_command/stop_explore", stopExploreSrvCallback);
-        ros::ServiceServer playPointSrv = n.advertiseService("/gobot_command/play_point", playPointSrvCallback);
-        ros::ServiceServer setPathSrv = n.advertiseService("/gobot_command/set_path", setPathSrvCallback);
-        ros::ServiceServer shutdownSrv = n.advertiseService("/gobot_command/shutdown", shutdownSrvCallback);
-        ros::ServiceServer setSpeedSrv = n.advertiseService("/gobot_command/set_speed", setSpeedSrvCallback);
+    ROS_INFO("(Command system) Ready to be launched.");
 
-        ROS_INFO("(Command system) Ready to be launched.");
+    ros::AsyncSpinner spinner(3); // Use 3 threads
+    spinner.start();
 
-        std::thread t(server);
+    boost::asio::io_service io_service;
+    tcp::acceptor a(io_service, tcp::endpoint(tcp::v4(), CMD_PORT));
+    while(ros::ok()) {
 
-        ros::spin();
-        
-    } catch (std::exception& e) {
-        ROS_ERROR("(Command system) Exception : %s", e.what());
+        boost::shared_ptr<tcp::socket> sock = boost::shared_ptr<tcp::socket>(new tcp::socket(io_service));
+
+        /// We wait for someone to connect
+        a.accept(*sock);
+
+        /// Got a new connection so we had it to our array of sockets
+        std::string ip = sock->remote_endpoint().address().to_string();
+        ROS_INFO("(Command system) Command socket connected to %s", ip.c_str());
+        socketsMutex.lock();
+        if(!sockets.count(ip))
+            sockets.insert(std::pair<std::string, boost::shared_ptr<tcp::socket>>(ip, sock));
+        else
+            ROS_ERROR("(Command system) the ip %s is already connected, this should not happen", ip.c_str());
+        socketsMutex.unlock();
+
+        /// Launch the session thread which will communicate with the server
+        std::thread(session, sock).detach();
     }
 
+    ros::waitForShutdown();
     return 0;
 }

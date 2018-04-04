@@ -65,8 +65,6 @@ void teleop(const int8_t val){
     cancel.id = "map";
 
     stop_pub.publish(cancel);
-
-    ros::spinOnce();
     
     /// Send the teleoperation command
     geometry_msgs::Twist twist;

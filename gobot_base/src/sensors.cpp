@@ -230,20 +230,17 @@ void publishSensors(void){
         } 
         else {
             //battery data update slower than requesting rate
-            if(abs(battery_data.ChargingCurrent-last_charging_current) > 5){
+            if(battery_data.ChargingCurrent!=last_charging_current){
                 int current_diff = battery_data.ChargingCurrent - last_charging_current;
                 //if not fully charged
-                if(battery_data.BatteryStatus<93){
-                    if(battery_data.ChargingCurrent >2500){
+                if(battery_data.BatteryStatus<90){
+                    if(battery_data.ChargingCurrent > 1000){
                         battery_data.ChargingFlag = true;
                     }
-                    else if(battery_data.ChargingCurrent < -1000){
+                    else if(battery_data.ChargingCurrent < -600){
                         battery_data.ChargingFlag = false;
                     }
-                    else if(battery_data.ChargingCurrent >1000){
-                        battery_data.ChargingFlag = current_diff<-100 ? false: true;
-                    }
-                    else if(battery_data.ChargingCurrent >=0){
+                    else if(battery_data.ChargingCurrent > 0){
                         battery_data.ChargingFlag = current_diff>100 ? true : false;
                     }
                     else{
@@ -427,20 +424,6 @@ void muteCallback(const std_msgs::Int8::ConstPtr& msg){
 
 void statusCallback(const std_msgs::Int8::ConstPtr& msg){
     robot_status_ = msg->data;
-}
-
-bool setSoundSrvCallback(gobot_msg_srv::SetIntArray::Request &req, gobot_msg_srv::SetIntArray::Response &res){
-    return setSound(req.data[0],req.data[1]);
-}
-
-bool setLedSrvCallback(gobot_msg_srv::LedStrip::Request &req, gobot_msg_srv::LedStrip::Response &res){
-    //if low battery and not charging, only show magenta color to warn user
-    //if charging, but robot received move command, color also changed
-    if(!low_battery && !charging){
-        //ROS_INFO("Receive a LED change request, and succeed to execute.");
-        return setLed(req.mode,req.color);
-    }
-    return false;
 }
 
 bool setSound(int num, int time_on){
@@ -676,12 +659,7 @@ int main(int argc, char **argv) {
         r2.sleep();
     }
 
-    //Declare service server after checking MCU
-    ////Replace these two speed services with publisher & subscriber
-    setLedSrv = nh.advertiseService("/gobot_base/setLed", setLedSrvCallback);
-    setSoundSrv = nh.advertiseService("/gobot_base/setSound", setSoundSrvCallback);
-    ////
-    
+
     ros::Subscriber ledSubscriber = nh.subscribe("/gobot_base/set_led", 1, ledCallback);
     ros::Subscriber soundSubscriber = nh.subscribe("/gobot_base/set_sound", 1, soundCallback);
     ros::Subscriber muteSubscriber = nh.subscribe("/gobot_status/mute", 1, muteCallback);
@@ -698,13 +676,16 @@ int main(int argc, char **argv) {
     ros::ServiceServer sensorsReadySrv = nh.advertiseService("/gobot_startup/sensors_ready", sensorsReadySrvCallback);
     //Startup end
 
+
+    ros::AsyncSpinner spinner(3); // Use 3 threads
+    spinner.start();
+
     ros::Rate r(STM_RATE);
     //start publish sensor information after checking procedure
     while(ros::ok()){
         publishSensors();
-        ros::spinOnce();
         r.sleep();
     }
-
+    ros::waitForShutdown();
     return 0;
 }

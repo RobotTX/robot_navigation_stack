@@ -95,7 +95,7 @@ void publishInitialpose(const double position_x, const double position_y, const 
     initialPose.pose.covariance[0] = cov1;
     initialPose.pose.covariance[7] = cov1;
     initialPose.pose.covariance[35] = cov2;
-    if(position_x == 0 && position_y == 0 && angle_z == 0){
+    if(position_x == 0 && position_y == 0 && angle_z == 0 && angle_w == 0){
         ROS_ERROR("(initial_pose_publisher) Robot probably got no home, set it position to map origin");
         initialPose.pose.pose.orientation.w = 1.0;
     }

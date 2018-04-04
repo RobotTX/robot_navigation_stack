@@ -5,7 +5,6 @@
 #include <string>
 #include <signal.h>
 #include <ros/ros.h>
-#include <std_msgs/String.h>
 #include <boost/asio.hpp>
 #include <boost/smart_ptr.hpp>
 #include <fstream>
@@ -15,6 +14,7 @@
 #include <mutex>
 #include <thread>
 #include <std_msgs/String.h>
+#include <gobot_msg_srv/StringArrayMsg.h>
 #include <gobot_msg_srv/BatteryMsg.h>
 #include <gobot_msg_srv/SetStringArray.h>
 #include <gobot_msg_srv/SetString.h>

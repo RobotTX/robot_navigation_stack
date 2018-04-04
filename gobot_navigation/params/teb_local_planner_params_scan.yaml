@@ -10,3 +10,4 @@ TebLocalPlannerROS:
     max_vel_x_backwards: 0.1
     #2*vel/wheel_sep(=0.45)
     max_vel_theta: 0.6
+    map_frame: /map
