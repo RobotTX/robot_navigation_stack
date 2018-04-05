@@ -1,4 +1,4 @@
-#include <gobot_recovery/initialpose_estimation.h>
+#include <gobot_recovery/pose_estimation.h>
 
 
 double cov_x=0.0,cov_y=0.0,cov_yaw=0.0,initial_cov_xy=0.02,initial_cov_yaw=0.02;
@@ -8,13 +8,19 @@ double last_pos_x=0.0,last_pos_y=0.0,last_ang_x=0.0,last_ang_y=0.0,last_ang_z=0.
 double home_pos_x=0.0,home_pos_y=0.0,home_ang_x=0.0,home_ang_y=0.0,home_ang_z=0.0,home_ang_w=0.0;
 double rosparam_x=0.0,rosparam_y=0.0,rosparam_yaw=0.0,rosparam_cov_x=0.0,rosparam_cov_y=0.0,rosparam_cov_yaw=0.0;
 
-bool running = false,found_pose=false;
+bool running = false,found_pose=false, charging_flag_ = false;
 
 std_srvs::Empty empty_srv;
+
+int left_speed_ = 0, right_speed_ = 0;
+
+double UPDATE_DURATION = 5.0;
 
 ros::Publisher vel_pub,foundPose_pub,initial_pose_publisher,goal_pub,lost_pub;
 std::string lastPoseFile;
 ros::ServiceServer poseReadySrv;
+ros::Timer pose_timer;
+ros::Time zero_vel_time;
 
 robot_class::SetRobot SetRobot;
 robot_class::GetRobot GetRobot;
@@ -111,7 +117,6 @@ bool initializePoseSrvCallback(std_srvs::Empty::Request &req, std_srvs::Empty::R
     if(!running){
         std::thread([](){
             int current_stage=START_STAGE;
-            gobot_msg_srv::IsCharging arg;
             running = true;
             found_pose=false;
 
@@ -139,9 +144,8 @@ bool initializePoseSrvCallback(std_srvs::Empty::Request &req, std_srvs::Empty::R
                         break;
 
                     case CHARGING_STAGE:
-                        ros::service::call("/gobot_status/charging_status",arg);
                         //if robot is charging, it is in CS station 
-                        if(arg.response.isCharging){
+                        if(charging_flag_){
                             publishInitialpose(home_pos_x,home_pos_y,home_ang_x,home_ang_y,home_ang_z,home_ang_w,initial_cov_xy,initial_cov_yaw);
                             ROS_INFO("(Finding) Robot is in the charing station");
                             found_pose=true;
@@ -186,12 +190,15 @@ bool initializePoseSrvCallback(std_srvs::Empty::Request &req, std_srvs::Empty::R
                 //Update and record last pose when found
                 ros::service::call("/request_nomotion_update",empty_srv);
 
-                 //Startup begin
-                 ros::NodeHandle nh;
-                 SetRobot.setStatus(-1,"ROBOT_READY");
-                 poseReadySrv = nh.advertiseService("/gobot_startup/pose_ready", poseReadySrvCallback);
-                 SetRobot.setBatteryLed();
-                 //Startup end
+                //Startup begin
+                ros::NodeHandle nh;
+                SetRobot.setStatus(-1,"ROBOT_READY");
+                poseReadySrv = nh.advertiseService("/gobot_startup/pose_ready", poseReadySrvCallback);
+                SetRobot.setBatteryLed();
+                //Startup end
+
+                zero_vel_time = ros::Time::now();
+                pose_timer.start();
             }
             running = false;
         }).detach();
@@ -377,22 +384,55 @@ void getPose(){
         ROS_ERROR("Could not find the param last_pose");
 }
 
+
+void batteryCallback(const gobot_msg_srv::BatteryMsg::ConstPtr& msg){
+    charging_flag_ = msg->ChargingFlag;
+}
+
+void motorSpdCallback(const gobot_msg_srv::MotorSpeedMsg::ConstPtr& speed){
+    left_speed_ = speed->velocityL;
+    right_speed_ = speed->velocityR;
+    if(left_speed_!=0 || right_speed_!=0)
+        zero_vel_time = ros::Time::now();
+}
+
+
+//manually perform update and publish updated particles
+void UpdateRobotPosTimer(const ros::TimerEvent&){
+    if(ros::service::exists("/request_nomotion_update",false)){
+        //if robot stopped for more than x sec and not charging, we start to update pose particles
+        if((ros::Time::now()-zero_vel_time).toSec()>UPDATE_DURATION && !charging_flag_)
+            if(left_speed_==0 && right_speed_==0)
+                ros::service::call("/request_nomotion_update",empty_srv);
+    }
+}
+
+
 int main(int argc, char **argv) {
-    ros::init(argc, argv, "initialpose_estimation");
+    ros::init(argc, argv, "pose_estimation");
     ros::NodeHandle nh;
     SetRobot.initialize();
     
+    nh.getParam("UPDATE_DURATION", UPDATE_DURATION);
+
     vel_pub = nh.advertise<geometry_msgs::Twist>("/cmd_vel",10);
     initial_pose_publisher = nh.advertise<geometry_msgs::PoseWithCovarianceStamped>("/initialpose", 1);
     goal_pub = nh.advertise<geometry_msgs::PoseStamped>("/move_base_simple/goal",1);
     foundPose_pub = nh.advertise<std_msgs::Int8>("/gobot_recovery/find_initial_pose",10);
     lost_pub = nh.advertise<std_msgs::Int8>("/gobot_recovery/lost_robot",1);
 
-    ros::Subscriber initialPose = nh.subscribe("/amcl_pose",1,getAmclPoseCallback);
     ros::ServiceServer initializePose = nh.advertiseService("/gobot_recovery/initialize_pose",initializePoseSrvCallback);
     ros::ServiceServer globalizePose = nh.advertiseService("/gobot_recovery/globalize_pose",globalizePoseSrvCallback);
     ros::ServiceServer stopGlobalizePose = nh.advertiseService("/gobot_recovery/stop_globalize_pose",stopGlobalizePoseSrvCallback);
     ros::ServiceServer goHome = nh.advertiseService("/gobot_recovery/go_home",goHomeSrvCallback);
+
+    ros::Subscriber motorSpd_sub = nh.subscribe("/gobot_motor/motor_speed", 1, motorSpdCallback);
+    ros::Subscriber initialPose_sub = nh.subscribe("/amcl_pose",1,getAmclPoseCallback);
+    ros::Subscriber battery_sub = nh.subscribe("/gobot_base/battery_topic",1, batteryCallback);
+
+    //Periodically save robot pose to local file
+    pose_timer = nh.createTimer(ros::Duration(UPDATE_DURATION), UpdateRobotPosTimer);
+    pose_timer.stop();
 
     ros::spin();
     return 0;

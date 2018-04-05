@@ -70,23 +70,10 @@ void getButtonCallback(const std_msgs::Int8::ConstPtr& msg){
       ros::service::call("/gobot_command/play_path",empty_srv);
       
     }
-    else if(dt>10.0 && dt<=15.0){
+    else if(dt>10.0 && dt<=20.0){
       ROS_INFO("Send robot home.");
       ros::service::call("/gobot_command/goDock",empty_srv);
 		}
-    /*
-    //These two cases are not considered now
-    else if(dt>99.0 && dt<=999.0){
-      ROS_INFO("Globalize robot.");
-      ros::service::call("/gobot_recovery/globalize_pose",empty_srv);
-    }
-		else if(dt>999.0){
-			//restart
-      ROS_INFO("Restart robot. Please wait for xx seconds...");
-			const std::string restart_script = "sh " + restart_sh + " &";
-      system(restart_script.c_str());
-		}
-    */
 	}
 }
 
@@ -117,8 +104,9 @@ int main(int argc, char **argv) {
     ros::Subscriber initialPoseResult = nh.subscribe("/gobot_recovery/find_initial_pose",1, initialPoseResultCallback);
     ros::Subscriber button_sub = nh.subscribe("/gobot_base/button_topic",1,getButtonCallback);
 
-    ros::service::waitForService("/move_base/clear_costmaps", ros::Duration(60.0));
-    ros::service::waitForService("/gobot_recovery/initialize_pose", ros::Duration(60.0));
+    ros::service::waitForService("/move_base/clear_costmaps", ros::Duration(120.0));
+    ros::service::waitForService("/request_nomotion_update", ros::Duration(120.0));
+    ros::service::waitForService("/gobot_recovery/initialize_pose", ros::Duration(120.0));
     ros::service::call("/gobot_recovery/initialize_pose",empty_srv);
 
 

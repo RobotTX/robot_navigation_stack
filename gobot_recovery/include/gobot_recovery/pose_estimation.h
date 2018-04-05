@@ -18,7 +18,7 @@
 #include <tf/transform_broadcaster.h>
 #include <geometry_msgs/Pose.h>
 #include <gobot_msg_srv/SetStringArray.h>
-#include <gobot_msg_srv/IsCharging.h>
+#include <gobot_msg_srv/BatteryMsg.h>
 #include <gobot_msg_srv/set_robot_class.h>
 #include <gobot_msg_srv/get_robot_class.h>
 
@@ -59,3 +59,9 @@ bool stopGlobalizePoseSrvCallback(std_srvs::Empty::Request &req, std_srvs::Empty
 bool goHomeSrvCallback(std_srvs::Empty::Request &req, std_srvs::Empty::Response &res);
 
 void getPose(void);
+
+void batteryCallback(const gobot_msg_srv::BatteryMsg::ConstPtr& msg);
+
+void motorSpdCallback(const gobot_msg_srv::MotorSpeedMsg::ConstPtr& speed);
+
+void UpdateRobotPosTimer(const ros::TimerEvent&);

@@ -39,7 +39,7 @@ void checkNewServers(void);
 
 void updateIP(void);
 
-bool initParams(void);
+void initParams(void);
 
 bool networkReadySrvCallback(std_srvs::Empty::Request &req, std_srvs::Empty::Response &res);
 

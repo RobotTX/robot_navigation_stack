@@ -1,13 +1,10 @@
 <?xml version="1.0"?>
 <launch>     
-
-    <param name="home_file" type="string" value="$(find gobot_data)/data/home.txt"/>
-    <param name="last_known_position_file" type="string" value="$(find gobot_data)/data/lastKnownPosition.txt"/>
-    <param name="restart_file" type="string" value="$(find gobot_data)/command/restart_robot.sh"/>
+    <include file="$(find gobot_base)/launch/robot_sensors_params.launch"/>
 
     <node pkg="gobot_recovery" type="allow_teb_back" name="recovery_allow_teb_back" output="screen" respawn="true"/>
 
-    <node pkg="gobot_recovery" type="initialpose_estimation" name="recovery_initialpose_estimation" output="screen" respawn="true"/>
+    <node pkg="gobot_recovery" type="pose_estimation" name="recovery_pose_estimation" output="screen" respawn="true"/>
     
     <node pkg="gobot_recovery" type="startup" name="recovery_startup" output="screen" required="true"/>
 

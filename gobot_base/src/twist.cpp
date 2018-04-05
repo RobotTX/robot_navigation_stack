@@ -19,7 +19,7 @@ bool lost_robot = false;
 bool enable_joy = false;
 double linear_limit = 0.4, angular_limit = 0.8; 
 
-int left_speed = 0, right_speed = 0;
+int left_speed_ = 0, right_speed_ = 0;
 
 ros::Time collisionTime;
 ros::Publisher bumper_pub,bumper_collision_pub;
@@ -46,7 +46,7 @@ void cliffCallback(const gobot_msg_srv::CliffMsg::ConstPtr& cliff){
     if((cliff->cliff1>CLIFF_THRESHOLD) || (cliff->cliff1==CLIFF_OUTRANGE) || (cliff->cliff2>CLIFF_THRESHOLD) || (cliff->cliff2==CLIFF_OUTRANGE)){
         if(moved_from_front_cliff){
             //if robot is moving
-            if(left_speed != 0 || right_speed != 0){
+            if(left_speed_ != 0 || right_speed_ != 0){
                 if(!bumper_on){
                     moved_from_front_cliff = false;
                     SetRobot.setSound(3,1);
@@ -64,7 +64,7 @@ void cliffCallback(const gobot_msg_srv::CliffMsg::ConstPtr& cliff){
     if((cliff->cliff3>CLIFF_THRESHOLD) || (cliff->cliff3==CLIFF_OUTRANGE) || (cliff->cliff4>CLIFF_THRESHOLD) || (cliff->cliff4==CLIFF_OUTRANGE)){
         if(moved_from_back_cliff){
             //if robot is moving
-            if(left_speed != 0 || right_speed != 0){
+            if(left_speed_ != 0 || right_speed_ != 0){
                 if(!bumper_on){
                     moved_from_back_cliff = false;
                     SetRobot.setSound(3,1);
@@ -305,8 +305,8 @@ void newCmdVel(const geometry_msgs::Twist::ConstPtr& twist){
 }
 
 void motorSpdCallback(const gobot_msg_srv::MotorSpeedMsg::ConstPtr& speed){
-    left_speed = speed->velocityL;
-    right_speed = speed->velocityR;
+    left_speed_ = speed->velocityL;
+    right_speed_ = speed->velocityR;
 }
 
 void statusCallback(const std_msgs::Int8::ConstPtr& msg){
@@ -340,14 +340,14 @@ int main(int argc, char **argv) {
     bumper_pub = nh.advertise<gobot_msg_srv::BumperMsg>("/gobot_base/bumpers_topic", 1);
     bumper_collision_pub = nh.advertise<gobot_msg_srv::BumperMsg>("/gobot_base/bumpers_collision", 1);
 
-    ros::Subscriber cmdVelSub = nh.subscribe("cmd_vel", 1, newCmdVel);
-    ros::Subscriber bumpersSub = nh.subscribe("/gobot_base/bumpers_raw_topic", 1, newBumpersInfo);
-    ros::Subscriber cliffSub = nh.subscribe("/gobot_base/cliff_topic", 1, cliffCallback);
-    ros::Subscriber lostRobot = nh.subscribe("/gobot_recovery/lost_robot",1,lostCallback);
-    ros::Subscriber joySub = nh.subscribe("joy", 1, joyCallback);
-    ros::Subscriber joyConSub = nh.subscribe("joy_connection", 1, joyConnectionCallback);
-    ros::Subscriber motorSpdSubscriber = nh.subscribe("/gobot_motor/motor_speed", 1, motorSpdCallback);
-    ros::Subscriber statusSubscriber = nh.subscribe("/gobot_status/gobot_status", 1, statusCallback);
+    ros::Subscriber cmdVel_sub = nh.subscribe("cmd_vel", 1, newCmdVel);
+    ros::Subscriber bumpers_sub = nh.subscribe("/gobot_base/bumpers_raw_topic", 1, newBumpersInfo);
+    ros::Subscriber cliff_sub = nh.subscribe("/gobot_base/cliff_topic", 1, cliffCallback);
+    ros::Subscriber lostRobot_sub = nh.subscribe("/gobot_recovery/lost_robot",1,lostCallback);
+    ros::Subscriber joy_sub = nh.subscribe("joy", 1, joyCallback);
+    ros::Subscriber joyConnection_sub = nh.subscribe("joy_connection", 1, joyConnectionCallback);
+    ros::Subscriber motorSpd_sub = nh.subscribe("/gobot_motor/motor_speed", 1, motorSpdCallback);
+    ros::Subscriber status_sub = nh.subscribe("/gobot_status/gobot_status", 1, statusCallback);
 
     //not in use now
     

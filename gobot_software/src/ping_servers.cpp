@@ -12,7 +12,6 @@ std::vector<std::pair<std::string, int>> oldIPs;
 std::mutex serverMutex, connectedMutex, ipMutex, sendDataMutex;
 ros::Publisher disco_pub;
 std_srvs::Empty empty_srv;
-
 ros::Time disco_time;
 
 robot_class::GetRobot GetRobot;
@@ -20,7 +19,7 @@ robot_class::GetRobot GetRobot;
 /**
  * Create the string with information to connect to the Qt app
  * hostname + sep + stage + sep + batteryLevel + sep + muteFlag + sep + dockStatus
- */
+**/
 std::string getDataToSend(void){
     gobot_msg_srv::GetString get_update_status;
     ros::service::call("/gobot_status/get_update_status", get_update_status);
@@ -31,7 +30,7 @@ std::string getDataToSend(void){
 
 /**
  * Will disconnet all servers for updating map/wifi
- */
+**/
 bool disServersSrvCallback(std_srvs::Empty::Request &req, std_srvs::Empty::Response &res){
     ipMutex.lock();
     //disconnect all sockets when closed
@@ -55,7 +54,7 @@ bool disServersSrvCallback(std_srvs::Empty::Request &req, std_srvs::Empty::Respo
 
 /**
  * Will update gobot status when receive any command
- */
+**/
 void updateInfoCallback(const std_msgs::String::ConstPtr& update_status){
     std::vector<std::thread> data_threads;
     ipMutex.lock();
@@ -77,7 +76,9 @@ void updateInfoCallback(const std_msgs::String::ConstPtr& update_status){
     sendDataMutex.unlock();
 }
 
-
+/**
+ * Will update servers' IP address in local network
+**/
 void updateServersCallback(const gobot_msg_srv::StringArrayMsg::ConstPtr& servers_msg){
     serverMutex.lock();
     availableIPs.clear();
@@ -88,7 +89,9 @@ void updateServersCallback(const gobot_msg_srv::StringArrayMsg::ConstPtr& server
 }
 
 
-//update old IP list with the now-connected IPs
+/**
+ * update old IP list with the now-connected IPs
+**/
 void updateIP(){
     /// We check the oldIPs vs the new connected IP so we now which one disconnected
     std::vector<int> toRemove;
@@ -146,7 +149,6 @@ void pingIP(std::string ip, std::string dataToSend, double sec){
     timeout::tcp::Client client;
     try {
         /// Try to connect to the remote Qt app
-        //tx??//close client connection after timeout
         client.connect(ip, "6000", boost::posix_time::seconds(sec));
         /// If we succesfully connect to the server, then the server is supposed to send us "OK"
         std::string read = client.read_some();
@@ -171,7 +173,6 @@ void pingIP2(std::string ip, std::string dataToSend, double sec){
     timeout::tcp::Client client;
     try {
         /// Try to connect to the remote Qt app
-        //tx??//close client connection after timeout
         client.connect(ip, "6000", boost::posix_time::seconds(sec));
         /// If we succesfully connect to the server, then the server is supposed to send us "OK"
         std::string read = client.read_some();
@@ -187,13 +188,11 @@ void pingIP2(std::string ip, std::string dataToSend, double sec){
 }
 
 
-bool initParams(){
+void initParams(){
     ros::NodeHandle nh;
     nh.getParam("status_update", STATUS_UPDATE);
     nh.getParam("waiting_time", WAITING_TIME);
     disco_time = ros::Time::now();
-    
-    return true;
 }
 
 
@@ -219,63 +218,62 @@ int main(int argc, char* argv[]){
     ros::NodeHandle n;
     signal(SIGINT, mySigintHandler);
 
-    if (initParams()){
-        //Startup begin
-        ROS_INFO("(ping_servers) Waiting for Robot network ready...");
-        ros::service::waitForService("/gobot_startup/network_ready", ros::Duration(120.0));
-        ROS_INFO("(ping_servers) Robot network is ready.");
-        //Startup end
+    initParams();
+    //Startup begin
+    ROS_INFO("(ping_servers) Waiting for Robot network ready...");
+    ros::service::waitForService("/gobot_startup/network_ready", ros::Duration(120.0));
+    ROS_INFO("(ping_servers) Robot network is ready.");
+    //Startup end
 
-        ros::ServiceServer disServersSrv = n.advertiseService("/gobot_software/disconnet_servers", disServersSrvCallback);
+    ros::ServiceServer disServersSrv = n.advertiseService("/gobot_software/disconnet_servers", disServersSrvCallback);
 
-        disco_pub = n.advertise<std_msgs::String>("/gobot_software/server_disconnected", 10);
+    disco_pub = n.advertise<std_msgs::String>("/gobot_software/server_disconnected", 10);
 
-        ros::Subscriber update_sub = n.subscribe("/gobot_status/update_information", 1, updateInfoCallback);
+    ros::Subscriber update_sub = n.subscribe("/gobot_status/update_information", 1, updateInfoCallback);
 
-        ros::Subscriber servers_sub = n.subscribe("/gobot_software/online_servers", 1, updateServersCallback);
+    ros::Subscriber servers_sub = n.subscribe("/gobot_software/online_servers", 1, updateServersCallback);
 
 
-        ros::AsyncSpinner spinner(3); // Use 3 threads
-        spinner.start();
+    ros::AsyncSpinner spinner(3); // Use 3 threads
+    spinner.start();
 
-        /**
-        * Will ping all available IP addresses and send a message when we disconnect to one
-        */
-        /// Ping all servers every 5 secs
-        ros::Rate loop_rate(1/STATUS_UPDATE);
+    /**
+    * Will ping all available IP addresses and send a message when we disconnect to one
+    */
+    /// Ping all servers every 5 secs
+    ros::Rate loop_rate(1/STATUS_UPDATE);
 
-        std::vector<std::thread> threads;
+    std::vector<std::thread> threads;
 
-        while(ros::ok()){ 
-            threads.clear();
-            connectedIPs.clear();
-            //ROS_INFO("%f",(ros::Time::now()-disco_time).toSec());
-            serverMutex.lock();
-            if(availableIPs.size()>0){
-                //ROS_INFO("(ping_server) Data to send : %s", dataToSend.c_str());
-                /// We create threads to ping every IP adress
-                /// => threads reduce the required time to ping from ~12 sec to 2 sec
-                if((ros::Time::now()-disco_time).toSec()>WAITING_TIME){
-                    /// Get the data to send to the Qt app
-                    std::string dataToSend = getDataToSend();
-                    //ROS_INFO("(ping_server) Trying to ping everyone %lu", availableIPs.size());
-                    for(int i = 0; i < availableIPs.size(); ++i)
-                        threads.push_back(std::thread(pingIP, availableIPs.at(i), dataToSend, 3.0));
-                }
+    while(ros::ok()){ 
+        threads.clear();
+        connectedIPs.clear();
+        //ROS_INFO("%f",(ros::Time::now()-disco_time).toSec());
+        serverMutex.lock();
+        if(availableIPs.size()>0){
+            //ROS_INFO("(ping_server) Data to send : %s", dataToSend.c_str());
+            /// We create threads to ping every IP adress
+            /// => threads reduce the required time to ping from ~12 sec to 2 sec
+            if((ros::Time::now()-disco_time).toSec()>WAITING_TIME){
+                /// Get the data to send to the Qt app
+                std::string dataToSend = getDataToSend();
+                //ROS_INFO("(ping_server) Trying to ping everyone %lu", availableIPs.size());
+                for(int i = 0; i < availableIPs.size(); ++i)
+                    threads.push_back(std::thread(pingIP, availableIPs.at(i), dataToSend, 3.0));
             }
-            serverMutex.unlock();
-
-            sendDataMutex.lock();
-            if(threads.size()>0){
-                /// We join all the threads => we wait for all the threads to be done
-                for(int i = 0; i < threads.size(); ++i)
-                    threads.at(i).join();
-                //ROS_INFO("(ping_server) Done pinging everyone");
-                updateIP();
-            }
-            sendDataMutex.unlock();
-            loop_rate.sleep();        
         }
+        serverMutex.unlock();
+
+        sendDataMutex.lock();
+        if(threads.size()>0){
+            /// We join all the threads => we wait for all the threads to be done
+            for(int i = 0; i < threads.size(); ++i)
+                threads.at(i).join();
+            //ROS_INFO("(ping_server) Done pinging everyone");
+            updateIP();
+        }
+        sendDataMutex.unlock();
+        loop_rate.sleep();        
     }
 
     ros::waitForShutdown();

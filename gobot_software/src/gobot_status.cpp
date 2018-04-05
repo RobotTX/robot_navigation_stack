@@ -534,7 +534,7 @@ bool recordBatterySrvCallback(gobot_msg_srv::SetInt::Request &req, gobot_msg_srv
 void batteryCallback(const gobot_msg_srv::BatteryMsg::ConstPtr& msg){
     battery_percent_ = msg->BatteryStatus;
     charging_current_ = msg->ChargingCurrent;
-    //for recording test purpose
+    /*//for recording test purpose
     if(record_battery_==1 && (ros::Time::now() - record_time_).toSec() >= 5.0){
         std::string record_date = getCurrentTime();
         std::ofstream ofsStage(recordBatteryFile, std::ofstream::out | std::ofstream::app);
@@ -545,6 +545,7 @@ void batteryCallback(const gobot_msg_srv::BatteryMsg::ConstPtr& msg){
             record_time_ = ros::Time::now();
         }
     }
+    */
 }
 
 //for changing led/sound purpose. There should be no change when docking
@@ -751,10 +752,9 @@ int main(int argc, char* argv[]){
         ros::ServiceServer getUpdateStatusSrv = n.advertiseService("/gobot_status/get_update_status", getUpdateStatusSrvCallback);
 
         ros::ServiceServer disconnectedSrv = n.advertiseService("/gobot_test/disconnected", disconnectedSrvCallback);
-        ros::ServiceServer recordBatterySrv = n.advertiseService("/gobot_test/record_battery", recordBatterySrvCallback);
 
-        ros::Subscriber battery = n.subscribe("/gobot_base/battery_topic",1, batteryCallback);
-        ros::Subscriber bumpers = n.subscribe("/gobot_base/bumpers_topic",1, bumpersCallback);
+        ros::Subscriber battery_sub = n.subscribe("/gobot_base/battery_topic",1, batteryCallback);
+        ros::Subscriber bumpers_sub = n.subscribe("/gobot_base/bumpers_topic",1, bumpersCallback);
 
         ros::spin();
         

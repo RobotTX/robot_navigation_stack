@@ -70,9 +70,9 @@ add_executable(allow_teb_back src/allow_teb_back.cpp)
 add_dependencies(allow_teb_back ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
 target_link_libraries(allow_teb_back ${catkin_LIBRARIES})
 
-add_executable(initialpose_estimation src/initialpose_estimation.cpp)
-add_dependencies(initialpose_estimation ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
-target_link_libraries(initialpose_estimation ${catkin_LIBRARIES})
+add_executable(pose_estimation src/pose_estimation.cpp)
+add_dependencies(pose_estimation ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
+target_link_libraries(pose_estimation ${catkin_LIBRARIES})
 
 
 add_executable(startup src/startup.cpp)

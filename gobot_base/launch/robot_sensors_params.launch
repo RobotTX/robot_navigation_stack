@@ -43,6 +43,9 @@
     <param name="USE_CLIFF_PC" type="bool" value="true" />
     <param name="CLIFF_THRESHOLD" type="double" value="170.0" />
     <param name="CLIFF_OUTRANGE" type="double" value="0.0" />
-    <!-- ROBOT COMMAND RELATED -->
+    <!-- ROBOT RECOVERY RELATED -->
     <param name="restart_file" type="string" value="$(find gobot_data)/command/restart_robot.sh" />
+    <param name="home_file" type="string" value="$(find gobot_data)/data/home.txt"/>
+    <param name="last_known_position_file" type="string" value="$(find gobot_data)/data/lastKnownPosition.txt"/>
+    <param name="UPDATE_DURATION" type="double" value="5.0"/>
 </launch>

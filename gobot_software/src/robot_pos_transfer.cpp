@@ -16,7 +16,6 @@ double last_pos_x=0.0,last_pos_y=0.0,last_pos_yaw=0.0,last_ang_x=0.0,last_ang_y=
 
 void sendRobotPosTimer(const ros::TimerEvent&){
     if(sockets.size() > 0){
-        std::vector<std::string> dis_ip;
         socketsMutex.lock();
         /// We send the position of the robot to every Qt app
         for(auto const &elem : sockets){
@@ -25,7 +24,6 @@ void sendRobotPosTimer(const ros::TimerEvent&){
             } catch (std::exception& e) {
                 //can not send pose to the ip
                 //ROS_ERROR("(Robot Pos) Exception %s : %s", elem.first.c_str(), e.what());
-                //dis_ip.push_back(elem.first);
             }
         }
         socketsMutex.unlock(); 
@@ -130,9 +128,9 @@ int main(int argc, char **argv){
         ros::service::waitForService("/gobot_startup/network_ready", ros::Duration(120.0));
         //Startup end
         
-        ros::Subscriber sub = n.subscribe("/gobot_software/server_disconnected", 1000, serverDisconnected);
+        ros::Subscriber servers_disco_sub = n.subscribe("/gobot_software/server_disconnected", 1000, serverDisconnected);
 
-        ros::Subscriber sub_robot = n.subscribe("/robot_pose", 1, getRobotPos);
+        ros::Subscriber robot_pose_sub = n.subscribe("/robot_pose", 1, getRobotPos);
 
         //Periodically send robot pose to connected clients
         timer1 = n.createTimer(ros::Duration(0.5), sendRobotPosTimer);
