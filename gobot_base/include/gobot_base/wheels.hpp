@@ -1,25 +1,25 @@
+//ros headers
 #include <ros/ros.h>
+#include <signal.h>
+#include <std_msgs/Int8.h>
+#include <std_srvs/Empty.h>
+#include <tf/transform_listener.h>
+#include <tf/transform_broadcaster.h>
+#include <geometry_msgs/Twist.h>
+#include <geometry_msgs/Quaternion.h>
+#include <nav_msgs/Odometry.h>
+//c++ headers
 #include <string>
-#include <iostream>
 #include <unistd.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <mutex>
-#include <thread>
-#include <signal.h>
 #include <numeric> 
-#include <std_srvs/Empty.h>
 #include <serial/serial.h>
-#include <geometry_msgs/Twist.h>
-#include <tf/transform_broadcaster.h>
-#include <nav_msgs/Odometry.h>
-#include <gobot_msg_srv/OdomTestMsg.h>
-#include <gobot_msg_srv/GetEncoders.h>
-#include <gobot_msg_srv/SetSpeeds.h>
-#include <gobot_msg_srv/SetGobotStatus.h>
-#include <gobot_msg_srv/GetIntArray.h>
-#include <gobot_msg_srv/MotorSpeedMsg.h>
-#include <gobot_msg_srv/EncodersMsg.h>
+#include <thread>
+#include <serial/serial.h>
+
+#include <gobot_msg_srv/robot_msgs.h>
 
 
 /// Write and read informations on the serial port
@@ -36,11 +36,6 @@ void initParams(ros::NodeHandle &nh);
 void motorSpdCallback(const gobot_msg_srv::MotorSpeedMsg::ConstPtr& speed);
 
 bool resetOdom(std_srvs::Empty::Request &req, std_srvs::Empty::Response &res);
-
-/// Set the encoders to 0
-bool resetEncoders(std_srvs::Empty::Request &req, std_srvs::Empty::Response &res);
-
-bool initialMotor(std_srvs::Empty::Request &req, std_srvs::Empty::Response &res);
 
 /// Just to test, we get the encoders and print them
 bool testEncoders(std_srvs::Empty::Request &req, std_srvs::Empty::Response &res);

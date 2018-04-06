@@ -10,7 +10,6 @@ project(robot_lib_test)
 find_package(catkin REQUIRED COMPONENTS
   roscpp
   rospy
-  std_msgs
   gobot_msg_srv
 )
 

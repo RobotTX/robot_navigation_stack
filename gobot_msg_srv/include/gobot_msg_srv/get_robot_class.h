@@ -1,16 +1,19 @@
 #ifndef GET_STATUS
 #define GET_STATUS
 
+//ros headers
 #include <ros/ros.h>
-#include <string>
-#include <stdio.h>
+#include <std_msgs/Int8.h>
 #include <std_srvs/Empty.h>
-#include <gobot_msg_srv/GetGobotStatus.h>
-#include <gobot_msg_srv/GetIntArray.h>
-#include <gobot_msg_srv/GetInt.h>
-#include <gobot_msg_srv/GetStringArray.h>
-#include <gobot_msg_srv/GetString.h>
 
+//c++ headers
+#include <string>
+#include <unistd.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <numeric> 
+
+#include <gobot_msg_srv/robot_msgs.h>
 
 namespace robot_class {
     class GetRobot {

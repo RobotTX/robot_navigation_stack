@@ -20,7 +20,7 @@ DOCK STATUS
 -1 FAILED TO GO TO CHARGING
 */
 
-ros::Publisher disco_pub,initial_pose_publisher, mute_pub, update_info_pub, status_pub;
+ros::Publisher initial_pose_publisher, mute_pub, update_info_pub, status_pub;
 
 static const std::string sep = std::string(1, 31);
 
@@ -508,7 +508,7 @@ bool PercentService(gobot_msg_srv::GetInt::Request &req, gobot_msg_srv::GetInt::
 }
 
 bool disconnectedSrvCallback(std_srvs::Empty::Request &req, std_srvs::Empty::Response &res){
-    /*
+    /*//test disconnection times
     disconnected++;
     std::ofstream ofsDisconnected(disconnectedFile, std::ofstream::out | std::ofstream::trunc);
     if(ofsDisconnected)

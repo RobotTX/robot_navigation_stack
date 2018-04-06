@@ -21,6 +21,7 @@ find_package(catkin REQUIRED COMPONENTS
         std_srvs
         tf
         gobot_recovery
+        gobot_msg_srv
 )
 find_package(Eigen3 REQUIRED)
 add_definitions(${EIGEN3_DEFINITIONS})

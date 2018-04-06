@@ -9,18 +9,8 @@ add_compile_options(-std=c++11)
 ## is used, also find other catkin packages
 find_package(catkin REQUIRED COMPONENTS
     roscpp
-    tf
-    actionlib
     hector_exploration_node
-    geometry_msgs
     gobot_msg_srv
-    actionlib_msgs
-    nav_msgs
-    move_base_msgs
-    sensor_msgs
-    std_msgs
-    std_srvs
-    dynamic_reconfigure
 )
 
 #add_service_files(
@@ -35,19 +25,6 @@ find_package(catkin REQUIRED COMPONENTS
 catkin_package(
     INCLUDE_DIRS include
     CATKIN_DEPENDS 
-        roscpp
-        tf
-        actionlib
-        hector_exploration_node
-        geometry_msgs
-        gobot_msg_srv
-        actionlib_msgs
-        nav_msgs
-        move_base_msgs
-        sensor_msgs
-        std_msgs
-        std_srvs
-        dynamic_reconfigure
 )
 
 ###########

@@ -10,9 +10,7 @@ add_compile_options(-std=c++11)
 find_package(catkin REQUIRED COMPONENTS
   roscpp
   rospy
-  std_msgs
   gobot_msg_srv
-  geometry_msgs
 )
 
 ## System dependencies are found with CMake's conventions

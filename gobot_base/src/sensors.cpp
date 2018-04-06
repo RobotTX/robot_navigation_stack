@@ -30,7 +30,6 @@ std::map<std::string, uint8_t> led_color_;
 std::string restart_file;
 
 robot_class::SetRobot SetRobot;
-robot_class::GetRobot GetRobot;
 int robot_status_ = -1;
 
 std::vector<uint8_t> writeAndRead(std::vector<uint8_t> toWrite, int bytesToRead){

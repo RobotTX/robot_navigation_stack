@@ -1,23 +1,18 @@
 #ifndef SET_STATUS
 #define SET_STATUS
 
+//ros headers
 #include <ros/ros.h>
-#include <string>
-#include <stdio.h>
+#include <std_msgs/Int8.h>
 #include <std_srvs/Empty.h>
-#include <gobot_msg_srv/MotorSpeedMsg.h>
-#include <gobot_msg_srv/LedMsg.h>
-#include <gobot_msg_srv/SoundMsg.h>
-#include <gobot_msg_srv/LedStrip.h>
-#include <gobot_msg_srv/SetGobotStatus.h>
-#include <gobot_msg_srv/SetIntArray.h>
-#include <gobot_msg_srv/SetInt.h>
-#include <gobot_msg_srv/GetInt.h>
-#include <gobot_msg_srv/SetStringArray.h>
-#include <gobot_msg_srv/SetString.h>
-#include <gobot_msg_srv/SetSpeeds.h>
-#include <gobot_msg_srv/IsCharging.h>
-#include <gobot_msg_srv/SetBattery.h>
+
+//c++ headers
+#include <string>
+#include <unistd.h>
+#include <stdio.h>
+#include <stdlib.h>
+
+#include <gobot_msg_srv/robot_msgs.h>
 
 namespace robot_class {
     class SetRobot {

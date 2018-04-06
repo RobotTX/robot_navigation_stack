@@ -1,6 +1,5 @@
 #include <gobot_recovery/startup.h>
 
-ros::Publisher vel_pub;
 std_srvs::Empty empty_srv;
 
 int count = 1;
@@ -98,9 +97,7 @@ int main(int argc, char **argv) {
     ROS_INFO("Starting Robot...");
     
     nh.getParam("restart_file", restart_sh);
-
-    vel_pub = nh.advertise<geometry_msgs::Twist>("/cmd_vel",10);
-
+    
     ros::Subscriber initialPoseResult = nh.subscribe("/gobot_recovery/find_initial_pose",1, initialPoseResultCallback);
     ros::Subscriber button_sub = nh.subscribe("/gobot_base/button_topic",1,getButtonCallback);
 

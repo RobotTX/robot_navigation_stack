@@ -3,15 +3,12 @@
 bool testEncoder = false;
 uint8_t leftSpeed_=128, rightSpeed_=128, rec_leftSpeed_=128,rec_rightSpeed_=128;
 
-ros::ServiceServer resetEncodersSrv,initialMotorSrv;
-
 std::mutex serialMutex, dataMutex;
 std::string MD49device;
 serial::Serial serialConnection;
 int ACC_RATE = 0,ROLLING_WINDOW_SIZE = 5;
 
 //odom related data
-std_srvs::Empty arg;
 int32_t last_left_encoder = 0, last_right_encoder = 0;
 double x = 0.0, y = 0.0, th = 0.0, pi = 3.1415926;
 int encoder_limit = 3000;
@@ -66,17 +63,6 @@ std::string getStdoutFromCommand(std::string cmd) {
     }
     return data;
 }
-
-/// Set the encoders to 0
-bool resetEncoders(std_srvs::Empty::Request &req, std_srvs::Empty::Response &res){
-    writeAndRead(std::vector<uint8_t>({0x00, 0x35}));
-    return true;
-}
-
-bool initialMotor(std_srvs::Empty::Request &req, std_srvs::Empty::Response &res){
-    return initSerial();
-}
-
 
 /// Just to test, we get the encoders and print them
 bool testEncoders(std_srvs::Empty::Request &req, std_srvs::Empty::Response &res){
@@ -174,9 +160,6 @@ void initParams(ros::NodeHandle &nh){
 }
 
 void mySigintHandler(int sig){   
-    resetEncodersSrv.shutdown();
-    initialMotorSrv.shutdown();
-
     serialMutex.lock();
     try{
         //set speed to 0 when shutdown
@@ -197,11 +180,6 @@ int main(int argc, char **argv) {
     initParams(nh);
 
     if(initSerial()){
-        ////Replace these services with publisher & subscriber
-        resetEncodersSrv = nh.advertiseService("/gobot_motor/resetEncoders", resetEncoders);
-        initialMotorSrv = nh.advertiseService("/gobot_motor/initialMotor", initialMotor);
-        ////
-
         //Startup begin
         ros::service::waitForService("/gobot_status/set_gobot_status", ros::Duration(60.0));
         ros::ServiceServer motorReadySrv = nh.advertiseService("/gobot_startup/motor_ready", motorReadySrvCallback);

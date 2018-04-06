@@ -9,15 +9,6 @@ add_compile_options(-std=c++11)
 ## is used, also find other catkin packages
 find_package(catkin REQUIRED COMPONENTS
     roscpp
-    geometry_msgs
-    sensor_msgs
-    nav_msgs
-    tf
-    serial
-    std_srvs
-    actionlib
-    actionlib_msgs
-    move_base_msgs
     gobot_msg_srv
 )
 
@@ -108,7 +99,6 @@ find_package(catkin REQUIRED COMPONENTS
 ## DEPENDS: system dependencies of this project that dependent projects also need
 catkin_package(
     INCLUDE_DIRS include
-    CATKIN_DEPENDS roscpp actionlib geometry_msgs sensor_msgs nav_msgs tf serial std_srvs gobot_msg_srv actionlib_msgs move_base_msgs
 )
 
 ###########
@@ -155,6 +145,11 @@ include_directories(
 add_executable(wheels src/wheels.cpp)
 target_link_libraries(wheels ${catkin_LIBRARIES})
 add_dependencies(wheels ${${gobot_msg_srv}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
+
+add_executable(wheel_node src/wheel_node.cpp)
+target_link_libraries(wheel_node ${catkin_LIBRARIES})
+add_dependencies(wheel_node ${${gobot_msg_srv}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
+
 
 add_executable(twist src/twist.cpp)
 target_link_libraries(twist ${catkin_LIBRARIES})

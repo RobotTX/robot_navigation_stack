@@ -1,12 +1,11 @@
 #include <ros/ros.h>
 #include <std_msgs/Int8.h>
 #include <std_srvs/Empty.h>
-#include <geometry_msgs/PoseWithCovarianceStamped.h>
 #include <geometry_msgs/Twist.h>
 #include <geometry_msgs/PoseStamped.h>
+#include <geometry_msgs/PoseWithCovarianceStamped.h>
 #include <actionlib_msgs/GoalStatusArray.h>
 #include <actionlib_msgs/GoalID.h>
-#include <std_srvs/Empty.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <iostream>
@@ -17,8 +16,6 @@
 #include <signal.h>
 #include <tf/transform_broadcaster.h>
 #include <geometry_msgs/Pose.h>
-#include <gobot_msg_srv/SetStringArray.h>
-#include <gobot_msg_srv/BatteryMsg.h>
 #include <gobot_msg_srv/set_robot_class.h>
 #include <gobot_msg_srv/get_robot_class.h>
 

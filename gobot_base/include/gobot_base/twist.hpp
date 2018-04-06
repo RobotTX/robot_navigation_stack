@@ -1,21 +1,19 @@
+//ros headers
 #include <ros/ros.h>
+#include <signal.h>
+#include <std_msgs/Int8.h>
+#include <std_srvs/Empty.h>
+#include <sensor_msgs/Joy.h>
+#include <geometry_msgs/Twist.h>
+//c++ headers
 #include <string>
 #include <unistd.h>
 #include <stdio.h>
 #include <stdlib.h>
-#include <chrono>
+#include <numeric> 
 #include <thread>
-#include <signal.h>
-#include <move_base_msgs/MoveBaseAction.h>
-#include <actionlib/client/simple_action_client.h>
-#include <std_srvs/Empty.h>
-#include <std_msgs/Int8.h>
-#include <geometry_msgs/Twist.h>
-#include <sensor_msgs/Joy.h>
+
 #include <gobot_msg_srv/set_robot_class.h>
-#include <gobot_msg_srv/get_robot_class.h>
-#include <gobot_msg_srv/robot_msgs.h>
-#include <gobot_msg_srv/GetIntArray.h>
 
 bool continueRobotSrvCallback(std_srvs::Empty::Request &req, std_srvs::Empty::Response &res);
 

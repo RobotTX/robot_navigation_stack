@@ -11,15 +11,7 @@ find_package(catkin REQUIRED
     COMPONENTS
         roscpp
         pluginlib
-        dynamic_reconfigure
-        move_base_msgs
-        costmap_2d
-        tf
         nav_core
-        std_srvs
-        std_msgs
-        actionlib_msgs
-        geometry_msgs
         gobot_msg_srv
 )
 
@@ -36,18 +28,6 @@ catkin_package(
     INCLUDE_DIRS include
     LIBRARIES init_back_recovery
     CATKIN_DEPENDS
-        roscpp
-        pluginlib
-        dynamic_reconfigure
-        move_base_msgs
-        costmap_2d
-        tf
-        nav_core
-        std_srvs
-        std_msgs
-        actionlib_msgs
-        geometry_msgs
-        gobot_msg_srv
 )
 
 ###########

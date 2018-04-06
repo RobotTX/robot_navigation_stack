@@ -37,27 +37,18 @@
 #ifndef ROBOT_COMMAND
 #define ROBOT_COMMAND
 
-#include <ros/ros.h>
-#include <string>
-#include <std_srvs/Empty.h>
-#include <tf/transform_listener.h>
+#include <gobot_msg_srv/set_robot_class.h>
+#include <gobot_msg_srv/get_robot_class.h>
+
 #include <move_base_msgs/MoveBaseAction.h>
 #include <actionlib/client/simple_action_client.h>
 #include <actionlib_msgs/GoalStatusArray.h>
-#include <geometry_msgs/Pose.h>
-#include <geometry_msgs/PoseStamped.h>
-#include <geometry_msgs/Twist.h>
-#include <geometry_msgs/Quaternion.h>
 #include <costmap_2d/costmap_2d.h>
 #include <costmap_2d/costmap_2d_ros.h>
 #include <sensor_msgs/LaserScan.h>
 #include <nav_msgs/Path.h>
 #include <nav_msgs/GetPlan.h>
 #include <nav_msgs/MapMetaData.h>
-
-#include <gobot_msg_srv/set_robot_class.h>
-#include <gobot_msg_srv/get_robot_class.h>
-#include <gobot_msg_srv/robot_msgs.h>
 
 namespace robot_class {
     

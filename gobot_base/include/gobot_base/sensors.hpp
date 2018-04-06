@@ -1,18 +1,21 @@
+//ros headers
 #include <ros/ros.h>
-#include <string>
-#include <unistd.h>
-#include <stdio.h>
-#include <stdlib.h>
 #include <signal.h>
 #include <std_msgs/Int8.h>
 #include <std_msgs/Float32.h>
 #include <std_srvs/Empty.h>
-#include <thread>
-#include "serial/serial.h"
+//c++ headers
+#include <string>
+#include <unistd.h>
+#include <stdio.h>
+#include <stdlib.h>
 #include <mutex>
-#include <gobot_msg_srv/robot_msgs.h>
+#include <numeric> 
+#include <serial/serial.h>
+#include <thread>
+
 #include <gobot_msg_srv/set_robot_class.h>
-#include <gobot_msg_srv/get_robot_class.h>
+
 
 std::vector<uint8_t> REQUEST_DATA_CMD = {0x10, 0x01, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x1B};
 std::vector<uint8_t> RESET_MCU_CMD = {0xD0, 0x01, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x1B};

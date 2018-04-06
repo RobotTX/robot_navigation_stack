@@ -11,11 +11,8 @@ find_package(catkin REQUIRED COMPONENTS
     hector_nav_msgs
     roscpp
     rospy
-    actionlib
-    actionlib_msgs
     gobot_msg_srv
     message_generation
-    std_msgs
 )
 
 ## System dependencies are found with CMake's conventions

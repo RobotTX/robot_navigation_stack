@@ -11,13 +11,18 @@ find_package(catkin REQUIRED COMPONENTS
     roscpp
     rospy
     std_msgs
-    message_generation
+    std_srvs
+    tf
+    serial
+    nav_msgs
     actionlib
-    actionlib_msgs
     costmap_2d
     sensor_msgs
     geometry_msgs
-    nav_msgs
+    actionlib_msgs
+    move_base_msgs
+    dynamic_reconfigure
+    message_generation
 )
 
 ## System dependencies are found with CMake's conventions
@@ -80,7 +85,6 @@ add_service_files(
     IsCharging.srv
     Port.srv
     PortLaser.srv
-    RecoveredPosition.srv
     SendMessageToPc.srv
     SetSpeeds.srv
     LedStrip.srv
@@ -115,12 +119,16 @@ catkin_package(
         robot_class
 #  LIBRARIES gobot_msg_srv
     CATKIN_DEPENDS 
-        message_runtime
+        std_srvs
+        tf
+        serial
+        nav_msgs
         actionlib
-        actionlib_msgs
+        costmap_2d
         sensor_msgs
         geometry_msgs
-        nav_msgs
+        actionlib_msgs
+        move_base_msgs
 #  DEPENDS system_lib
 )
 
