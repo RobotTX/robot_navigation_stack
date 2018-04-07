@@ -10,7 +10,7 @@ double STATUS_UPDATE=5.0, WAITING_TIME=5.0;
 std::vector<std::string> availableIPs, connectedIPs;
 std::vector<std::pair<std::string, int>> oldIPs;
 std::mutex serverMutex, connectedMutex, ipMutex, sendDataMutex;
-ros::Publisher disco_pub;
+ros::Publisher disco_pub, host_pub;
 std_srvs::Empty empty_srv;
 ros::Time disco_time;
 
@@ -110,14 +110,14 @@ void updateIP(){
             oldIPs.at(i).second++;
             if(oldIPs.at(i).second >= PING_THRESHOLD){
                 /// Publish a message to the topic /gobot_software/server_disconnected with the IP address of the server which disconnected
-                ROS_WARN("(ping_server) The ip %s disconnected", oldIPs.at(i).first.c_str());
+                ROS_WARN("(PING_SERVERS) The ip %s disconnected", oldIPs.at(i).first.c_str());
                 std_msgs::String msg;
                 msg.data = oldIPs.at(i).first;
                 disco_pub.publish(msg);
                 toRemove.push_back(i);
             } 
             else{
-                //ROS_WARN("Could not ping IP %s for %d time(s)", oldIPs.at(i).first.c_str(), oldIPs.at(i).second);
+                //ROS_WARN("(PING_SERVERS) Could not ping IP %s for %d time(s)", oldIPs.at(i).first.c_str(), oldIPs.at(i).second);
             }
         }
     }
@@ -138,6 +138,13 @@ void updateIP(){
         if(!hasIP)
             oldIPs.push_back(std::pair<std::string, int>(connectedIPs.at(i), 0));
     }
+
+    gobot_msg_srv::StringArrayMsg host_ip_msg;
+    for(int i = 0; i < oldIPs.size(); ++i){
+        host_ip_msg.data.push_back(oldIPs.at(i).first);
+    }
+    host_pub.publish(host_ip_msg);
+
     ipMutex.unlock();
 }
 
@@ -145,7 +152,7 @@ void updateIP(){
  * Try to connect to the given IP, if can, then read OK, then send some data
  */
 void pingIP(std::string ip, std::string dataToSend, double sec){
-    //ROS_INFO("(ping_server) Called pingIP : %s", ip.c_str());
+    //ROS_INFO("(PING_SERVERS) Called pingIP : %s", ip.c_str());
     timeout::tcp::Client client;
     try {
         /// Try to connect to the remote Qt app
@@ -159,17 +166,17 @@ void pingIP(std::string ip, std::string dataToSend, double sec){
             connectedMutex.lock();
             connectedIPs.push_back(ip);
             connectedMutex.unlock();
-            //ROS_INFO("(ping_server) Connected to %s", ip.c_str());
+            //ROS_INFO("(PING_SERVERS) Connected to %s", ip.c_str());
         } //else
-            //ROS_ERROR("(ping_server) read %lu bytes : %s", read.size(), read.c_str());
+            //ROS_ERROR("(PING_SERVERS) read %lu bytes : %s", read.size(), read.c_str());
         
     } catch(std::exception& e) {
-        //ROS_ERROR("(ping_server) error %s : %s", ip.c_str(), e.what());
+        //ROS_ERROR("(PING_SERVERS) error %s : %s", ip.c_str(), e.what());
     }
 }
 
 void pingIP2(std::string ip, std::string dataToSend, double sec){
-    //ROS_INFO("(ping_server) Called pingIP : %s", ip.c_str());
+    //ROS_INFO("(PING_SERVERS) Called pingIP : %s", ip.c_str());
     timeout::tcp::Client client;
     try {
         /// Try to connect to the remote Qt app
@@ -179,11 +186,11 @@ void pingIP2(std::string ip, std::string dataToSend, double sec){
         if(read.compare("OK") == 0){
             /// Send the required data
             client.write_line(dataToSend, boost::posix_time::seconds(2.5));
-            //ROS_INFO("(ping_server) Connected to %s", ip.c_str());
+            //ROS_INFO("(PING_SERVERS) Connected to %s", ip.c_str());
         } 
 
     } catch(std::exception& e) {
-        //ROS_ERROR("(ping_server) error %s : %s", ip.c_str(), e.what());
+        //ROS_ERROR("(PING_SERVERS) error %s : %s", ip.c_str(), e.what());
     }
 }
 
@@ -217,17 +224,20 @@ int main(int argc, char* argv[]){
     ros::init(argc, argv, "ping_server");
     ros::NodeHandle n;
     signal(SIGINT, mySigintHandler);
+    
+    //Startup begin
+    ROS_INFO("(PING_SERVERS) Waiting for Robot network ready...");
+    ros::service::waitForService("/gobot_startup/network_ready", ros::Duration(120.0));
+    ROS_INFO("(PING_SERVERS) Robot network is ready.");
+    //Startup end
 
     initParams();
-    //Startup begin
-    ROS_INFO("(ping_servers) Waiting for Robot network ready...");
-    ros::service::waitForService("/gobot_startup/network_ready", ros::Duration(120.0));
-    ROS_INFO("(ping_servers) Robot network is ready.");
-    //Startup end
 
     ros::ServiceServer disServersSrv = n.advertiseService("/gobot_software/disconnet_servers", disServersSrvCallback);
 
-    disco_pub = n.advertise<std_msgs::String>("/gobot_software/server_disconnected", 10);
+    disco_pub = n.advertise<std_msgs::String>("/gobot_software/server_disconnected", 1);
+
+    host_pub = n.advertise<gobot_msg_srv::StringArrayMsg>("/gobot_software/connected_servers", 1);
 
     ros::Subscriber update_sub = n.subscribe("/gobot_status/update_information", 1, updateInfoCallback);
 
@@ -248,16 +258,16 @@ int main(int argc, char* argv[]){
     while(ros::ok()){ 
         threads.clear();
         connectedIPs.clear();
-        //ROS_INFO("%f",(ros::Time::now()-disco_time).toSec());
+        //ROS_INFO("(PING_SERVERS) %f",(ros::Time::now()-disco_time).toSec());
         serverMutex.lock();
         if(availableIPs.size()>0){
-            //ROS_INFO("(ping_server) Data to send : %s", dataToSend.c_str());
+            //ROS_INFO("(PING_SERVERS) Data to send : %s", dataToSend.c_str());
             /// We create threads to ping every IP adress
             /// => threads reduce the required time to ping from ~12 sec to 2 sec
             if((ros::Time::now()-disco_time).toSec()>WAITING_TIME){
                 /// Get the data to send to the Qt app
                 std::string dataToSend = getDataToSend();
-                //ROS_INFO("(ping_server) Trying to ping everyone %lu", availableIPs.size());
+                //ROS_INFO("(PING_SERVERS) Trying to ping everyone %lu", availableIPs.size());
                 for(int i = 0; i < availableIPs.size(); ++i)
                     threads.push_back(std::thread(pingIP, availableIPs.at(i), dataToSend, 3.0));
             }
@@ -269,7 +279,7 @@ int main(int argc, char* argv[]){
             /// We join all the threads => we wait for all the threads to be done
             for(int i = 0; i < threads.size(); ++i)
                 threads.at(i).join();
-            //ROS_INFO("(ping_server) Done pinging everyone");
+            //ROS_INFO("(PING_SERVERS) Done pinging everyone");
             updateIP();
         }
         sendDataMutex.unlock();

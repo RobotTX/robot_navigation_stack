@@ -32,19 +32,19 @@ void getButtonCallback(const std_msgs::Int8::ConstPtr& msg){
     if(dt<=5.0){
       //start exploration
       if(robot_status_==21){
-        ROS_INFO("Continue robot exploration.");
+        ROS_INFO("(SCAN_STARTUP) Continue robot exploration.");
         ros::service::call("/gobot_command/start_explore",empty_srv);
       }
       //stop exploring
       else if(robot_status_==25){
-        ROS_INFO("Stop robot exploration.");
+        ROS_INFO("(SCAN_STARTUP) Stop robot exploration.");
         ros::service::call("/gobot_command/stop_explore",empty_srv);
       }
     }
     else if(dt>5.0){
       //exploration startup, then start auto-exploration
       if(robot_status_==20){
-        ROS_INFO("Start robot exploration.");
+        ROS_INFO("SCAN_STARTUP) Start robot exploration.");
         ros::service::call("/gobot_command/start_explore",empty_srv);
       }
       //save map
@@ -56,7 +56,7 @@ void getButtonCallback(const std_msgs::Int8::ConstPtr& msg){
 }
 
 void saveMap(){
-  ROS_INFO("Save scaned map.");
+  ROS_INFO("(SCAN_STARTUP) Save scaned map.");
   std::string cmd = "rosrun map_server map_saver -f "+ map_path +" &";
   system(cmd.c_str());
   std::time_t now = time(0);
@@ -70,22 +70,22 @@ void saveMap(){
   if(ofs){
       ofs << mapId << std::endl << mapDate << std::endl;
       ofs.close();
-      ROS_INFO("(startup) map id: %s.",mapId.c_str());
+      ROS_INFO("(SCAN_STARTUP) map id: %s.",mapId.c_str());
   }
 
   SetRobot.setHome("0","0","0","0","0","1");
-  ROS_INFO("(Scan Startup) Home deleted");
+  ROS_INFO("(SCAN_STARTUP) Home deleted");
 
   SetRobot.setLoop(0);
-  ROS_INFO("(Scan Startup) Loop deleted");
+  ROS_INFO("(SCAN_STARTUP) Loop deleted");
 
   /// We delete the old path
   SetRobot.clearPath();
-  ROS_INFO("(Scan Startup) Path deleted");
+  ROS_INFO("(SCAN_STARTUP) Path deleted");
 
   /// We delete the old path stage
   SetRobot.setStage(0);
-  ROS_INFO("(Scan Startup) Path stage deleted");
+  ROS_INFO("(SCAN_STARTUP) Path stage deleted");
 }
 
 bool saveMapSrvCallback(std_srvs::Empty::Request &req, std_srvs::Empty::Response &res){
@@ -108,25 +108,22 @@ void mySigintHandler(int sig)
 int main(int argc, char **argv) {
     ros::init(argc, argv, "scan_startup");
     ros::NodeHandle nh;
-    SetRobot.initialize();
     signal(SIGINT, mySigintHandler);
-
+    
     //Startup begin
-    ROS_INFO("(startup) Waiting for Robot setting hardware...");
+    ROS_INFO("(SCAN_STARTUP) Waiting for Robot setting hardware...");
     ros::service::waitForService("/gobot_startup/sensors_ready", ros::Duration(60.0));
     ros::service::waitForService("/move_base/clear_costmaps", ros::Duration(60.0));
-    ROS_INFO("(startup) Robot setting hardware is ready.");
+    ROS_INFO("(SCAN_STARTUP) Robot setting hardware is ready.");
     
+    SetRobot.initialize();
     SetRobot.setBatteryLed();
-
     SetRobot.setStatus(-1,"ROBOT_READY");
     ros::ServiceServer poseReadySrv = nh.advertiseService("/gobot_startup/pose_ready", poseReadySrvCallback);
     //Startup end
-
-    ROS_INFO("Started Robot.");
     
     nh.getParam("map_path", map_path);
-    ROS_INFO("(startup) map_path: %s.",map_path.c_str());
+    ROS_INFO("(SCAN_STARTUP) map_path: %s.",map_path.c_str());
 
     nh.getParam("map_id_file", map_id);
     

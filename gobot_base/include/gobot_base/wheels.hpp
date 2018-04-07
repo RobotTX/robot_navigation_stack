@@ -17,16 +17,12 @@
 #include <numeric> 
 #include <serial/serial.h>
 #include <thread>
-#include <serial/serial.h>
 
 #include <gobot_msg_srv/robot_msgs.h>
 
 
 /// Write and read informations on the serial port
 std::vector<uint8_t> writeAndRead(std::vector<uint8_t> toWrite, int bytesToRead = 0);
-
-/// get the output of the given system command
-std::string getStdoutFromCommand(std::string cmd);
 
 /// Initialize the serial connection
 bool initSerial(void);

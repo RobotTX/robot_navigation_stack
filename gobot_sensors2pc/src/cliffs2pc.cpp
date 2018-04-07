@@ -77,7 +77,7 @@ void cliffCallback(const gobot_msg_srv::CliffMsg::ConstPtr& cliff){
     }
 }
 
-bool initParams(){
+void initParams(){
     ros::NodeHandle nh;
 
     /// We get the frames on which the cliffs are attached
@@ -89,27 +89,27 @@ bool initParams(){
     nh.getParam("CLIFF_THRESHOLD", CLIFF_THRESHOLD);
     nh.getParam("CLIFF_OUTRANGE", CLIFF_OUTRANGE);
     nh.getParam("USE_CLIFF_PC", use_pc);
-    std::cout << "(cliff2pc::initParams) CLIFF THRESHOLD:"<<CLIFF_THRESHOLD<<" CLIFF OUTRANGE:"<<CLIFF_OUTRANGE<<std::endl;
-
-
-    return true;
+    std::cout << "(CLIFF2PC::initParams) CLIFF THRESHOLD:"<<CLIFF_THRESHOLD<<" CLIFF OUTRANGE:"<<CLIFF_OUTRANGE<<std::endl;
 }
 
 int main(int argc, char* argv[]){
     ros::init(argc, argv, "cliffs2pc");
     ros::NodeHandle nh;
     
-    if(initParams()){
-        cliffFRPublisher = nh.advertise<pcl::PointCloud<pcl::PointXYZ> >("/gobot_pc/FR_cliff_pc", 10);
-        cliffFLPublisher = nh.advertise<pcl::PointCloud<pcl::PointXYZ> >("/gobot_pc/FL_cliff_pc", 10);
-        cliffBRPublisher = nh.advertise<pcl::PointCloud<pcl::PointXYZ> >("/gobot_pc/BR_cliff_pc", 10);
-        cliffBLPublisher = nh.advertise<pcl::PointCloud<pcl::PointXYZ> >("/gobot_pc/BL_cliff_pc", 10);
-        // get the sonars information
-        ros::Subscriber cliffSub = nh.subscribe("/gobot_base/cliff_topic", 1, cliffCallback);
-        ros::Subscriber motorSpdSubscriber = nh.subscribe("/gobot_motor/motor_speed", 1, motorSpdCallback);
+    //Startup begin
+    ros::service::waitForService("/gobot_startup/pose_ready", ros::Duration(90.0));
+    //Startup end
 
-        ros::spin();
-    }
+    initParams();
+    cliffFRPublisher = nh.advertise<pcl::PointCloud<pcl::PointXYZ> >("/gobot_pc/FR_cliff_pc", 10);
+    cliffFLPublisher = nh.advertise<pcl::PointCloud<pcl::PointXYZ> >("/gobot_pc/FL_cliff_pc", 10);
+    cliffBRPublisher = nh.advertise<pcl::PointCloud<pcl::PointXYZ> >("/gobot_pc/BR_cliff_pc", 10);
+    cliffBLPublisher = nh.advertise<pcl::PointCloud<pcl::PointXYZ> >("/gobot_pc/BL_cliff_pc", 10);
+    // get the sonars information
+    ros::Subscriber cliffSub = nh.subscribe("/gobot_base/cliff_topic", 1, cliffCallback);
+    ros::Subscriber motorSpdSubscriber = nh.subscribe("/gobot_motor/motor_speed", 1, motorSpdCallback);
+
+    ros::spin();
 
     return 0;
 }

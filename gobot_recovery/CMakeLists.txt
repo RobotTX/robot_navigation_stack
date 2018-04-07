@@ -9,7 +9,6 @@ add_compile_options(-std=c++11)
 ## is used, also find other catkin packages
 find_package(catkin REQUIRED 
     COMPONENTS
-        roscpp
         pluginlib
         nav_core
         gobot_msg_srv

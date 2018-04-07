@@ -4,9 +4,9 @@ bool testEncoder = false;
 uint8_t leftSpeed_=128, rightSpeed_=128, rec_leftSpeed_=128,rec_rightSpeed_=128;
 
 std::mutex serialMutex, dataMutex;
-std::string MD49device;
+std::string MOTOR_PORT;
 serial::Serial serialConnection;
-int ACC_RATE = 0,ROLLING_WINDOW_SIZE = 5;
+int ROLLING_WINDOW_SIZE = 5;
 
 //odom related data
 int32_t last_left_encoder = 0, last_right_encoder = 0;
@@ -34,34 +34,17 @@ std::vector<uint8_t> writeAndRead(std::vector<uint8_t> toWrite, int bytesToRead)
 
             //serialConnection.flush();
         } catch (std::exception& e) {
-		    ROS_ERROR("(Wheels) exception : %s", e.what());
+		    ROS_ERROR("MOTOR:: exception : %s", e.what());
 	    }
     } 
     else {
-        ROS_WARN("(wheels::writeAndRead) The serial connection is not opened, something is wrong");
+        ROS_WARN("(MOTOR::writeAndRead) The serial connection is not opened, something is wrong");
     }
 
     /// Unlock the mutex
     serialMutex.unlock();
 
     return buff;
-}
-
-/// get the output of the given system command
-std::string getStdoutFromCommand(std::string cmd) {
-    std::string data;
-    FILE * stream;
-    const int max_buffer = 256;
-    char buffer[max_buffer];
-    cmd.append(" 2>&1");
-
-    stream = popen(cmd.c_str(), "r");
-    if (stream) {
-        while (!feof(stream))
-            if (fgets(buffer, max_buffer, stream) != NULL) data.append(buffer);
-        pclose(stream);
-    }
-    return data;
 }
 
 /// Just to test, we get the encoders and print them
@@ -101,8 +84,8 @@ void motorSpdCallback(const gobot_msg_srv::MotorSpeedMsg::ConstPtr& speed){
     
     //leftSpeed_ = rec_leftSpeed_;
     //rightSpeed_ = rec_rightSpeed_;
-    //ROS_INFO("(wheels::setSpeeds) Data : %s %d %s %d", req.directionL.c_str(), (int) req.velocityL, req.directionR.c_str(), (int) req.velocityR);
-    //ROS_INFO("(wheels::setSpeeds) Left:%d    Right:%d", leftSpeed_,rightSpeed_);
+    //ROS_INFO("(MOTOR::setSpeeds) Data : %s %d %s %d", req.directionL.c_str(), (int) req.velocityL, req.directionR.c_str(), (int) req.velocityR);
+    //ROS_INFO("(MOTOR::setSpeeds) Left:%d    Right:%d", leftSpeed_,rightSpeed_);
     //writeAndRead(std::vector<uint8_t>({0x00, 0x31, leftSpeed_, 0x00, 0x32, rightSpeed_})); 
 }
 
@@ -113,15 +96,14 @@ bool motorReadySrvCallback(std_srvs::Empty::Request &req, std_srvs::Empty::Respo
 
 bool initSerial(){
     /// Get the port in which our device is connected
-    std::string port = MD49device;
-    ROS_INFO("(wheels::initSerial) MD49 port : %s", port.c_str());
+    ROS_INFO("(MOTOR::initSerial) MD49 port : %s", MOTOR_PORT.c_str());
 
     serialMutex.lock();
     if(serialConnection.isOpen())
         serialConnection.close();
 
     // Set the serial port, baudrate and timeout in milliseconds
-    serialConnection.setPort(port);
+    serialConnection.setPort(MOTOR_PORT);
     //Send 1200 bytes per second
     serialConnection.setBaudrate(9600);
     serial::Timeout timeout = serial::Timeout::simpleTimeout(200);
@@ -139,7 +121,7 @@ bool initSerial(){
         serialConnection.write(std::vector<uint8_t>({0x00, 0x31, 0x80, 0x00, 0x32, 0x80}));
         ///reset Encoder
         serialConnection.write(std::vector<uint8_t>({0x00, 0x35}));
-        ROS_INFO("(wheels::initSerial) Established connection to MD49.");
+        ROS_INFO("(MOTOR::initSerial) Established connection to MD49.");
         serialMutex.unlock();
         return true;
     } 
@@ -150,12 +132,11 @@ bool initSerial(){
 }
 
 void initParams(ros::NodeHandle &nh){
-    nh.getParam("MD49device", MD49device);
-    nh.getParam("wheel_separation", wheel_separation);
-    nh.getParam("wheel_radius", wheel_radius);
-    nh.getParam("ticks_per_rotation", ticks_per_rotation);
+    nh.getParam("MOTOR_PORT", MOTOR_PORT);
+    nh.getParam("WHEEL_SEP", wheel_separation);
+    nh.getParam("WHEEL_RADIUS", wheel_radius);
+    nh.getParam("TICKS_PER_ROT", ticks_per_rotation);
     nh.getParam("ODOM_RATE", ODOM_RATE);
-    nh.getParam("ACC_RATE", ACC_RATE);
     nh.getParam("ROLLING_WINDOW_SIZE", ROLLING_WINDOW_SIZE);
 }
 
@@ -166,7 +147,7 @@ void mySigintHandler(int sig){
         serialConnection.write(std::vector<uint8_t>({0x00, 0x31, 0x80, 0x00, 0x32, 0x80}));
         serialConnection.close();
 	} catch (std::exception& e) {
-		ROS_ERROR("(Wheels) Shutdown exception : %s", e.what());
+		ROS_ERROR("MOTOR::Shutdown exception : %s", e.what());
 	}
     serialMutex.unlock();
     ros::shutdown();
@@ -189,10 +170,10 @@ int main(int argc, char **argv) {
         ros::ServiceServer testEncodersSrv = nh.advertiseService("/gobot_test/testEncoders", testEncoders);
         ros::ServiceServer stopTestsSrv = nh.advertiseService("/gobot_test/stopTestEncoder", stopTests);
 
-        ros::Publisher odom_pub = nh.advertise<nav_msgs::Odometry>("/odom", 50);
-        ros::Publisher odom_test_pub = nh.advertise<gobot_msg_srv::OdomTestMsg>("/odom_test", 50);
-        ros::Publisher encoder_pub = nh.advertise<gobot_msg_srv::EncodersMsg>("/encoders", 50);
-        ros::Publisher real_vel_pub = nh.advertise<geometry_msgs::Twist>("/real_vel", 50);
+        ros::Publisher odom_pub = nh.advertise<nav_msgs::Odometry>("/odom", 1);
+        ros::Publisher odom_test_pub = nh.advertise<gobot_msg_srv::OdomTestMsg>("/odom_test", 1);
+        ros::Publisher encoder_pub = nh.advertise<gobot_msg_srv::EncodersMsg>("/encoders", 1);
+        ros::Publisher real_vel_pub = nh.advertise<geometry_msgs::Twist>("/real_vel", 1);
         
         ros::Subscriber motorSpd_sub = nh.subscribe("/gobot_motor/motor_speed", 1, motorSpdCallback);
         
@@ -225,14 +206,14 @@ int main(int argc, char **argv) {
                 //just skip them to prevent position jump
                 //if(abs(delta_left_encoder/dt)>encoder_limit|| abs(delta_right_encoder/dt)>encoder_limit){
                 if(abs(delta_left_encoder/dt)>encoder_limit|| abs(delta_right_encoder/dt)>encoder_limit){
-                    ROS_WARN("(wheels::Odom) Detect odom jump (%d,%d), re-initial motor...",
+                    ROS_WARN("(MOTOR::Odom) Detect odom jump (%d,%d), re-initial motor...",
                     abs(delta_left_encoder/dt),abs(delta_right_encoder/dt));
                     initSerial();
                     last_left_encoder = 0;
                     last_right_encoder = 0;
                 }
                 else{
-                    //ROS_INFO("right:%d, left:%d",delta_right_encoder,delta_left_encoder);
+                    //ROS_INFO("(MOTOR) right:%d, left:%d",delta_right_encoder,delta_left_encoder);
                     last_left_encoder = leftEncoder;
                     last_right_encoder = rightEncoder;
 
@@ -248,7 +229,7 @@ int main(int argc, char **argv) {
                     double vx = vel * cos(th);
                     double vy = vel * sin(th);
                     double vth = (right_vel - left_vel) / wheel_separation;
-                    //ROS_INFO("Linear vel:%.3f, Angular vel:%.3f",vel,vth);
+                    //ROS_INFO("(MOTOR) Linear vel:%.3f, Angular vel:%.3f",vel,vth);
 
                     double delta_x = vx * dt;
                     double delta_y = vy * dt;
@@ -264,7 +245,7 @@ int main(int argc, char **argv) {
                     x += delta_x;
                     y += delta_y;
                     th += delta_th;  
-                    //ROS_INFO("%.5f,%.5f, %.5f",delta_x,delta_y,delta_th);
+                    //ROS_INFO("(MOTOR) %.5f,%.5f, %.5f",delta_x,delta_y,delta_th);
                     
                     //since all odometry is 6DOF we'll need a quaternion created from yaw
                     geometry_msgs::Quaternion odom_quat = tf::createQuaternionMsgFromYaw(th);
@@ -323,7 +304,7 @@ int main(int argc, char **argv) {
                 last_time = current_time;
             }
             else
-                ROS_WARN("(wheels::getEncoders) Got the wrong number of encoders data : %lu", encoders.size());
+                ROS_WARN("(MOTOR::getEncoders) Got the wrong number of encoders data : %lu", encoders.size());
             
             dataMutex.unlock();
 
@@ -344,13 +325,13 @@ int main(int argc, char **argv) {
                 rightSpeed_ = std::accumulate(right_vel_mean_.begin(),right_vel_mean_.end(),0)/right_vel_mean_.size();
             }
             writeAndRead(std::vector<uint8_t>({0x00, 0x31, leftSpeed_, 0x00, 0x32, rightSpeed_})); 
-            //ROS_INFO("Left mean vel:%d, Right mean vel:%d",leftSpeed_,rightSpeed_);
+            //ROS_INFO("(MOTOR) Left mean vel:%d, Right mean vel:%d",leftSpeed_,rightSpeed_);
 
             r.sleep();
         }
     } 
     else
-        ROS_INFO("(wheels::main) Could not open the serial communication");
+        ROS_INFO("(MOTOR::main) Could not open the serial communication");
     
     ros::waitForShutdown();
     return 0;

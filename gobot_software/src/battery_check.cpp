@@ -5,7 +5,7 @@ int test = -1;
 
 /// For test purpose only
 bool testAutoDocking(gobot_msg_srv::SetBattery::Request &req, gobot_msg_srv::SetBattery::Response &res){
-    ROS_INFO("(Battery check) Service testAutoDocking called");
+    ROS_INFO("(BATTERY_MONITOR) Service testAutoDocking called");
     test = req.voltage;
     return true;
 }
@@ -21,7 +21,7 @@ void timerCallback(const ros::TimerEvent&){
         gobot_msg_srv::GetString get_battery;
         ros::service::call("/gobot_status/get_battery",get_battery);
         if(canGoCharge && (battery_percent.response.data < std::stoi(get_battery.response.data) || test == 0)){
-            ROS_WARN("(Battery check) Battery current percentage:%d, auto-charging percentage: %d ", battery_percent.response.data,std::stoi(get_battery.response.data));
+            ROS_WARN("(BATTERY_MONITOR) Battery current percentage:%d, auto-charging percentage: %d ", battery_percent.response.data,std::stoi(get_battery.response.data));
             std_srvs::Empty arg;
             ros::service::call("/gobot_command/lowBattery", arg);
             canGoCharge = false;
@@ -36,7 +36,9 @@ int main(int argc, char* argv[]){
     ros::init(argc, argv, "battery_check");
     ros::NodeHandle nh;
     
-    ros::service::waitForService("/gobot_startup/pose_ready", ros::Duration(120.0));
+    //Startup begin
+    ros::service::waitForService("/gobot_startup/pose_ready", ros::Duration(90.0));
+    //Startup end
 
     ros::ServiceServer testAutoDockingService = nh.advertiseService("/gobot_test/testAutoDocking", testAutoDocking);
 

@@ -23,7 +23,7 @@ void sendRobotPosTimer(const ros::TimerEvent&){
                 boost::asio::write(*(elem.second), boost::asio::buffer(robot_string, robot_string.length()));
             } catch (std::exception& e) {
                 //can not send pose to the ip
-                //ROS_ERROR("(Robot Pos) Exception %s : %s", elem.first.c_str(), e.what());
+                //ROS_ERROR("(POS_TRANSFER) Exception %s : %s", elem.first.c_str(), e.what());
             }
         }
         socketsMutex.unlock(); 
@@ -66,12 +66,12 @@ void server(void){
 
         /// Got a new connection so we had it to our array of sockets
         std::string ip = sock->remote_endpoint().address().to_string();
-        ROS_INFO("(Robot Pos) Command socket connected to %s", ip.c_str());
+        ROS_INFO("(POS_TRANSFER) Command socket connected to %s", ip.c_str());
         socketsMutex.lock();
         if(!sockets.count(ip))
             sockets.insert(std::pair<std::string, boost::shared_ptr<tcp::socket>>(ip, sock));
         else
-            ROS_ERROR("(Robot Pos) the ip %s is already connected, this should not happen", ip.c_str());
+            ROS_ERROR("(POS_TRANSFER) the ip %s is already connected, this should not happen", ip.c_str());
         socketsMutex.unlock();
     }
 }
@@ -88,7 +88,7 @@ void disconnect(const std::string ip){
     if(sockets.count(ip)){
         sockets.at(ip)->close();
         sockets.erase(ip);
-        //ROS_WARN("(Robot Pos) The ip %s just disconnected", ip.c_str());
+        //ROS_WARN("(POS_TRANSFER) The ip %s just disconnected", ip.c_str());
     }
     socketsMutex.unlock();
 }
@@ -110,38 +110,36 @@ void mySigintHandler(int sig){
 
 /*********************************** MAIN ***********************************/
 
-bool initParams(){
+void initParams(){
     ros::NodeHandle nh;
     nh.getParam("last_known_position_file", lastPoseFile);
-
-    return true;
 }
 
 int main(int argc, char **argv){
 
 	ros::init(argc, argv, "robot_pos_transfer");
 	ros::NodeHandle n;
-	signal(SIGINT, mySigintHandler);
+    signal(SIGINT, mySigintHandler);
+    
+    //Startup begin
+    ros::service::waitForService("/gobot_startup/network_ready", ros::Duration(120.0));
+    //Startup end
 
-    if (initParams()){
-        //Startup begin
-        ros::service::waitForService("/gobot_startup/network_ready", ros::Duration(120.0));
-        //Startup end
-        
-        ros::Subscriber servers_disco_sub = n.subscribe("/gobot_software/server_disconnected", 1000, serverDisconnected);
+    initParams();
+    
+    ros::Subscriber servers_disco_sub = n.subscribe("/gobot_software/server_disconnected", 1000, serverDisconnected);
 
-        ros::Subscriber robot_pose_sub = n.subscribe("/robot_pose", 1, getRobotPos);
+    ros::Subscriber robot_pose_sub = n.subscribe("/robot_pose", 1, getRobotPos);
 
-        //Periodically send robot pose to connected clients
-        timer1 = n.createTimer(ros::Duration(0.5), sendRobotPosTimer);
-        //Periodically save robot pose to local file
-        timer2 = n.createTimer(ros::Duration(2.0), saveRobotPosTimer);
+    //Periodically send robot pose to connected clients
+    timer1 = n.createTimer(ros::Duration(0.5), sendRobotPosTimer);
+    //Periodically save robot pose to local file
+    timer2 = n.createTimer(ros::Duration(2.0), saveRobotPosTimer);
 
-        std::thread t(server);
-        ROS_INFO("(Robot Pos) Ready to be launched.");
+    std::thread t(server);
+    ROS_INFO("(POS_TRANSFER) Ready to be launched.");
 
-        ros::spin();
-    }
+    ros::spin();
 
 	return 0;
 }

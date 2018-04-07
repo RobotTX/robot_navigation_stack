@@ -6,6 +6,6 @@
 	<node pkg="gobot_software" type="gobot_status" name="software_gobot_status" respawn="true" />
 
     <node pkg="gobot_base" type="sensors" name="base_sensors" required="true"/>
-    <node pkg="gobot_base" type="wheels" name="motor_wheels" required="true"/>"/>
+    <node pkg="gobot_base" type="wheels" name="base_motors" required="true"/>"/>
     <node pkg="robot_hardware_test" type="hardware_check" name="hardware_check" output="screen" required="true"/>"/>
 </launch>

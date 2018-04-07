@@ -13,7 +13,7 @@ std::mutex socketsMutex;
 std::map<std::string, boost::shared_ptr<tcp::socket>> sockets;
 
 void teleop(const int8_t val){
-    ROS_INFO("(Teleop) got data %d", val);
+    ROS_INFO("(TELE_CONTROL) got data %d", val);
     double speed = 0.2;
     double turnSpeed = 0.5;
     // x == 1 -> forward       x == -1 -> backward
@@ -80,7 +80,7 @@ void teleop(const int8_t val){
 
 void session(boost::shared_ptr<tcp::socket> sock){
     std::string ip = sock->remote_endpoint().address().to_string();
-    //~ROS_INFO("(Teleop) session launched %s", ip.c_str());
+    //~ROS_INFO("(TELE_CONTROL) session launched %s", ip.c_str());
 
     while(ros::ok() && sockets.count(ip)){
         char data[max_length];
@@ -88,7 +88,7 @@ void session(boost::shared_ptr<tcp::socket> sock){
         boost::system::error_code error;
         size_t length = sock->read_some(boost::asio::buffer(data), error);
         if ((error == boost::asio::error::eof) || (error == boost::asio::error::connection_reset)){
-            //~ROS_INFO("(Teleop) Connection closed");
+            //~ROS_INFO("(TELE_CONTROL) Connection closed");
             return;
         } else if (error) {
             throw boost::system::system_error(error); // Some other error.
@@ -113,12 +113,12 @@ void server(void){
 
         /// Got a new connection so we had it to our array of sockets
         std::string ip = sock->remote_endpoint().address().to_string();
-        //~ROS_INFO("(Teleop) Command socket connected to %s", ip.c_str());
+        //~ROS_INFO("(TELE_CONTROL) Command socket connected to %s", ip.c_str());
         socketsMutex.lock();
         if(!sockets.count(ip))
             sockets.insert(std::pair<std::string, boost::shared_ptr<tcp::socket>>(ip, sock));
         else
-            ROS_ERROR("(Teleop) the ip %s is already connected, this should not happen", ip.c_str());
+            ROS_ERROR("(TELE_CONTROL) the ip %s is already connected, this should not happen", ip.c_str());
         socketsMutex.unlock();
 
         /// Launch the session thread which wait for a new map
@@ -134,7 +134,7 @@ void serverDisconnected(const std_msgs::String::ConstPtr& msg){
     if(sockets.count(msg->data)){
         sockets.at(msg->data)->close();
         sockets.erase(msg->data);
-        //~ROS_WARN("(Teleop) The ip %s just disconnected", msg->data.c_str());
+        //~ROS_WARN("(TELE_CONTROL) The ip %s just disconnected", msg->data.c_str());
     }
     socketsMutex.unlock();
 }
@@ -146,14 +146,18 @@ int main(int argc, char **argv){
     ros::init(argc, argv, "teleop");
     ros::NodeHandle n;
     
-    ROS_INFO("(Teleop) Ready to be launched.");
+    //Startup begin
+    ros::service::waitForService("/gobot_startup/network_ready", ros::Duration(120.0));
+    //Startup end
+
+    ROS_INFO("(TELE_CONTROL) Ready to be launched.");
 
     /// Subscribe to know when we disconnect from the server
-    ros::Subscriber sub = n.subscribe("/gobot_software/server_disconnected", 1000, serverDisconnected);
+    ros::Subscriber sub = n.subscribe("/gobot_software/server_disconnected", 1, serverDisconnected);
 
     /// Advertise that we are going to publish to /cmd_vel & /move_base/cancel
-    teleop_pub = n.advertise<geometry_msgs::Twist>("/cmd_vel", 1000);
-    stop_pub = n.advertise<actionlib_msgs::GoalID>("/move_base/cancel", 1000);
+    teleop_pub = n.advertise<geometry_msgs::Twist>("/cmd_vel", 1);
+    stop_pub = n.advertise<actionlib_msgs::GoalID>("/move_base/cancel", 1);
 
     std::thread t(server);
 

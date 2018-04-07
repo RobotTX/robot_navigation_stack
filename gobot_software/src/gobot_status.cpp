@@ -132,7 +132,7 @@ void publishInitialpose(geometry_msgs::PoseWithCovarianceStamped pose){
     pose.pose.covariance[7] = 0.01;
     pose.pose.covariance[35] = 0.01;
     if(pose.pose.pose.position.x == 0 && pose.pose.pose.position.y == 0 && pose.pose.pose.orientation.z == 0&& pose.pose.pose.orientation.w == 0){
-        ROS_ERROR("(gobot_status) Robot probably got no home, set it position to map origin");
+        ROS_ERROR("(STATUS_SYSTEM) Robot probably got no home, set it position to map origin");
         pose.pose.pose.orientation.w = 1.0;
     }
     initial_pose_publisher.publish(pose);
@@ -147,7 +147,7 @@ void setHomePose(){
     home_pose.pose.pose.orientation.z = std::stod(home_.at(4));
     home_pose.pose.pose.orientation.w = std::stod(home_.at(5));
     publishInitialpose(home_pose);
-    ROS_INFO("(Gobot Status) Robot is charging, set its pose to be home pose");
+    ROS_INFO("(STATUS_SYSTEM) Robot is charging, set its pose to be home pose");
 }
 
 //initialize robot to be home if charging
@@ -169,11 +169,11 @@ bool getUpdateStatusSrvCallback(gobot_msg_srv::GetString::Request &req, gobot_ms
 
 bool setWifiSrvCallback(gobot_msg_srv::SetStringArray::Request &req, gobot_msg_srv::SetStringArray::Response &res){    
     if(req.data.size()!=2){
-        ROS_ERROR("(Gobot_status) Receive wrong wifi information");
+        ROS_ERROR("(STATUS_SYSTEM) Receive wrong wifi information");
         return false;
     }
     if(wifi_.at(0)==req.data[0] && wifi_.at(1)==req.data[1]){
-        ROS_INFO("(Gobot_status) Receive same wifi info: name:%s, password:%s",wifi_.at(0).c_str(),wifi_.at(1).c_str());
+        ROS_INFO("(STATUS_SYSTEM) Receive same wifi info: name:%s, password:%s",wifi_.at(0).c_str(),wifi_.at(1).c_str());
         return false;
     }
     //disconnect all server
@@ -194,7 +194,7 @@ bool setWifiSrvCallback(gobot_msg_srv::SetStringArray::Request &req, gobot_msg_s
             ofsWifi << wifi_.at(i) << "\n";
         }
         ofsWifi.close();
-        ROS_INFO("(Gobot_status) Set Gobot wifi: name:%s, password:%s",wifi_.at(0).c_str(),wifi_.at(1).c_str());
+        ROS_INFO("(STATUS_SYSTEM) Set Gobot wifi: name:%s, password:%s",wifi_.at(0).c_str(),wifi_.at(1).c_str());
     }
     wifiMutex.unlock();
 
@@ -212,7 +212,7 @@ bool getWifiSrvCallback(gobot_msg_srv::GetStringArray::Request &req, gobot_msg_s
 
 bool setHomeSrvCallback(gobot_msg_srv::SetStringArray::Request &req, gobot_msg_srv::SetStringArray::Response &res){
     if(req.data.size()!=6){
-        ROS_ERROR("(Gobot_status) Receive wrong home information");
+        ROS_ERROR("(STATUS_SYSTEM) Receive wrong home information");
         return false;
     }
     
@@ -226,7 +226,7 @@ bool setHomeSrvCallback(gobot_msg_srv::SetStringArray::Request &req, gobot_msg_s
     if(ofsHome){
         ofsHome << home_.at(0) << " " << home_.at(1) << " " << home_.at(2) << " " << home_.at(3) << " " << home_.at(4) << " " << home_.at(5);
         ofsHome.close();
-        ROS_INFO("(Gobot_status) set Gobot home: [%f, %f] [%f, %f, %f, %f]", std::stod(home_.at(0)),std::stod(home_.at(1)),std::stod(home_.at(2)),std::stod(home_.at(3)),std::stod(home_.at(4)),std::stod(home_.at(5)));
+        ROS_INFO("(STATUS_SYSTEM) set Gobot home: [%f, %f] [%f, %f, %f, %f]", std::stod(home_.at(0)),std::stod(home_.at(1)),std::stod(home_.at(2)),std::stod(home_.at(3)),std::stod(home_.at(4)),std::stod(home_.at(5)));
     }
 
     return true;
@@ -250,7 +250,7 @@ bool setBatterySrvCallback(gobot_msg_srv::SetString::Request &req, gobot_msg_srv
     if(ofsBattery){
         ofsBattery << low_battery_;
         ofsBattery.close();
-        ROS_INFO("(Gobot_status) set Gobot battery level: %.2f", std::stod(low_battery_));
+        ROS_INFO("(STATUS_SYSTEM) set Gobot battery level: %.2f", std::stod(low_battery_));
     }
 
     return true;
@@ -265,7 +265,7 @@ bool getBatterySrvCallback(gobot_msg_srv::GetString::Request &req, gobot_msg_srv
 
 bool setSpeedSrvCallback(gobot_msg_srv::SetStringArray::Request &req, gobot_msg_srv::SetStringArray::Response &res){
     if(req.data.size()!=2){
-        ROS_ERROR("(Gobot_status) Receive wrong set_speed information");
+        ROS_ERROR("(STATUS_SYSTEM) Receive wrong set_speed information");
         return false;
     }
     
@@ -278,7 +278,7 @@ bool setSpeedSrvCallback(gobot_msg_srv::SetStringArray::Request &req, gobot_msg_
     if(ofSpeed){
         ofSpeed << linear_spd_ << " " << angular_spd_;
         ofSpeed.close();
-        ROS_INFO("(Gobot_status) set Gobot speed: %.2f, %.2f", std::stod(linear_spd_),std::stod(angular_spd_));
+        ROS_INFO("(STATUS_SYSTEM) set Gobot speed: %.2f, %.2f", std::stod(linear_spd_),std::stod(angular_spd_));
     }
 
     dynamic_reconfigure::Reconfigure config;
@@ -314,7 +314,7 @@ bool setNameSrvCallback(gobot_msg_srv::SetString::Request &req, gobot_msg_srv::S
     if(ofsName){
         ofsName << hostname_;
         ofsName.close();
-        ROS_INFO("(Gobot_status) Set Gobot name: %s",hostname_.c_str());
+        ROS_INFO("(STATUS_SYSTEM) Set Gobot name: %s",hostname_.c_str());
     }
 
     updateStatus();
@@ -327,7 +327,7 @@ bool getNameSrvCallback(gobot_msg_srv::GetString::Request &req, gobot_msg_srv::G
     res.data = hostname_;
     nameMutex.unlock();
 
-    //ROS_INFO("(Gobot_status) Get Gobot name: %s",res.data.c_str());
+    //ROS_INFO("(STATUS_SYSTEM) Get Gobot name: %s",res.data.c_str());
     return true;
 }
 
@@ -346,7 +346,7 @@ bool setPathSrvCallback(gobot_msg_srv::SetStringArray::Request &req, gobot_msg_s
             ofsPath << path_.at(i) << "\n";
             path_info = path_info+path_.at(i)+", ";
         }
-        ROS_INFO("(Gobot_status) Set Gobot path: %s",path_info.c_str());
+        ROS_INFO("(STATUS_SYSTEM) Set Gobot path: %s",path_info.c_str());
         ofsPath.close();
     }
     
@@ -380,7 +380,7 @@ bool setMuteSrvCallback(gobot_msg_srv::SetInt::Request &req, gobot_msg_srv::SetI
     if(ofsMute){
         ofsMute << mute_;
         ofsMute.close();
-    ROS_INFO("(Gobot_status) Set Gobot mute: %d",mute_);
+    ROS_INFO("(STATUS_SYSTEM) Set Gobot mute: %d",mute_);
     }
     updateStatus();
     
@@ -404,7 +404,7 @@ bool setLoopSrvCallback(gobot_msg_srv::SetInt::Request &req, gobot_msg_srv::SetI
     if(ofsLoop){
         ofsLoop << loop_;
         ofsLoop.close();
-        ROS_INFO("(Gobot_status) Set Gobot loop: %d",loop_);
+        ROS_INFO("(STATUS_SYSTEM) Set Gobot loop: %d",loop_);
     }
 
     return true;
@@ -427,7 +427,7 @@ bool setStageSrvCallback(gobot_msg_srv::SetInt::Request &req, gobot_msg_srv::Set
     if(ofsStage){
         ofsStage << stage_;
         ofsStage.close();
-        ROS_INFO("(Gobot_status) Set Gobot stage: %d",stage_);
+        ROS_INFO("(STATUS_SYSTEM) Set Gobot stage: %d",stage_);
     }
     
     updateStatus();
@@ -440,7 +440,7 @@ bool getStageSrvCallback(gobot_msg_srv::GetInt::Request &req, gobot_msg_srv::Get
     res.data = stage_;
     stageMutex.unlock();
 
-    //ROS_INFO("(Gobot_status) Get Gobot stage: %d",stage_);
+    //ROS_INFO("(STATUS_SYSTEM) Get Gobot stage: %d",stage_);
     return true;
 }
 
@@ -449,7 +449,7 @@ bool setDockStatusSrvCallback(gobot_msg_srv::SetInt::Request &req, gobot_msg_srv
     dockStatusMutex.lock();
     dock_status_ = req.data;
     dockStatusMutex.unlock();
-    ROS_INFO("(Gobot_status) Set Dock status: %d", dock_status_);
+    ROS_INFO("(STATUS_SYSTEM) Set Dock status: %d", dock_status_);
     
     charging_ = dock_status_==1 ? true : false;
     
@@ -468,7 +468,7 @@ bool getDockStatusSrvCallback(gobot_msg_srv::GetInt::Request &req, gobot_msg_srv
     dockStatusMutex.lock();
     res.data = dock_status_;
     dockStatusMutex.unlock();
-    //ROS_INFO("(Gobot_status) Get Dock status: %d", dock_status_);
+    //ROS_INFO("(STATUS_SYSTEM) Get Dock status: %d", dock_status_);
 
     return true;
 }
@@ -485,7 +485,7 @@ bool setGobotStatusSrvCallback(gobot_msg_srv::SetGobotStatus::Request &req, gobo
 
     gobotStatusMutex.unlock();
     
-    ROS_INFO("(Gobot_status) Set Gobot status: %d,%s",gobot_status_,gobot_text_.c_str());
+    ROS_INFO("(STATUS_SYSTEM) Set Gobot status: %d,%s",gobot_status_,gobot_text_.c_str());
     return true;
 }
 
@@ -541,7 +541,7 @@ void batteryCallback(const gobot_msg_srv::BatteryMsg::ConstPtr& msg){
         if(ofsStage){
             ofsStage << record_date << "  " <<charging_current_<<std::endl;
             ofsStage.close();
-            ROS_INFO("(Gobot_status) Recorded battery data: %s  %d",record_date.c_str(),charging_current_);
+            ROS_INFO("(STATUS_SYSTEM) Recorded battery data: %s  %d",record_date.c_str(),charging_current_);
             record_time_ = ros::Time::now();
         }
     }
@@ -575,7 +575,7 @@ void initialData(){
     if(ifsStage){
         ifsStage >> stage_;
         ifsStage.close();
-        ROS_INFO("(Gobot_status) Read Gobot path stage: %d",stage_);
+        ROS_INFO("(STATUS_SYSTEM) Read Gobot path stage: %d",stage_);
     }
     
     if(stage_<0){
@@ -589,7 +589,7 @@ void initialData(){
             if(ofsStage){
                 ofsStage << stage_;
                 ofsStage.close();
-                ROS_INFO("(Gobot_status) Set Gobot stage: %d",stage_);
+                ROS_INFO("(STATUS_SYSTEM) Set Gobot stage: %d",stage_);
         }
     }    
 
@@ -599,7 +599,7 @@ void initialData(){
     if(ifsMute){
         ifsMute >> mute_;
         ifsMute.close();
-        ROS_INFO("(Gobot_status) Read Gobot mute: %d",mute_);
+        ROS_INFO("(STATUS_SYSTEM) Read Gobot mute: %d",mute_);
         std_msgs::Int8 data;
         data.data = mute_;
         mute_pub.publish(data);
@@ -611,7 +611,7 @@ void initialData(){
     if(ifsLoop){
         ifsLoop >> loop_;
         ifsLoop.close();
-        ROS_INFO("(Gobot_status) Read Gobot path loop: %d",loop_);
+        ROS_INFO("(STATUS_SYSTEM) Read Gobot path loop: %d",loop_);
     } 
 
     //read path
@@ -625,7 +625,7 @@ void initialData(){
         std::string path_info;
         for(int i = 0; i < path_.size(); i++)
             path_info = path_info+path_.at(i)+", ";
-        ROS_INFO("(Gobot_status) Read Gobot path: %s",path_info.c_str());
+        ROS_INFO("(STATUS_SYSTEM) Read Gobot path: %s",path_info.c_str());
     }
 
     //read name
@@ -634,7 +634,7 @@ void initialData(){
     if(ifsName){
         ifsName >> hostname_;
         ifsName.close();
-        ROS_INFO("(Gobot_status) Read Gobot name: %s",hostname_.c_str());
+        ROS_INFO("(STATUS_SYSTEM) Read Gobot name: %s",hostname_.c_str());
     }
 
     //read home
@@ -643,7 +643,7 @@ void initialData(){
     if(ifsHome){
         ifsHome >> home_.at(0) >> home_.at(1) >> home_.at(2) >> home_.at(3) >> home_.at(4) >> home_.at(5);
         ifsHome.close();
-        ROS_INFO("(Gobot_status) Read Gobot home: [%.2f, %.2f] [%.2f, %.2f, %.2f, %.2f]", std::stod(home_.at(0)),std::stod(home_.at(1)),std::stod(home_.at(2)),std::stod(home_.at(3)),std::stod(home_.at(4)),std::stod(home_.at(5)));
+        ROS_INFO("(STATUS_SYSTEM) Read Gobot home: [%.2f, %.2f] [%.2f, %.2f, %.2f, %.2f]", std::stod(home_.at(0)),std::stod(home_.at(1)),std::stod(home_.at(2)),std::stod(home_.at(3)),std::stod(home_.at(4)),std::stod(home_.at(5)));
     }
 
     //read low battery
@@ -652,7 +652,7 @@ void initialData(){
     if(ifsBattery){
         ifsBattery >> low_battery_;
         ifsBattery.close();
-        ROS_INFO("(Gobot_status) Read Gobot battery: %.2f", std::stod(low_battery_));
+        ROS_INFO("(STATUS_SYSTEM) Read Gobot battery: %.2f", std::stod(low_battery_));
     }
 
     //read speed
@@ -661,7 +661,7 @@ void initialData(){
     if(ifsSpeed){
         ifsSpeed >> linear_spd_ >> angular_spd_;
         ifsSpeed.close();
-        ROS_INFO("(Gobot_status) Read Gobot speed: %.2f, %.2f", std::stod(linear_spd_),std::stod(angular_spd_));
+        ROS_INFO("(STATUS_SYSTEM) Read Gobot speed: %.2f, %.2f", std::stod(linear_spd_),std::stod(angular_spd_));
     }
 
     //read wifi
@@ -681,7 +681,7 @@ void initialData(){
     else if(wifi_.size()<2){
         wifi_.push_back("");
     }
-    ROS_INFO("(Gobot_status) Read Gobot wifi: name:%s, password:%s",wifi_.at(0).c_str(),wifi_.at(1).c_str());
+    ROS_INFO("(STATUS_SYSTEM) Read Gobot wifi: name:%s, password:%s",wifi_.at(0).c_str(),wifi_.at(1).c_str());
 
     n.getParam("deleteWIFI", deleteWifi);
     
@@ -712,9 +712,6 @@ int main(int argc, char* argv[]){
         initial_pose_publisher = n.advertise<geometry_msgs::PoseWithCovarianceStamped>("/initialpose", 1);
 
         ros::ServiceServer initializeHome = n.advertiseService("/gobot_recovery/initialize_home",initializeHomeSrcCallback);
-
-        ros::ServiceServer setGobotStatusSrv = n.advertiseService("/gobot_status/get_gobot_status", getGobotStatusSrvCallback);
-        ros::ServiceServer getGobotStatusSrv = n.advertiseService("/gobot_status/set_gobot_status", setGobotStatusSrvCallback);
 
         ros::ServiceServer setDockStatusSrv = n.advertiseService("/gobot_status/set_dock_status", setDockStatusSrvCallback);
         ros::ServiceServer getDockStatusSrv = n.advertiseService("/gobot_status/get_dock_status", getDockStatusSrvCallback);
@@ -753,13 +750,16 @@ int main(int argc, char* argv[]){
 
         ros::ServiceServer disconnectedSrv = n.advertiseService("/gobot_test/disconnected", disconnectedSrvCallback);
 
+        ros::ServiceServer setGobotStatusSrv = n.advertiseService("/gobot_status/get_gobot_status", getGobotStatusSrvCallback);
+        ros::ServiceServer getGobotStatusSrv = n.advertiseService("/gobot_status/set_gobot_status", setGobotStatusSrvCallback);
+        
         ros::Subscriber battery_sub = n.subscribe("/gobot_base/battery_topic",1, batteryCallback);
         ros::Subscriber bumpers_sub = n.subscribe("/gobot_base/bumpers_topic",1, bumpersCallback);
 
         ros::spin();
         
     } catch (std::exception& e) {
-        ROS_ERROR("(Gobot_status system) Exception : %s", e.what());
+        ROS_ERROR("(STATUS_SYSTEM) Exception : %s", e.what());
     }
 
     return 0;

@@ -1,0 +1,5 @@
+<?xml version="1.0"?>
+<launch>
+    <include file="$(find gobot_software)/launch/gobot_software.launch"/>
+    <include file="$(find gobot_base)/launch/gobot_base.launch"/>
+</launch>

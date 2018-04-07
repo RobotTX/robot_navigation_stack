@@ -9,25 +9,22 @@ int battery_percent = 50;
 
 int error_count = 0;
 bool display_data = false;
-int STM_CHECK = 0, STM_RATE=5, charge_check = 0, STM_BYTES = 0;
+int SENSOR_RATE=5, SENSOR_BYTES=0, charge_check = 0;
 bool USE_BUMPER=true,USE_SONAR=true,USE_CLIFF=true;
 
 int mute_=0;
-
 int max_weight = 200000;
 
+std::string restart_script;
+
 ros::Publisher bumper_pub, ir_pub, proximity_pub, sonar_pub, weight_pub, battery_pub, cliff_pub, button_pub, gyro_pub, temperature_pub;
-ros::ServiceServer setLedSrv, setSoundSrv;
 ros::Time last_led_time, reset_wifi_time;
 serial::Serial serialConnection;
 
 std_srvs::Empty empty_srv;
-std::vector<uint8_t> cmd;
 std::mutex connectionMutex;
-std::string STMdevice;
+std::string SENSOR_PORT;
 std::map<std::string, uint8_t> led_color_;
-
-std::string restart_file;
 
 robot_class::SetRobot SetRobot;
 int robot_status_ = -1;
@@ -46,11 +43,11 @@ std::vector<uint8_t> writeAndRead(std::vector<uint8_t> toWrite, int bytesToRead)
 
             //serialConnection.flush();
         } catch (std::exception& e) {
-            ROS_ERROR("(Sensors) exception : %s", e.what());
+            ROS_ERROR("(SENSORS) exception : %s", e.what());
         }
     }
     else {
-        ROS_WARN("(wheels::writeAndRead) The serial connection is not opened, something is wrong");
+        ROS_WARN("(SENSORS::writeAndRead) The serial connection is not opened, something is wrong");
     }
     connectionMutex.unlock();
 
@@ -64,7 +61,7 @@ bool resetSTMSrvCallback(std_srvs::Empty::Request &req, std_srvs::Empty::Respons
 }
 
 bool displaySensorData(gobot_msg_srv::SetBattery::Request &req, gobot_msg_srv::SetBattery::Response &res){
-    ROS_INFO("(sensors::displaySensorData) Service called");
+    ROS_INFO("(SENSORS::displaySensorData) Service called");
     display_data = (req.voltage > 0);
     return true;
 }
@@ -78,7 +75,7 @@ void resetStm(void){
     /// Unlock the mutex
     ros::Duration(0.5).sleep();
     connectionMutex.unlock();
-    ROS_WARN("(sensors::publishSensors WARN) Reseted STM32. Received %lu bytes", buff.size());
+    ROS_WARN("(SENSORS::publishSensors WARN) Reseted STM32. Received %lu bytes", buff.size());
 }
 
 /// get the output of the given system command
@@ -100,8 +97,8 @@ std::string getStdoutFromCommand(std::string cmd) {
 }
 
 bool checkSensors(){
-    std::vector<uint8_t> buff = writeAndRead(REQUEST_DATA_CMD,STM_BYTES);
-    if(buff.size() == STM_BYTES){
+    std::vector<uint8_t> buff = writeAndRead(REQUEST_DATA_CMD,SENSOR_BYTES);
+    if(buff.size() == SENSOR_BYTES){
         if(buff.at(17)){
             int16_t voltage = (buff.at(32) << 8) | buff.at(33);
             int16_t temperature = (buff.at(36) << 8) | buff.at(37);
@@ -111,13 +108,13 @@ bool checkSensors(){
                 return true;
             }
             else
-                ROS_ERROR("(sensors::CheckSensors) Check battery data : Voltage:%d, Temperature:%d", voltage,temperature);
+                ROS_ERROR("(SENSORS::CheckSensors) Check battery data : Voltage:%d, Temperature:%d", voltage,temperature);
         }
         else
-            ROS_ERROR("(sensors::CheckSensors) Bumpers information is wrong");
+            ROS_ERROR("(SENSORS::CheckSensors) Bumpers information is wrong");
     }
     else
-        ROS_ERROR("(sensors::CheckSensors) Wrong size : %zu", buff.size());
+        ROS_ERROR("(SENSORS::CheckSensors) Wrong size : %zu", buff.size());
 
     return false;
 }
@@ -140,11 +137,11 @@ void publishSensors(void){
     bool error = false;
     bool error_bumper = false;
     bool error_weight = false;
-    std::vector<uint8_t> buff = writeAndRead(REQUEST_DATA_CMD,STM_BYTES);
+    std::vector<uint8_t> buff = writeAndRead(REQUEST_DATA_CMD,SENSOR_BYTES);
 
-    //ROS_INFO("(sensors::publishSensors) Info : %lu %d %d %d", buff.size(), (int) buff.at(0), (int) buff.at(1), (int) buff.at(2));
+    //ROS_INFO("(SENSORS::publishSensors) Info : %lu %d %d %d", buff.size(), (int) buff.at(0), (int) buff.at(1), (int) buff.at(2));
     /// check if the 16 is useful
-    if(buff.size() == STM_BYTES){
+    if(buff.size() == SENSOR_BYTES){
         /// First 3 bytes are: 
         // sensor address=B0, command=B1, data length=B2, so we can ignore it
         //D for data, B for buff
@@ -189,7 +186,7 @@ void publishSensors(void){
         ir_data.rearSignal = buff.at(18);
         ir_data.leftSignal = buff.at(19);
         ir_data.rightSignal = buff.at(20);
-        //ROS_INFO("(sensors::publishSensors) Check IR data : %d %d %d", ir_data.rearSignal,ir_data.leftSignal,ir_data.rightSignal);
+        //ROS_INFO("(SENSORS::publishSensors) Check IR data : %d %d %d", ir_data.rearSignal,ir_data.leftSignal,ir_data.rightSignal);
 
 
         /// Proximity sensors = D19 / B21
@@ -208,7 +205,7 @@ void publishSensors(void){
         cliff_data.cliff2 = (cliff_data.cliff2>1000) ? 1 : cliff_data.cliff2;
         cliff_data.cliff3 = (cliff_data.cliff3>1000) ? 1 : cliff_data.cliff3;
         cliff_data.cliff4 = (cliff_data.cliff4>1000) ? 1 : cliff_data.cliff4;
-        //ROS_INFO("%d,%d,%d,%d",cliff_data.cliff1,cliff_data.cliff2,cliff_data.cliff3,cliff_data.cliff4);
+        //ROS_INFO("(SENSORS) %d,%d,%d,%d",cliff_data.cliff1,cliff_data.cliff2,cliff_data.cliff3,cliff_data.cliff4);
         
         //D28 / B30  MAX ERROR
 
@@ -224,7 +221,7 @@ void publishSensors(void){
 
         if(battery_data.BatteryVoltage <= 0 || battery_data.Temperature <= 0){
             error = true;
-            ROS_ERROR("(sensors::publishSensors ERROR) Check battery data : Status:%d, Voltage:%d, ChargingCurrent:%d, Temperature:%d", 
+            ROS_ERROR("(SENSORS::publishSensors ERROR) Check battery data : Status:%d, Voltage:%d, ChargingCurrent:%d, Temperature:%d", 
             battery_data.BatteryStatus,(int) battery_data.BatteryVoltage, battery_data.ChargingCurrent, battery_data.Temperature);
         } 
         else {
@@ -369,7 +366,7 @@ void publishSensors(void){
                 setSound(1,2);
                 //if scanning, save the map
                 if(robot_status_<=25 && robot_status_>=20){ 
-                    ROS_INFO("Save scanned map");     
+                    ROS_INFO("(SENSORS) Save scanned map");     
                     std::thread([](){                  
                         ros::service::call("/gobot_scan/save_map",empty_srv);
                     }).detach();
@@ -377,7 +374,7 @@ void publishSensors(void){
                 }
                 //otherwise, reset the wifi
                 else{
-                    ROS_INFO("Reset robot WiFi"); 
+                    ROS_INFO("(SENSORS) Reset robot WiFi"); 
                     std::thread([](){
                         SetRobot.setWifi("","");
                     }).detach();
@@ -385,10 +382,10 @@ void publishSensors(void){
             }
         }
         else if (error_bumper)
-            ROS_ERROR("(sensors::publishSensors ERROR) All bumpers got a collision");
+            ROS_ERROR("(SENSORS::publishSensors ERROR) All bumpers got a collision");
     } 
     else {
-        //ROS_ERROR("(sensors::publishSensors) Wrong buff size : %lu, error count: %d", buff.size(),error_count);
+        //ROS_ERROR("(SENSORS::publishSensors) Wrong buff size : %lu, error count: %d", buff.size(),error_count);
         error = true;
     }
 
@@ -449,7 +446,7 @@ bool setSound(int num, int time_on){
             break;
     }
     std::vector<uint8_t> buff = writeAndRead(sound_cmd,5);
-    //ROS_INFO("Receive a sound request, and succeed to execute.");
+    //ROS_INFO("(SENSORS) Receive a sound request, and succeed to execute.");
     return true;
 }
 
@@ -492,7 +489,7 @@ bool setLed(int mode, const std::vector<std::string> &color){
     }
     std::vector<uint8_t> buff = writeAndRead(led_cmd,5);
     last_led_time = ros::Time::now();
-    //ROS_INFO("Receive a LED change request, and succeed to execute.");
+    //ROS_INFO("(SENSORS) Receive a LED change request, and succeed to execute.");
     return true;
 }
 
@@ -521,13 +518,13 @@ void ledTimerCallback(const ros::TimerEvent&){
 
 
 bool shutdownSrvCallback(std_srvs::Empty::Request &req, std_srvs::Empty::Response &res){
-    //ROS_INFO("Receive a LED change request, and succeed to execute.");
+    //ROS_INFO("(SENSORS) Receive a LED change request, and succeed to execute.");
     SetRobot.setMotorSpeed('F', 0, 'F', 0);
     setSound(2,1);
     //shutdown command
     std::vector<uint8_t> buff = writeAndRead(SHUT_DOWN_CMD,5);
     while(buff.size()!=5){
-        ROS_INFO("(sensors::Shutdown) Shutdown system. Received %lu bytes", buff.size());
+        ROS_INFO("(SENSORS::Shutdown) Shutdown system. Received %lu bytes", buff.size());
         buff = writeAndRead(SHUT_DOWN_CMD,5);
         ros::Duration(1.0).sleep();
     }
@@ -540,14 +537,14 @@ bool sensorsReadySrvCallback(std_srvs::Empty::Request &req, std_srvs::Empty::Res
 }
 
 void initData(ros::NodeHandle &nh){
-    nh.getParam("STM_BYTES", STM_BYTES);  //61/49
-    nh.getParam("STMdevice", STMdevice);
-    nh.getParam("STM_RATE", STM_RATE);
+    nh.getParam("SENSOR_BYTES", SENSOR_BYTES);  //61/49
+    nh.getParam("SENSOR_PORT", SENSOR_PORT);
+    nh.getParam("SENSOR_RATE", SENSOR_RATE);
     nh.getParam("USE_BUMPER", USE_BUMPER);
     nh.getParam("USE_SONAR", USE_SONAR);
     nh.getParam("USE_CLIFF", USE_CLIFF);
-    nh.getParam("restart_file",restart_file);
-    nh.getParam("max_weight",max_weight);
+    nh.getParam("WEIGHT_MAX",max_weight);
+    nh.getParam("restart_file",restart_script);
     
     //0x52 = Blue,0x47 = Red,0x42 = Green,0x4D = Magenta,0x43 = Cyan,0x59 = Yellow,0x57 = White, 0x00 = Off
     led_color_ = {{"green",0x42}, {"blue",0x52}, {"yellow",0x59}, {"red",0x47}, {"cyan",0x43}, {"white",0x57}, {"magenta",0x4D}, {"off",0x00}};
@@ -555,14 +552,13 @@ void initData(ros::NodeHandle &nh){
 
 bool initSerial(){
     connectionMutex.lock(); 
-    std::string port = STMdevice;
     if(serialConnection.isOpen()){
         serialConnection.close();
     }
     ros::Duration(2.0).sleep();
-    ROS_INFO("(sensors::initSerial) STM32 port : %s", port.c_str());
+    ROS_INFO("(SENSORS::initSerial) STM32 port : %s", SENSOR_PORT.c_str());
     // Set the serial port, baudrate and timeout in milliseconds
-    serialConnection.setPort(port);
+    serialConnection.setPort(SENSOR_PORT);
     //14400 bytes per sec
     serialConnection.setBaudrate(115200);
     serial::Timeout timeout = serial::Timeout::simpleTimeout(100);
@@ -576,15 +572,15 @@ bool initSerial(){
         /// Read any byte that we are expecting
         std::vector<uint8_t> buff;
         serialConnection.read(buff, 5);
-        ROS_INFO("(sensors::Initial) Reseted STM32. Received %lu bytes", buff.size());
+        ROS_INFO("(SENSORS::Initial) Reseted STM32. Received %lu bytes", buff.size());
         //we need wait for a while when startup robot and initilize STM
         ros::Duration(2.0).sleep();
         if(buff.size() != 5){
-            ROS_INFO("(Sensors::Initial) Receive wrong ACK from STM32.");
+            ROS_INFO("(SENSORS::Initial) Receive wrong ACK from STM32.");
             connectionMutex.unlock(); 
             return false;
         }
-        ROS_INFO("(Sensors::Initial) Receive correct ACK from STM32. Established connection to STM32.");
+        ROS_INFO("(SENSORS::Initial) Receive correct ACK from STM32. Established connection to STM32.");
         connectionMutex.unlock(); 
         return true;
     }
@@ -594,8 +590,6 @@ bool initSerial(){
 }
 
 void mySigintHandler(int sig){   
-    setLedSrv.shutdown();
-    setSoundSrv.shutdown();
 
     connectionMutex.lock();
     try{
@@ -605,7 +599,7 @@ void mySigintHandler(int sig){
         serialConnection.read(buff, 5);
         serialConnection.close();
     } catch (std::exception& e) {
-		ROS_ERROR("(Sensors) Shutdown exception : %s", e.what());
+		ROS_ERROR("(SENSORS) Shutdown exception : %s", e.what());
 	}
     connectionMutex.unlock();
 
@@ -615,49 +609,59 @@ void mySigintHandler(int sig){
 int main(int argc, char **argv) {
     ros::init(argc, argv, "sensors");
     ros::NodeHandle nh;
-    
-    SetRobot.initialize();
     signal(SIGINT, mySigintHandler);
-
+    
     //Startup begin
-    ROS_INFO("(Sensors) Waiting for MD49 to be ready...");
+    ROS_INFO("(SENSORS) Waiting for MD49 to be ready...");
     ros::service::waitForService("/gobot_startup/motor_ready", ros::Duration(60.0));
-    ROS_INFO("(Sensors) MD49 is ready.");
+    ROS_INFO("(SENSORS) MD49 is ready.");
     //Startup end
 
-    initData(nh);
+    SetRobot.initialize();
 
-    bumper_pub = nh.advertise<gobot_msg_srv::BumperMsg>("/gobot_base/bumpers_raw_topic", 50);
-    ir_pub = nh.advertise<gobot_msg_srv::IrMsg>("/gobot_base/ir_topic", 50);
-    proximity_pub = nh.advertise<gobot_msg_srv::ProximityMsg>("/gobot_base/proximity_topic", 50);
-    sonar_pub = nh.advertise<gobot_msg_srv::SonarMsg>("/gobot_base/sonar_topic", 50);
-    weight_pub = nh.advertise<gobot_msg_srv::WeightMsg>("/gobot_base/weight_topic", 50);
-    battery_pub = nh.advertise<gobot_msg_srv::BatteryMsg>("/gobot_base/battery_topic", 50);
-    cliff_pub = nh.advertise<gobot_msg_srv::CliffMsg>("/gobot_base/cliff_topic", 50);
-    button_pub = nh.advertise<std_msgs::Int8>("/gobot_base/button_topic",50);
-    gyro_pub = nh.advertise<gobot_msg_srv::GyroMsg>("/gobot_base/gyro_topic",50);
-    temperature_pub = nh.advertise<std_msgs::Float32>("/gobot_base/temperature_topic",50);
+    initData(nh);
     
     initSerial();
 
-    int n=0;
+    int fail=0, success=0;
     ros::Rate r2(2);
     //checking procedure
-    while(STM_CHECK<4 && ros::ok()){
-        if (checkSensors()){
-            STM_CHECK++;
-            ROS_INFO("(Sensors::StartUp) Check Iteration:%d, CC:%d", STM_CHECK,last_charging_current);
+    ros::Time initilize_time = ros::Time::now();
+    
+    while(success<4 && ros::ok()){
+        if((ros::Time::now()-initilize_time).toSec()>10.0){
+            //restart the system as unable to initilize MCU
+            std::string cmd;
+            cmd = "sudo sh " + restart_script;
+            system(cmd.c_str());
+            exit(1);
         }
         else{
-            n++;
-        }
-        if(n>10){
-            initSerial();
-            n=0;
+            if (checkSensors())
+                success++;
+            else
+                fail++;
+            
+            if(fail>5){
+                initSerial();
+                fail=0;
+                success=0;
+            }
+            ROS_INFO("(SENSORS::StartUp) SUCCESS:%d,  FAIL:%d, CC:%d", success,fail,last_charging_current);
         }
         r2.sleep();
     }
 
+    bumper_pub = nh.advertise<gobot_msg_srv::BumperMsg>("/gobot_base/bumpers_raw_topic", 1);
+    ir_pub = nh.advertise<gobot_msg_srv::IrMsg>("/gobot_base/ir_topic", 1);
+    proximity_pub = nh.advertise<gobot_msg_srv::ProximityMsg>("/gobot_base/proximity_topic", 1);
+    sonar_pub = nh.advertise<gobot_msg_srv::SonarMsg>("/gobot_base/sonar_topic", 1);
+    weight_pub = nh.advertise<gobot_msg_srv::WeightMsg>("/gobot_base/weight_topic", 1);
+    battery_pub = nh.advertise<gobot_msg_srv::BatteryMsg>("/gobot_base/battery_topic", 1);
+    cliff_pub = nh.advertise<gobot_msg_srv::CliffMsg>("/gobot_base/cliff_topic", 1);
+    button_pub = nh.advertise<std_msgs::Int8>("/gobot_base/button_topic",1);
+    gyro_pub = nh.advertise<gobot_msg_srv::GyroMsg>("/gobot_base/gyro_topic",1);
+    temperature_pub = nh.advertise<std_msgs::Float32>("/gobot_base/temperature_topic",1);
 
     ros::Subscriber ledSubscriber = nh.subscribe("/gobot_base/set_led", 1, ledCallback);
     ros::Subscriber soundSubscriber = nh.subscribe("/gobot_base/set_sound", 1, soundCallback);
@@ -679,7 +683,7 @@ int main(int argc, char **argv) {
     ros::AsyncSpinner spinner(3); // Use 3 threads
     spinner.start();
 
-    ros::Rate r(STM_RATE);
+    ros::Rate r(SENSOR_RATE);
     //start publish sensor information after checking procedure
     while(ros::ok()){
         publishSensors();

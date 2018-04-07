@@ -46,7 +46,7 @@ namespace robot_class {
             vel_pub_ = nh.advertise<geometry_msgs::Twist>("/cmd_vel", 1);
             make_plan_pub_ = nh.advertise<nav_msgs::Path>("/robot_lib/make_path_plan",1,true);
             //Subscribers
-            encoder_sub_ = nh.subscribe<gobot_msg_srv::EncodersMsg>("/encoders", 50, &RobotCommand::encodersCallback, this);
+            encoder_sub_ = nh.subscribe<gobot_msg_srv::EncodersMsg>("/encoders", 1, &RobotCommand::encodersCallback, this);
             speed_sub_ = nh.subscribe<gobot_msg_srv::MotorSpeedMsg>("/gobot_motor/motor_speed", 1, &RobotCommand::motorSpdCallback,this);
             battery_sub_ = nh.subscribe<gobot_msg_srv::BatteryMsg>("/gobot_base/battery_topic", 1, &RobotCommand::batteryCallback,this);
             laser_sub_ = nh.subscribe<sensor_msgs::LaserScan>("/scan", 1, &RobotCommand::laserCallback,this);
@@ -64,10 +64,10 @@ namespace robot_class {
             r.sleep();
             }
             initialized_ = true;
-            ROS_INFO("Robot_Command::Object is successfully initialized.");
+            ROS_INFO("(ROBOT_COMMAND) Object is successfully initialized.");
         }
         else{
-            ROS_WARN("Robot_Command::You should not call initialize twice on this object, doing nothing");
+            ROS_WARN("(ROBOT_COMMAND) You should not call initialize twice on this object, doing nothing");
         }
     }
 
@@ -77,10 +77,10 @@ namespace robot_class {
     void RobotCommand::stopCostmap(){
         if(initialized_){
             global_costmap_->stop();
-            ROS_INFO("Robot_Command::Costmap update stopped.");
+            ROS_INFO("(ROBOT_COMMAND) Costmap update stopped.");
         }
         else{
-            ROS_WARN("Robot_Command::You should initialize this object before calling this function");
+            ROS_WARN("(ROBOT_COMMAND) You should initialize this object before calling this function");
         }
     }
 
@@ -90,10 +90,10 @@ namespace robot_class {
     void RobotCommand::startCostmap(){
         if(initialized_){
             global_costmap_->start();
-            ROS_INFO("Robot_Command::Costmap update started.");
+            ROS_INFO("(ROBOT_COMMAND) Costmap update started.");
         }
         else{
-            ROS_WARN("Robot_Command::You should initialize this object before calling this function");
+            ROS_WARN("(ROBOT_COMMAND) You should initialize this object before calling this function");
         }
     }
 
@@ -135,7 +135,7 @@ namespace robot_class {
     }
 
     void RobotCommand::goalCallback(const move_base_msgs::MoveBaseActionGoal::ConstPtr& msg){
-        ROS_INFO("Robot_Lib::Received a new goal");
+        ROS_INFO("(ROBOT_COMMAND) Received a new goal");
         current_goal_ = msg->goal.target_pose;
     }
 
@@ -332,7 +332,7 @@ namespace robot_class {
     //First param = k, 2nd is point name, 3rd is x coordinate, 4th is y coordinate, 5th is orientation, 6th is home bool
     bool RobotCommand::setTargetPoint(const Pose &point){
         if (getPointCost(point.x,point.y) >= costmap_2d::INSCRIBED_INFLATED_OBSTACLE){
-            ROS_WARN("Robot_Lib::Assigned point can not be reached.");
+            ROS_WARN("(ROBOT_COMMAND) Assigned point can not be reached.");
             return false;
         }
 
@@ -350,7 +350,7 @@ namespace robot_class {
 
     bool RobotCommand::setTargetPoint(const geometry_msgs::PoseStamped &point){
         if (getPointCost(point.pose.position.x,point.pose.position.y) >= costmap_2d::INSCRIBED_INFLATED_OBSTACLE){
-            ROS_WARN("Robot_Lib::Assigned point can not be reached.");
+            ROS_WARN("(ROBOT_COMMAND) Assigned point can not be reached.");
             return false;
         }
 
@@ -375,7 +375,7 @@ namespace robot_class {
         for(int i=0;i<path.size();i++){
             //if point is unreachable, return false
             if (getPointCost(path[i].x,path[i].y) >= costmap_2d::INSCRIBED_INFLATED_OBSTACLE){
-                ROS_WARN("Robot_Lib::Assigned %d point of route can not be reached.", i);
+                ROS_WARN("(ROBOT_COMMAND) Assigned %d point of route can not be reached.", i);
                 return false;
             }
             std::string name = path[i].name == "" ? std::to_string(i+1) : path[i].name;

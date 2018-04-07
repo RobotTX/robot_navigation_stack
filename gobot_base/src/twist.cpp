@@ -2,9 +2,10 @@
 
 #define CLIFF_THRESHOLD 170
 #define CLIFF_OUTRANGE 1
+#define PI 3.1415926
 
 bool collision = false, moved_from_collision = true, pause_robot = false;
-double wheel_separation, wheel_radius, ticks_per_rotation, collision_threshold, avoid_spd;
+double wheel_sep_, wheel_radius_, ticks_per_rot_, wait_collision_, avoid_spd_;
 
 bool bumper_on=false, cliff_on=false,moved_from_front_cliff = true,moved_from_back_cliff=true;
 bool bumpers_broken[8]={false,false,false,false,false,false,false,false};
@@ -12,7 +13,6 @@ bool bumpers_broken[8]={false,false,false,false,false,false,false,false};
 /// based on tests, the linear regression from the velocity in m/s to the ticks/sec is approx : y=15.606962627075x-2.2598795680051
 //15.606962627075;//-2.2598795680051;
 double a = 15.55, b = -2.26;  
-double pi = 3.14159;
 
 bool lost_robot = false;
 
@@ -50,7 +50,7 @@ void cliffCallback(const gobot_msg_srv::CliffMsg::ConstPtr& cliff){
                 if(!bumper_on){
                     moved_from_front_cliff = false;
                     SetRobot.setSound(3,1);
-                    SetRobot.setMotorSpeed('B', avoid_spd, 'B', avoid_spd);
+                    SetRobot.setMotorSpeed('B', avoid_spd_, 'B', avoid_spd_);
                 }
             }
         }
@@ -68,7 +68,7 @@ void cliffCallback(const gobot_msg_srv::CliffMsg::ConstPtr& cliff){
                 if(!bumper_on){
                     moved_from_back_cliff = false;
                     SetRobot.setSound(3,1);
-                    SetRobot.setMotorSpeed('F', avoid_spd, 'F', avoid_spd);
+                    SetRobot.setMotorSpeed('F', avoid_spd_, 'F', avoid_spd_);
                 }
             }
         }
@@ -122,14 +122,14 @@ void newBumpersInfo(const gobot_msg_srv::BumperMsg::ConstPtr& bumpers){
             /// if it's a new collision, we stop the robot
             if(!collision){
                 SetRobot.setMotorSpeed('F', 0, 'F', 0);
-                ROS_WARN("(twist::newBumpersInfo) just got a new collision");
+                ROS_WARN("(TWIST::newBumpersInfo) Detect collision");
                 collision = true;
                 collisionTime = ros::Time::now();
             } 
-            else if((ros::Time::now() - collisionTime).toSec()>collision_threshold){
+            else if((ros::Time::now() - collisionTime).toSec()>wait_collision_){
                 bumper_collision_pub.publish(bumpers_data); 
                 moved_from_collision = false; 
-                /// if after collision_threshold seconds, the obstacle is still there, we go to the opposite direction
+                /// if after wait_collision_ seconds, the obstacle is still there, we go to the opposite direction
                 //if front bumpers are trigered
                 if(front && !back){
                     std::thread([](){
@@ -137,8 +137,8 @@ void newBumpersInfo(const gobot_msg_srv::BumperMsg::ConstPtr& bumpers){
                         bumpers_broken[1] = !bumpers_data.bumper2;
                         bumpers_broken[2] = !bumpers_data.bumper3;
                         bumpers_broken[3] = !bumpers_data.bumper4;
-                        ROS_WARN("(twist::newBumpersInfo) Launching thread to move away from front obstacle");
-                        SetRobot.setMotorSpeed('B', avoid_spd, 'B', avoid_spd);
+                        ROS_WARN("(TWIST::newBumpersInfo) Launching thread to move away from front obstacle");
+                        SetRobot.setMotorSpeed('B', avoid_spd_, 'B', avoid_spd_);
                         ros::Duration(1.5).sleep();
                         SetRobot.setMotorSpeed('F', 0, 'F', 0);
                         //ROS_INFO("Front bumper broken: %d,%d,%d,%d",bumpers_broken[0],bumpers_broken[1],bumpers_broken[2],bumpers_broken[3]);
@@ -153,8 +153,8 @@ void newBumpersInfo(const gobot_msg_srv::BumperMsg::ConstPtr& bumpers){
                         bumpers_broken[5] = !bumpers_data.bumper6;
                         bumpers_broken[6] = !bumpers_data.bumper7;
                         bumpers_broken[7] = !bumpers_data.bumper8;
-                        ROS_WARN("(twist::newBumpersInfo) Launching thread to move away from back obstacle");
-                        SetRobot.setMotorSpeed('F', avoid_spd, 'F', avoid_spd);
+                        ROS_WARN("(TWIST::newBumpersInfo) Launching thread to move away from back obstacle");
+                        SetRobot.setMotorSpeed('F', avoid_spd_, 'F', avoid_spd_);
                         ros::Duration(1.5).sleep();
                         SetRobot.setMotorSpeed('F', 0, 'F', 0);
                         //ROS_INFO("Back bumper broken: %d,%d,%d,%d",bumpers_broken[4],bumpers_broken[5],bumpers_broken[6],bumpers_broken[7]);
@@ -172,7 +172,7 @@ void newBumpersInfo(const gobot_msg_srv::BumperMsg::ConstPtr& bumpers){
         } 
         else if(collision){
             /// if we had a collision and the obstacle left
-            ROS_INFO("(twist::newBumpersInfo) Obstacle left after %f seconds",(ros::Time::now() - collisionTime).toSec());
+            ROS_INFO("(TWIST::newBumpersInfo) Obstacle left after %f seconds",(ros::Time::now() - collisionTime).toSec());
             ROS_INFO("Front bumper broken: %d,%d,%d,%d",bumpers_broken[0],bumpers_broken[1],bumpers_broken[2],bumpers_broken[3]);
             ROS_INFO("Back bumper broken: %d,%d,%d,%d",bumpers_broken[4],bumpers_broken[5],bumpers_broken[6],bumpers_broken[7]);
             collision = false;
@@ -256,12 +256,12 @@ void joyCallback(const sensor_msgs::Joy::ConstPtr& joy){
                 SetRobot.setMotorSpeed('F', 0, 'F', 0);
             else {
                 /// calculate the speed of each wheel in m/s
-                double right_vel_m_per_sec = linear_limit * joy->axes[1] + angular_limit * joy->axes[3] * wheel_separation / (double)2;
-                double left_vel_m_per_sec = linear_limit * joy->axes[1] - angular_limit * joy->axes[3] * wheel_separation / (double)2;
+                double right_vel_m_per_sec = linear_limit * joy->axes[1] + angular_limit * joy->axes[3] * wheel_sep_ / (double)2;
+                double left_vel_m_per_sec = linear_limit * joy->axes[1] - angular_limit * joy->axes[3] * wheel_sep_ / (double)2;
 
                 /// calculate the real value we need to give the MD49
-                double right_vel_speed = ((right_vel_m_per_sec * ticks_per_rotation) / (2 * pi * wheel_radius) - b ) / a;
-                double left_vel_speed = ((left_vel_m_per_sec * ticks_per_rotation) / (2 * pi * wheel_radius) - b ) / a;
+                double right_vel_speed = ((right_vel_m_per_sec * ticks_per_rot_) / (2 * PI * wheel_radius_) - b ) / a;
+                double left_vel_speed = ((left_vel_m_per_sec * ticks_per_rot_) / (2 * PI * wheel_radius_) - b ) / a;
 
                 SetRobot.setMotorSpeed(right_vel_speed >= 0 ? 'F' : 'B', fabs(right_vel_speed), left_vel_speed >= 0 ? 'F' : 'B', fabs(left_vel_speed));;
             }
@@ -286,20 +286,20 @@ void newCmdVel(const geometry_msgs::Twist::ConstPtr& twist){
             SetRobot.setMotorSpeed('F', 0, 'F', 0);
         else {
             /// calculate the speed of each wheel in m/s
-            double right_vel_m_per_sec = twist->linear.x + twist->angular.z * wheel_separation / 2.0;
-            double left_vel_m_per_sec = twist->linear.x - twist->angular.z * wheel_separation / 2.0;
+            double right_vel_m_per_sec = twist->linear.x + twist->angular.z * wheel_sep_ / 2.0;
+            double left_vel_m_per_sec = twist->linear.x - twist->angular.z * wheel_sep_ / 2.0;
 
             /// calculate the real value we need to give the MD49
-            double right_vel_speed = ((right_vel_m_per_sec * ticks_per_rotation) / (2 * pi * wheel_radius) - b ) / a;
-            double left_vel_speed = ((left_vel_m_per_sec * ticks_per_rotation) / (2 * pi * wheel_radius) - b ) / a;
+            double right_vel_speed = ((right_vel_m_per_sec * ticks_per_rot_) / (2 * PI * wheel_radius_) - b ) / a;
+            double left_vel_speed = ((left_vel_m_per_sec * ticks_per_rot_) / (2 * PI * wheel_radius_) - b ) / a;
 
-            //ROS_INFO("(twist::newCmdVel) new vel %f %f", right_vel_speed, left_vel_speed);
+            //ROS_INFO("(TWIST::newCmdVel) new vel %f %f", right_vel_speed, left_vel_speed);
 
             SetRobot.setMotorSpeed(right_vel_speed >= 0 ? 'F' : 'B', fabs(right_vel_speed), left_vel_speed >= 0 ? 'F' : 'B', fabs(left_vel_speed));
 
             /// just to show the actual real speed we gave to the wheels
-            //double real_vel = (a * (int)right_vel_speed + b) / ticks_per_rotation * 2 * pi * wheel_radius;
-            //ROS_INFO("(twist::newCmdVel) linear vel %f m/s, compared to real vel %f  m/s\n so a difference of %f", twist->linear.x, real_vel, real_vel - twist->linear.x);
+            //double real_vel = (a * (int)right_vel_speed + b) / ticks_per_rot_ * 2 * PI * wheel_radius_;
+            //ROS_INFO("(TWIST::newCmdVel) linear vel %f m/s, compared to real vel %f  m/s\n so a difference of %f", twist->linear.x, real_vel, real_vel - twist->linear.x);
         }
     }
 }
@@ -314,11 +314,11 @@ void statusCallback(const std_msgs::Int8::ConstPtr& msg){
 }
 
 void initParams(ros::NodeHandle &nh){
-    nh.getParam("wheel_separation", wheel_separation);
-    nh.getParam("wheel_radius", wheel_radius);
-    nh.getParam("ticks_per_rotation", ticks_per_rotation);
-    nh.getParam("collision_threshold", collision_threshold);
-    nh.getParam("avoid_spd", avoid_spd);
+    nh.getParam("WHEEL_SEP", wheel_sep_);
+    nh.getParam("WHEEL_RADIUS", wheel_radius_);
+    nh.getParam("TICKS_PER_ROT", ticks_per_rot_);
+    nh.getParam("WAIT_COLLISION", wait_collision_);
+    nh.getParam("AVOID_SPD", avoid_spd_);
 }
 
 void mySigintHandler(int sig){   
@@ -328,14 +328,15 @@ void mySigintHandler(int sig){
 int main(int argc, char **argv) {
     ros::init(argc, argv, "twist");
     ros::NodeHandle nh;
-    SetRobot.initialize();
     signal(SIGINT, mySigintHandler);
+
+    ROS_INFO("(TWIST::START) Waiting for SENSORS to be ready...");
+    ros::service::waitForService("/gobot_startup/sensors_ready", ros::Duration(60.0));
+    ROS_INFO("(TWIST::START) SENSORS is ready.");
+
+    SetRobot.initialize();
     
     initParams(nh);
-    
-    ROS_INFO("(Twist) Waiting for MCU to be ready...");
-    ros::service::waitForService("/gobot_startup/sensors_ready", ros::Duration(60.0));
-    ROS_INFO("(Twist) MCU is ready.");
 
     bumper_pub = nh.advertise<gobot_msg_srv::BumperMsg>("/gobot_base/bumpers_topic", 1);
     bumper_collision_pub = nh.advertise<gobot_msg_srv::BumperMsg>("/gobot_base/bumpers_collision", 1);

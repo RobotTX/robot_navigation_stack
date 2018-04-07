@@ -31,14 +31,14 @@ bool getRobotPos(void){
         startingPose.position.y = transform.getOrigin().getY();
         startingPose.position.z = transform.getOrigin().getZ();
 
-        ROS_INFO("(Exploration) Robot position : (%f, %f, %f) - Robot orientation : (%f, %f, %f, %f)", 
+        ROS_INFO("(SCAN_EXPLORE) Robot position : (%f, %f, %f) - Robot orientation : (%f, %f, %f, %f)", 
         startingPose.position.x, startingPose.position.y,
         startingPose.position.z, startingPose.orientation.x,
         startingPose.orientation.y, startingPose.orientation.z,
         startingPose.orientation.w);
 
     } catch (tf::TransformException &ex) {
-        ROS_ERROR("(Exploration) Got a transform problem : %s", ex.what());
+        ROS_ERROR("(SCAN_EXPLORE) Got a transform problem : %s", ex.what());
         return false;
     }
 
@@ -47,17 +47,17 @@ bool getRobotPos(void){
 
 /// To make the robot go back to its starting position
 void backToStart(){
-    ROS_INFO("(Exploration) Back to start launched...");
+    ROS_INFO("(SCAN_EXPLORE) Back to start launched...");
     move_base_msgs::MoveBaseGoal goal;
     switch(back_to_start_when_finished){
         case 1:
             SetRobot.setHome(std::to_string(startingPose.position.x),std::to_string(startingPose.position.y),std::to_string(startingPose.orientation.x),
             std::to_string(startingPose.orientation.y),std::to_string(startingPose.orientation.z),std::to_string(startingPose.orientation.w));
         
-            ROS_INFO("(Exploration) Complete exploration and Set robot home:%.2f,%.2f",startingPose.position.x,startingPose.position.y);
+            ROS_INFO("(SCAN_EXPLORE) Complete exploration and Set robot home:%.2f,%.2f",startingPose.position.x,startingPose.position.y);
 
             if(ros::service::call("/gobot_function/startDocking", empty_srv))
-                ROS_INFO("(Exploration) Complete exploration and Sending robot home");
+                ROS_INFO("(SCAN_EXPLORE) Complete exploration and Sending robot home");
             break;
         case 2:
             /// We go back to a normal point (not a charging station)
@@ -67,20 +67,20 @@ void backToStart(){
             
             if(ac->isServerConnected()){
                 ac->sendGoalAndWait(goal, ros::Duration(0), ros::Duration(0));
-                ROS_INFO("(Exploration) Start position goal achieved");
+                ROS_INFO("(SCAN_EXPLORE) Start position goal achieved");
             } 
             else 
-                ROS_ERROR("(Exploration) No action server to go back to start");
+                ROS_ERROR("(SCAN_EXPLORE) No action server to go back to start");
             break;
         default:
-            ROS_ERROR("(Exploration) back_to_start_when_finished value not defined : %d", back_to_start_when_finished);
+            ROS_ERROR("(SCAN_EXPLORE) back_to_start_when_finished value not defined : %d", back_to_start_when_finished);
             break;
     }
 }
 
 /// Call a service to get the trajectory for exploration from the hector_exploration_planner and send the goal to move_base
 void doExploration(void){
-    ROS_INFO("(Exploration) Starting exploration...");
+    ROS_INFO("(SCAN_EXPLORE) Starting exploration...");
 
     ros::Rate loop_rate(2);
     while(ros::ok() && exploring){
@@ -91,7 +91,7 @@ void doExploration(void){
             if(ros::service::call("get_exploration_path", arg)){
                 std::vector<geometry_msgs::PoseStamped> poses = arg.response.trajectory.poses;
                 if(!poses.empty()){
-                    ROS_INFO("(Exploration) Moving to frontier...");
+                    ROS_INFO("(SCAN_EXPLORE) Moving to frontier...");
                     noFrontiersLeft = 0;
                     move_base_msgs::MoveBaseGoal goal;
                     /// The array is a set of goal creating a trajectory but it's used in the hector_navigation stack
@@ -104,10 +104,10 @@ void doExploration(void){
                         SetRobot.setStatus(25,"EXPLORING");
                     }
                     else 
-                        ROS_INFO("(Exploration) No action server or we stopped exploring already");
+                        ROS_INFO("(SCAN_EXPLORE) No action server or we stopped exploring already");
                 } 
                 else {
-                    ROS_INFO("(Exploration) No frontiers left.");
+                    ROS_INFO("(SCAN_EXPLORE) No frontiers left.");
                     noFrontiersLeft++;
                     /// After no_frontier_threshold attemps at finding a point to explore, we consider the scan finished
                     if(noFrontiersLeft >= no_frontier_threshold){
@@ -120,12 +120,12 @@ void doExploration(void){
                         if(back_to_start_when_finished)
                             backToStart();
 
-                        ROS_INFO("(Exploration) Exploration finished");
+                        ROS_INFO("(SCAN_EXPLORE) Exploration finished");
                     }
                 }
             } 
             else
-                ROS_WARN("(Exploration) get_exploration_path service call failed");
+                ROS_WARN("(SCAN_EXPLORE) get_exploration_path service call failed");
         } 
         else
             count++;
@@ -146,7 +146,7 @@ bool startExplorationSrv(hector_exploration_node::Exploration::Request &req, hec
         }
         gobot_msg_srv::IsCharging isCharging;
         if(ros::service::call("/gobot_status/charging_status", isCharging) && isCharging.response.isCharging){
-            ROS_WARN("(Exploration) we are charging so we go straight to avoid bumping into the CS when turning");
+            ROS_WARN("(SCAN_EXPLORE) we are charging so we go straight to avoid bumping into the CS when turning");
             SetRobot.setMotorSpeed('F', 15, 'F', 15);
 		    ros::Duration(2.5).sleep();
             SetRobot.setMotorSpeed('F', 0, 'F', 0);
@@ -159,7 +159,7 @@ bool startExplorationSrv(hector_exploration_node::Exploration::Request &req, hec
 
     } 
     else{
-        ROS_WARN("(Exploration) We were already exploring");
+        ROS_WARN("(SCAN_EXPLORE) We were already exploring");
     }
     return true;
 
@@ -177,14 +177,14 @@ bool stopExplorationSrv(std_srvs::Empty::Request &req, std_srvs::Empty::Response
 
 /// To stop the exploration (either when the service is called or when we are done scanning)
 bool stopExploration(void){
-    //~ROS_INFO("(Exploration) stopExploration called %d", exploring);
+    //~ROS_INFO("(SCAN_EXPLORE) stopExploration called %d", exploring);
     if(exploring){
-        ROS_INFO("(Exploration) Stopped exploring");
+        ROS_INFO("(SCAN_EXPLORE) Stopped exploring");
         exploring = false;
         ac->cancelAllGoals();
     } 
     else{
-        ROS_WARN("(Exploration) We were not exploring");
+        ROS_WARN("(SCAN_EXPLORE) We were not exploring");
     }
     
     return true;
@@ -199,29 +199,28 @@ void mySigintHandler(int sig)
 int main(int argc, char* argv[]){
     ros::init(argc, argv, "move_base_controller");
     ros::NodeHandle nh;
-    
-    SetRobot.initialize();
     signal(SIGINT, mySigintHandler);
     
     //Startup begin
-    ROS_INFO("(Exploration) Waiting for Robot setting hardware...");
-    ros::service::waitForService("/gobot_startup/pose_ready", ros::Duration(120.0));
-    ROS_INFO("(Exploration) Robot setting hardware is ready.");
+    ROS_INFO("(SCAN_EXPLORE) Waiting for Robot setting hardware...");
+    ros::service::waitForService("/gobot_startup/pose_ready", ros::Duration(90.0));
+    ROS_INFO("(SCAN_EXPLORE) Robot setting hardware is ready.");
     //Startup end
 
-    ROS_INFO("(Exploration) running...");
+    SetRobot.initialize();
+    ROS_INFO("(SCAN_EXPLORE) running...");
     /// Get the data from the parameters server
     nh.param<std::string>("map_frame", map_frame, "map");
-    //~ROS_INFO("(Exploration) map_frame : %s", map_frame.c_str());
+    //~ROS_INFO("(SCAN_EXPLORE) map_frame : %s", map_frame.c_str());
 
     nh.param<std::string>("base_frame", base_frame, "base_link");
-    //~ROS_INFO("(Exploration) base_frame : %s", base_frame.c_str());
+    //~ROS_INFO("(SCAN_EXPLORE) base_frame : %s", base_frame.c_str());
 
     nh.param<int>("new_goal_sec", new_goal_sec, 30);
-    //~ROS_INFO("(Exploration) new_goal_sec : %d", new_goal_sec);
+    //~ROS_INFO("(SCAN_EXPLORE) new_goal_sec : %d", new_goal_sec);
 
     nh.param<int>("no_frontier_threshold", no_frontier_threshold, 5);
-    //~ROS_INFO("(Exploration) no_frontier_threshold : %d", no_frontier_threshold);
+    //~ROS_INFO("(SCAN_EXPLORE) no_frontier_threshold : %d", no_frontier_threshold);
 
     /// Create an actionlibClient to be able to send and monitor goals
     ac = new MoveBaseClient("move_base", true);

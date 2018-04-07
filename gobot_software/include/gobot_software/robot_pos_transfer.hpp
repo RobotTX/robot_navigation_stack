@@ -39,5 +39,6 @@ void serverDisconnected(const std_msgs::String::ConstPtr& msg);
 
 void disconnect(const std::string ip);
 
+void initParams();
 
 #endif

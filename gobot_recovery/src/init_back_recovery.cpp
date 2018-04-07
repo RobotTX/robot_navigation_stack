@@ -22,23 +22,23 @@ InitBackRecovery::InitBackRecovery(): global_costmap_(NULL), local_costmap_(NULL
             initialized_ = true;
         }
         else{
-            ROS_ERROR("You should not call initialize twice on this object, doing nothing");
+            ROS_ERROR("(ALLOW_BACKWARD) You should not call initialize twice on this object, doing nothing");
         }
     }
 
     void InitBackRecovery::runBehavior()
     {
         if(!initialized_){
-            ROS_ERROR("This object must be initialized before runBehavior is called");
+            ROS_ERROR("(ALLOW_BACKWARD) This object must be initialized before runBehavior is called");
             return;
         }
 
-        ROS_WARN("Init back recovery behavior started.");
+        ROS_WARN("(ALLOW_BACKWARD) Init back recovery behavior started.");
 
         std_srvs::Empty arg;
         if(ros::service::call("/gobot_recovery/allow_teb_initBack",arg))
-            ROS_WARN("Allow teb init with backwards motion");
+            ROS_WARN("(ALLOW_BACKWARD) Allow teb init with backwards motion");
         else
-            ROS_ERROR("Failed to allow teb init with backwards motion");
+            ROS_ERROR("(ALLOW_BACKWARD) Failed to allow teb init with backwards motion");
     }
 };

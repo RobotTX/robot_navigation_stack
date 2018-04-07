@@ -37,14 +37,14 @@ bool startDocking(void){
     GetRobot.getHome(x,y,oriX,oriY,oriZ,oriW);
 
     if(x != 0 || y != 0 || oriZ != 0){
-        //~ROS_INFO("(auto_docking::startDocking) home found : [%f, %f] [%f, %f, %f, %f]", x, y, oriX, oriY, oriZ, oriW);
+        //~ROS_INFO("(AUTO_DOCKING::startDocking) home found : [%f, %f] [%f, %f, %f, %f]", x, y, oriX, oriY, oriZ, oriW);
 
         landingYaw = tf::getYaw(tf::Quaternion(oriX , oriY , oriZ, oriW));
 
         /// We want to go 1 metre in front of the charging station
         landingPointX = x + 0.5 * std::cos(landingYaw);
         landingPointY = y + 0.5 * std::sin(landingYaw);
-        //~ROS_INFO("(auto_docking::startDocking) landing point : [%f, %f, %f]", landingPointX, landingPointY, landingYaw);
+        //~ROS_INFO("(AUTO_DOCKING::startDocking) landing point : [%f, %f, %f]", landingPointX, landingPointY, landingYaw);
 
         /// Create the goal
         currentGoal.target_pose.header.frame_id = "map";
@@ -66,17 +66,17 @@ bool startDocking(void){
             return true;
         }
         else 
-            ROS_ERROR("(auto_docking::startDocking) no action server");
+            ROS_ERROR("(AUTO_DOCKING::startDocking) no action server");
     } 
     else
-        ROS_ERROR("(auto_docking::startDocking) home is not valid (probably not set)");
+        ROS_ERROR("(AUTO_DOCKING::startDocking) home is not valid (probably not set)");
 
     return false;
 }
 
 void goalResultCallback(const move_base_msgs::MoveBaseActionResult::ConstPtr& msg){
     if(docking){
-        ROS_INFO("(auto_docking::newBumpersInfo) Goal status %d",msg->status.status);
+        ROS_INFO("(AUTO_DOCKING::newBumpersInfo) Goal status %d",msg->status.status);
         switch(msg->status.status){
             case 2:
                 break;
@@ -91,7 +91,7 @@ void goalResultCallback(const move_base_msgs::MoveBaseActionResult::ConstPtr& ms
                 dock_status = -1;
                 SetRobot.setDock(dock_status);
                 SetRobot.setStatus(11,"FAIL_DOCKING");
-                ROS_WARN("(auto_docking::finishedDocking) Auto docking finished->FAILED because goal can not be reached.");
+                ROS_WARN("(AUTO_DOCKING::finishedDocking) Auto docking finished->FAILED because goal can not be reached.");
 				break;
 		}
     }
@@ -99,7 +99,7 @@ void goalResultCallback(const move_base_msgs::MoveBaseActionResult::ConstPtr& ms
 
 /****************************************** STEP 2 : Use the IR to guide the robot to the charging station *********************************************************/
 void findChargingStation(void){
-    //~ROS_INFO("(auto_docking::findChargingStation) start to find charging station");
+    //~ROS_INFO("(AUTO_DOCKING::findChargingStation) start to find charging station");
     ros::NodeHandle nh;
     goalStatusSub.shutdown();
     /// To check if we are charging
@@ -135,7 +135,7 @@ void newBumpersInfo(const gobot_msg_srv::BumperMsg::ConstPtr& bumpers){
             irSub.shutdown();
             collision = true;
             move_from_collision = false;
-            ROS_WARN("(auto_docking::newBumpersInfo) Detect back collision:%d,%d,%d,%d",bumpers->bumper5,bumpers->bumper6,bumpers->bumper7,bumpers->bumper8);
+            ROS_WARN("(AUTO_DOCKING::newBumpersInfo) Detect back collision:%d,%d,%d,%d",bumpers->bumper5,bumpers->bumper6,bumpers->bumper7,bumpers->bumper8);
             //turn right
             if(bumpers->bumper8==0 && bumpers->bumper5==1 && bumpers->bumper6==1 && bumpers->bumper7==1)
                 SetRobot.setMotorSpeed('B', base_spd*2, 'F', base_spd);
@@ -212,7 +212,7 @@ void newIrSignal(const gobot_msg_srv::IrMsg::ConstPtr& irSignal){
 
         if (irSignal->rearSignal == 0){
             if(!lostIrSignal){
-                //ROS_WARN("(auto_docking::newIrSignal) just lost the ir signal");
+                //ROS_WARN("(AUTO_DOCKING::newIrSignal) just lost the ir signal");
                 lostIrSignal = true;
                 lastIrSignalTime = ros::Time::now();
                 /// make the robot turn on itself
@@ -238,7 +238,7 @@ void newIrSignal(const gobot_msg_srv::IrMsg::ConstPtr& irSignal){
 void newProximityInfo(const gobot_msg_srv::ProximityMsg::ConstPtr& proximitySignal){
     /*
     if(docking && !collision){
-        //~ROS_INFO("(auto_docking::newProximityInfo) new proximity signal : %d %d", proximitySignal->signal1, proximitySignal->signal2);
+        //~ROS_INFO("(AUTO_DOCKING::newProximityInfo) new proximity signal : %d %d", proximitySignal->signal1, proximitySignal->signal2);
         /// signal1 = leftSensor
         /// signal2 = rightSensor
         /// 0 : object; 1 : no object
@@ -273,12 +273,12 @@ void finishedDocking(){
     if(ros::service::call("/gobot_status/charging_status", arg) && arg.response.isCharging){
         dock_status = 1;
         SetRobot.setStatus(11,"COMPLETE_DOCKING");
-        ROS_INFO("(auto_docking::finishedDocking) Auto docking finished->SUCESSFUL.");
+        ROS_INFO("(AUTO_DOCKING::finishedDocking) Auto docking finished->SUCESSFUL.");
     }
     else{
         attempt++;
         if(attempt <= 3){
-            ROS_WARN("(auto_docking::finishedDocking) Failed docking %d time(s)", attempt);
+            ROS_WARN("(AUTO_DOCKING::finishedDocking) Failed docking %d time(s)", attempt);
             SetRobot.setMotorSpeed('F', 15, 'F', 15);
             ros::Duration(1.5).sleep();
             SetRobot.setMotorSpeed('F', 0, 'F', 0);
@@ -307,7 +307,7 @@ void finishedDocking(){
             dock_status = -1;
             SetRobot.setDock(dock_status);
             SetRobot.setStatus(11,"FAIL_DOCKING");
-            ROS_WARN("(auto_docking::finishedDocking) Auto docking finished->FAILED.");
+            ROS_WARN("(AUTO_DOCKING::finishedDocking) Auto docking finished->FAILED.");
             SetRobot.setMotorSpeed('F', 15, 'F', 15);
             ros::Duration(2.0).sleep();
             SetRobot.setMotorSpeed('F', 0, 'F', 0);
@@ -371,11 +371,14 @@ void mySigintHandler(int sig)
 int main(int argc, char* argv[]){
     ros::init(argc, argv, "auto_docking");
     ros::NodeHandle nh;
-
-    SetRobot.initialize();
     signal(SIGINT, mySigintHandler);
     
-    ros::service::waitForService("/gobot_startup/pose_ready", ros::Duration(120.0));
+    //Startup begin
+    ros::service::waitForService("/gobot_startup/pose_ready", ros::Duration(90.0));
+    //Startup end
+
+    SetRobot.initialize();
+    
     ac = new MoveBaseClient("move_base", true);
     ac->waitForServer(ros::Duration(60.0));
 

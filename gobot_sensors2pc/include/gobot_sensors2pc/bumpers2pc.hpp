@@ -9,5 +9,5 @@
 #include "gobot_msg_srv/BumperMsg.h"
 
 void newBumpersInfo(const gobot_msg_srv::BumperMsg::ConstPtr& bumpers);
-bool initParams(void);
+void initParams();
 #endif

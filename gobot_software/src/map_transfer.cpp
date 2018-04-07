@@ -29,7 +29,7 @@ ros::Subscriber sub_map;
 void sendMap(const std::string ip, const std::vector<uint8_t>& my_map){
 	try {
 		boost::system::error_code ignored_error;
-		ROS_INFO("(Map::sendMap) Map size to send in uint8_t : %lu", my_map.size());
+		ROS_INFO("(MAP_TRANSFER) Map size to send in uint8_t : %lu", my_map.size());
         if(sockets.count(ip))
 		  boost::asio::write(*(sockets.at(ip)), boost::asio::buffer(my_map), boost::asio::transfer_all(), ignored_error);
 	} catch (std::exception& e) {
@@ -47,7 +47,7 @@ void getMap(const nav_msgs::OccupancyGrid::ConstPtr& msg){
     socketsMutex.lock();
     for(auto const &elem : sockets){
         if(session_map.count(elem.first) && session_map.at(elem.first).sendAutoMap){
-            ROS_INFO("(Map::getMap) Just received a new map o send to the QT app [%d, %d] => %d", msg->info.width, msg->info.height, msg->info.width * msg->info.height);
+            ROS_INFO("(MAP_TRANSFER) Just received a new map o send to the QT app [%d, %d] => %d", msg->info.width, msg->info.height, msg->info.width * msg->info.height);
             sendMap(elem.first, compress(msg->data, msg->info.width, msg->info.height, msg->info.resolution, msg->info.origin.position.x, msg->info.origin.position.y, 0));
         }
     }
@@ -60,7 +60,7 @@ std::vector<uint8_t> compress(const std::vector<int8_t> map, const int map_width
 
 	if(who == 0){
 		/// If we are scanning a new map, we send the published metadata with it
-	   	ROS_INFO("(Map::compress) Map metadata (who = 0) : [%d, %d] %f [%f, %f]", map_width, map_height, map_resolution, _map_orixin_x, _map_orixin_y);
+	   	ROS_INFO("(MAP_TRANSFER) Map metadata (who = 0) : [%d, %d] %f [%f, %f]", map_width, map_height, map_resolution, _map_orixin_x, _map_orixin_y);
         for(int i = 0; i < std::to_string(map_width).size(); ++i)
    		   my_map.push_back(static_cast<uint8_t>(std::to_string(map_width).at(i)));
         my_map.push_back(static_cast<uint8_t>(' '));
@@ -93,7 +93,7 @@ std::vector<uint8_t> compress(const std::vector<int8_t> map, const int map_width
 		std::string mapIdFile;
 		if(n.hasParam("map_id_file")){
 			n.getParam("map_id_file", mapIdFile);
-			ROS_INFO("(Map::compress) map_transfer got map id file %s", mapIdFile.c_str());
+			ROS_INFO("(MAP_TRANSFER) map_transfer got map id file %s", mapIdFile.c_str());
 		}
 		std::string mapId("{0}");
 		std::string mapDate("0");
@@ -109,7 +109,7 @@ std::vector<uint8_t> compress(const std::vector<int8_t> map, const int map_width
         + std::to_string(map_height) + " " + std::to_string(map_resolution) + " " 
         + std::to_string(_map_orixin_x) + " " + std::to_string(_map_orixin_y);
 
-	   	ROS_INFO("(Map::compress) Map metadata (who = 1 or 2) : %s", str.c_str());
+	   	ROS_INFO("(MAP_TRANSFER) Map metadata (who = 1 or 2) : %s", str.c_str());
 	   	for(int i = 0; i < str.size(); i++)
 	   		my_map.push_back(static_cast<uint8_t>(str.at(i)));
 	   	
@@ -126,7 +126,7 @@ std::vector<uint8_t> compress(const std::vector<int8_t> map, const int map_width
 	int last = GREY;
 	uint32_t count=0;
 	int curr = 0;
-    ROS_INFO("(Map::compress) Map size %d vs %lu", map_size, map.size());
+    ROS_INFO("(MAP_TRANSFER) Map size %d vs %lu", map_size, map.size());
 	for(size_t i = 0; i < map_size; i++){
 
         if(i >= map.size())
@@ -181,7 +181,7 @@ std::vector<uint8_t> compress(const std::vector<int8_t> map, const int map_width
 }
 
 bool sendAutoMap(gobot_msg_srv::SetStringArray::Request &req, gobot_msg_srv::SetStringArray::Response &res){
-	ROS_INFO("(Map::sendAutoMap) SendAutoMap");
+	ROS_INFO("(MAP_TRANSFER) SendAutoMap");
 	ros::NodeHandle n;
 
     int count = 0;
@@ -198,7 +198,7 @@ bool sendAutoMap(gobot_msg_srv::SetStringArray::Request &req, gobot_msg_srv::Set
 
 
 bool stopAutoMap(gobot_msg_srv::SetStringArray::Request &req, gobot_msg_srv::SetStringArray::Response &res){
-	ROS_INFO("(Map::stopAutoMap) StopAutoMap");
+	ROS_INFO("(MAP_TRANSFER) StopAutoMap");
 
     session_map.at(req.data[0]).sendAutoMap = false;
 
@@ -218,7 +218,7 @@ bool stopAutoMap(gobot_msg_srv::SetStringArray::Request &req, gobot_msg_srv::Set
 // 2 : to merge
 bool sendOnceMap(gobot_msg_srv::SendMap::Request &req,
     gobot_msg_srv::SendMap::Response &res){
-	ROS_INFO("(Map::sendOnceMap) SendOnceMap doing nothing for now");
+	ROS_INFO("(MAP_TRANSFER) SendOnceMap doing nothing for now");
 
 	int who = req.who;	
 
@@ -227,7 +227,7 @@ bool sendOnceMap(gobot_msg_srv::SendMap::Request &req,
     ros::NodeHandle n;
     if(n.hasParam("map_image_used")){
     	n.getParam("map_image_used", mapFileStr);
-    	ROS_INFO("(Map::sendOnceMap) map_transfer set map image file to %s", mapFileStr.c_str());
+    	ROS_INFO("(MAP_TRANSFER) map_transfer set map image file to %s", mapFileStr.c_str());
     }
 
 	std::string line;
@@ -236,23 +236,23 @@ bool sendOnceMap(gobot_msg_srv::SendMap::Request &req,
 	mapFile.open(mapFileStr);
 	if(mapFile.is_open()){
 		std::getline(mapFile, line);
-		ROS_INFO("(Map::sendOnceMap) 1 : %s", line.c_str());
+		ROS_INFO("(MAP_TRANSFER) 1 : %s", line.c_str());
 
 		std::getline(mapFile, line);
         if(line.at(0) == '#'){
-            ROS_INFO("(Map::sendOnceMap) Got a second line with # : %s", line.c_str());
+            ROS_INFO("(MAP_TRANSFER) Got a second line with # : %s", line.c_str());
             std::getline(mapFile, line);
         }
 
-		ROS_INFO("(Map::sendOnceMap) 2 : %s", line.c_str());
+		ROS_INFO("(MAP_TRANSFER) 2 : %s", line.c_str());
 
 		int width = std::stoi(line.substr(0,line.find_first_of(" ")));
 		int height = std::stoi(line.substr(line.find_first_of(" "), line.length()));
 		int map_size = width * height;
-		ROS_INFO("(Map::sendOnceMap) width & height : [%d, %d] => %d", width, height, map_size);
+		ROS_INFO("(MAP_TRANSFER) width & height : [%d, %d] => %d", width, height, map_size);
 
 		std::getline(mapFile, line);
-		ROS_INFO("(Map::sendOnceMap) 3 : %s", line.c_str());
+		ROS_INFO("(MAP_TRANSFER) 3 : %s", line.c_str());
 
 		while(std::getline(mapFile, line))
 			for(int i = 0; i < line.size(); i++)
@@ -260,7 +260,7 @@ bool sendOnceMap(gobot_msg_srv::SendMap::Request &req,
 
 		mapFile.close();
 		
-		ROS_INFO("(Map::sendOnceMap) Got the whole map from file, about to compress and send it %lu", ori_map.size());
+		ROS_INFO("(MAP_TRANSFER) Got the whole map from file, about to compress and send it %lu", ori_map.size());
 		sendMap(req.ip, compress(ori_map, width, height, map_resolution, map_origin_x, map_origin_y, who));
 
 		return true;
@@ -294,7 +294,7 @@ void server(void){
         } 
 		else{
 			error = true;
-            ROS_ERROR("(Map::server) the ip %s is already connected, this should not happen", ip.c_str());
+            ROS_ERROR("(MAP_TRANSFER) the ip %s is already connected, this should not happen", ip.c_str());
 		}
         socketsMutex.unlock();
     }
@@ -326,11 +326,9 @@ void mySigintHandler(int sig){
 int main(int argc, char **argv){
 
 	ros::init(argc, argv, "map_transfer");
-	ROS_INFO("(Map::main) Ready to be launched.");
-
 	ros::NodeHandle n;
 	signal(SIGINT, mySigintHandler);
-
+	
 	//Startup begin
 	ros::service::waitForService("/gobot_startup/network_ready", ros::Duration(120.0));
 	//Startup end
@@ -343,7 +341,7 @@ int main(int argc, char **argv){
 
     ros::Subscriber sub_meta = n.subscribe("/map_metadata", 1, getMetaData);
 
-	ROS_INFO("(Transfer New Map) Ready to be launched.");
+	ROS_INFO("(MAP_TRANSFER) Ready to be launched.");
 
     std::thread t(server);
 

@@ -13,16 +13,16 @@ void goalResultCallback(const move_base_msgs::MoveBaseActionResult::ConstPtr& ms
     ros::service::call("/move_base/TebLocalPlannerROS/set_parameters",config);
     switch(msg->status.status){
         case 2:
-            ROS_INFO("Goal PREEMPTED and disable teb_local_planner allow_init_with_backwards_motion.");
+            ROS_INFO("(ALLOW_BACKWARD) Goal PREEMPTED and disable teb_local_planner allow_init_with_backwards_motion.");
             break;
         case 3:
-            ROS_INFO("Goal PREEMPTED and disable teb_local_planner allow_init_with_backwards_motion.");
+            ROS_INFO("(ALLOW_BACKWARD) Goal PREEMPTED and disable teb_local_planner allow_init_with_backwards_motion.");
             break;
         case 4:
-            ROS_INFO("Goal ABORTED and disable teb_local_planner allow_init_with_backwards_motion.");
+            ROS_INFO("(ALLOW_BACKWARD) Goal ABORTED and disable teb_local_planner allow_init_with_backwards_motion.");
             break;
         default:
-            ROS_ERROR("Unknown goal status %d and disable teb_local_planner allow_init_with_backwards_motion",msg->status.status);
+            ROS_ERROR("(ALLOW_BACKWARD) Unknown goal status %d and disable teb_local_planner allow_init_with_backwards_motion",msg->status.status);
             break;
     }
 }
@@ -36,12 +36,12 @@ bool allowTebSrvCallback(std_srvs::Empty::Request &req, std_srvs::Empty::Respons
     //allow teb_local to backwards initialize
     config.request.config.bools.push_back(param);
     if(ros::service::call("/move_base/TebLocalPlannerROS/set_parameters",config)){
-        ROS_INFO("Enable teb_local_planner allow_init_with_backwards_motion.");
+        ROS_INFO("(ALLOW_BACKWARD) Enable teb_local_planner allow_init_with_backwards_motion.");
         goalResult = nh.subscribe("/move_base/result",1,goalResultCallback);
         return true;
     }
     else{
-        ROS_ERROR("Unable to set teb_local_planner allow_init_with_backwards_motion");
+        ROS_ERROR("(ALLOW_BACKWARD) Unable to set teb_local_planner allow_init_with_backwards_motion");
         return false;
     }
 }

@@ -36,44 +36,35 @@ void newBumpersInfo(const gobot_msg_srv::BumperMsg::ConstPtr& bumpers){
 }
 
 /// Initialize the global parameters
-bool initParams(){
+void initParams(){
     ros::NodeHandle nh;
     /// We get the frame on which the bumpers are attached
-    nh.getParam("pc_frame", pc_frame);
+    nh.getParam("PC_FRAME", pc_frame);
     /// We get the height of the bumpers compared to their frame
-    nh.getParam("bumpers_height", bumpers_height);
-    nh.getParam("dimension_x", dimension_x);
-    nh.getParam("dimension_y", dimension_y);
+    nh.getParam("DIM_X", dimension_x);
+    nh.getParam("DIM_Y", dimension_y);
     nh.getParam("USE_BUMPER_PC", use_pc);
-    std::cout <<  "(bumpers2pc::initParams) bumpers height:"<<bumpers_height<<" dimension_x:"<<dimension_x<<" dimension_y:"<<dimension_y<<std::endl;
-
-    return true;
+    nh.getParam("DIM_Z", bumpers_height);
+    std::cout <<  "(BUMPER2PC::initParams) bumpers height:"<<bumpers_height<<" dimension_x:"<<dimension_x<<" dimension_y:"<<dimension_y<<std::endl;
 }
 
 int main(int argc, char* argv[]){
+    ros::init(argc, argv, "bumpers2pc");
+    ros::NodeHandle nh;
+    
+    //Startup begin
+    ros::service::waitForService("/gobot_startup/pose_ready", ros::Duration(90.0));
+    //Startup end
 
-    std::cout << "(bumpers2pc) running..." << std::endl;
+    initParams();
 
-    try {
+    // the pointcloud publisher
+    pcPublisher = nh.advertise<pcl::PointCloud<pcl::PointXYZ> >("/gobot_pc/bumpers_pc", 10);
 
-        ros::init(argc, argv, "bumpers2pc");
+    // get the bumpers collision information
+    ros::Subscriber pcSubscriber = nh.subscribe("/gobot_base/bumpers_collision", 1, newBumpersInfo);
 
-        ros::NodeHandle nh;
-
-        if(initParams()){
-
-            // the pointcloud publisher
-            pcPublisher = nh.advertise<pcl::PointCloud<pcl::PointXYZ> >("/gobot_pc/bumpers_pc", 10);
-
-            // get the bumpers collision information
-            ros::Subscriber pcSubscriber = nh.subscribe("/gobot_base/bumpers_collision", 1, newBumpersInfo);
-
-            ros::spin();
-        }
-
-    } catch (std::exception& e) {
-        std::cerr << "(bumpers2pc) Exception: " << e.what() << std::endl;
-    }
+    ros::spin();
 
     return 0;
 }

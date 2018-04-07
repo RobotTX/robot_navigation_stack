@@ -1,6 +1,5 @@
 //ros headers
 #include <ros/ros.h>
-#include <signal.h>
 #include <std_msgs/Int8.h>
 #include <std_srvs/Empty.h>
 #include <tf/transform_listener.h>
@@ -17,43 +16,37 @@
 #include <numeric> 
 #include <serial/serial.h>
 #include <thread>
-#include <serial/serial.h>
 
 #include <gobot_msg_srv/robot_msgs.h>
 
 
+#define PI_ 3.1415926
+
 class MotorClass {
     public:
-
         MotorClass(): 
-        test_encoders_(false),reset_odom_(false),encoder_limit_(3000),leftSpeed_(128),rightSpeed_(128), rec_leftSpeed_(128),rec_rightSpeed_(128), PI_(3.1415926)
-        {
-            std::cout<<"I AM IN"<<std::endl;
+        test_encoders_(false),reset_odom_(false),encoder_limit_(3000),leftSpeed_(128),rightSpeed_(128), rec_leftSpeed_(128),rec_rightSpeed_(128)
+        { 
             ros::NodeHandle nh;
-            nh.getParam("MD49device", motor_device_);
-            nh.getParam("wheel_separation", wheel_separation_);
-            nh.getParam("wheel_radius", wheel_radius_);
-            nh.getParam("ticks_per_rotation", ticks_per_rotation_);
+            //load parameters
+            nh.getParam("MOTOR_PORT", motor_device_);
+            nh.getParam("WHEEL_SEP", wheel_sep_);
+            nh.getParam("WHEEL_RADIUS", wheel_radius_);
+            nh.getParam("TICKS_PER_ROT", ticks_per_rot_);
             nh.getParam("ODOM_RATE", odom_rate_);
-            nh.getParam("ACC_RATE", acc_rate_);
             nh.getParam("ROLLING_WINDOW_SIZE", rolling_window_size_);
             
             if(!initSerial()){
                 exit(1);
             }
 
-            //Startup begin
-            ros::service::waitForService("/gobot_status/set_gobot_status", ros::Duration(60.0));
-            motorReadySrv = nh.advertiseService("/gobot_startup/motor_ready", &MotorClass::motorReadySrvCallback,this);
-            //Startup end
-
             resetOdomSrv = nh.advertiseService("/gobot_motor/resetOdom", &MotorClass::resetOdom, this);
             resetEncodersSrv = nh.advertiseService("/gobot_motor/resetEncoders", &MotorClass::resetEncoders, this);
 
-            odom_pub_ = nh.advertise<nav_msgs::Odometry>("/odom", 50);
-            odom_test_pub_ = nh.advertise<gobot_msg_srv::OdomTestMsg>("/odom_test", 50);
-            encoder_pub_ = nh.advertise<gobot_msg_srv::EncodersMsg>("/encoders", 50);
-            real_vel_pub_ = nh.advertise<geometry_msgs::Twist>("/real_vel", 50);
+            odom_pub_ = nh.advertise<nav_msgs::Odometry>("/odom", 1);
+            odom_test_pub_ = nh.advertise<gobot_msg_srv::OdomTestMsg>("/odom_test", 1);
+            encoder_pub_ = nh.advertise<gobot_msg_srv::EncodersMsg>("/encoders", 1);
+            real_vel_pub_ = nh.advertise<geometry_msgs::Twist>("/real_vel", 1);
 
             motorSpd_sub_ = nh.subscribe("/gobot_motor/motor_speed", 1, &MotorClass::motorSpdCallback, this);
 
@@ -61,9 +54,15 @@ class MotorClass {
             odom_thread_ = new boost::thread(&MotorClass::odomThread, this);
 
             vel_thread_ = new boost::thread(&MotorClass::velThread, this);
+
+            //Startup begin
+            motorReadySrv = nh.advertiseService("/gobot_startup/motor_ready", &MotorClass::motorReadySrvCallback,this);
+            //Startup end
         }
 
         ~MotorClass(){
+            motorSpd_sub_.shutdown();
+
             vel_thread_->interrupt();
             vel_thread_->join();
             delete vel_thread_;
@@ -78,7 +77,7 @@ class MotorClass {
                 serialConnection.write(std::vector<uint8_t>({0x00, 0x31, 0x80, 0x00, 0x32, 0x80}));
                 serialConnection.close();
             } catch (std::exception& e) {
-                ROS_ERROR("(Wheels) Shutdown exception : %s", e.what());
+                ROS_ERROR("(MOTOR::Shutdown) exception : %s", e.what());
             }
             serialMutex_.unlock();
         }
@@ -86,7 +85,7 @@ class MotorClass {
         /// Initialize the serial connection
         bool initSerial(){
             /// Get the port in which our device is connected
-            ROS_INFO("(wheels::initSerial) MD49 port : %s", motor_device_.c_str());
+            ROS_INFO("(MOTOR::initSerial) MD49 port : %s", motor_device_.c_str());
 
             serialMutex_.lock();
             if(serialConnection.isOpen())
@@ -111,7 +110,7 @@ class MotorClass {
                 serialConnection.write(std::vector<uint8_t>({0x00, 0x31, 0x80, 0x00, 0x32, 0x80}));
                 ///reset Encoder
                 serialConnection.write(std::vector<uint8_t>({0x00, 0x35}));
-                ROS_INFO("(wheels::initSerial) Established connection to MD49.");
+                ROS_INFO("(MOTOR::initSerial) Established connection to motor.");
                 serialMutex_.unlock();
                 return true;
             } 
@@ -127,58 +126,56 @@ class MotorClass {
             ros::Rate r(odom_rate_);
 
             while(ros::ok()){
-            std::vector<uint8_t> encoders = writeAndRead(std::vector<uint8_t>({0x00, 0x25}), 8);
-            if(encoders.size() == 8){
-                int32_t leftEncoder = (encoders.at(0) << 24) + (encoders.at(1) << 16) + (encoders.at(2) << 8) + encoders.at(3);
-                int32_t rightEncoder = (encoders.at(4) << 24) + (encoders.at(5) << 16) + (encoders.at(6) << 8) + encoders.at(7);
-                current_time = ros::Time::now();
-                double dt = (current_time - last_time).toSec();
+                std::vector<uint8_t> encoders = writeAndRead(std::vector<uint8_t>({0x00, 0x25}), 8);
+                if(encoders.size() == 8){
+                    int32_t leftEncoder = (encoders.at(0) << 24) + (encoders.at(1) << 16) + (encoders.at(2) << 8) + encoders.at(3);
+                    int32_t rightEncoder = (encoders.at(4) << 24) + (encoders.at(5) << 16) + (encoders.at(6) << 8) + encoders.at(7);
+                    
+                    //publish encoders
+                    gobot_msg_srv::EncodersMsg encoder_msg;
+                    encoder_msg.left_encoder = leftEncoder;
+                    encoder_msg.right_encoder = rightEncoder;
+                    encoder_pub_.publish(encoder_msg);
 
-                int32_t delta_left_encoder = leftEncoder - last_left_encoder_;
-                int32_t delta_right_encoder = rightEncoder - last_right_encoder_;
+                    current_time = ros::Time::now();
+                    double dt = (current_time - last_time).toSec();
 
-                // difference of ticks compared to last time
-                //122rpm, 2 rotation/sec, 980ticks/rotation, 2000ticks/sec maximum
-                //if odom reading too large, probably wrong reading.
-                //just skip them to prevent position jump
-                //if(abs(delta_left_encoder/dt)>encoder_limit|| abs(delta_right_encoder/dt)>encoder_limit){
-                if(abs(delta_left_encoder/dt)>encoder_limit_|| abs(delta_right_encoder/dt)>encoder_limit_){
-                    ROS_WARN("(wheels::Odom) Detect odom jump (%d,%d), re-initial motor...",
-                    abs(delta_left_encoder/dt),abs(delta_right_encoder/dt));
-                    initSerial();
-                    last_left_encoder_ = 0;
-                    last_right_encoder_ = 0;
-                }
-                else{
-                    //ROS_INFO("right:%d, left:%d",delta_right_encoder,delta_left_encoder);
+                    int32_t delta_left_encoder = leftEncoder - last_left_encoder_;
+                    int32_t delta_right_encoder = rightEncoder - last_right_encoder_;
+
+                    // difference of ticks compared to last time
+                    //122rpm, 2 rotation/sec, 980ticks/rotation, 2000ticks/sec maximum
+                    //if odom reading too large, probably wrong reading.
+                    //just skip them to prevent position jump
+                    //if(abs(delta_left_encoder/dt)>encoder_limit|| abs(delta_right_encoder/dt)>encoder_limit){
+                    if(abs(delta_left_encoder/dt)>encoder_limit_|| abs(delta_right_encoder/dt)>encoder_limit_){
+                        ROS_WARN("(MOTOR::Odom) Detect odom jump (%d,%d), re-initial motor...",
+                        abs(delta_left_encoder/dt),abs(delta_right_encoder/dt));
+                        initSerial();
+                        leftEncoder = 0;
+                        rightEncoder = 0;
+                        delta_left_encoder = 0;
+                        delta_right_encoder = 0;
+                    }
+
+                    //ROS_INFO("(MOTOR::Odom) right:%d, left:%d",delta_right_encoder,delta_left_encoder);
                     last_left_encoder_ = leftEncoder;
                     last_right_encoder_ = rightEncoder;
 
                     // distance travelled by each wheel
-                    double left_dist = (delta_left_encoder / ticks_per_rotation_) * 2.0 * wheel_radius_ * PI_;
-                    double right_dist = (delta_right_encoder / ticks_per_rotation_) * 2.0 * wheel_radius_ * PI_;
-
+                    double left_dist = (delta_left_encoder/ticks_per_rot_)*2.0*wheel_radius_*PI_, 
+                            right_dist = (delta_right_encoder/ticks_per_rot_)*2.0*wheel_radius_*PI_;
                     // velocity of each wheel
-                    double left_vel = left_dist / dt;
-                    double right_vel = right_dist / dt;
+                    double left_vel = left_dist/dt, right_vel = right_dist/dt;
                     //compute odometry in a typical way given the velocities of the robot
-                    double vel = (right_vel + left_vel) / 2.0;
-                    double vx = vel * cos(odom_th_);
-                    double vy = vel * sin(odom_th_);
-                    double vth = (right_vel - left_vel) / wheel_separation_;
-                    //ROS_INFO("Linear vel:%.3f, Angular vel:%.3f",vel,vth);
-
-                    double delta_x = vx * dt;
-                    double delta_y = vy * dt;
-                    double delta_th = vth * dt;
-
+                    double vel = (right_vel+left_vel)/2.0, vx = vel*cos(odom_th_), vy = vel*sin(odom_th_), vth = (right_vel-left_vel)/wheel_sep_;
+                    double delta_x = vx*dt, delta_y = vy*dt, delta_th = vth*dt;
                     /*TEST REAL VELOCITY: angular speed varying
                     geometry_msgs::Twist real_cmd;
                     real_cmd.linear.x = vel;
                     real_cmd.angular.z = vth;
                     real_vel_pub_.publish(real_cmd);
                     */
-
                     if(reset_odom_){
                         reset_odom_ = false; 
                         odom_x_ = 0.0;
@@ -192,7 +189,7 @@ class MotorClass {
                         odom_y_ += delta_y;
                         odom_th_ += delta_th;  
                     }
-                    //ROS_INFO("%.5f,%.5f, %.5f",delta_x,delta_y,delta_th);
+                    //ROS_INFO("(MOTOR::Odom) %.5f,%.5f, %.5f",delta_x,delta_y,delta_th);
                     
                     //since all odometry is 6DOF we'll need a quaternion created from yaw
                     geometry_msgs::Quaternion odom_quat = tf::createQuaternionMsgFromYaw(odom_th_);
@@ -202,13 +199,10 @@ class MotorClass {
                     odom_trans.header.stamp = current_time;
                     odom_trans.header.frame_id = "odom";
                     odom_trans.child_frame_id = "base_link";
-
                     odom_trans.transform.translation.x = odom_x_;
                     odom_trans.transform.translation.y = odom_y_;
                     odom_trans.transform.translation.z = 0.0;
                     odom_trans.transform.rotation = odom_quat;
-
-                    
                     //send the transform
                     odom_broadcaster_.sendTransform(odom_trans);
 
@@ -216,33 +210,23 @@ class MotorClass {
                     nav_msgs::Odometry odom;
                     odom.header.stamp = ros::Time::now();;
                     odom.header.frame_id = "odom";
-
                     //set the position
                     odom.pose.pose.position.x = odom_x_;
                     odom.pose.pose.position.y = odom_y_;
                     odom.pose.pose.position.z = 0.0;
                     odom.pose.pose.orientation = odom_quat;
-
                     //set the velocity
                     odom.child_frame_id = "base_link";
                     odom.twist.twist.linear.x = vel;
                     odom.twist.twist.linear.y = 0.0;
                     odom.twist.twist.angular.z = vth;
-
                     //publish the message
                     odom_pub_.publish(odom);
 
-                    //publish encoders
-                    gobot_msg_srv::EncodersMsg encoder_msg;
-                    encoder_msg.left_encoder = leftEncoder;
-                    encoder_msg.right_encoder = rightEncoder;
-                    encoder_pub_.publish(encoder_msg);
-
-                    }
                     last_time = current_time;
                 }
                 else
-                    ROS_WARN("(wheels::getEncoders) Got the wrong number of encoders data : %lu", encoders.size());
+                    ROS_WARN("(MOTOR::getEncoders) Got the wrong number of encoders data : %lu", encoders.size());
 
                 r.sleep();
             }
@@ -253,6 +237,7 @@ class MotorClass {
 
             std::vector<uint8_t> left_vel_mean_(rolling_window_size_,leftSpeed_), right_vel_mean_(rolling_window_size_,rightSpeed_);
             while(ros::ok()){
+                spdMutex_.lock();
                 //adopt rolling window mean to smooth motor speed
                 left_vel_mean_.erase(left_vel_mean_.begin());
                 left_vel_mean_.push_back(rec_leftSpeed_);
@@ -269,6 +254,8 @@ class MotorClass {
                     leftSpeed_ = std::accumulate(left_vel_mean_.begin(),left_vel_mean_.end(),0)/left_vel_mean_.size();
                     rightSpeed_ = std::accumulate(right_vel_mean_.begin(),right_vel_mean_.end(),0)/right_vel_mean_.size();
                 }
+                spdMutex_.unlock();
+                
                 writeAndRead(std::vector<uint8_t>({0x00, 0x31, leftSpeed_, 0x00, 0x32, rightSpeed_})); 
 
                 r.sleep();
@@ -277,6 +264,7 @@ class MotorClass {
 
 
         void motorSpdCallback(const gobot_msg_srv::MotorSpeedMsg::ConstPtr& speed){
+            spdMutex_.lock();
             if(speed->velocityL <= 127)
                 rec_leftSpeed_ = speed->directionL.compare("F") == 0 ? 128 + speed->velocityL : 128 - speed->velocityL;  
             else
@@ -286,6 +274,7 @@ class MotorClass {
                 rec_rightSpeed_ = speed->directionR.compare("F") == 0 ? 128 + speed->velocityR : 128 - speed->velocityR;
             else
                 rec_rightSpeed_ = speed->directionL.compare("F") == 0 ? 255 : 0;
+            spdMutex_.unlock();
         }
 
         bool resetOdom(std_srvs::Empty::Request &req, std_srvs::Empty::Response &res){
@@ -303,11 +292,11 @@ class MotorClass {
             return true;
         }
 
+
     private:
         /// Write and read informations on the serial port
         std::vector<uint8_t> writeAndRead(std::vector<uint8_t> toWrite, int bytesToRead = 0){
             std::vector<uint8_t> buff;
-    
             /// Lock the mutex so no one can write at the same time
             serialMutex_.lock();
             if(serialConnection.isOpen()){
@@ -320,11 +309,11 @@ class MotorClass {
 
                     //serialConnection.flush();
                 } catch (std::exception& e) {
-                    ROS_ERROR("(Wheels) exception : %s", e.what());
+                    ROS_ERROR("(MOTOR::exception) : %s", e.what());
                 }
             } 
             else {
-                ROS_WARN("(wheels::writeAndRead) The serial connection is not opened, something is wrong");
+                ROS_WARN("(MOTOR::writeAndRead) The serial connection is not opened, something is wrong");
             }
 
             /// Unlock the mutex
@@ -333,38 +322,21 @@ class MotorClass {
             return buff;
         }
 
-        /// get the output of the given system command
-        std::string getStdoutFromCommand(std::string cmd){
-            std::string data;
-            FILE * stream;
-            const int max_buffer = 256;
-            char buffer[max_buffer];
-            cmd.append(" 2>&1");
 
-            stream = popen(cmd.c_str(), "r");
-            if (stream) {
-                while (!feof(stream))
-                    if (fgets(buffer, max_buffer, stream) != NULL) data.append(buffer);
-                pclose(stream);
-            }
-            return data;
-        }
-
-
-        bool test_encoders_, reset_odom_;
-        int acc_rate_,rolling_window_size_, encoder_limit_, odom_rate_;
-        double odom_x_, odom_y_, odom_th_ , PI_ , wheel_separation_, wheel_radius_ ,ticks_per_rotation_;
-        uint8_t leftSpeed_, rightSpeed_, rec_leftSpeed_,rec_rightSpeed_;
-        int32_t last_left_encoder_, last_right_encoder_;
         std::string motor_device_;
-        std::mutex serialMutex_;
+        bool test_encoders_, reset_odom_;
+        int rolling_window_size_, encoder_limit_, odom_rate_;
+        double odom_x_, odom_y_, odom_th_, wheel_sep_, wheel_radius_ , ticks_per_rot_;
+        uint8_t leftSpeed_, rightSpeed_, rec_leftSpeed_, rec_rightSpeed_;
+        int32_t last_left_encoder_, last_right_encoder_;
+        std::mutex serialMutex_, spdMutex_;
         serial::Serial serialConnection;
 
-        ros::ServiceServer motorReadySrv,resetOdomSrv,resetEncodersSrv;
-        ros::Time current_time, last_time;
-        ros::Subscriber motorSpd_sub_;
-        ros::Publisher odom_pub_, odom_test_pub_, encoder_pub_, real_vel_pub_;
         tf::TransformBroadcaster odom_broadcaster_;
+        ros::Time current_time, last_time;
+        ros::ServiceServer motorReadySrv, resetOdomSrv, resetEncodersSrv;
+        ros::Publisher odom_pub_, odom_test_pub_, encoder_pub_, real_vel_pub_;
+        ros::Subscriber motorSpd_sub_;
 
         boost::thread *odom_thread_, *vel_thread_;
 };

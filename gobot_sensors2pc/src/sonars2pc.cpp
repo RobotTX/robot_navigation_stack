@@ -141,7 +141,7 @@ void newSonarsInfo(const gobot_msg_srv::SonarMsg::ConstPtr& sonars){
     }
 }
 
-bool initParams(){
+void initParams(){
     ros::NodeHandle nh;
     /// We get the frames on which the sonars are attached
     nh.param("rear_right_frame", rear_right_frame, std::string("/rear_right_sonar"));
@@ -161,9 +161,8 @@ bool initParams(){
     prev_sonars.distance2 = SONAR_MAX;
     prev_sonars.distance3 = SONAR_MAX;
     prev_sonars.distance4 = SONAR_MAX;
-    std::cout << "(sonar2pc::initParams) SONAR THRESHOLD:"<<SONAR_THRESHOLD<<" SONAR OUTRANGE:"<<SONAR_OUTRANGE<<
+    std::cout << "(SONAR2PC::initParams) SONAR THRESHOLD:"<<SONAR_THRESHOLD<<" SONAR OUTRANGE:"<<SONAR_OUTRANGE<<
     " SONAR MAX:"<<SONAR_MAX<<" SONAR VIEW:"<<SONAR_VIEW<<" SONAR RESOLUTION:"<<SONAR_RESOLUTION<<std::endl;
-    return true;
 }
 
 
@@ -171,23 +170,26 @@ int main(int argc, char* argv[]){
     ros::init(argc, argv, "sonars2pc");
     ros::NodeHandle nh;
 
-    if(initParams()){
+    //Startup begin
+    ros::service::waitForService("/gobot_startup/pose_ready", ros::Duration(90.0));
+    //Startup end
+    
+    initParams();
 
-        rearRightPublisher = nh.advertise<pcl::PointCloud<pcl::PointXYZ> >("/gobot_pc/rearRight_sonar_pc", 10);
-        rearLeftPublisher = nh.advertise<pcl::PointCloud<pcl::PointXYZ> >("/gobot_pc/rearLeft_sonar_pc", 10);
-        frontLeftPublisher = nh.advertise<pcl::PointCloud<pcl::PointXYZ> >("/gobot_pc/frontLeft_sonar_pc", 10);
-        frontRightPublisher = nh.advertise<pcl::PointCloud<pcl::PointXYZ> >("/gobot_pc/frontRight_sonar_pc", 10);
-        leftPublisher = nh.advertise<pcl::PointCloud<pcl::PointXYZ> >("/gobot_pc/left_sonar_pc", 10);
-        rightPublisher = nh.advertise<pcl::PointCloud<pcl::PointXYZ> >("/gobot_pc/right_sonar_pc", 10);
-        midPublisher = nh.advertise<pcl::PointCloud<pcl::PointXYZ> >("/gobot_pc/mid_sonar_pc", 10);
-        topPublisher = nh.advertise<pcl::PointCloud<pcl::PointXYZ> >("/gobot_pc/top_sonar_pc", 10);
+    rearRightPublisher = nh.advertise<pcl::PointCloud<pcl::PointXYZ> >("/gobot_pc/rearRight_sonar_pc", 10);
+    rearLeftPublisher = nh.advertise<pcl::PointCloud<pcl::PointXYZ> >("/gobot_pc/rearLeft_sonar_pc", 10);
+    frontLeftPublisher = nh.advertise<pcl::PointCloud<pcl::PointXYZ> >("/gobot_pc/frontLeft_sonar_pc", 10);
+    frontRightPublisher = nh.advertise<pcl::PointCloud<pcl::PointXYZ> >("/gobot_pc/frontRight_sonar_pc", 10);
+    leftPublisher = nh.advertise<pcl::PointCloud<pcl::PointXYZ> >("/gobot_pc/left_sonar_pc", 10);
+    rightPublisher = nh.advertise<pcl::PointCloud<pcl::PointXYZ> >("/gobot_pc/right_sonar_pc", 10);
+    midPublisher = nh.advertise<pcl::PointCloud<pcl::PointXYZ> >("/gobot_pc/mid_sonar_pc", 10);
+    topPublisher = nh.advertise<pcl::PointCloud<pcl::PointXYZ> >("/gobot_pc/top_sonar_pc", 10);
 
-        // get the sonars information
-        ros::Subscriber sonarSub = nh.subscribe("/gobot_base/sonar_topic", 1, newSonarsInfo);
-        ros::Subscriber motorSpdSubscriber = nh.subscribe("/gobot_motor/motor_speed", 1, motorSpdCallback);
+    // get the sonars information
+    ros::Subscriber sonarSub = nh.subscribe("/gobot_base/sonar_topic", 1, newSonarsInfo);
+    ros::Subscriber motorSpdSubscriber = nh.subscribe("/gobot_motor/motor_speed", 1, motorSpdCallback);
 
-        ros::spin();
-    }
+    ros::spin();
 
     return 0;
 }

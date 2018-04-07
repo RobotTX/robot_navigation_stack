@@ -14,6 +14,6 @@ void sonarFrontToCloud(double sonarR,double sonarL,pcl::PointCloud<pcl::PointXYZ
 void sonarBackToCloud(double sonarR,double sonarL,pcl::PointCloud<pcl::PointXYZ> &cloudR,pcl::PointCloud<pcl::PointXYZ> &cloudL, double y, double factor);
 void motorSpdCallback(const gobot_msg_srv::MotorSpeedMsg::ConstPtr& speed);
 void newSonarsInfo(const gobot_msg_srv::SonarMsg::ConstPtr& sonars);
-bool initParams(void);
+void initParams();
 
 #endif

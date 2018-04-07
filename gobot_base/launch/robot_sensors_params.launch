@@ -1,19 +1,19 @@
 <?xml version="1.0"?>
 <launch>
-    <!-- MD49 AND STM32 RELATED -->
-    <param name="wheel_separation" type="double" value="0.35" />
-    <param name="wheel_radius" type="double" value="0.075" />
-    <param name="ticks_per_rotation" type="double" value="982" />
-    <param name="collision_threshold" type="double" value="4.0" />
-    <param name="max_weight" type="int" value="200000" />
-    <param name="avoid_spd" type="int" value="12" />
-    <param name="STMdevice" type="string" value="/dev/STM" />
-    <param name="MD49device" type="string" value="/dev/MD" />
-    <param name="STM_RATE" type="int" value="4" />
+    <!-- SENSOR RELATED -->
+    <param name="SENSOR_PORT" type="string" value="/dev/STM" />
+    <param name="SENSOR_RATE" type="int" value="4" />
+    <param name="SENSOR_BYTES" type="int" value="63" />  
+    <param name="WEIGHT_MAX" type="int" value="200000" />
+    <!-- MOTOR RELATED -->
+    <param name="MOTOR_PORT" type="string" value="/dev/MD" />
     <param name="ODOM_RATE" type="int" value="10" />
-    <param name="STM_BYTES" type="int" value="63" />  
-    <param name="ACC_RATE" type="int" value="16" />  <!-- ACC_STEP=16ms -->
+    <param name="WHEEL_SEP" type="double" value="0.35" />
+    <param name="WHEEL_RADIUS" type="double" value="0.075" />
+    <param name="TICKS_PER_ROT" type="double" value="982" />
     <param name="ROLLING_WINDOW_SIZE" type="int" value="5" />
+    <param name="WAIT_COLLISION" type="double" value="4.0" />
+    <param name="AVOID_SPD" type="int" value="12" />
     <!-- RPLIDAR RELATED -->
     <param name="serial_port" type="string" value="/dev/rplidar"/>  
     <param name="serial_baudrate" type="int" value="115200"/>
@@ -28,10 +28,10 @@
     <param name="USE_CLIFF" type="bool" value="true" />
     <!--BUMPER CLOUD RELATED -->
     <param name="USE_BUMPER_PC" type="bool" value="true" />
-    <param name="dimension_x" type="double" value="0.255" />
-    <param name="dimension_y" type="double" value="0.25" />
-    <param name="bumpers_height" type="double" value="0.11" />
-    <param name="pc_frame" type="string" value="base_link" />
+    <param name="DIM_X" type="double" value="0.255" />
+    <param name="DIM_Y" type="double" value="0.25" />
+    <param name="DIM_Z" type="double" value="0.11" />
+    <param name="PC_FRAME" type="string" value="base_link" />
     <!-- SONAR CLOUD RELATED -->
     <param name="USE_SONAR_PC" type="bool" value="true" />
     <param name="SONAR_THRESHOLD" type="double" value="0.6" />

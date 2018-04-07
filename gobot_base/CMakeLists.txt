@@ -8,7 +8,6 @@ add_compile_options(-std=c++11)
 ## if COMPONENTS list like find_package(catkin REQUIRED COMPONENTS xyz)
 ## is used, also find other catkin packages
 find_package(catkin REQUIRED COMPONENTS
-    roscpp
     gobot_msg_srv
 )
 
@@ -146,10 +145,13 @@ add_executable(wheels src/wheels.cpp)
 target_link_libraries(wheels ${catkin_LIBRARIES})
 add_dependencies(wheels ${${gobot_msg_srv}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
 
-add_executable(wheel_node src/wheel_node.cpp)
-target_link_libraries(wheel_node ${catkin_LIBRARIES})
-add_dependencies(wheel_node ${${gobot_msg_srv}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
+add_executable(motor_node src/motor_node.cpp)
+target_link_libraries(motor_node ${catkin_LIBRARIES})
+add_dependencies(motor_node ${${gobot_msg_srv}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
 
+add_executable(sensor_node src/sensor_node.cpp)
+target_link_libraries(sensor_node ${catkin_LIBRARIES})
+add_dependencies(sensor_node ${${gobot_msg_srv}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
 
 add_executable(twist src/twist.cpp)
 target_link_libraries(twist ${catkin_LIBRARIES})

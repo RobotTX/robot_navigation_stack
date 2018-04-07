@@ -34,12 +34,12 @@ int main(int argc, char* argv[]){
     ros::init(argc, argv, "check_servers");
     ros::NodeHandle n;
     signal(SIGINT, mySigintHandler);
-
-    initParams();
+    
+    std::cout<<"###############START NETWORK INITILIZATION###############"<<std::endl;
     //Startup begin
-    ROS_INFO("(check_servers) Waiting for Robot finding initial pose...");
-    ros::service::waitForService("/gobot_startup/pose_ready", ros::Duration(120.0));
-    ROS_INFO("(check_servers) Robot finding initial pose is ready.");
+    ROS_INFO("(CHECK_SERVERS) Waiting for Robot finding initial pose...");
+    ros::service::waitForService("/gobot_startup/pose_ready", ros::Duration(90.0));
+    ROS_INFO("(CHECK_SERVERS) Robot finding initial pose is ready.");
 
     //start network-manager when startup
     std::string cmd = "sudo service network-manager start";
@@ -47,6 +47,9 @@ int main(int argc, char* argv[]){
 
     ros::ServiceServer networkReadySrv = n.advertiseService("/gobot_startup/network_ready", networkReadySrvCallback);
     //Startup end
+    std::cout<<"###############COMPLETE NETWORK INITILIZATION###############"<<std::endl;
+
+    initParams();
 
     ros::Publisher servers_pub = n.advertise<gobot_msg_srv::StringArrayMsg>("/gobot_software/online_servers", 1000);
     /**
@@ -55,22 +58,22 @@ int main(int argc, char* argv[]){
     */
     ros::Rate loop_rate(1/IP_UPDATE);
     while(ros::ok()){ 
-        //ROS_INFO("(check_servers) Refreshing the list of potential servers");
+        //ROS_INFO("(CHECK_SERVERS) Refreshing the list of potential servers");
         /// Script which will check all the IP on the local network and put them in a file
         const std::string ping_script = "sudo sh " + pingFile + " " + ipsFile +" " +wifiFile;
         system(ping_script.c_str());
-        gobot_msg_srv::StringArrayMsg servers_msg;
+        gobot_msg_srv::StringArrayMsg servers_ip_msg;
         /// Get the file with the available IP addresses
         std::ifstream ifs(ipsFile, std::ifstream::in);
         if(ifs){
             std::string currentIP;
             /// Save all the IP addresses in an array
             while(std::getline(ifs, currentIP) && ros::ok())
-                servers_msg.data.push_back(currentIP);
+                servers_ip_msg.data.push_back(currentIP);
             ifs.close();
         }
-        servers_pub.publish(servers_msg);
-        //ROS_INFO("(check_servers) Available IPs: %lu, Connected IPs: %lu", availableIPs.size(),oldIPs.size());
+        servers_pub.publish(servers_ip_msg);
+        //ROS_INFO("(CHECK_SERVERS) Available IPs: %lu, Connected IPs: %lu", availableIPs.size(),oldIPs.size());
         ros::spinOnce();
         loop_rate.sleep();        
     }

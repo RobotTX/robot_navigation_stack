@@ -12,4 +12,4 @@
 bool setSpeed(const char directionR, const int velocityR, const char directionL, const int velocityL);
 void cliffCallback(const gobot_msg_srv::CliffMsg::ConstPtr& cliff);
 bool cliffToCloud(double CliffData,pcl::PointCloud<pcl::PointXYZ> &cloudData, bool cliff_on);
-bool initParams(void);
+void initParams();
