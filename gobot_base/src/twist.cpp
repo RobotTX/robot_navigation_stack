@@ -184,11 +184,11 @@ void newBumpersInfo(const gobot_msg_srv::BumperMsg::ConstPtr& bumpers){
 void lostCallback(const std_msgs::Int8::ConstPtr& msg){
     if(msg->data==1 && !lost_robot){
         lost_robot=true;
-        SetRobot.setLed(1,{"red","blue"});
+        //SetRobot.setLed(1,{"red","blue"});
     }
     else if(msg->data==0 && lost_robot){
         lost_robot=false;
-        SetRobot.setLed(0,{"white"});
+        //SetRobot.setLed(0,{"white"});
     }
 }
 
@@ -330,11 +330,11 @@ int main(int argc, char **argv) {
     ros::NodeHandle nh;
     signal(SIGINT, mySigintHandler);
 
+    SetRobot.initialize();
+    
     ROS_INFO("(TWIST::START) Waiting for SENSORS to be ready...");
     ros::service::waitForService("/gobot_startup/sensors_ready", ros::Duration(60.0));
     ROS_INFO("(TWIST::START) SENSORS is ready.");
-
-    SetRobot.initialize();
     
     initParams(nh);
 

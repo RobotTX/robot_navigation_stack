@@ -156,7 +156,7 @@ void newBumpersInfo(const gobot_msg_srv::BumperMsg::ConstPtr& bumpers){
             if (!move_from_collision && collision){
                 if(!charging){
                     move_from_collision = true;
-                    SetRobot.setMotorSpeed('F', 1, 'F', 1);
+                    SetRobot.setMotorSpeed('F', 2, 'F', 2);
                     ros::Duration(0.5).sleep();
                     SetRobot.setMotorSpeed('F', 0, 'F', 0);
                     finishedDocking();
@@ -373,11 +373,11 @@ int main(int argc, char* argv[]){
     ros::NodeHandle nh;
     signal(SIGINT, mySigintHandler);
     
+    SetRobot.initialize();
+    
     //Startup begin
     ros::service::waitForService("/gobot_startup/pose_ready", ros::Duration(90.0));
     //Startup end
-
-    SetRobot.initialize();
     
     ac = new MoveBaseClient("move_base", true);
     ac->waitForServer(ros::Duration(60.0));

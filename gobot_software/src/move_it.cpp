@@ -423,11 +423,11 @@ int main(int argc, char* argv[]){
 	ros::NodeHandle n;
 	signal(SIGINT, mySigintHandler);
 	
+	SetRobot.initialize();
+	
 	//Startup begin
     ros::service::waitForService("/gobot_startup/pose_ready", ros::Duration(90.0));
     //Startup end
-	
-	SetRobot.initialize();
 	
 	ac = new MoveBaseClient("move_base", true);
 	ac->waitForServer(ros::Duration(60.0));

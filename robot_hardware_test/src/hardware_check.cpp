@@ -491,13 +491,14 @@ int main(int argc, char **argv){
     ros::init(argc, argv, "hardware_check");
     ros::NodeHandle n;
 
+    SetRobot.initialize();
+    
     //Startup begin
     ROS_INFO("(startup) Waiting for Robot setting hardware...");
     ros::service::waitForService("/gobot_startup/sensors_ready", ros::Duration(60.0));
     ROS_INFO("(startup) Robot setting hardware is ready.");
     //Startup end
 
-    SetRobot.initialize();
     ros::Subscriber bumpersSub = n.subscribe("/gobot_base/bumpers_raw_topic", 1, bumperCallback);
     ros::Subscriber sonarSub = n.subscribe("/gobot_base/sonar_topic", 1, sonarCallback);
     ros::Subscriber irSub = n.subscribe("/gobot_base/ir_topic", 1, irCallback);

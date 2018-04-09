@@ -314,7 +314,7 @@ bool adjustBatteryLvl(const std::vector<std::string> command){
 /// Command : a, second param = new name 
 bool renameRobot(const std::vector<std::string> command){
     if(command.size() == 2){
-        ROS_INFO("(COMMAND_SYSTEM) New name : %s", command.at(1).c_str());
+        //ROS_INFO("(COMMAND_SYSTEM) New name : %s", command.at(1).c_str());
         return SetRobot.setName(command.at(1));
     } 
     else 
@@ -335,7 +335,7 @@ bool previousPath(const std::vector<std::string> command){
 
 /// First param = c, second param = goal pos x coordinate, third param = goal pos y coordinate
 bool newGoal(const std::vector<std::string> command){
-    ROS_INFO("(COMMAND_SYSTEM) Gobot go to point");
+    //ROS_INFO("(COMMAND_SYSTEM) Gobot go to point");
     if(command.size() == 3){
         double posX = std::stof(command.at(1));
         double posY = std::stof(command.at(2));
@@ -377,7 +377,7 @@ bool newGoal(const std::vector<std::string> command){
 bool pausePath(const std::vector<std::string> command){
     if(command.size() == 1) {
         if (ros::service::call("/gobot_function/pause_path", empty_srv)){
-            ROS_INFO("(COMMAND_SYSTEM) Pause the path");
+            //ROS_INFO("(COMMAND_SYSTEM) Pause the path");
             return true;
         }
     }
@@ -398,7 +398,7 @@ bool nextPath(const std::vector<std::string> command){
 /// First param = f
 bool pauseScan(const std::string ip, const std::vector<std::string> command){
     if(command.size() == 1) {         
-        ROS_INFO("(COMMAND_SYSTEM) Gobot pause the ongoing scan");         
+        //ROS_INFO("(COMMAND_SYSTEM) Gobot pause the ongoing scan");         
         std_srvs::Empty arg;         
         ros::service::call("/gobot_scan/stopExploration", arg);         
         return stopSendingMapAutomatically(ip);     
@@ -410,8 +410,8 @@ bool pauseScan(const std::string ip, const std::vector<std::string> command){
 bool startScanAndAutoExplore(const std::string ip, const std::vector<std::string> command){
     if(command.size() == 1){    
         
-        ROS_INFO("(COMMAND_SYSTEM) Going to scan automatically");
-        ROS_INFO("(COMMAND_SYSTEM) Gobot start to scan a new map");
+        //ROS_INFO("(COMMAND_SYSTEM) Going to scan automatically");
+        //ROS_INFO("(COMMAND_SYSTEM) Gobot start to scan a new map");
         scanning = true;
         /// Kill gobot move so that we'll restart it with the new map
         std::string cmd = SetRobot.killList(simulation);
@@ -419,7 +419,7 @@ bool startScanAndAutoExplore(const std::string ip, const std::vector<std::string
         /// Relaunch gobot_navigation
         SetRobot.runScan(simulation);
 
-        ROS_INFO("(New Map) We relaunched gobot_scan");
+        //ROS_INFO("(New Map) We relaunched gobot_scan");
 
         /// 0 : the robot doesn't go back to its starting point at the end of the scan
         /// 1 : robot goes back to its starting point which is its charging station
@@ -444,7 +444,7 @@ bool robotStartup(const std::vector<std::string> command){
         robot_pos_port = std::stoi(command.at(1));
         map_port = std::stoi(command.at(2));
         laser_port = std::stoi(command.at(3));
-        ROS_INFO("(COMMAND_SYSTEM) Gobot here are the ports %d, %d, %d", robot_pos_port, map_port, laser_port);
+        //ROS_INFO("(COMMAND_SYSTEM) Gobot here are the ports %d, %d, %d", robot_pos_port, map_port, laser_port);
         return true;
     } else
         ROS_ERROR("(COMMAND_SYSTEM) Parameter missing");
@@ -455,7 +455,7 @@ bool robotStartup(const std::vector<std::string> command){
 /// First param = i, then the path name, then quadriplets of parameters to represent path points (path name, point name, posX, posY, waiting time,orientation) 
 bool newPath(const std::vector<std::string> command){
     if(command.size() >= 6 && command.size()%5 == 2){  
-        ROS_INFO("(COMMAND_SYSTEM) New path received");
+        //ROS_INFO("(COMMAND_SYSTEM) New path received");
         gobot_msg_srv::SetStringArray set_path;
         for(int i = 1; i < command.size(); i++)
             set_path.request.data.push_back(command.at(i));
@@ -474,7 +474,7 @@ bool newPath(const std::vector<std::string> command){
 bool playPath(const std::vector<std::string> command){
     if(command.size() == 1) {
         if(ros::service::call("/gobot_function/play_path", empty_srv)){
-            ROS_INFO("(COMMAND_SYSTEM) Play the path");
+            //ROS_INFO("(COMMAND_SYSTEM) Play the path");
             return true;
         }
     } 
@@ -506,7 +506,7 @@ bool stopPath(const std::vector<std::string> command){
         //not stop docking
         if(ros::service::call("/gobot_function/stop_path", empty_srv)){
             ros::service::call("/move_base/clear_costmaps",empty_srv);
-            ROS_INFO("(COMMAND_SYSTEM) Stop the current motion");
+            //ROS_INFO("(COMMAND_SYSTEM) Stop the current motion");
             return true;
         }
     }
@@ -517,7 +517,7 @@ bool stopPath(const std::vector<std::string> command){
 /// First param = m
 bool stopAndDeletePath(const std::vector<std::string> command){
     if(command.size() == 1) {
-        ROS_INFO("(COMMAND_SYSTEM) Stop the robot and delete its path");
+        //ROS_INFO("(COMMAND_SYSTEM) Stop the robot and delete its path");
         if(SetRobot.clearPath()){
             return true;
         }
@@ -530,7 +530,7 @@ bool stopAndDeletePath(const std::vector<std::string> command){
 bool newChargingStation(const std::vector<std::string> command){
     if(command.size() == 4){
         // TODO send an angle from the application and convert it to store it in home.txt
-        ROS_INFO("(COMMAND_SYSTEM) Home received %s %s %s", command.at(1).c_str(), command.at(2).c_str(), command.at(3).c_str());
+        //ROS_INFO("(COMMAND_SYSTEM) Home received %s %s %s", command.at(1).c_str(), command.at(2).c_str(), command.at(3).c_str());
         
         //Check home from scanned map or new map
         std::string homeX = command.at(1), homeY = command.at(2), homeOri = command.at(3);
@@ -541,7 +541,7 @@ bool newChargingStation(const std::vector<std::string> command){
         std::string mapType = homeX.substr(0,1);
         if(mapType == "S"){
             homeX = homeX.substr(1);
-            ROS_INFO("(Command System::New CS) Map Type: %s", mapType.c_str());
+            //ROS_INFO("(Command System::New CS) Map Type: %s", mapType.c_str());
             //We change the last known pose for localize Gobot in scanned map
         }
         SetRobot.setHome(homeX,homeY,std::to_string(quaternion.x()),std::to_string(quaternion.y()),std::to_string(quaternion.z()),std::to_string(quaternion.w()));
@@ -563,7 +563,7 @@ bool goToChargingStation(const std::vector<std::string> command){
             return false;
         }
         else{
-            ROS_INFO("(COMMAND_SYSTEM) Sending the robot home");
+            //ROS_INFO("(COMMAND_SYSTEM) Sending the robot home");
             return ros::service::call("/gobot_function/startDocking", empty_srv);
         }
     }
@@ -576,11 +576,9 @@ bool stopGoingToChargingStation(const std::vector<std::string> command){
         GetRobot.getStatus(robot_status_);
         //docking
         if(robot_status_==15){
-            ROS_INFO("(COMMAND_SYSTEM) Stop sending the robot home");
+            //ROS_INFO("(COMMAND_SYSTEM) Stop sending the robot home");
             return ros::service::call("/gobot_function/stopDocking", empty_srv);
         }
-        else
-            ROS_INFO("(COMMAND_SYSTEM) Not sending the robot home");
     }
 
     return false;
@@ -598,7 +596,7 @@ bool savePoints(const std::vector<std::string> command){
         set_point.request.data.push_back(command.at(5));
         set_point.request.data.push_back(command.at(6));
         if(ros::service::call("/gobot_function/save_point", set_point)){
-            ROS_INFO("(COMMAND_SYSTEM) Save the point");
+            //ROS_INFO("(COMMAND_SYSTEM) Save the point");
             return true;
         }
     } 
@@ -609,7 +607,7 @@ bool savePoints(const std::vector<std::string> command){
 
 /// First param = s, second is who -> which widget requires it
 bool sendMapOnce(const std::string ip, const std::vector<std::string> command){
-    ROS_INFO("(COMMAND_SYSTEM) Gobot send the map once");
+    //ROS_INFO("(COMMAND_SYSTEM) Gobot send the map once");
     if(command.size() == 2){
         // std::stoi(command.at(1)):
         // 0 : scan 
@@ -632,7 +630,7 @@ bool sendMapOnce(const std::string ip, const std::vector<std::string> command){
 /// First param = t
 bool startNewScan(const std::string ip, const std::vector<std::string> command){
     if(command.size() == 1) {
-        ROS_INFO("(COMMAND_SYSTEM) Gobot start to scan a new map");
+        //ROS_INFO("(COMMAND_SYSTEM) Gobot start to scan a new map");
         scanning = true;
 
         /// Kill gobot move so that we'll restart it with the new map
@@ -640,7 +638,7 @@ bool startNewScan(const std::string ip, const std::vector<std::string> command){
         system(cmd.c_str());
         /// Relaunch gobot_navigation
         SetRobot.runScan(simulation);
-        ROS_INFO("(COMMAND_SYSTEM) We relaunched gobot_scan");
+        //ROS_INFO("(COMMAND_SYSTEM) We relaunched gobot_scan");
 
         return sendMapAutomatically(ip);
     }
@@ -651,7 +649,7 @@ bool startNewScan(const std::string ip, const std::vector<std::string> command){
 /// First param = u, 2nd is whether or not we want to kill gobot_move
 bool stopScanning(const std::string ip, const std::vector<std::string> command){
     if(command.size() == 2) {
-        ROS_INFO("(COMMAND_SYSTEM) Gobot stops the scan of the new map");
+        //ROS_INFO("(COMMAND_SYSTEM) Gobot stops the scan of the new map");
 
         ros::service::call("/gobot_scan/stopExploration", empty_srv);
 
@@ -663,7 +661,7 @@ bool stopScanning(const std::string ip, const std::vector<std::string> command){
  
             /// Relaunch gobot_navigation
             SetRobot.runNavi(simulation);
-            ROS_INFO("(COMMAND_SYSTEM) We relaunched gobot_navigation");
+            //ROS_INFO("(COMMAND_SYSTEM) We relaunched gobot_navigation");
         }
 
         return stopSendingMapAutomatically(ip);
@@ -678,7 +676,7 @@ bool shutdownRobot(const std::vector<std::string> command){
     std::string shutdown_sh;
     if(n.hasParam("shutdown_file") && command.size() == 1){
         n.getParam("shutdown_file", shutdown_sh);
-        ROS_INFO("(COMMAND_SYSTEM) Shutdown Robot");
+        //ROS_INFO("(COMMAND_SYSTEM) Shutdown Robot");
         if (ros::service::call("/gobot_base/shutdown_robot",empty_srv)){
             std::string cmd;
             cmd = "sudo sh " + shutdown_sh;
@@ -692,7 +690,7 @@ bool shutdownRobot(const std::vector<std::string> command){
 /// First param = w
 bool muteOff(const std::vector<std::string> command){
     if(command.size() == 1) {
-        ROS_INFO("(COMMAND_SYSTEM) Disable mute");
+        //ROS_INFO("(COMMAND_SYSTEM) Disable mute");
         return SetRobot.setMute(0);
     }
 
@@ -702,7 +700,7 @@ bool muteOff(const std::vector<std::string> command){
 /// First param = x
 bool muteOn(const std::vector<std::string> command){
     if(command.size() == 1) {
-        ROS_INFO("(COMMAND_SYSTEM) Enable mute");
+        //ROS_INFO("(COMMAND_SYSTEM) Enable mute");
         return SetRobot.setMute(1);
     }
 
@@ -713,7 +711,7 @@ bool muteOn(const std::vector<std::string> command){
 bool setWifi(const std::vector<std::string> command){;
     //1=y, 2=wifi name, 3=wifi password
     if(command.size() == 3){
-        ROS_INFO("(COMMAND_SYSTEM) Wifi received %s %s", command.at(1).c_str(), command.at(2).c_str());
+        //ROS_INFO("(COMMAND_SYSTEM) Wifi received %s %s", command.at(1).c_str(), command.at(2).c_str());
         return SetRobot.setWifi(command.at(1),command.at(2));
     } 
     else
@@ -728,8 +726,8 @@ bool restartEverything(const std::vector<std::string> command){
     std::string restart_sh;
     if(n.hasParam("restart_file") && command.size() == 1){
         n.getParam("restart_file", restart_sh);
-        ROS_INFO("(COMMAND_SYSTEM) Gobot restarts its packages");
-        ROS_INFO("(COMMAND_SYSTEM) Please wait for 15s");
+        //ROS_INFO("(COMMAND_SYSTEM) Gobot restarts its packages");
+        //ROS_INFO("(COMMAND_SYSTEM) Please wait for 15s");
         std::string cmd = "sh " + restart_sh + " &";
         system(cmd.c_str());
         return true;
@@ -741,7 +739,7 @@ bool restartEverything(const std::vector<std::string> command){
 /// First param = ,
 bool startAutoExplore(const std::vector<std::string> command){
     if(command.size() == 1) {
-        ROS_INFO("(COMMAND_SYSTEM) Start to explore");
+        //ROS_INFO("(COMMAND_SYSTEM) Start to explore");
         /// 0 : the robot doesn't go back to its starting point at the end of the scan
         /// 1 : robot goes back to its starting point which is its charging station
         /// 2 : robot goes back to its starting point which is not a charging station
@@ -765,7 +763,7 @@ bool startAutoExplore(const std::vector<std::string> command){
 /// First param = .
 bool stopAutoExplore(const std::vector<std::string> command){
     if(command.size() == 1) {
-        ROS_INFO("(COMMAND_SYSTEM) Stop to explore");
+        //ROS_INFO("(COMMAND_SYSTEM) Stop to explore");
         return ros::service::call("/gobot_scan/stopExploration", empty_srv);
     }
 
@@ -775,7 +773,7 @@ bool stopAutoExplore(const std::vector<std::string> command){
 /// First param = /, 2nd param is a bollean to know if we start or stop looping
 bool loopPath(const std::vector<std::string> command){
     if(command.size() == 2) {
-        ROS_INFO("(COMMAND_SYSTEM) Loop the path %s", command.at(1).c_str());
+        //ROS_INFO("(COMMAND_SYSTEM) Loop the path %s", command.at(1).c_str());
         if(std::stoi(command.at(1)) == 0){
             if(ros::service::call("/gobot_function/stopLoopPath", empty_srv)){
                 return true;
@@ -806,7 +804,7 @@ double DegreeToRad(double degree){
 }
 
 bool sendMapAutomatically(const std::string ip){
-    ROS_INFO("(COMMAND_SYSTEM) Launching the service to get the map auto");
+    //ROS_INFO("(COMMAND_SYSTEM) Launching the service to get the map auto");
 
     gobot_msg_srv::SetStringArray srv;
     srv.request.data.push_back(ip);
@@ -821,7 +819,7 @@ bool sendMapAutomatically(const std::string ip){
 }
 
 bool stopSendingMapAutomatically(const std::string ip){
-    ROS_INFO("(COMMAND_SYSTEM) Launching the service to stop the map auto");
+    //ROS_INFO("(COMMAND_SYSTEM) Launching the service to stop the map auto");
 
     gobot_msg_srv::SetStringArray srv;
     srv.request.data.push_back(ip);
@@ -839,7 +837,7 @@ bool stopSendingMapAutomatically(const std::string ip){
 
 void sendCommand(const std::string ip, const std::vector<std::string> command, std::string commandStr){
     //ROS_INFO("(COMMAND_SYSTEM) Executing command for ip: %s", ip.c_str());
-    ROS_INFO("Command char:'%s', Command from ip: %s", command.at(0).c_str(),ip.c_str());
+    //ROS_INFO("Command char:'%s', Command from ip: %s", command.at(0).c_str(),ip.c_str());
 
     std::string msg;
     commandMutex.lock();
@@ -925,7 +923,7 @@ bool lowBatterySrvCallback(std_srvs::Empty::Request &req, std_srvs::Empty::Respo
         ROS_WARN("(COMMAND_SYSTEM) The robot is trying to dock");
     }
     else{
-        ROS_INFO("(COMMAND_SYSTEM) Sending the robot home");
+        //ROS_INFO("(COMMAND_SYSTEM) Sending the robot home");
         std::vector<std::string> command({"o"});
         std::string commandStr = command.at(0) + sep;
         sendCommand("",command,commandStr);
@@ -1050,7 +1048,7 @@ bool sendMessageToSock(boost::shared_ptr<tcp::socket> sock, const std::string me
         /// We send the result of the command to the given socket
         boost::asio::write(*sock, boost::asio::buffer(message, message.length()));
 
-        ROS_INFO("(COMMAND_SYSTEM) Message sent to %s succesfully",ip.c_str());
+        //ROS_INFO("(COMMAND_SYSTEM) Message sent to %s succesfully",ip.c_str());
         socketsMutex.unlock();
         return true;
     } catch (std::exception& e) {
@@ -1074,7 +1072,7 @@ bool sendMessageToAll(const std::string message){
             }
         }
         socketsMutex.unlock();
-        ROS_INFO("(COMMAND_SYSTEM) Message sent to ALL succesfully");
+        //ROS_INFO("(COMMAND_SYSTEM) Message sent to ALL succesfully");
         return true;
     }
 }
@@ -1124,7 +1122,7 @@ void session(boost::shared_ptr<tcp::socket> sock){
                 if(static_cast<int>(data[i]) != 0){
                     //ETB
                     if(static_cast<int>(data[i]) == 23){
-                        ROS_INFO("(COMMAND_SYSTEM) Read command complete %s", ip.c_str());
+                        ROS_INFO("(COMMAND_SYSTEM) Read command '%c' completed from '%s'", commandStr[0], ip.c_str());
                         finishedCmd = 1;
                         i = length;
                     } 
@@ -1225,11 +1223,11 @@ int main(int argc, char* argv[]){
     ros::NodeHandle n;
     signal(SIGINT, mySigintHandler);
     
+    SetRobot.initialize();
+    
     //Startup begin
     ros::service::waitForService("/gobot_startup/network_ready", ros::Duration(120.0));
     //Startup end
-
-    SetRobot.initialize();
 
     n.getParam("simulation", simulation);
     ROS_INFO("(COMMAND_SYSTEM) simulation : %d", simulation);

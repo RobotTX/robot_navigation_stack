@@ -110,13 +110,14 @@ int main(int argc, char **argv) {
     ros::NodeHandle nh;
     signal(SIGINT, mySigintHandler);
     
+    SetRobot.initialize();
+    
     //Startup begin
     ROS_INFO("(SCAN_STARTUP) Waiting for Robot setting hardware...");
     ros::service::waitForService("/gobot_startup/sensors_ready", ros::Duration(60.0));
     ros::service::waitForService("/move_base/clear_costmaps", ros::Duration(60.0));
     ROS_INFO("(SCAN_STARTUP) Robot setting hardware is ready.");
     
-    SetRobot.initialize();
     SetRobot.setBatteryLed();
     SetRobot.setStatus(-1,"ROBOT_READY");
     ros::ServiceServer poseReadySrv = nh.advertiseService("/gobot_startup/pose_ready", poseReadySrvCallback);

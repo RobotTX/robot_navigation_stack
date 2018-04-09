@@ -25,7 +25,8 @@ std::vector<uint8_t> SHUT_DOWN_CMD = {0xF0, 0x01, 0x00, 0x00, 0x00, 0x00, 0x00, 
 class SensorClass {
     public:
         SensorClass():
-        battery_percent_(50), robot_status_(-1), charging_flag_(false), low_battery_(false), display_data_(false)
+        battery_percent_(50), robot_status_(-1), charging_flag_(false), low_battery_(false), display_data_(false), last_charging_current_(0),
+        error_count_(0), mute_(0), charge_check_(0)
         {
             ros::NodeHandle nh;
             nh.getParam("SENSOR_BYTES", SENSOR_BYTES);  //61/49
@@ -70,8 +71,6 @@ class SensorClass {
                 }
                 r2.sleep();
             }
-
-            last_led_time_ = ros::Time::now();
 
             bumper_pub_ = nh.advertise<gobot_msg_srv::BumperMsg>("/gobot_base/bumpers_raw_topic", 1);
             ir_pub_ = nh.advertise<gobot_msg_srv::IrMsg>("/gobot_base/ir_topic", 1);
@@ -188,6 +187,7 @@ class SensorClass {
         }
 
         void sensorThread(){
+            last_led_time_ = ros::Time::now();
             reset_wifi_time_ = ros::Time::now();
             ros::Rate r(SENSOR_RATE);
             //start publish sensor information after checking procedure

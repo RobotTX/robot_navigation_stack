@@ -611,13 +611,13 @@ int main(int argc, char **argv) {
     ros::NodeHandle nh;
     signal(SIGINT, mySigintHandler);
     
+    SetRobot.initialize();
+    
     //Startup begin
     ROS_INFO("(SENSORS) Waiting for MD49 to be ready...");
     ros::service::waitForService("/gobot_startup/motor_ready", ros::Duration(60.0));
     ROS_INFO("(SENSORS) MD49 is ready.");
     //Startup end
-
-    SetRobot.initialize();
 
     initData(nh);
     

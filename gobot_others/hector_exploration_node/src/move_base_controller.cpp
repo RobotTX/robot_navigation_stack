@@ -201,13 +201,14 @@ int main(int argc, char* argv[]){
     ros::NodeHandle nh;
     signal(SIGINT, mySigintHandler);
     
+    SetRobot.initialize();
+    
     //Startup begin
     ROS_INFO("(SCAN_EXPLORE) Waiting for Robot setting hardware...");
     ros::service::waitForService("/gobot_startup/pose_ready", ros::Duration(90.0));
     ROS_INFO("(SCAN_EXPLORE) Robot setting hardware is ready.");
     //Startup end
 
-    SetRobot.initialize();
     ROS_INFO("(SCAN_EXPLORE) running...");
     /// Get the data from the parameters server
     nh.param<std::string>("map_frame", map_frame, "map");

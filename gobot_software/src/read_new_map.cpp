@@ -312,14 +312,14 @@ int main(int argc, char **argv){
     ros::NodeHandle n;
     signal(SIGINT, mySigintHandler);
     
+    SetRobot.initialize();
+    
     //Startup begin
     ros::service::waitForService("/gobot_startup/network_ready", ros::Duration(120.0));
     //Startup end
 
     n.getParam("simulation", simulation);
     ROS_INFO("(MAP_READ) simulation : %d", simulation);
-
-    SetRobot.initialize();
 
     /// Subscribe to know when we disconnected from the server
     ros::Subscriber sub = n.subscribe("/gobot_software/server_disconnected", 1, serverDisconnected);

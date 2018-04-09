@@ -30,4 +30,4 @@ echo "y" | sudo apt install libsox-fmt-all
 echo "[libsox-fmt-all] installed!"
 sleep 2s
 echo "#################################"
-echo "All tools are installed!"
+echo "All tts tools are installed!"

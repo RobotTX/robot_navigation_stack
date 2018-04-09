@@ -25,7 +25,8 @@
 class MotorClass {
     public:
         MotorClass(): 
-        test_encoders_(false),reset_odom_(false),encoder_limit_(3000),leftSpeed_(128),rightSpeed_(128), rec_leftSpeed_(128),rec_rightSpeed_(128)
+        test_encoders_(false),reset_odom_(false),encoder_limit_(3000),leftSpeed_(128),rightSpeed_(128), rec_leftSpeed_(128),rec_rightSpeed_(128),
+        last_left_encoder_(0), last_right_encoder_(0), odom_x_(0), odom_y_(0), odom_th_(0)
         { 
             ros::NodeHandle nh;
             //load parameters
@@ -170,12 +171,7 @@ class MotorClass {
                     //compute odometry in a typical way given the velocities of the robot
                     double vel = (right_vel+left_vel)/2.0, vx = vel*cos(odom_th_), vy = vel*sin(odom_th_), vth = (right_vel-left_vel)/wheel_sep_;
                     double delta_x = vx*dt, delta_y = vy*dt, delta_th = vth*dt;
-                    /*TEST REAL VELOCITY: angular speed varying
-                    geometry_msgs::Twist real_cmd;
-                    real_cmd.linear.x = vel;
-                    real_cmd.angular.z = vth;
-                    real_vel_pub_.publish(real_cmd);
-                    */
+                   
                     if(reset_odom_){
                         reset_odom_ = false; 
                         odom_x_ = 0.0;
@@ -190,7 +186,12 @@ class MotorClass {
                         odom_th_ += delta_th;  
                     }
                     //ROS_INFO("(MOTOR::Odom) %.5f,%.5f, %.5f",delta_x,delta_y,delta_th);
-                    
+                     /*TEST REAL VELOCITY: angular speed varying
+                    geometry_msgs::Twist real_cmd;
+                    real_cmd.linear.x = vel;
+                    real_cmd.angular.z = vth;
+                    real_vel_pub_.publish(real_cmd);
+                    */
                     //since all odometry is 6DOF we'll need a quaternion created from yaw
                     geometry_msgs::Quaternion odom_quat = tf::createQuaternionMsgFromYaw(odom_th_);
 

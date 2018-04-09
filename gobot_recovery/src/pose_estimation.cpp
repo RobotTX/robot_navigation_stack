@@ -295,6 +295,7 @@ bool stopGlobalizePoseSrvCallback(std_srvs::Empty::Request &req, std_srvs::Empty
 }
 
 void getAmclPoseCallback(const geometry_msgs::PoseWithCovarianceStamped::ConstPtr& msg){
+    /*
     cov_x=msg->pose.covariance[0];
     cov_y=msg->pose.covariance[7];
     cov_yaw=msg->pose.covariance[35];
@@ -315,6 +316,7 @@ void getAmclPoseCallback(const geometry_msgs::PoseWithCovarianceStamped::ConstPt
         }
         lost_pub.publish(lost);
     }
+    */
 }
 
 bool goHomeSrvCallback(std_srvs::Empty::Request &req, std_srvs::Empty::Response &res){
