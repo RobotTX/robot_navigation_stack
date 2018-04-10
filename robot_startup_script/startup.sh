@@ -11,7 +11,7 @@ if [ -z "$(rosnode list | grep base_sensors)" ]
 then
     gnome-terminal -x bash -c "source /opt/ros/kinetic/setup.bash;source ~/catkin_ws/devel/setup.bash;roslaunch gobot_navigation gobot_system.launch;exec bash;"
 fi
-sleep 5s
+sleep 3s
 if [ -z "$(rosnode list | grep move_base)" ]
 then
     gnome-terminal -x bash -c "source /opt/ros/kinetic/setup.bash;source ~/catkin_ws/devel/setup.bash;roslaunch gobot_navigation gobot_navigation.launch;exec bash;"

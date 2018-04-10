@@ -141,10 +141,6 @@ include_directories(
 #   ${catkin_LIBRARIES}
 # )
 
-add_executable(wheels src/wheels.cpp)
-target_link_libraries(wheels ${catkin_LIBRARIES})
-add_dependencies(wheels ${${gobot_msg_srv}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
-
 add_executable(motor_node src/motor_node.cpp)
 target_link_libraries(motor_node ${catkin_LIBRARIES})
 add_dependencies(motor_node ${${gobot_msg_srv}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
@@ -156,10 +152,6 @@ add_dependencies(sensor_node ${${gobot_msg_srv}_EXPORTED_TARGETS} ${catkin_EXPOR
 add_executable(twist src/twist.cpp)
 target_link_libraries(twist ${catkin_LIBRARIES})
 add_dependencies(twist ${${gobot_msg_srv}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
-
-add_executable(sensors src/sensors.cpp)
-target_link_libraries(sensors ${catkin_LIBRARIES})
-add_dependencies(sensors ${${gobot_msg_srv}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
 
 #############
 ## Install ##

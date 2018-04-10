@@ -11,7 +11,7 @@ then
 fi
 #set speaker volume to be 80%
 amixer -M set Master 80%
-path="/home/$username/catkin_ws/src/gobot_navigation_stack"
+path="/home/$username/catkin_ws/src/robot_navigation_stack"
 #copy the lastest log files, and clear them to store new logs
 sudo sh $path/gobot_data/command/robot_log.sh $username
 sleep 15s

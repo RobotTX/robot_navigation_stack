@@ -245,6 +245,7 @@ class MotorClass {
                 right_vel_mean_.erase(right_vel_mean_.begin());
                 right_vel_mean_.push_back(rec_rightSpeed_);
 
+                /*//rolling mean the velocity values except stop motor values
                 //if command is stop motor, directly apply the value
                 if(rec_leftSpeed_==128 && rec_rightSpeed_==128){
                     leftSpeed_ = rec_leftSpeed_;
@@ -255,6 +256,23 @@ class MotorClass {
                     leftSpeed_ = std::accumulate(left_vel_mean_.begin(),left_vel_mean_.end(),0)/left_vel_mean_.size();
                     rightSpeed_ = std::accumulate(right_vel_mean_.begin(),right_vel_mean_.end(),0)/right_vel_mean_.size();
                 }
+                */
+
+                //rolling mean the velocity values that accelerate the motor, directly apply the values when decelerate or stop the motors
+                if((rec_leftSpeed_>=128&&rec_leftSpeed_<=leftSpeed_) || (rec_leftSpeed_<=128&&rec_leftSpeed_>=leftSpeed_)){
+                    leftSpeed_ = rec_leftSpeed_;
+                }
+                else{
+                    leftSpeed_ = std::accumulate(left_vel_mean_.begin(),left_vel_mean_.end(),0)/left_vel_mean_.size();
+                }
+
+                if((rec_rightSpeed_>=128&&rec_rightSpeed_<=rightSpeed_) || (rec_rightSpeed_<=128&&rec_rightSpeed_>=rightSpeed_)){
+                    rightSpeed_ = rec_rightSpeed_;
+                }
+                else{
+                    rightSpeed_ = std::accumulate(right_vel_mean_.begin(),right_vel_mean_.end(),0)/right_vel_mean_.size();
+                }
+                
                 spdMutex_.unlock();
                 
                 writeAndRead(std::vector<uint8_t>({0x00, 0x31, leftSpeed_, 0x00, 0x32, rightSpeed_})); 

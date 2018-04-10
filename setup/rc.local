@@ -11,6 +11,6 @@
 #
 # By default this script does nothing.
 username="username"
-cd /home/$username/catkin_ws/src/gobot_navigation_stack/gobot_data/command
+cd /home/$username/catkin_ws/src/robot_navigation_stack/gobot_data/command
 ./start_robot.sh $username
 exit 0
