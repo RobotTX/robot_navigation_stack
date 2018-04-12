@@ -150,6 +150,7 @@ bool startExplorationSrv(hector_exploration_node::Exploration::Request &req, hec
             SetRobot.setMotorSpeed('F', 15, 'F', 15);
 		    ros::Duration(2.5).sleep();
             SetRobot.setMotorSpeed('F', 0, 'F', 0);
+            SetRobot.setDock(0);
         }
         //reset count to start exploration fast
         count = 0;

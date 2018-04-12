@@ -48,7 +48,7 @@ class MotorClass {
             odom_test_pub_ = nh.advertise<gobot_msg_srv::OdomTestMsg>("/odom_test", 1);
             encoder_pub_ = nh.advertise<gobot_msg_srv::EncodersMsg>("/encoders", 1);
             real_vel_pub_ = nh.advertise<geometry_msgs::Twist>("/real_vel", 1);
-
+            
             motorSpd_sub_ = nh.subscribe("/gobot_motor/motor_speed", 1, &MotorClass::motorSpdCallback, this);
 
             //set up the planner's thread
@@ -236,16 +236,13 @@ class MotorClass {
         void velThread(){
             ros::Rate r(odom_rate_);
 
+            /*
             std::vector<uint8_t> left_vel_mean_(rolling_window_size_,leftSpeed_), right_vel_mean_(rolling_window_size_,rightSpeed_);
             while(ros::ok()){
                 spdMutex_.lock();
                 //adopt rolling window mean to smooth motor speed
-                left_vel_mean_.erase(left_vel_mean_.begin());
-                left_vel_mean_.push_back(rec_leftSpeed_);
-                right_vel_mean_.erase(right_vel_mean_.begin());
-                right_vel_mean_.push_back(rec_rightSpeed_);
 
-                /*//rolling mean the velocity values except stop motor values
+                //rolling mean the velocity values except stop motor values
                 //if command is stop motor, directly apply the value
                 if(rec_leftSpeed_==128 && rec_rightSpeed_==128){
                     leftSpeed_ = rec_leftSpeed_;
@@ -256,22 +253,26 @@ class MotorClass {
                     leftSpeed_ = std::accumulate(left_vel_mean_.begin(),left_vel_mean_.end(),0)/left_vel_mean_.size();
                     rightSpeed_ = std::accumulate(right_vel_mean_.begin(),right_vel_mean_.end(),0)/right_vel_mean_.size();
                 }
-                */
 
-                //rolling mean the velocity values that accelerate the motor, directly apply the values when decelerate or stop the motors
-                if((rec_leftSpeed_>=128&&rec_leftSpeed_<=leftSpeed_) || (rec_leftSpeed_<=128&&rec_leftSpeed_>=leftSpeed_)){
-                    leftSpeed_ = rec_leftSpeed_;
+                //when the motor turning direction changed
+                if((rec_leftSpeed_>=128&&leftSpeed_<128) || (rec_leftSpeed_<=128&&leftSpeed_>128)){
+                    left_vel_mean_ = std::vector<uint8_t>(rolling_window_size_,128);
                 }
                 else{
-                    leftSpeed_ = std::accumulate(left_vel_mean_.begin(),left_vel_mean_.end(),0)/left_vel_mean_.size();
+                    left_vel_mean_.erase(left_vel_mean_.begin());
+                    left_vel_mean_.push_back(rec_leftSpeed_);
                 }
 
-                if((rec_rightSpeed_>=128&&rec_rightSpeed_<=rightSpeed_) || (rec_rightSpeed_<=128&&rec_rightSpeed_>=rightSpeed_)){
-                    rightSpeed_ = rec_rightSpeed_;
+                if((rec_rightSpeed_>=128&&rightSpeed_<128) || (rec_rightSpeed_<=128&&rightSpeed_>128)){
+                    right_vel_mean_ = std::vector<uint8_t>(rolling_window_size_,128);
                 }
                 else{
-                    rightSpeed_ = std::accumulate(right_vel_mean_.begin(),right_vel_mean_.end(),0)/right_vel_mean_.size();
+                    right_vel_mean_.erase(right_vel_mean_.begin());
+                    right_vel_mean_.push_back(rec_rightSpeed_);
                 }
+
+                leftSpeed_ = std::accumulate(left_vel_mean_.begin(),left_vel_mean_.end(),0)/left_vel_mean_.size();
+                rightSpeed_ = std::accumulate(right_vel_mean_.begin(),right_vel_mean_.end(),0)/right_vel_mean_.size();
                 
                 spdMutex_.unlock();
                 
@@ -279,6 +280,7 @@ class MotorClass {
 
                 r.sleep();
             }
+            */
         }
 
 
@@ -293,6 +295,8 @@ class MotorClass {
                 rec_rightSpeed_ = speed->directionR.compare("F") == 0 ? 128 + speed->velocityR : 128 - speed->velocityR;
             else
                 rec_rightSpeed_ = speed->directionL.compare("F") == 0 ? 255 : 0;
+
+            writeAndRead(std::vector<uint8_t>({0x00, 0x31, rec_leftSpeed_, 0x00, 0x32, rec_rightSpeed_})); 
             spdMutex_.unlock();
         }
 

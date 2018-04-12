@@ -14,22 +14,22 @@ void newBumpersInfo(const gobot_msg_srv::BumperMsg::ConstPtr& bumpers){
         pcl::PointCloud<pcl::PointXYZ> cloud;
         cloud.header.frame_id = pc_frame;
 
-        if(!bumpers->bumper1)
+        if(!bumpers->bumper1 || !bumpers->bumper2){
             cloud.push_back(pcl::PointXYZ(dimension_x, dimension_y, bumpers_height));
-        if(!bumpers->bumper2)
             cloud.push_back(pcl::PointXYZ(dimension_x, dimension_y/2, bumpers_height));
-        if(!bumpers->bumper3)
+        }
+        if(!bumpers->bumper3 || !bumpers->bumper4){
             cloud.push_back(pcl::PointXYZ(dimension_x, -dimension_y/2, bumpers_height));
-        if(!bumpers->bumper4)
             cloud.push_back(pcl::PointXYZ(dimension_x, -dimension_y, bumpers_height));
-        if(!bumpers->bumper5)
+        }
+        if(!bumpers->bumper5 || !bumpers->bumper6){
             cloud.push_back(pcl::PointXYZ(-dimension_x, -dimension_y, bumpers_height));
-        if(!bumpers->bumper6)
             cloud.push_back(pcl::PointXYZ(-dimension_x, -dimension_y/2, bumpers_height));
-        if(!bumpers->bumper7)
+        }
+        if(!bumpers->bumper7 || !bumpers->bumper8){
             cloud.push_back(pcl::PointXYZ(-dimension_x, dimension_y/2, bumpers_height));
-        if(!bumpers->bumper8)
             cloud.push_back(pcl::PointXYZ(-dimension_x, dimension_y, bumpers_height));
+        }
 
         pcPublisher.publish(cloud);
     }

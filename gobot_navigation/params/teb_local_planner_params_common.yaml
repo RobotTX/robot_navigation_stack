@@ -7,23 +7,23 @@ odom_topic: /odom
 #MAX_ACC_LINEAR=ACC_STEP*0.45m/s^2
 acc_lim_x: 0.3
 #MAX_ACC_ANGULAR=ACC_STEP*2.35rad/s^2
-acc_lim_theta: 0.6  #0.8
+acc_lim_theta: 0.5  #0.8
 
 ####Key params that affect motion####
 weight_max_vel_x: 1.0 #default:2
-weight_max_vel_theta: 3.0 #default:1
+weight_max_vel_theta: 2.0 #default:1
 weight_acc_lim_x: 1.0 #default:1
-weight_acc_lim_theta: 3.0 #default:1
+weight_acc_lim_theta: 1.0 #default:1
 
-weight_kinematics_nh: 1111.0
+weight_kinematics_nh: 1500.0
 weight_kinematics_forward_drive: 999.0
 weight_viapoint: 75.0 # 1.0
-weight_obstacle: 25.0
+weight_obstacle: 50.0
 weight_optimaltime: 4.0 #2
 
 
 max_global_plan_lookahead_dist: 2.0
-global_plan_viapoint_sep: 0.5 # -0.1
+global_plan_viapoint_sep: 0.4 # -0.1
 
 # GoalTolerance
 xy_goal_tolerance: 0.2
@@ -31,16 +31,16 @@ yaw_goal_tolerance: 0.1 #5.7 degrees
 free_goal_vel: false
 
 # Obstacles
-min_obstacle_dist: 0.06
+min_obstacle_dist: 0.1
 include_costmap_obstacles: true
 costmap_obstacles_behind_robot_dist: 1.0
 obstacle_poses_affected: 30
-inflation_dist: 0.55
-oscillation_recovery: false
+inflation_dist: 0.6
+oscillation_recovery: true
 #Not in use
+include_dynamic_obstacles: false
 weight_dynamic_obstacle: 50.0
 dynamic_obstacle_inflation_dist: 0.6
-include_dynamic_obstacles: false
 
 weight_kinematics_turning_radius: 0.0
 
@@ -70,10 +70,10 @@ weight_acc_lim_y: 0.0
 
 footprint_model: # types: "point", "circular", "two_circles", "line", "polygon"
     type: "polygon"
-    vertices: [[0.250,0],[0.245,-0.165], [0.225,-0.220], [0.165,-0.240],
-              [0,-0.245],[-0.165,-0.240],[-0.225,-0.220],[-0.245,-0.165],
-              [-0.250,0],[-0.245,0.165], [-0.225,0.220], [-0.165,0.240],
-              [0,0.245], [0.165,0.240],  [0.225,0.220],  [0.245,0.165]]
+    vertices: [[0.250,0],[0.245,-0.165], [0.215,-0.215], [0.165,-0.240],
+              [0,-0.245],[-0.165,-0.240],[-0.215,-0.215],[-0.245,-0.165],
+              [-0.250,0],[-0.245,0.165], [-0.215,0.215], [-0.165,0.240],
+              [0,0.245], [0.165,0.240],  [0.215,0.215],  [0.245,0.165]]
 
 # Optimization
 no_inner_iterations: 4

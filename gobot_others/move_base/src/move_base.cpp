@@ -82,6 +82,9 @@ namespace move_base {
     private_nh.param("recovery_count_threshold", recovery_count_threshold_, 4);
     //How many recovery behaviours tried
     recovery_count_ = 0;
+    current_linear_spd_ = 0.0;
+    current_angular_spd_ = 0.0;
+    private_nh.param("linear_spd_incre", linear_spd_incre_, 0.03); 
     //add these two params to smooth motion 
     private_nh.param("linear_spd_limit", linear_spd_limit_, 0.0); 
     private_nh.param("angular_spd_limit", angular_spd_limit_, 3.0); 
@@ -996,7 +999,19 @@ namespace move_base {
             if ((cmd_vel.linear.x <0 || fabs(cmd_vel.linear.x) <linear_spd_limit_) && fabs(cmd_vel.angular.z) > angular_spd_limit_)
                   cmd_vel.linear.x = 0.0;
           }
+          
+          if((cmd_vel.linear.x-current_linear_spd_) > linear_spd_incre_){
+            cmd_vel.linear.x = current_linear_spd_+linear_spd_incre_;
+          }
+
+          if(cmd_vel.angular.z*current_angular_spd_<0.0){
+            cmd_vel.angular.z = 0.0;
+          }
+
+          current_linear_spd_ = cmd_vel.linear.x;
+          current_angular_spd_ = cmd_vel.angular.z;
           //tx//end
+
           vel_pub_.publish(cmd_vel);
           if(recovery_trigger_ == CONTROLLING_R)
             recovery_index_ = 0;

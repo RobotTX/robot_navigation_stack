@@ -202,6 +202,7 @@ bool playPointService(gobot_msg_srv::SetStringArray::Request &req, gobot_msg_srv
 		SetRobot.setMotorSpeed('F', 15, 'F', 15);
 		ros::Duration(2.5).sleep();
 		SetRobot.setMotorSpeed('F', 0, 'F', 0);
+		SetRobot.setDock(0);
 	}
 
 	//request data: 0-name,1-x,2-y,3-orientation, 4-home or not
@@ -240,13 +241,20 @@ bool playPathService(std_srvs::Empty::Request &req, std_srvs::Empty::Response &r
 		SetRobot.setStage(stage_);
 	}
 
+	else if(stage_ < 0){
+		stage_ = -stage_-1;
+		SetRobot.setStage(stage_);
+	}
+
 	gobot_msg_srv::IsCharging arg;
 	if(ros::service::call("/gobot_status/charging_status", arg) && arg.response.isCharging){
 		ROS_WARN("(MOVE_IT::playPathService) we are charging so we go straight to avoid bumping into the CS when turning");
 		SetRobot.setMotorSpeed('F', 15, 'F', 15);
 		ros::Duration(2.5).sleep();
 		SetRobot.setMotorSpeed('F', 0, 'F', 0);
+		SetRobot.setDock(0);
 	}
+
 	setGobotStatus(5,"PLAY_PATH");
 	goNextPoint(path.at(stage_));
 	
@@ -303,6 +311,10 @@ bool stopPathService(std_srvs::Empty::Request &req, std_srvs::Empty::Response &r
 
 bool pausePathService(std_srvs::Empty::Request &req, std_srvs::Empty::Response &res){
 	//~ROS_INFO("(MOVE_IT::pausePathService) pausePathService called");
+	if(stage_ < 0){
+		stage_ = -stage_-1;
+		SetRobot.setStage(stage_);
+	}
 	setGobotStatus(4,"PAUSE_PATH");
 	stop_flag = true;
 	if(ac->isServerConnected())

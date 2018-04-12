@@ -280,8 +280,8 @@ int main(int argc, char* argv[]){
             for(int i = 0; i < threads.size(); ++i)
                 threads.at(i).join();
             //ROS_INFO("(PING_SERVERS) Done pinging everyone");
-            updateIP();
         }
+        updateIP();
         sendDataMutex.unlock();
         loop_rate.sleep();        
     }
