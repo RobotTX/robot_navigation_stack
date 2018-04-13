@@ -368,7 +368,7 @@ namespace robot_class {
     }
 
     //assign targeted path to robot
-    /// First param = i, then the path name, then quadriplets of parameters to represent path points (path point name, posX, posY, waiting time,orientation) 
+    /// First param = i, then the path name, then quadriplets of parameters to represent path points (path point name, posX, posY, waiting time,orientation,text,text delay) 
     bool RobotCommand::setTargetPath(const std::vector<Path> &path, std::string path_name){
         gobot_msg_srv::SetStringArray msg;
         msg.request.data.push_back(path_name);
@@ -386,6 +386,8 @@ namespace robot_class {
             //rads
             double theta = getDegree(-path[i].theta-1.57079);
             msg.request.data.push_back(std::to_string(theta));
+            msg.request.data.push_back(path[i].text);
+            msg.request.data.push_back(std::to_string(path[i].textDelay));
         }
         ros::service::call("/gobot_command/set_path",msg);
         return true;

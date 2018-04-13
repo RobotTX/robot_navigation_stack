@@ -454,7 +454,7 @@ bool robotStartup(const std::vector<std::string> command){
 
 /// First param = i, then the path name, then quadriplets of parameters to represent path points (path name, point name, posX, posY, waiting time,orientation) 
 bool newPath(const std::vector<std::string> command){
-    if(command.size() >= 6 && command.size()%5 == 2){  
+    if(command.size() >= 6 && (command.size()%7==2 || command.size()%5==2)){  
         //ROS_INFO("(COMMAND_SYSTEM) New path received");
         gobot_msg_srv::SetStringArray set_path;
         for(int i = 1; i < command.size(); i++)

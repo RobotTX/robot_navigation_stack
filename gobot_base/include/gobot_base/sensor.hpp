@@ -286,6 +286,7 @@ class SensorClass {
                         //battery data update slower than requesting rate
                         if(battery_data.ChargingCurrent!=last_charging_current_){
                             int current_diff = battery_data.ChargingCurrent - last_charging_current_;
+                            /*old method: use charging current difference to know whether charging or not
                             //if not fully charged
                             if(battery_data.BatteryStatus<90){
                                 if(battery_data.ChargingCurrent > 1000){
@@ -305,6 +306,8 @@ class SensorClass {
                             else{
                                 battery_data.ChargingFlag = battery_data.ChargingCurrent<-400 ? false : true;
                             }
+                            */
+                            battery_data.ChargingFlag = battery_data.ChargingCurrent<-400 ? false : true;
                             if(!charging_flag_){
                                 charge_check_ = battery_data.ChargingFlag ? charge_check_+1 : 0;
                             }

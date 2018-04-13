@@ -49,6 +49,8 @@ void getButtonCallback(const std_msgs::Int8::ConstPtr& msg){
       }
       //save map
       else if(robot_status_==21){
+        //user feedback
+        SetRobot.setSound(1,1);
         saveMap();
       }
     }

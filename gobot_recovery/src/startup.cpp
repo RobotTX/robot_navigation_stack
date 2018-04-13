@@ -32,6 +32,7 @@ void initialPoseResultCallback(const std_msgs::Int8::ConstPtr& msg){
 
 
 void getButtonCallback(const std_msgs::Int8::ConstPtr& msg){
+  // External button 1-No press; 0-press
   if(msg->data==0 && buttonOn){
 		action_time = ros::Time::now();
 		buttonOn=false;

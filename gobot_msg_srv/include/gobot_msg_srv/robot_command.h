@@ -65,6 +65,8 @@ namespace robot_class {
         double y;
         int waiting;
         double theta;
+        std::string text;
+        double textDelay;
     };
 
     struct Map{

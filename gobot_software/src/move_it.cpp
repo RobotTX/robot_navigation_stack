@@ -62,6 +62,10 @@ void goalReached(){
 		setGobotStatus(0,"COMPLETE_POINT");
 	}
 	else{
+		if(currentGoal.text!=""){
+			std::thread tts_thread(textToSpeech,currentGoal.text,currentGoal.delayText);
+			tts_thread.detach();
+		}	
 		stage_++;
 		if(stage_ >= path.size()){
 			//complete path but looping
@@ -130,7 +134,8 @@ void checkGoalDelay(){
 			setGobotStatus(5,"WAITING");
 			ros::NodeHandle n;
 			//ROS_INFO("(MOVE_IT) Goal reached. Waiting for human action.");
-			waitingForAction=true;
+			waitingForAction = true;
+			readAction = true;
 			button_sub = n.subscribe("/gobot_base/button_topic",1,getButtonCallback);
 			while(waitingForAction && !stop_flag && !interruptDelay && ros::ok()){
 				ros::Duration(0.1).sleep();
@@ -139,6 +144,11 @@ void checkGoalDelay(){
 			button_sub.shutdown();
 		}
 	}
+}
+
+void textToSpeech(std::string text, double delay){
+	ros::Duration(delay).sleep();
+	SetRobot.speakChinese(text);
 }
 
 void getButtonCallback(const std_msgs::Int8::ConstPtr& msg){
@@ -150,9 +160,11 @@ void getButtonCallback(const std_msgs::Int8::ConstPtr& msg){
 	else if(msg->data==1 && !readAction){
 		readAction = true;
 		double dt = (ros::Time::now() - action_time).toSec();
-		if(dt<=10.0){
+		if(dt<5.0){
 			//Go to next point
 			waitingForAction=false;
+			//user feedback
+			SetRobot.setSound(1,1);
 			//ROS_INFO("(MOVE_IT) Received Human Action %.2f seconds.",dt);
 		}
 	}
@@ -217,6 +229,7 @@ bool playPointService(gobot_msg_srv::SetStringArray::Request &req, gobot_msg_srv
 	}
 	assigned_point.isHome = false;
 	assigned_point.waitingTime = -1;
+	assigned_point.text = "";
 	setGobotStatus(5,"PLAY_POINT");
 	goNextPoint(assigned_point);
 	
@@ -266,21 +279,35 @@ bool updatePathService(gobot_msg_srv::SetStringArray::Request &req, gobot_msg_sr
 	SetRobot.setStage(stage_);
 	path = std::vector<Point>();
 	Point pathPoint;
+	int n = req.data.size()%7==1 ? 7 : 5;
+
 	for(int i=0;i<req.data.size();i++){
-		if(i!= 0 && (i-1)%5 != 0){
-			if((i-1)%5 == 1){
-				pathPoint.x=std::stod(req.data.at(i));
+		if(i!= 0 && (i-1)%n != 0){
+			if((i-1)%n == 1){
+				pathPoint.x = std::stod(req.data.at(i));
 			} 
-			else if((i-1)%5 == 2){
-				pathPoint.y=std::stod(req.data.at(i));
+			else if((i-1)%n == 2){
+				pathPoint.y = std::stod(req.data.at(i));
 			} 
-			else if((i-1)%5 == 3){
-				pathPoint.waitingTime=std::stod(req.data.at(i));
+			else if((i-1)%n == 3){
+				pathPoint.waitingTime = std::stod(req.data.at(i));
 				pathPoint.isHome = false;
 			} 
-			else if((i-1)%5 == 4){
-				pathPoint.yaw=std::stod(req.data.at(i));
-				path.push_back(pathPoint);
+			else if((i-1)%n == 4){
+				pathPoint.yaw = std::stod(req.data.at(i));
+				if(n!=7){
+					pathPoint.text = "";
+					path.push_back(pathPoint);
+				}
+			}
+			else if(n==7){
+				if((i-1)%n == 5){
+					pathPoint.text = req.data.at(i);
+				}
+				else if((i-1)%n == 6){
+					pathPoint.delayText = std::stod(req.data.at(i));
+					path.push_back(pathPoint);
+				}
 			}
 		}
 	}
@@ -386,21 +413,34 @@ void initData(){
 	// we recreate the path to follow from the file
 	ros::service::call("/gobot_status/get_path", get_path);
 	Point pathPoint;
+	int n = get_path.response.data.size()%7==1 ? 7 : 5;
 	for(int i=0;i<get_path.response.data.size();i++){
-		if(i!= 0 && (i-1)%5 != 0){
-			if((i-1)%5 == 1){
+		if(i!= 0 && (i-1)%n != 0){
+			if((i-1)%n == 1){
 				pathPoint.x=std::stod(get_path.response.data.at(i));
 			} 
-			else if((i-1)%5 == 2){
+			else if((i-1)%n == 2){
 				pathPoint.y=std::stod(get_path.response.data.at(i));
 			} 
-			else if((i-1)%5 == 3){
+			else if((i-1)%n == 3){
 				pathPoint.waitingTime=std::stod(get_path.response.data.at(i));
 				pathPoint.isHome = false;
 			} 
-			else if((i-1)%5 == 4){
+			else if((i-1)%n == 4){
 				pathPoint.yaw=std::stod(get_path.response.data.at(i));
-				path.push_back(pathPoint);
+				if(n!=7){
+					pathPoint.text = "";
+					path.push_back(pathPoint);
+				}
+			}
+			else if(n==7){
+				if((i-1)%n == 5){
+					pathPoint.text = get_path.response.data.at(i);
+				}
+				else if((i-1)%n == 6){
+					pathPoint.delayText = std::stod(get_path.response.data.at(i));
+					path.push_back(pathPoint);
+				}
 			}
 		}
 	}
@@ -452,6 +492,7 @@ int main(int argc, char* argv[]){
 	currentGoal.y = -1;
 	currentGoal.waitingTime = -1;
 	currentGoal.isHome = false;
+	currentGoal.text = "";
 
 	// service to interrupt delay/human action
 	ros::ServiceServer _interruptDelayService = n.advertiseService("/gobot_function/interrupt_delay", interruptDelayService);

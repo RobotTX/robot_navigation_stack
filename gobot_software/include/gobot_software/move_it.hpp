@@ -37,6 +37,8 @@ struct Point {
     // whether or not this point is the charging point of the robot
     bool isHome;
     double yaw;
+    std::string text;
+    double delayText;
 };
 
 void goalResultCallback(const move_base_msgs::MoveBaseActionResult::ConstPtr& msg);
@@ -44,6 +46,8 @@ void goalResultCallback(const move_base_msgs::MoveBaseActionResult::ConstPtr& ms
 void goalReached();
 
 void checkGoalDelay();
+
+void textToSpeech(std::string text, double delay);
 
 void getButtonCallback(const std_msgs::Int8::ConstPtr& msg);
 
