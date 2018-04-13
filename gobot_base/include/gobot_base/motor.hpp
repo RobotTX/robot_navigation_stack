@@ -185,6 +185,7 @@ class MotorClass {
                         odom_y_ += delta_y;
                         odom_th_ += delta_th;  
                     }
+                    //ROS_INFO("Linear vel: %f, Angular vel: %f", vel, vth);
                     //ROS_INFO("(MOTOR::Odom) %.5f,%.5f, %.5f",delta_x,delta_y,delta_th);
                      /*TEST REAL VELOCITY: angular speed varying
                     geometry_msgs::Twist real_cmd;

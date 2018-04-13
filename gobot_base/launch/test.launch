@@ -16,6 +16,8 @@
     </node>
     -->
     <node pkg="rplidar_ros" type="rplidarNode" name="rplidarNode" output="screen" required="true"/>
-    <node pkg="gobot_base" type="sensors" name="base_sensors" output="screen" required="true"/>
-    <node pkg="gobot_base" type="wheels" name="base_motors" output="screen" required="true"/>"/>
+    <node pkg="gobot_base" type="sensor_node" name="base_sensors" output="screen" required="true"/>
+    <node pkg="gobot_base" type="motor_node" name="base_motors" output="screen" required="true"/>
+    <node pkg="gobot_base" type="twist" name="base_twist" output="screen" respawn="true"/>
+    <node pkg="joy" type="joy_node" name="joy_node" output="screen" respawn="true"/>
 </launch>

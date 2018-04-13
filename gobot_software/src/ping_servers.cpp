@@ -1,11 +1,11 @@
 #include "gobot_software/ping_servers.hpp"
 
-#define PING_THRESHOLD 5
+#define PING_THRESHOLD 4
 
 static const std::string sep = std::string(1, 31);
 
 bool muteFlag = false;
-double STATUS_UPDATE=5.0, WAITING_TIME=5.0;
+double STATUS_UPDATE, WAITING_TIME;
 
 std::vector<std::string> availableIPs, connectedIPs;
 std::vector<std::pair<std::string, int>> oldIPs;
@@ -13,9 +13,6 @@ std::mutex serverMutex, connectedMutex, ipMutex, sendDataMutex;
 ros::Publisher disco_pub, host_pub;
 std_srvs::Empty empty_srv;
 ros::Time disco_time;
-
-robot_class::GetRobot GetRobot;
-
 /**
  * Create the string with information to connect to the Qt app
  * hostname + sep + stage + sep + batteryLevel + sep + muteFlag + sep + dockStatus
@@ -67,13 +64,13 @@ void updateInfoCallback(const std_msgs::String::ConstPtr& update_status){
     }
     ipMutex.unlock();
     
-    sendDataMutex.lock();
     if(data_threads.size()>0){
+        sendDataMutex.lock();
         ///we wait for all the threads to be done
         for(int i = 0; i < data_threads.size(); ++i)
             data_threads.at(i).join();  
+        sendDataMutex.unlock();
     }
-    sendDataMutex.unlock();
 }
 
 /**
@@ -274,15 +271,15 @@ int main(int argc, char* argv[]){
         }
         serverMutex.unlock();
 
-        sendDataMutex.lock();
         if(threads.size()>0){
+            sendDataMutex.lock();
             /// We join all the threads => we wait for all the threads to be done
             for(int i = 0; i < threads.size(); ++i)
                 threads.at(i).join();
             //ROS_INFO("(PING_SERVERS) Done pinging everyone");
+            sendDataMutex.unlock();
         }
         updateIP();
-        sendDataMutex.unlock();
         loop_rate.sleep();        
     }
 

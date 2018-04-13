@@ -39,6 +39,7 @@
 
 #include <vector>
 #include <string>
+#include <numeric> 
 
 #include <ros/ros.h>
 
@@ -191,8 +192,9 @@ namespace move_base {
 
       //tx//begin
       int32_t recovery_count_, recovery_count_threshold_;
-      double linear_spd_limit_,angular_spd_limit_;
-      double current_linear_spd_, linear_spd_incre_, current_angular_spd_;
+      double current_linear_spd_, linear_spd_incre_, current_angular_spd_, angular_spd_limit_;
+      int angular_spd_size_;
+      std::vector<double> angular_spd_;
       int costmap_threshold_value_; //no info=255, lethal obs=254, inscribed obs=253
       bool scan_mode_;
       robot_class::SetRobot SetRobot;

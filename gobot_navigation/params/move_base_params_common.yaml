@@ -41,9 +41,9 @@ oscillation_distance: 0.25 #0.5
 
 max_planning_retries: 2 #-1
 
-linear_spd_limit: 0.0   #-1 to disable the function
-angular_spd_limit: 0.2 
 linear_spd_incre: 0.03  #when linear velocity increases, its increasement should not exceed this value
+angular_spd_limit: 0.2 
+angular_spd_size: 4 #rolling mean window size
 
 costmap_threshold_value: 220
 

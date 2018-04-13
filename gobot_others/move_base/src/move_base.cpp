@@ -84,10 +84,13 @@ namespace move_base {
     recovery_count_ = 0;
     current_linear_spd_ = 0.0;
     current_angular_spd_ = 0.0;
+
+    private_nh.param("angular_spd_size", angular_spd_size_, 4); 
+    angular_spd_ = std::vector<double>(angular_spd_size_,0.0);
+
     private_nh.param("linear_spd_incre", linear_spd_incre_, 0.03); 
     //add these two params to smooth motion 
-    private_nh.param("linear_spd_limit", linear_spd_limit_, 0.0); 
-    private_nh.param("angular_spd_limit", angular_spd_limit_, 3.0); 
+    private_nh.param("angular_spd_limit", angular_spd_limit_, 0.2); 
     //threshold value for checking end point of planned path
     private_nh.param("costmap_threshold_value", costmap_threshold_value_, 225); 
     private_nh.param("scan_mode", scan_mode_, false); 
@@ -994,18 +997,38 @@ namespace move_base {
                            cmd_vel.linear.x, cmd_vel.linear.y, cmd_vel.angular.z );
           last_valid_control_ = ros::Time::now();
           //tx//start
-          if (linear_spd_limit_>=0){
-            //make sure that we send the velocity command to the base
-            if ((cmd_vel.linear.x <0 || fabs(cmd_vel.linear.x) <linear_spd_limit_) && fabs(cmd_vel.angular.z) > angular_spd_limit_)
-                  cmd_vel.linear.x = 0.0;
-          }
-          
-          if((cmd_vel.linear.x-current_linear_spd_) > linear_spd_incre_){
-            cmd_vel.linear.x = current_linear_spd_+linear_spd_incre_;
+          //limit the backward velocity
+          //make sure that we send the velocity command to the base
+          if(cmd_vel.linear.x < 0){
+            if(fabs(cmd_vel.angular.z) > angular_spd_limit_)
+              cmd_vel.linear.x = 0.0;
+            else
+              cmd_vel.angular.z = 0.0;
           }
 
-          if(cmd_vel.angular.z*current_angular_spd_<0.0){
-            cmd_vel.angular.z = 0.0;
+
+          //limit linear acceleration
+          if((cmd_vel.linear.x-current_linear_spd_) > linear_spd_incre_ && cmd_vel.linear.x!=0){
+            cmd_vel.linear.x = current_linear_spd_+linear_spd_incre_;
+          }
+          /*
+          else if(cmd_vel.linear.x*current_linear_spd_<0.0){
+            cmd_vel.linear.x = 0.0;
+          }
+          else if((cmd_vel.linear.x-current_linear_spd_)<-linear_spd_incre_ && cmd_vel.linear.x<0){
+            cmd_vel.linear.x = current_linear_spd_-linear_spd_incre_;
+          }
+          */
+          
+          //limit angular acceleration
+          if(cmd_vel.angular.z == 0.0){
+            angular_spd_ = std::vector<double>(angular_spd_size_,0.0);
+          }
+          //rolling mean to smooth angular velocity
+          else{
+            angular_spd_.erase(angular_spd_.begin());
+            angular_spd_.push_back(cmd_vel.angular.z);
+            cmd_vel.angular.z = std::accumulate(angular_spd_.begin(),angular_spd_.end(),0.0)/angular_spd_.size();
           }
 
           current_linear_spd_ = cmd_vel.linear.x;

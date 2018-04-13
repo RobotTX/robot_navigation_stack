@@ -6,13 +6,14 @@
 
 bool collision = false, moved_from_collision = true, pause_robot = false;
 double wheel_sep_, wheel_radius_, ticks_per_rot_, wait_collision_, avoid_spd_;
+double vel_constant_;
 
 bool bumper_on=false, cliff_on=false,moved_from_front_cliff = true,moved_from_back_cliff=true;
 bool bumpers_broken[8]={false,false,false,false,false,false,false,false};
 
 /// based on tests, the linear regression from the velocity in m/s to the ticks/sec is approx : y=15.606962627075x-2.2598795680051
 //15.606962627075;//-2.2598795680051;
-double a = 15.55, b = -2.26;  
+double a = 15.6, b = -20.0;  
 
 bool lost_robot = false;
 
@@ -260,8 +261,8 @@ void joyCallback(const sensor_msgs::Joy::ConstPtr& joy){
                 double left_vel_m_per_sec = linear_limit * joy->axes[1] - angular_limit * joy->axes[3] * wheel_sep_ / (double)2;
 
                 /// calculate the real value we need to give the MD49
-                double right_vel_speed = ((right_vel_m_per_sec * ticks_per_rot_) / (2 * PI * wheel_radius_) - b ) / a;
-                double left_vel_speed = ((left_vel_m_per_sec * ticks_per_rot_) / (2 * PI * wheel_radius_) - b ) / a;
+                double right_vel_speed = (right_vel_m_per_sec * vel_constant_ - b ) / a;
+                double left_vel_speed = (left_vel_m_per_sec * vel_constant_ - b ) / a;
 
                 SetRobot.setMotorSpeed(right_vel_speed >= 0 ? 'F' : 'B', fabs(right_vel_speed), left_vel_speed >= 0 ? 'F' : 'B', fabs(left_vel_speed));;
             }
@@ -290,16 +291,12 @@ void newCmdVel(const geometry_msgs::Twist::ConstPtr& twist){
             double left_vel_m_per_sec = twist->linear.x - twist->angular.z * wheel_sep_ / 2.0;
 
             /// calculate the real value we need to give the MD49
-            double right_vel_speed = ((right_vel_m_per_sec * ticks_per_rot_) / (2 * PI * wheel_radius_) - b ) / a;
-            double left_vel_speed = ((left_vel_m_per_sec * ticks_per_rot_) / (2 * PI * wheel_radius_) - b ) / a;
+            double right_vel_speed = (right_vel_m_per_sec * vel_constant_ - b ) / a;
+            double left_vel_speed = (left_vel_m_per_sec * vel_constant_ - b ) / a;
 
             //ROS_INFO("(TWIST::newCmdVel) new vel %f %f", right_vel_speed, left_vel_speed);
 
             SetRobot.setMotorSpeed(right_vel_speed >= 0 ? 'F' : 'B', fabs(right_vel_speed), left_vel_speed >= 0 ? 'F' : 'B', fabs(left_vel_speed));
-
-            /// just to show the actual real speed we gave to the wheels
-            //double real_vel = (a * (int)right_vel_speed + b) / ticks_per_rot_ * 2 * PI * wheel_radius_;
-            //ROS_INFO("(TWIST::newCmdVel) linear vel %f m/s, compared to real vel %f  m/s\n so a difference of %f", twist->linear.x, real_vel, real_vel - twist->linear.x);
         }
     }
 }
@@ -319,6 +316,7 @@ void initParams(ros::NodeHandle &nh){
     nh.getParam("TICKS_PER_ROT", ticks_per_rot_);
     nh.getParam("WAIT_COLLISION", wait_collision_);
     nh.getParam("AVOID_SPD", avoid_spd_);
+    vel_constant_ = ticks_per_rot_/(2*PI*wheel_radius_);
 }
 
 void mySigintHandler(int sig){   

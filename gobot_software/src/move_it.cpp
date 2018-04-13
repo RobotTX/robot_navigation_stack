@@ -305,7 +305,7 @@ bool updatePathService(gobot_msg_srv::SetStringArray::Request &req, gobot_msg_sr
 					pathPoint.text = req.data.at(i);
 				}
 				else if((i-1)%n == 6){
-					pathPoint.delayText = std::stod(req.data.at(i));
+					pathPoint.delayText = req.data.at(i)=="" ? 0.0 : std::stod(req.data.at(i));
 					path.push_back(pathPoint);
 				}
 			}
@@ -438,7 +438,7 @@ void initData(){
 					pathPoint.text = get_path.response.data.at(i);
 				}
 				else if((i-1)%n == 6){
-					pathPoint.delayText = std::stod(get_path.response.data.at(i));
+					pathPoint.delayText = get_path.response.data.at(i)=="" ? 0.0 : std::stod(get_path.response.data.at(i));
 					path.push_back(pathPoint);
 				}
 			}
@@ -493,6 +493,7 @@ int main(int argc, char* argv[]){
 	currentGoal.waitingTime = -1;
 	currentGoal.isHome = false;
 	currentGoal.text = "";
+	currentGoal.delayText = 0.0;
 
 	// service to interrupt delay/human action
 	ros::ServiceServer _interruptDelayService = n.advertiseService("/gobot_function/interrupt_delay", interruptDelayService);

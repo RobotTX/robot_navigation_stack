@@ -274,10 +274,19 @@ void server(void){
         std::string ip = sock->remote_endpoint().address().to_string();
         //~ROS_INFO("(MAP_READ) Command socket connected to %s", ip.c_str());
         socketsMutex.lock();
+        /*
         if(!sockets.count(ip))
             sockets.insert(std::pair<std::string, boost::shared_ptr<tcp::socket>>(ip, sock));
         else
             ROS_ERROR("(MAP_READ) the ip %s is already connected, this should not happen", ip.c_str());
+        */
+        if(sockets.find(ip)==sockets.end()){ //not find the ip
+            sockets.insert(std::pair<std::string, boost::shared_ptr<tcp::socket>>(ip, sock));
+        }
+        else{   //ip exists in the list
+            sockets.find(ip)->second->close();
+            sockets.find(ip)->second = sock;
+        }
         socketsMutex.unlock();
 
         /// Launch the session thread which wait for a new map
