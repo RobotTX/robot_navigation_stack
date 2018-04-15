@@ -178,10 +178,16 @@ bool setWifiSrvCallback(gobot_msg_srv::SetStringArray::Request &req, gobot_msg_s
     }
     //disconnect all server
     ros::service::call("/gobot_software/disconnet_servers",empty_srv);
+    //stop robot
+    std::thread([](){
+        ros::service::call("/gobot_function/pause_path", empty_srv);
+    }).detach();
 
     //if previous wifi is not empty and receive a new wifi, we delete the previous wifi in the netowrk list
     //delete previously connected wifi
-    const std::string deleteWIFI_script = "sudo sh " + deleteWifi + " " + wifiFile;
+    std::string oldWifi = wifi_.at(0)=="" ? "null_wifi" : wifi_.at(0);
+    std::string newWifi = req.data[0]=="" ? "null_wifi" : req.data[0];
+    const std::string deleteWIFI_script = "sudo sh " + deleteWifi + " " + oldWifi + " " + newWifi + " " + req.data[1]  + " &";  //run in thread
     system(deleteWIFI_script.c_str());
     wifiMutex.lock();
     wifi_.clear();
@@ -666,6 +672,7 @@ void initialData(){
 
     //read wifi
     n.getParam("wifi_file", wifiFile);
+    n.getParam("deleteWIFI", deleteWifi);
     std::ifstream ifWifi(wifiFile, std::ifstream::in);
     if(ifWifi){
         std::string line;
@@ -682,8 +689,6 @@ void initialData(){
         wifi_.push_back("");
     }
     ROS_INFO("(STATUS_SYSTEM) Read Gobot wifi: name:%s, password:%s",wifi_.at(0).c_str(),wifi_.at(1).c_str());
-
-    n.getParam("deleteWIFI", deleteWifi);
     
     //record disconnect times
     n.getParam("disconnected_file", disconnectedFile);
