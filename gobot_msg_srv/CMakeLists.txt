@@ -92,6 +92,7 @@ add_service_files(
     SendMap.srv
     GetGobotStatus.srv
     SetGobotStatus.srv
+    SetBool.srv
     GetString.srv
     SetString.srv
     GetInt.srv

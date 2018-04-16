@@ -134,6 +134,7 @@ Install all dependencies from packages or from sources:
 * sudo apt-get install python-pyasn1 python-twisted-conch
 
 #dd clone system
+sudo fdisk -l
 dd if=/dev/sdb  of=/dev/sdc
 dd bs=512 count=[fdisk命令中最大的end数+1] if=/dev/sdb of=name.img
 * Monitor

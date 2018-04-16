@@ -6,7 +6,6 @@ then
     echo "y" | rosclean purge
     echo "Cleaned ros log data:"$var"G"
 fi
-gnome-terminal -x bash -c "source /opt/ros/kinetic/setup.bash;roscore;exec bash;"
 sleep 2s
 if [ -z "$(rosnode list | grep base_sensors)" ]
 then

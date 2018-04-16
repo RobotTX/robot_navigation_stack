@@ -269,7 +269,7 @@ void finishedDocking(){
     ros::NodeHandle nh;
     gobot_msg_srv::IsCharging arg;
     resetDockingParams();
-    ros::Duration(4.0).sleep();
+    ros::Duration(6.0).sleep();
     if(ros::service::call("/gobot_status/charging_status", arg) && arg.response.isCharging){
         dock_status = 1;
         SetRobot.setStatus(11,"COMPLETE_DOCKING");

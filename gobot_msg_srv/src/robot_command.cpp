@@ -101,12 +101,17 @@ namespace robot_class {
     /**
     * @BRIEF  Subscribers callback
     */
+    /**
+    * @brief encoders callback function
+    */
     void RobotCommand::encodersCallback(const gobot_msg_srv::EncodersMsg::ConstPtr& msg){
         left_encoder_ = msg->left_encoder;
         right_encoder_ = msg->right_encoder;
     }
 
-
+    /**
+    * @brief motor speeds callback function
+    */
     //motor speed ranges from 0 to 128. Positive indicates forward, and negative indicates backward
     void RobotCommand::motorSpdCallback(const gobot_msg_srv::MotorSpeedMsg::ConstPtr& speed){
         if(speed->velocityL <= 127 && speed->velocityR <= 127){
@@ -120,29 +125,47 @@ namespace robot_class {
         } 
     }
 
+    /**
+    * @brief battery callback function
+    */
     void RobotCommand::batteryCallback(const gobot_msg_srv::BatteryMsg::ConstPtr& msg){
         battery_percent_ = msg->BatteryStatus;
         charging_current_ = msg->ChargingCurrent;
         charging_flag_ = msg->ChargingFlag;
     }
 
+    /**
+    * @brief laser callback function
+    */
     void RobotCommand::laserCallback(const sensor_msgs::LaserScan msg){
         laser_data_ = msg;
     }
 
+    /**
+    * @brief planned path callback function
+    */
     void RobotCommand::globalPathCallback(const nav_msgs::Path msg){
         global_path_ = msg;
     }
 
+    /**
+    * @brief goal callback function
+    */
     void RobotCommand::goalCallback(const move_base_msgs::MoveBaseActionGoal::ConstPtr& msg){
         ROS_INFO("(ROBOT_COMMAND) Received a new goal");
         current_goal_ = msg->goal.target_pose;
     }
 
+    /**
+    * @brief sonars callback function
+    */
     void RobotCommand::sonarCallback(const gobot_msg_srv::SonarMsg msg){
         sonar_data_ = msg;
     }
 
+    /**
+    * @brief gyro and accelerometer callback function
+    */
     void RobotCommand::gyroCallback(const gobot_msg_srv::GyroMsg::ConstPtr& msg){
         gyro_data_.gyrox = msg->gyrox;
         gyro_data_.gyroy = msg->gyroy;
@@ -152,6 +175,9 @@ namespace robot_class {
         gyro_data_.accelz = msg->accelz;
     }
 
+    /**
+    * @brief goal status callback function
+    */
     void RobotCommand::goalStatusCallback(const actionlib_msgs::GoalStatusArray::ConstPtr& msg){
         if(msg->status_list.size()==0)
             goal_status_ = -1;
@@ -159,6 +185,9 @@ namespace robot_class {
             goal_status_ = msg->status_list.back().status;
     }
 
+    /**
+    * @brief map metadata status callback function
+    */
     void RobotCommand::mapDataCallback(const nav_msgs::MapMetaData::ConstPtr& msg){
         map_data_.resolution = msg->resolution;
         map_data_.pixel_width = msg->width;
@@ -171,6 +200,9 @@ namespace robot_class {
         map_received_ = true;
     }
 
+    /**
+    * @brief load weight callback function
+    */
     void RobotCommand::weightCallback(const gobot_msg_srv::WeightMsg::ConstPtr& msg){
         load_weight_ = msg->weight;
     }
@@ -179,18 +211,36 @@ namespace robot_class {
     /**
     * @BRIEF  Some functions
     */
+     /**
+    * @brief quaternion to yaw conversion
+    * @param yaw: get the yaw by converting given quaternion
+    * @param q: set the quaternion for yaw convertion
+    */
     void RobotCommand::getYaw(double &yaw, const geometry_msgs::Quaternion &q){
         yaw = tf::getYaw(tf::Quaternion(q.x,q.y,q.z,q.w));
     }
 
+    /**
+    * @brief yaw to quaternion conversion
+    * @param q: get the quaternion by converting given yaw
+    * @param yaw: set the yaw for quaternion convertion
+    */
     void RobotCommand::getQuaternion(geometry_msgs::Quaternion &q, const double &yaw){
         q = tf::createQuaternionMsgFromYaw(yaw);
     }
 
+    /**
+    * @brief degree to radian conversion
+    * @param degree: degree value that going to be converted to radian
+    */
     double RobotCommand::getRadian(const double degree){
         return degree*3.1415926/180.0;
     }
 
+    /**
+    * @brief radian to yaw conversion
+    * @param rad: radian value that going to be converted to degree
+    */
     double RobotCommand::getDegree(const double rad){
         return rad*180.0/3.1415926;
     }
@@ -198,6 +248,7 @@ namespace robot_class {
 
     /**
     * @BRIEF  Programmable voice
+    * @param str: text for robot to convert to speech
     */
     void RobotCommand::ttsEnglish(std::string str){
         set_robot_.speakEnglish(str);
@@ -211,42 +262,117 @@ namespace robot_class {
     /**
     * @BRIEF  Interact with base sensors such as color, sound and sensors data
     */
+
+    /**
+    * @brief change robot led color
+    * @param mode: 0 means permanent LED display; 1 means running LED display
+    * @param color: LED colors to display (mode 0 needs only 1 color input, and mode 2 needs at least 2 colors input)
+    * *color value: "green", "blue", "yellow", "red", "cyan", "white", "magenta", "off"
+    */
     void RobotCommand::setLed(int mode, const std::vector<std::string> &color){
         set_robot_.setLed(mode,color);
     }
 
+    /**
+    * @brief make robot buzzer beep
+    * @param num: how many times of beeps for the buzzer 
+    * @param time_on: how long each beep last for
+    */
     void RobotCommand::setSound(int num,int time_on){
         set_robot_.setSound(num,time_on);
     }
 
+
+    /**
+    * @brief return current battery percentage ranging from 0 to 100 (integer)
+    */
     int RobotCommand::getBatteryPercent(){
         return battery_percent_;
     }
 
+    /**
+    * @brief return current battery charging current (integer); 
+    * *usually positive values when charging, and negative values when not charging;
+    */
     int RobotCommand::getBatteryChargingCurrent(){
         return charging_current_;
     }
 
+    /**
+    * @brief return current charging status; true indicates charging
+    */
     bool RobotCommand::getBatteryCharging(){
         return charging_flag_;
     }
 
+
+    /**
+    * @brief get gyro data
+    * @param gyro: get the current gyroscope and accelerometer data (self-defined type 'GyroMsg')
+    */
     void RobotCommand::getGyro(Gyro &gyro_data){
         gyro_data = gyro_data_;
     }
 
+    /**
+    * @brief return load weight data (unit:kg)
+    */
     float RobotCommand::getWeight(){
         return load_weight_;
     }
 
+    /**
+    * @brief turn on/off bumper sensors
+    * @param flag: true/false means on/off bumper sensors
+    */
+    void RobotCommand::useBumper(bool flag){
+        gobot_msg_srv::SetBool on_off;
+        on_off.request.data = flag;
+        ros::service::call("/gobot_base/use_bumper",on_off);
+    }
+
+    /**
+    * @brief turn on/off sonar sensors
+    * @param flag: true/false means on/off sonar sensors
+    */
+    void RobotCommand::useSonar(bool flag){
+        gobot_msg_srv::SetBool on_off;
+        on_off.request.data = flag;
+        ros::service::call("/gobot_base/use_sonar",on_off);
+    }
+
+    /**
+    * @brief turn on/off cliff sensors
+    * @param flag: true/false means on/off cliff sensors
+    */
+    void RobotCommand::useCliff(bool flag){
+        gobot_msg_srv::SetBool on_off;
+        on_off.request.data = flag;
+        ros::service::call("/gobot_base/use_cliff",on_off);
+    }
 
     /**
     * @BRIEF  Interact with base motors such as get/set motor speeds and encoders
+    */
+
+    /**
+    * @brief two ways to set robot moving speed:
+    * *1.set direction and velocity for the robot's each wheel
+    * *2.set linear and angular velocities for the whole robot
+    */
+    /**
+    * @param directionR: set turning direction for right wheel, where 'F' indicates forward; 'B' indicates backwards;
+    * @param velocityR: set turning velocity for right wheel, where value ranges from 0 to 127 
+    * @param directionL, velocityL: same as before for setting left wheel's turning direction and velocity
     */
     void RobotCommand::setMotorSpeed(const char directionL, const int velocityL, const char directionR, const int velocityR){ 
         set_robot_.setMotorSpeed(directionR,velocityR,directionL,velocityL);
     }
 
+    /**
+    * @param linear_vel: set linear velocity of robot
+    * @param angular_vel: set angular velocity of robot
+    */
     void RobotCommand::setMotorSpeed(const double linear_vel, const double angular_vel){
         geometry_msgs::Twist vel;
         vel.linear.x = linear_vel;
@@ -254,6 +380,10 @@ namespace robot_class {
         vel_pub_.publish(vel);
     }
 
+    /**
+    * @param linear: set limit for linear velocity with unit m/s (recommanded value: 0.4m/s)
+    * @param angular: set limit for angular velocity with unit rad/s (recommanded value: 0.8 rad/s)
+    */
     void RobotCommand::setSpeedLimit(double linear, double angular){
         gobot_msg_srv::SetStringArray set_speed;
         set_speed.request.data.push_back(std::to_string(linear));
@@ -261,11 +391,19 @@ namespace robot_class {
         ros::service::call("/gobot_command/set_speed",set_speed);
     }
 
+    /**
+    * @param left_encoder: get left encoder's accumulated reading
+    * @param right_encoder: get right encoder's accumulated reading
+    */
     void RobotCommand::getEncoder(int &left_encoder, int &right_encoder){
         left_encoder = left_encoder_;
         right_encoder = right_encoder_;   
     }
 
+    /**
+    * @param left_speed: get left wheel's speed ranging from -127 to 127 (128 indicates out of range)
+    * @param right_speed: get right wheel's speed ranging from -127 to 127 (128 indicates out of range)
+    */
     void RobotCommand::getMotorSpeed(int &left_speed, int &right_speed){
         left_speed = left_speed_;
         right_speed = right_speed_;   
@@ -274,6 +412,15 @@ namespace robot_class {
     
     /**
     * @BRIEF  Localization
+    */
+
+    /**
+    * @brief two ways to get robot current pose in the global frame:
+    * *1.self-defined data type 'Pose'
+    * *2.ROS-defined data type 'geometry_msgs::PoseStamped'
+    */
+    /**
+    * @param pose: get the current pose as type 'Pose' 
     */
     void RobotCommand::getCurrentPose(Pose &pose){
         tf::Stamped<tf::Pose> global_pose;
@@ -286,6 +433,9 @@ namespace robot_class {
         }
     }
 
+    /**
+    * @param pose: get the current pose as type 'geometry_msgs::PoseStamped'
+    */
     void RobotCommand::getCurrentPose(geometry_msgs::PoseStamped &pose){
         tf::Stamped<tf::Pose> global_pose;
         if (global_costmap_->getRobotPose(global_pose)){
@@ -297,7 +447,10 @@ namespace robot_class {
     /**
     * @BRIEF  Map
     */
-    //rosrun map_server map_saver [-f mapname]
+
+    /**
+    * @param path: set the path to store robot's map to; if no path given, save map to /home/username/map.pgm
+    */
     void RobotCommand::saveMapTo(std::string path){
         std::string cmd;
         if (path == ""){
@@ -309,6 +462,10 @@ namespace robot_class {
         system(cmd.c_str());
     }
 
+    /**
+    * @param data: get current map's data such as resolution, width, height and origin
+    * *if map is not initialized, return false
+    */
     void RobotCommand::getMapMetadata(Map &data){
         data = map_data_;
     }
@@ -316,8 +473,17 @@ namespace robot_class {
     /**
     * @BRIEF  Target Points || Routes
     */
-    //get the point cost in costmap
-    //costmap_2d::FREE_SPACE=0, costmap_2d::INSCRIBED_INFLATED_OBSTACLE=253, costmap_2d::LETHAL_OBSTACLE=254, costmap_2d::NO_INFORMATION=255
+
+    /**
+    * @brief get the grid cost for the given position (x,y)
+    * @param x: x coordinate for given position
+    * @param y: y coordinate for given position
+    * @comment: cost value ranges from 0 to 255, meaning: 
+    * *costmap_2d::FREE_SPACE=0, 
+    * *costmap_2d::INSCRIBED_INFLATED_OBSTACLE=253, 
+    * *costmap_2d::LETHAL_OBSTACLE=254, 
+    * *costmap_2d::NO_INFORMATION=255
+    */
     int RobotCommand::getPointCost(const double point_x,const double point_y){
         unsigned int x,y;
         if(global_costmap_->getCostmap()->worldToMap(point_x,point_y,x,y)){	
@@ -328,8 +494,16 @@ namespace robot_class {
             return 255;
         }
     }
-    //assign targeted point to robot, and play assigned point
-    //First param = k, 2nd is point name, 3rd is x coordinate, 4th is y coordinate, 5th is orientation, 6th is home bool
+
+
+    /**
+    * @brief two ways to send a goal point for robot:
+    * *1.self-defined data type 'Pose'
+    * *2.ROS-defined data type 'geometry_msgs::PoseStamped'
+    */
+    /**
+    * @param point: set the goal point as type 'Pose' 
+    */
     bool RobotCommand::setTargetPoint(const Pose &point){
         if (getPointCost(point.x,point.y) >= costmap_2d::INSCRIBED_INFLATED_OBSTACLE){
             ROS_WARN("(ROBOT_COMMAND) Assigned point can not be reached.");
@@ -348,6 +522,9 @@ namespace robot_class {
         return true;
     }
 
+    /**
+    * @param point: set the goal point as type 'geometry_msgs::PoseStamped' 
+    */
     bool RobotCommand::setTargetPoint(const geometry_msgs::PoseStamped &point){
         if (getPointCost(point.pose.position.x,point.pose.position.y) >= costmap_2d::INSCRIBED_INFLATED_OBSTACLE){
             ROS_WARN("(ROBOT_COMMAND) Assigned point can not be reached.");
@@ -367,8 +544,11 @@ namespace robot_class {
         return true;
     }
 
-    //assign targeted path to robot
-    /// First param = i, then the path name, then quadriplets of parameters to represent path points (path point name, posX, posY, waiting time,orientation,text,text delay) 
+    /**
+    * @brief set a route for robot
+    * @param path: set the route as self-defined type 'Path' 
+    * @param path_name: set the name for the route; if no name given, set route's name to be "default"
+    */
     bool RobotCommand::setTargetPath(const std::vector<Path> &path, std::string path_name){
         gobot_msg_srv::SetStringArray msg;
         msg.request.data.push_back(path_name);
@@ -393,46 +573,70 @@ namespace robot_class {
         return true;
     }
 
-    //get the current goal information if have
+    /**
+    * @brief get current goal of robot
+    * @param goal: get the current goal information if have as type 'geometry_msgs::PoseStamped'
+    */
     void RobotCommand::getCurrentGoal(geometry_msgs::PoseStamped &goal){
         goal = current_goal_;
     }
 
-    //get goal status
+    /**
+    * @brief return goal status
+    * *-1 - No goal
+    * * 1 - Goal active
+    * * 2 - Goal cancel
+    * * 3 - Goal complete
+    * * 4 - Goal aborted
+    */
     int RobotCommand::getGoalStatus(){
         return goal_status_;
     }
 
 
+
     /**
     * @BRIEF  Control robot motion
     */
-    //play assigned path
+
+    /**
+    * @brief start robot to execute assigned route if have
+    */
     void RobotCommand::playTargetPath(){
         ros::service::call("/gobot_command/play_path",empty_srv_);
     }
 
-    //pause robot from playing path/point
+    /**
+    * @brief stop robot; when re-executing route, robot will go to the uncompleted point
+    */
     void RobotCommand::pauseRobot(){
         ros::service::call("/gobot_command/pause_path",empty_srv_);
     }
 
-    //stop robot from playing path/point
+    /**
+    * @brief stop robot; when re-executing route, robot will go to first point 
+    */
     void RobotCommand::stopRobot(){
         ros::service::call("/gobot_command/stop_path",empty_srv_);
     }
 
-    //start robot going to charging station
+    /**
+    * @brief start robot to go to docking station
+    */
     void RobotCommand::startDock(){
         ros::service::call("/gobot_command/goDock",empty_srv_);
     }
 
-    //stop robot going to charging station
+    /**
+    * @brief stop robot from going to docking station
+    */
     void RobotCommand::stopDock(){
         ros::service::call("/gobot_command/stopGoDock",empty_srv_);
     }
 
-    //poweroff robot
+    /**
+    * @brief poweroff robot and electrical system
+    */
     void RobotCommand::shutDown(){
         ros::service::call("/gobot_command/shutdown",empty_srv_);
     }
@@ -441,12 +645,19 @@ namespace robot_class {
     /**
     * @BRIEF  Obstacle Detection & Avoidance
     */
-    //get laser raw data (detection of obstacles depends on the laser range)
+
+    /**
+    * @brief get laser data
+    * @param data: get the laser data as type 'sensor_msgs::LaserScan'
+    */
     void RobotCommand::getLaserData(sensor_msgs::LaserScan &data){
         data = laser_data_;
     }
 
-    //get sonar raw data
+    /**
+    * @brief get four sonars data (two in front and two in rear)
+    * @param data: get the sonars data as type 'std::vector<int>', where four sonars data are stored in data[0], data[1], data[2] and data[3] respectively
+    */
     void RobotCommand::getSonarData(std::vector<int> &data){
         data.clear();
         data.push_back(sonar_data_.distance1);
@@ -455,14 +666,22 @@ namespace robot_class {
         data.push_back(sonar_data_.distance4);
     }
 
-    //get planned path from current pose to goal pose if have
+    /**
+    * @brief get planned path to goal pose if have
+    * @param plan_path: get the planned path consisting of 'geometry_msgs::PoseStamped' points
+    */
     void RobotCommand::getPlanPath(std::vector<geometry_msgs::PoseStamped> &plan_path){
         plan_path.clear();
         for(int i=0;i<global_path_.poses.size();i++)
             plan_path.push_back(global_path_.poses[i]);
     }   
 
-    //make plan for any two points in the map, and give a plan path if have
+    /**
+    * @brief plan path for given start pose and goal pose
+    * *return true if have plan 
+    * *return false if no plan
+    * @param plan_path: get the planned path consisting of 'geometry_msgs::PoseStamped' points
+    */
     bool RobotCommand::makePlanPath(const geometry_msgs::PoseStamped &start,const geometry_msgs::PoseStamped &goal,std::vector<geometry_msgs::PoseStamped> &plan_path){
         nav_msgs::GetPlan get_plan;
         get_plan.request.start = start;
@@ -486,6 +705,12 @@ namespace robot_class {
         }
     }
 
+    /**
+    * @brief get planned path from current pose to given goal pose if have
+    * *return true if have plan 
+    * *return false if no plan
+    * @param plan_path: get the planned path consisting of 'geometry_msgs::PoseStamped' points
+    */
     bool RobotCommand::makePlanPath(const geometry_msgs::PoseStamped &goal,std::vector<geometry_msgs::PoseStamped> &plan_path){
         nav_msgs::GetPlan get_plan;
         get_plan.request.goal = goal;
@@ -503,7 +728,10 @@ namespace robot_class {
             return false;
     }
 
-    //clear costmap 
+    /**
+    * @brief clear obstacles information in costmap. 
+    * *As a result, only static map information will be kept after calling this function
+    */
     void RobotCommand::clearCostMap(){
         ros::service::call("/move_base/clear_costmaps",empty_srv_);
     }

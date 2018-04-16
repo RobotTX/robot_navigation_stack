@@ -1,7 +1,7 @@
 #!/bin/bash
 isAlive="$1"
 wififile="$2"
-defalutwifi="Robot_Hotspot_00X"
+defalutwifi="Robot_Hotspot_yymmdd"
 wifi=$(nmcli device status | grep wifi |cut -d ' ' -f1)
 n=1
 #read wifi infomation from local file

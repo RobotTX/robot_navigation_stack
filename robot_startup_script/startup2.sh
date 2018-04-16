@@ -8,7 +8,6 @@ then
     echo "Cleaned ros log data:"$var"G"
 fi
 sudo sh ~/catkin_ws/src/robot_navigation_stack/gobot_data/command/robot_log.sh
-roscore &
 sleep 2s
 roslaunch gobot_navigation gobot_system.launch >> $path/robot_log/system_log.txt &
 sleep 5s

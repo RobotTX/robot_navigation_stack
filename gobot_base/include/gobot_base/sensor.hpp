@@ -83,9 +83,13 @@ class SensorClass {
             gyro_pub_ = nh.advertise<gobot_msg_srv::GyroMsg>("/gobot_base/gyro_topic",1);
             temperature_pub_ = nh.advertise<std_msgs::Float32>("/gobot_base/temperature_topic",1);
 
+            ros::ServiceServer useBumperSrv = nh.advertiseService("/gobot_base/use_bumper", &SensorClass::useBumperSrvCallback, this);
+            ros::ServiceServer useSonarSrv = nh.advertiseService("/gobot_base/use_sonar", &SensorClass::useSonarSrvCallback, this);
+            ros::ServiceServer useCliffSrv = nh.advertiseService("/gobot_base/use_cliff", &SensorClass::useCliffSrvCallback, this);
             shutdownSrv = nh.advertiseService("/gobot_base/shutdown_robot", &SensorClass::shutdownSrvCallback, this);
             displayDataSrv = nh.advertiseService("/gobot_base/displaySensorData", &SensorClass::displaySensorData, this);
-            
+
+
             led_sub_ = nh.subscribe("/gobot_base/set_led", 1, &SensorClass::ledCallback, this);
             sound_sub_ = nh.subscribe("/gobot_base/set_sound", 1, &SensorClass::soundCallback, this);
             mute_sub_ = nh.subscribe("/gobot_status/mute", 1, &SensorClass::muteCallback, this);
@@ -472,6 +476,21 @@ class SensorClass {
             else if(n==4){
                 SetRobot_.setWifi("","");
             }
+        }
+
+        bool useBumperSrvCallback(gobot_msg_srv::SetBool::Request &req, gobot_msg_srv::SetBool::Response &res){
+            USE_BUMPER = req.data;
+            return true;
+        }
+
+        bool useSonarSrvCallback(gobot_msg_srv::SetBool::Request &req, gobot_msg_srv::SetBool::Response &res){
+            USE_SONAR = req.data;
+            return true;
+        }
+
+        bool useCliffSrvCallback(gobot_msg_srv::SetBool::Request &req, gobot_msg_srv::SetBool::Response &res){
+            USE_CLIFF = req.data;
+            return true;
         }
 
         bool shutdownSrvCallback(std_srvs::Empty::Request &req, std_srvs::Empty::Response &res){

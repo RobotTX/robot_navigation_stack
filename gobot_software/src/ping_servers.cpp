@@ -158,7 +158,7 @@ void pingIP(std::string ip, std::string dataToSend, double sec){
         std::string read = client.read_some();
         if(read.compare("OK") == 0){
             /// Send the required data
-            client.write_line(dataToSend, boost::posix_time::seconds(2.5));
+            client.write_line(dataToSend, boost::posix_time::seconds(3.0));
             /// Save the IP we just connected to in an array for later
             connectedMutex.lock();
             connectedIPs.push_back(ip);
@@ -266,7 +266,7 @@ int main(int argc, char* argv[]){
                 std::string dataToSend = getDataToSend();
                 //ROS_INFO("(PING_SERVERS) Trying to ping everyone %lu", availableIPs.size());
                 for(int i = 0; i < availableIPs.size(); ++i)
-                    threads.push_back(std::thread(pingIP, availableIPs.at(i), dataToSend, 3.0));
+                    threads.push_back(std::thread(pingIP, availableIPs.at(i), dataToSend, 4.0));
             }
         }
         serverMutex.unlock();

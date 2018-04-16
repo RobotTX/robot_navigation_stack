@@ -1003,13 +1003,16 @@ namespace move_base {
             if(fabs(cmd_vel.angular.z) > angular_spd_limit_)
               cmd_vel.linear.x = 0.0;
             else
-              cmd_vel.angular.z = 0.0;
+              cmd_vel.linear.x = -0.1;
           }
 
 
           //limit linear acceleration
           if((cmd_vel.linear.x-current_linear_spd_) > linear_spd_incre_ && cmd_vel.linear.x!=0){
-            cmd_vel.linear.x = current_linear_spd_+linear_spd_incre_;
+            if(current_linear_spd_<0)
+              cmd_vel.linear.x = 0.0;
+            else
+              cmd_vel.linear.x = current_linear_spd_+linear_spd_incre_;
           }
           /*
           else if(cmd_vel.linear.x*current_linear_spd_<0.0){

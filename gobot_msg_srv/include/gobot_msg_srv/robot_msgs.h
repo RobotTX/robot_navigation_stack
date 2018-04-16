@@ -32,6 +32,7 @@
 #include <gobot_msg_srv/SendMessageToPc.h>
 #include <gobot_msg_srv/SetBattery.h>
 #include <gobot_msg_srv/SetGobotStatus.h>
+#include <gobot_msg_srv/SetBool.h>
 #include <gobot_msg_srv/SetInt.h>
 #include <gobot_msg_srv/SetIntArray.h>
 #include <gobot_msg_srv/SetSpeeds.h>

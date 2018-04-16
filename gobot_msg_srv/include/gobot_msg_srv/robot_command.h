@@ -103,7 +103,6 @@ namespace robot_class {
             /**
             * @BRIEF  Initialize class object
             */
-            //void initialize(tf::TransformListener* tf,costmap_2d::Costmap2DROS* global_costmap);
             void initialize();
 
             /**
@@ -262,6 +261,24 @@ namespace robot_class {
             float getWeight();
 
             /**
+            * @brief turn on/off bumper sensors
+            * @param flag: true/false means on/off bumper sensors
+            */
+            void useBumper(bool flag);
+
+            /**
+            * @brief turn on/off sonar sensors
+            * @param flag: true/false means on/off sonar sensors
+            */
+            void useSonar(bool flag);
+
+            /**
+            * @brief turn on/off cliff sensors
+            * @param flag: true/false means on/off cliff sensors
+            */
+            void useCliff(bool flag);
+
+            /**
             * @BRIEF  Interact with base motors such as get/set motor speeds and encoders
             */
 
@@ -276,6 +293,7 @@ namespace robot_class {
             * @param directionL, velocityL: same as before for setting left wheel's turning direction and velocity
             */
             void setMotorSpeed(const char directionL, const int velocityL, const char directionR, const int velocityR);
+
             /**
             * @param linear_vel: set linear velocity of robot
             * @param angular_vel: set angular velocity of robot

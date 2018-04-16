@@ -2,7 +2,14 @@
 
 
 namespace robot_class {
+    /**
+    * @BRIEF  Class constructor
+    */
     SetRobot::SetRobot(){};
+
+    /**
+    * @BRIEF  Class destructor
+    */
     SetRobot::~SetRobot(){};
 
     //Do remember to initilize class after ros::init if setMotorSpeed is used
