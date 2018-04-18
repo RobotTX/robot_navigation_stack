@@ -174,6 +174,7 @@ bool sendMessageToAll(const std::string message);
 
 void session(boost::shared_ptr<tcp::socket> sock);
 
+void server(void);
 /*********************************** DISCONNECTION FUNCTIONS ***********************************/
 void mySigintHandler(int sig);
 

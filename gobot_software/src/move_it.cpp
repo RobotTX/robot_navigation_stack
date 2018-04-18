@@ -62,10 +62,10 @@ void goalReached(){
 		setGobotStatus(0,"COMPLETE_POINT");
 	}
 	else{
-		if(currentGoal.text!=""){
+		if(currentGoal.text != "\"\"" && currentGoal.text !=""){   //string "\"\"" means empty
 			std::thread tts_thread(textToSpeech,currentGoal.text,currentGoal.delayText);
 			tts_thread.detach();
-		}	
+		}
 		stage_++;
 		if(stage_ >= path.size()){
 			//complete path but looping
@@ -279,9 +279,11 @@ bool updatePathService(gobot_msg_srv::SetStringArray::Request &req, gobot_msg_sr
 	SetRobot.setStage(stage_);
 	path = std::vector<Point>();
 	Point pathPoint;
-	int n = req.data.size()%7==1 ? 7 : 5;
 
+	int n = 7;
+	
 	for(int i=0;i<req.data.size();i++){
+		//0 is point name, no need to record
 		if(i!= 0 && (i-1)%n != 0){
 			if((i-1)%n == 1){
 				pathPoint.x = std::stod(req.data.at(i));
@@ -295,19 +297,13 @@ bool updatePathService(gobot_msg_srv::SetStringArray::Request &req, gobot_msg_sr
 			} 
 			else if((i-1)%n == 4){
 				pathPoint.yaw = std::stod(req.data.at(i));
-				if(n!=7){
-					pathPoint.text = "";
-					path.push_back(pathPoint);
-				}
 			}
-			else if(n==7){
-				if((i-1)%n == 5){
-					pathPoint.text = req.data.at(i);
-				}
-				else if((i-1)%n == 6){
-					pathPoint.delayText = req.data.at(i)=="" ? 0.0 : std::stod(req.data.at(i));
-					path.push_back(pathPoint);
-				}
+			else if((i-1)%n == 5){
+				pathPoint.text = req.data.at(i);
+			}
+			else if((i-1)%n == 6){
+				pathPoint.delayText = req.data.at(i)=="" ? 0.0 : std::stod(req.data.at(i));
+				path.push_back(pathPoint);
 			}
 		}
 	}
@@ -413,7 +409,7 @@ void initData(){
 	// we recreate the path to follow from the file
 	ros::service::call("/gobot_status/get_path", get_path);
 	Point pathPoint;
-	int n = get_path.response.data.size()%7==1 ? 7 : 5;
+	int n = 7;
 	for(int i=0;i<get_path.response.data.size();i++){
 		if(i!= 0 && (i-1)%n != 0){
 			if((i-1)%n == 1){
@@ -428,19 +424,14 @@ void initData(){
 			} 
 			else if((i-1)%n == 4){
 				pathPoint.yaw=std::stod(get_path.response.data.at(i));
-				if(n!=7){
-					pathPoint.text = "";
-					path.push_back(pathPoint);
-				}
 			}
-			else if(n==7){
-				if((i-1)%n == 5){
-					pathPoint.text = get_path.response.data.at(i);
-				}
-				else if((i-1)%n == 6){
-					pathPoint.delayText = get_path.response.data.at(i)=="" ? 0.0 : std::stod(get_path.response.data.at(i));
-					path.push_back(pathPoint);
-				}
+
+			else if((i-1)%n == 5){
+				pathPoint.text = get_path.response.data.at(i);
+			}
+			else if((i-1)%n == 6){
+				pathPoint.delayText = get_path.response.data.at(i)=="" ? 0.0 : std::stod(get_path.response.data.at(i));
+				path.push_back(pathPoint);
 			}
 		}
 	}

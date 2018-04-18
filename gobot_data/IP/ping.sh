@@ -51,7 +51,7 @@ else
                     nmcli d wifi connect "$wifiname" password "$wifipassword"
                     echo "(PING WIFI) Robot build connection to assigned wifi named #$wifiname#"
             else
-                nmcli connection up $wifiname
+                nmcli connection up "$wifiname"
                 echo "(PING WIFI) Robot connecting to assigned wifi named #$wifiname#"
             fi
         else

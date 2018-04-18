@@ -14,7 +14,7 @@ else        #if old wifi is not Hotspot, then delete it from wifi memory list
     echo "(DELETE WIFI) Disconnect robot wifi: #$oldWifiName#"
     if [ "$(nmcli connection show | grep -w "$oldWifiName")" ]
     then
-        nmcli connection delete $oldWifiName
+        nmcli connection delete "$oldWifiName"
         echo "(DELETE WIFI) Deleted WIFIs name: #$oldWifiName#"
     fi
 fi

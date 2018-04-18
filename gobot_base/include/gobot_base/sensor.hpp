@@ -421,7 +421,7 @@ class SensorClass {
                         if (USE_SONAR)
                             sonar_pub_.publish(sonar_data);
 
-                        if (USE_CLIFF && !battery_data.ChargingFlag)
+                        if (USE_CLIFF)
                             cliff_pub_.publish(cliff_data);
                     
                         if(resetwifi_button==1 && (ros::Time::now()-reset_wifi_time_).toSec()>1.0){

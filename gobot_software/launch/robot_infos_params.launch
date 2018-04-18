@@ -3,7 +3,7 @@
     <!--COMMON PARAMETERS -->
     <param name="simulation" type="bool" value="false" />
     <param name="status_update" type="double" value="6.0" />
-    <param name="ip_update" type="double" value="30.0" />
+    <param name="ip_update" type="double" value="25.0" />
     <param name="waiting_time" type="double" value="6.0" />
     <!-- MAP RELATED -->
 		<param name="map_image_used" type="string" value="$(find gobot_data)/maps/used_map.pgm" />

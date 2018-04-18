@@ -1,6 +1,6 @@
 #include "gobot_software/ping_servers.hpp"
 
-#define PING_THRESHOLD 4
+#define PING_THRESHOLD 6
 
 static const std::string sep = std::string(1, 31);
 
@@ -65,11 +65,10 @@ void updateInfoCallback(const std_msgs::String::ConstPtr& update_status){
     ipMutex.unlock();
     
     if(data_threads.size()>0){
-        sendDataMutex.lock();
         ///we wait for all the threads to be done
         for(int i = 0; i < data_threads.size(); ++i)
             data_threads.at(i).join();  
-        sendDataMutex.unlock();
+        ROS_INFO("(PING_SERVERS) Done pinging every connected server");
     }
 }
 
@@ -164,8 +163,7 @@ void pingIP(std::string ip, std::string dataToSend, double sec){
             connectedIPs.push_back(ip);
             connectedMutex.unlock();
             //ROS_INFO("(PING_SERVERS) Connected to %s", ip.c_str());
-        } //else
-            //ROS_ERROR("(PING_SERVERS) read %lu bytes : %s", read.size(), read.c_str());
+        }
         
     } catch(std::exception& e) {
         //ROS_ERROR("(PING_SERVERS) error %s : %s", ip.c_str(), e.what());
@@ -182,7 +180,7 @@ void pingIP2(std::string ip, std::string dataToSend, double sec){
         std::string read = client.read_some();
         if(read.compare("OK") == 0){
             /// Send the required data
-            client.write_line(dataToSend, boost::posix_time::seconds(2.5));
+            client.write_line(dataToSend, boost::posix_time::seconds(2.0));
             //ROS_INFO("(PING_SERVERS) Connected to %s", ip.c_str());
         } 
 
@@ -191,6 +189,42 @@ void pingIP2(std::string ip, std::string dataToSend, double sec){
     }
 }
 
+void tcp_slave(){
+    /**
+    * Will ping all available IP addresses and send a message when we disconnect to one
+    */
+    /// Ping all servers every 5 secs
+    ros::Rate loop_rate(1/STATUS_UPDATE);
+
+    while(ros::ok()){ 
+        std::vector<std::thread> threads;
+        connectedIPs.clear();
+        //ROS_INFO("(PING_SERVERS) %f",(ros::Time::now()-disco_time).toSec());
+        serverMutex.lock();
+        if(availableIPs.size()>0){
+            //ROS_INFO("(PING_SERVERS) Data to send : %s", dataToSend.c_str());
+            /// We create threads to ping every IP adress
+            /// => threads reduce the required time to ping from ~12 sec to 2 sec
+            if((ros::Time::now()-disco_time).toSec()>WAITING_TIME){
+                /// Get the data to send to the Qt app
+                std::string dataToSend = getDataToSend();
+                //ROS_INFO("(PING_SERVERS) Trying to ping everyone %lu", availableIPs.size());
+                for(int i = 0; i < availableIPs.size(); ++i)
+                    threads.push_back(std::thread(pingIP, availableIPs.at(i), dataToSend, 4.0));
+            }
+        }
+        serverMutex.unlock();
+
+        if(threads.size()>0){
+            /// We join all the threads => we wait for all the threads to be done
+            for(int i = 0; i < threads.size(); ++i)
+                threads.at(i).join();
+            ROS_INFO("(PING_SERVERS) Done pinging everyone");
+        }
+        updateIP();
+        loop_rate.sleep();        
+    }
+}
 
 void initParams(){
     ros::NodeHandle nh;
@@ -240,20 +274,17 @@ int main(int argc, char* argv[]){
 
     ros::Subscriber servers_sub = n.subscribe("/gobot_software/online_servers", 1, updateServersCallback);
 
-
-    ros::AsyncSpinner spinner(3); // Use 3 threads
-    spinner.start();
-
+    //start to ping available servers that can be connected
+    //std::thread t(tcp_slave);
     /**
     * Will ping all available IP addresses and send a message when we disconnect to one
     */
     /// Ping all servers every 5 secs
     ros::Rate loop_rate(1/STATUS_UPDATE);
 
-    std::vector<std::thread> threads;
-
     while(ros::ok()){ 
-        threads.clear();
+        ros::spinOnce();
+        std::vector<std::thread> threads;
         connectedIPs.clear();
         //ROS_INFO("(PING_SERVERS) %f",(ros::Time::now()-disco_time).toSec());
         serverMutex.lock();
@@ -272,17 +303,19 @@ int main(int argc, char* argv[]){
         serverMutex.unlock();
 
         if(threads.size()>0){
-            sendDataMutex.lock();
             /// We join all the threads => we wait for all the threads to be done
             for(int i = 0; i < threads.size(); ++i)
                 threads.at(i).join();
-            //ROS_INFO("(PING_SERVERS) Done pinging everyone");
-            sendDataMutex.unlock();
+            ROS_INFO("(PING_SERVERS) Done pinging everyone");
         }
         updateIP();
         loop_rate.sleep();        
     }
-
+    /*
+    ros::AsyncSpinner spinner(3); // Use 3 threads
+    spinner.start();
     ros::waitForShutdown();
+    */
+    ROS_INFO("(PING_SERVERS) CLOSED.");
     return 0;
 }

@@ -454,7 +454,7 @@ bool robotStartup(const std::vector<std::string> command){
 
 /// First param = i, then the path name, then quadriplets of parameters to represent path points (path name, point name, posX, posY, waiting time,orientation) 
 bool newPath(const std::vector<std::string> command){
-    if(command.size() >= 6 && (command.size()%7==2 || command.size()%5==2)){  
+    if(command.size() >= 6 && command.size()%7==2){  
         //ROS_INFO("(COMMAND_SYSTEM) New path received");
         gobot_msg_srv::SetStringArray set_path;
         for(int i = 1; i < command.size(); i++)
@@ -1094,7 +1094,7 @@ void session(boost::shared_ptr<tcp::socket> sock){
             /// We wait to receive some data
             size_t length = sock->read_some(boost::asio::buffer(data), error);
             if ((error == boost::asio::error::eof) || (error == boost::asio::error::connection_reset)){
-                ROS_WARN("(COMMAND_SYSTEM) Connection error %s", ip.c_str());
+                ROS_WARN("(COMMAND_SYSTEM) Connection error %s, Done with this session", ip.c_str());
                 /*
                 std_msgs::String msg;
                 msg.data = ip;
@@ -1163,6 +1163,41 @@ void session(boost::shared_ptr<tcp::socket> sock){
     ROS_INFO("(COMMAND_SYSTEM) Done with this session %s", ip.c_str());
 }
 
+void server(void){
+    boost::asio::io_service io_service;
+    tcp::acceptor a(io_service, tcp::endpoint(tcp::v4(), CMD_PORT));
+    while(ros::ok()) {
+
+        boost::shared_ptr<tcp::socket> sock = boost::shared_ptr<tcp::socket>(new tcp::socket(io_service));
+
+        /// We wait for someone to connect
+        a.accept(*sock);
+
+        /// Got a new connection so we had it to our array of sockets
+        std::string ip = sock->remote_endpoint().address().to_string();
+        ROS_INFO("(COMMAND_SYSTEM) Command socket connected to %s", ip.c_str());
+        socketsMutex.lock();
+        /*
+        if(!sockets.count(ip))
+            sockets.insert(std::pair<std::string, boost::shared_ptr<tcp::socket>>(ip, sock));
+        else
+            ROS_ERROR("(COMMAND_SYSTEM) the ip %s is already connected, this should not happen", ip.c_str());
+        */
+        if(sockets.find(ip)==sockets.end()){ //not find the ip
+            sockets.insert(std::pair<std::string, boost::shared_ptr<tcp::socket>>(ip, sock));
+        }
+        else{   //ip exists in the list
+            sockets.find(ip)->second->close();
+            sockets.find(ip)->second = sock;
+            ROS_ERROR("(COMMAND_SYSTEM) the ip %s is already connected, this should not happen", ip.c_str());
+        }
+        socketsMutex.unlock();
+
+        /// Launch the session thread which will communicate with the server
+        std::thread(session, sock).detach();
+    }
+
+}
 /*********************************** DISCONNECTION FUNCTIONS ***********************************/
 
 void serverDisconnected(const std_msgs::String::ConstPtr& msg){
@@ -1223,42 +1258,8 @@ int main(int argc, char* argv[]){
 
     ROS_INFO("(COMMAND_SYSTEM) Ready to be launched.");
 
-    ros::AsyncSpinner spinner(3); // Use 3 threads
-    spinner.start();
-
-    boost::asio::io_service io_service;
-    tcp::acceptor a(io_service, tcp::endpoint(tcp::v4(), CMD_PORT));
-    while(ros::ok()) {
-
-        boost::shared_ptr<tcp::socket> sock = boost::shared_ptr<tcp::socket>(new tcp::socket(io_service));
-
-        /// We wait for someone to connect
-        a.accept(*sock);
-
-        /// Got a new connection so we had it to our array of sockets
-        std::string ip = sock->remote_endpoint().address().to_string();
-        ROS_INFO("(COMMAND_SYSTEM) Command socket connected to %s", ip.c_str());
-        socketsMutex.lock();
-        /*
-        if(!sockets.count(ip))
-            sockets.insert(std::pair<std::string, boost::shared_ptr<tcp::socket>>(ip, sock));
-        else
-            ROS_ERROR("(COMMAND_SYSTEM) the ip %s is already connected, this should not happen", ip.c_str());
-        */
-        if(sockets.find(ip)==sockets.end()){ //not find the ip
-            sockets.insert(std::pair<std::string, boost::shared_ptr<tcp::socket>>(ip, sock));
-        }
-        else{   //ip exists in the list
-            sockets.find(ip)->second->close();
-            sockets.find(ip)->second = sock;
-            ROS_ERROR("(COMMAND_SYSTEM) the ip %s is already connected, this should not happen", ip.c_str());
-        }
-        socketsMutex.unlock();
-
-        /// Launch the session thread which will communicate with the server
-        std::thread(session, sock).detach();
-    }
-
-    ros::waitForShutdown();
+    std::thread t(server);
+    
+    ros::spin();
     return 0;
 }

@@ -44,4 +44,6 @@ void initParams(void);
 bool networkReadySrvCallback(std_srvs::Empty::Request &req, std_srvs::Empty::Response &res);
 
 void mySigintHandler(int sig);
+
+void tcp_slave(void);
 #endif
