@@ -65,7 +65,7 @@ void server(void){
 
         /// Got a new connection so we had it to our array of sockets
         std::string ip = sock->remote_endpoint().address().to_string();
-        ROS_INFO("(LASER_TRANSFER) Command socket connected to %s", ip.c_str());
+        //ROS_INFO("(LASER_TRANSFER) Command socket connected to %s", ip.c_str());
         socketsMutex.lock();
         /*
         if(!sockets.count(ip))

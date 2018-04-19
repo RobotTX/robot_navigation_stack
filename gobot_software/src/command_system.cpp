@@ -1094,7 +1094,7 @@ void session(boost::shared_ptr<tcp::socket> sock){
             /// We wait to receive some data
             size_t length = sock->read_some(boost::asio::buffer(data), error);
             if ((error == boost::asio::error::eof) || (error == boost::asio::error::connection_reset)){
-                ROS_WARN("(COMMAND_SYSTEM) Connection error %s, Done with this session", ip.c_str());
+                ROS_WARN("(COMMAND_SYSTEM) Connection error %s. Closed", ip.c_str());
                 /*
                 std_msgs::String msg;
                 msg.data = ip;

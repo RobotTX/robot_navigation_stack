@@ -48,7 +48,7 @@ std::string pathLoopFile;
 int loop_ = 0;
 
 std::string lowBatteryFile;
-std::string low_battery_="0.0";
+std::string low_battery_="0";
 
 std::string speedFile;
 std::string linear_spd_="0.4";
@@ -585,12 +585,7 @@ void initialData(){
     }
     
     if(stage_<0){
-        if(stage_==-99 || stage_==-100){
-            stage_=0;
-        }
-        else{
-            stage_=-stage_-1;
-        }
+        stage_ = -stage_ - 1;
         std::ofstream ofsStage(pathStageFile, std::ofstream::out | std::ofstream::trunc);
             if(ofsStage){
                 ofsStage << stage_;
@@ -658,7 +653,7 @@ void initialData(){
     if(ifsBattery){
         ifsBattery >> low_battery_;
         ifsBattery.close();
-        ROS_INFO("(STATUS_SYSTEM) Read Gobot battery: %.2f", std::stod(low_battery_));
+        ROS_INFO("(STATUS_SYSTEM) Read Gobot battery: %d", std::stoi(low_battery_));
     }
 
     //read speed

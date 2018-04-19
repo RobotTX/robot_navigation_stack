@@ -80,10 +80,9 @@ add_executable(battery_check src/battery_check.cpp)
 target_link_libraries(battery_check ${catkin_LIBRARIES} ${gobot_software} )
 add_dependencies(battery_check ${${gobot_msg_srv}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
 
-
-add_executable(ping_servers src/ping_servers.cpp)
-target_link_libraries(ping_servers ${catkin_LIBRARIES} ${gobot_software} ${Boost_FILESYSTEM_LIBRARY} ${Boost_SYSTEM_LIBRARY} )
-add_dependencies(ping_servers ${${gobot_msg_srv}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
+add_executable(ping_server_node src/ping_server_node.cpp)
+target_link_libraries(ping_server_node ${catkin_LIBRARIES} ${gobot_software} ${Boost_FILESYSTEM_LIBRARY} ${Boost_SYSTEM_LIBRARY} )
+add_dependencies(ping_server_node ${${gobot_msg_srv}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
 
 add_executable(check_servers src/check_servers.cpp)
 target_link_libraries(check_servers ${catkin_LIBRARIES} ${gobot_software} ${Boost_FILESYSTEM_LIBRARY} ${Boost_SYSTEM_LIBRARY} )

@@ -42,8 +42,10 @@ void goalResultCallback(const move_base_msgs::MoveBaseActionResult::ConstPtr& ms
 				break;
 			//ABORTED
 			case 4:
-				if(text_=="PLAY_PATH")
-					SetRobot.setStage(-stage_ - 1);
+				if(text_=="PLAY_PATH"){
+					stage_ = -stage_ - 1;
+					SetRobot.setStage(stage_);
+				}
 				setGobotStatus(0,"ABORTED_PATH");
 				SetRobot.setMotorSpeed('F', 0, 'F', 0);
 				break;
@@ -455,7 +457,6 @@ void initData(){
 
 void mySigintHandler(int sig)
 {   
-    SetRobot.setStage(stage_);
 	button_sub.shutdown();
 	delete ac;
     ros::shutdown();
