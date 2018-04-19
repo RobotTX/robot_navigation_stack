@@ -91,4 +91,8 @@ add_dependencies(check_servers ${${gobot_msg_srv}_EXPORTED_TARGETS} ${catkin_EXP
 add_executable(command_system src/command_system.cpp)
 target_link_libraries(command_system ${catkin_LIBRARIES} ${gobot_software} ${Boost_FILESYSTEM_LIBRARY} ${Boost_SYSTEM_LIBRARY} )
 add_dependencies(command_system ${${gobot_msg_srv}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
+
+add_executable(map_test src/map_test.cpp)
+target_link_libraries(map_test ${catkin_LIBRARIES} ${gobot_software} ${Boost_FILESYSTEM_LIBRARY} ${Boost_SYSTEM_LIBRARY} )
+add_dependencies(map_test ${${gobot_msg_srv}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
 #add_library(ThreadPool include/gobot_software/ThreadPool.h)

@@ -1,0 +1,11 @@
+<?xml version="1.0"?>
+<launch>
+    <param name="map_image_used" type="string" value="$(find gobot_data)/maps/processed_map.pgm" />
+
+    <node pkg="map_server" type="map_server" name="map_server" args="$(find gobot_data)/maps/used_map.yaml" required="true">
+        <param name="frame_id" type="string" value="/map" />
+    </node>
+    
+    <node pkg="gobot_software" type="map_test" name="map_test" output="screen" required="true" />
+
+</launch>
