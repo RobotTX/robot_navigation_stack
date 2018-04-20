@@ -251,13 +251,13 @@ bool playPathService(std_srvs::Empty::Request &req, std_srvs::Empty::Response &r
 		stop_flag = false;
 	}
 
-	if(stage_>=path.size()){
-		stage_ = 0;
+	if(stage_ < 0){
+		stage_ = -stage_ - 1;
 		SetRobot.setStage(stage_);
 	}
-
-	else if(stage_ < 0){
-		stage_ = -stage_-1;
+	
+	if(stage_ >= path.size()){
+		stage_ = 0;
 		SetRobot.setStage(stage_);
 	}
 
@@ -452,6 +452,12 @@ void initData(){
     config.request.config.doubles.push_back(angular_param);
 	ros::service::waitForService("/move_base/TebLocalPlannerROS/set_parameters",ros::Duration(30));
     ros::service::call("/move_base/TebLocalPlannerROS/set_parameters",config);
+
+	//Set lower manual speed for scan process
+    gobot_msg_srv::SetFloatArray joy_speed;
+    joy_speed.request.data.push_back(0.4);
+    joy_speed.request.data.push_back(0.8);
+    ros::service::call("/gobot_base/set_joy_speed",joy_speed);
 
 }
 

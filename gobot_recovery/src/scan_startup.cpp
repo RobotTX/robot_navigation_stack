@@ -125,10 +125,9 @@ int main(int argc, char **argv) {
     ros::ServiceServer poseReadySrv = nh.advertiseService("/gobot_startup/pose_ready", poseReadySrvCallback);
     //Startup end
     
+    nh.getParam("map_id_file", map_id);
     nh.getParam("map_path", map_path);
     ROS_INFO("(SCAN_STARTUP) map_path: %s.",map_path.c_str());
-
-    nh.getParam("map_id_file", map_id);
     
     ros::ServiceServer saveMapSrv = nh.advertiseService("/gobot_scan/save_map", saveMapSrvCallback);
 

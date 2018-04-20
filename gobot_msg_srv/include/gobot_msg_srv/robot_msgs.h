@@ -38,4 +38,5 @@
 #include <gobot_msg_srv/SetSpeeds.h>
 #include <gobot_msg_srv/SetString.h>
 #include <gobot_msg_srv/SetStringArray.h>
+#include <gobot_msg_srv/SetFloatArray.h>
 #endif

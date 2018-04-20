@@ -16,6 +16,8 @@
 #include <tf/transform_listener.h>
 #include <gobot_msg_srv/set_robot_class.h>
 #include <gobot_msg_srv/GetGobotStatus.h>
+#include <dynamic_reconfigure/Reconfigure.h>
+#include <dynamic_reconfigure/DoubleParameter.h>
 
 typedef actionlib::SimpleActionClient<move_base_msgs::MoveBaseAction> MoveBaseClient;
 
@@ -36,5 +38,7 @@ void backToStart(void);
 
 /// To get the starting position
 bool getRobotPos(void);
+
+void initData(void);
     
 #endif

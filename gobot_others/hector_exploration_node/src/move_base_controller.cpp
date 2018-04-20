@@ -191,6 +191,35 @@ bool stopExploration(void){
     return true;
 }
 
+void initData(){
+    ros::NodeHandle nh;
+    /// Get the data from the parameters server
+    nh.param<std::string>("map_frame", map_frame, "map");
+    nh.param<std::string>("base_frame", base_frame, "base_link");
+    nh.param<int>("new_goal_sec", new_goal_sec, 30);
+    nh.param<int>("no_frontier_threshold", no_frontier_threshold, 5);
+
+
+    ros::service::waitForService("/gobot_function/play_path",ros::Duration(60));
+    //Set lower speed for scan process
+    dynamic_reconfigure::Reconfigure config;
+    dynamic_reconfigure::DoubleParameter linear_param,angular_param;
+    linear_param.name = "max_vel_x";
+    linear_param.value = 0.2;
+    angular_param.name = "max_vel_theta";
+    angular_param.value = 0.5;
+    config.request.config.doubles.push_back(linear_param);
+    config.request.config.doubles.push_back(angular_param);
+    ros::service::call("/move_base/TebLocalPlannerROS/set_parameters",config);
+
+
+    //Set lower manual speed for scan process
+    gobot_msg_srv::SetFloatArray joy_speed;
+    joy_speed.request.data.push_back(0.2);
+    joy_speed.request.data.push_back(0.5);
+    ros::service::call("/gobot_base/set_joy_speed",joy_speed);
+}
+
 void mySigintHandler(int sig)
 {   
 	delete ac;
@@ -211,18 +240,8 @@ int main(int argc, char* argv[]){
     //Startup end
 
     ROS_INFO("(SCAN_EXPLORE) running...");
-    /// Get the data from the parameters server
-    nh.param<std::string>("map_frame", map_frame, "map");
-    //~ROS_INFO("(SCAN_EXPLORE) map_frame : %s", map_frame.c_str());
 
-    nh.param<std::string>("base_frame", base_frame, "base_link");
-    //~ROS_INFO("(SCAN_EXPLORE) base_frame : %s", base_frame.c_str());
-
-    nh.param<int>("new_goal_sec", new_goal_sec, 30);
-    //~ROS_INFO("(SCAN_EXPLORE) new_goal_sec : %d", new_goal_sec);
-
-    nh.param<int>("no_frontier_threshold", no_frontier_threshold, 5);
-    //~ROS_INFO("(SCAN_EXPLORE) no_frontier_threshold : %d", no_frontier_threshold);
+    initData();
 
     /// Create an actionlibClient to be able to send and monitor goals
     ac = new MoveBaseClient("move_base", true);

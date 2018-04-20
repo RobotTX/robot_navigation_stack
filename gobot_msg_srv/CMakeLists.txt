@@ -101,6 +101,7 @@ add_service_files(
     SetStringArray.srv
     GetIntArray.srv
     SetIntArray.srv
+    SetFloatArray.srv
 )
 
 ## Generate actions in the 'action' folder

@@ -25,7 +25,7 @@ stt: 0.02
 linearUpdate: 0.5
 angularUpdate: 0.5 #17degree 
 particles: 60
-map_update_interval: 2.0
+map_update_interval: 3.0
 iterations: 5
 use_footprint: true
 footprint: [[0.250,0],[0.245,-0.165], [0.215,-0.215], [0.165,-0.240],

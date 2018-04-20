@@ -18,7 +18,7 @@ double a = 15.6, b = -20.0;
 bool lost_robot = false;
 
 bool enable_joy = false;
-double linear_limit = 0.4, angular_limit = 0.8; 
+double linear_limit = 0.4, angular_limit = 0.8, joy_linear = 0.4, joy_angular = 0.8; 
 
 int left_speed_ = 0, right_speed_ = 0;
 
@@ -42,6 +42,13 @@ bool pauseRobotSrvCallback(std_srvs::Empty::Request &req, std_srvs::Empty::Respo
     return true;
 }
 
+bool joySpeedSrvCallback(gobot_msg_srv::SetFloatArray::Request &req, gobot_msg_srv::SetFloatArray::Response &res){
+    linear_limit = req.data[0];
+    angular_limit = req.data[1];
+    joy_linear = linear_limit;
+    joy_angular = angular_limit;
+    return true;
+}
 
 void cliffCallback(const gobot_msg_srv::CliffMsg::ConstPtr& cliff){
     if((cliff->cliff1>CLIFF_THRESHOLD) || (cliff->cliff1==CLIFF_OUTRANGE) || (cliff->cliff2>CLIFF_THRESHOLD) || (cliff->cliff2==CLIFF_OUTRANGE)){
@@ -219,28 +226,28 @@ void joyCallback(const sensor_msgs::Joy::ConstPtr& joy){
     if(enable_joy){
         //adjust linear speed
         if(joy->axes[7] == 1){
-            linear_limit = (linear_limit+0.1) <= 0.9 ? linear_limit+0.1 : 0.9;
+            joy_linear = (joy_linear+0.1) <= 0.9 ? joy_linear+0.1 : 0.9;
         }
         else if(joy->axes[7] == -1){
-            linear_limit = (linear_limit-0.1) > 0.1 ? linear_limit-0.1 : 0.1;
+            joy_linear = (joy_linear-0.1) > 0.1 ? joy_linear-0.1 : 0.1;
         }
 
         //adjust angular speed
         if(joy->axes[6] == -1){
-            angular_limit = (angular_limit+0.1) <= 2.0 ? angular_limit+0.1 : 2.0;
+            joy_angular = (joy_angular+0.1) <= 2.0 ? joy_angular+0.1 : 2.0;
         }
         else if(joy->axes[6] == 1){
-            angular_limit = (angular_limit-0.1) > 0.2 ? angular_limit-0.1 : 0.2;
+            joy_angular = (joy_angular-0.1) > 0.2 ? joy_angular-0.1 : 0.2;
         }
 
         //reset linear speed limit 0.4
         if(joy->buttons[9]){
-            linear_limit = 0.4;
+            joy_linear = linear_limit;;
         }
 
         //reset angular speed limit 0.8
         if(joy->buttons[10]){
-            angular_limit = 0.8;
+            joy_angular = angular_limit;
         }
 
         if(joy->buttons[0])
@@ -257,8 +264,8 @@ void joyCallback(const sensor_msgs::Joy::ConstPtr& joy){
                 SetRobot.setMotorSpeed('F', 0, 'F', 0);
             else {
                 /// calculate the speed of each wheel in m/s
-                double right_vel_m_per_sec = linear_limit * joy->axes[1] + angular_limit * joy->axes[3] * wheel_sep_ / (double)2;
-                double left_vel_m_per_sec = linear_limit * joy->axes[1] - angular_limit * joy->axes[3] * wheel_sep_ / (double)2;
+                double right_vel_m_per_sec = joy_linear * joy->axes[1] + joy_angular * joy->axes[3] * wheel_sep_ / (double)2;
+                double left_vel_m_per_sec = joy_linear * joy->axes[1] - joy_angular * joy->axes[3] * wheel_sep_ / (double)2;
 
                 /// calculate the real value we need to give the MD49
                 double right_vel_speed = (right_vel_m_per_sec * vel_constant_ - b ) / a;
@@ -348,8 +355,9 @@ int main(int argc, char **argv) {
     ros::Subscriber motorSpd_sub = nh.subscribe("/gobot_motor/motor_speed", 1, motorSpdCallback);
     ros::Subscriber status_sub = nh.subscribe("/gobot_status/gobot_status", 1, statusCallback);
 
+    ros::ServiceServer joySpeed = nh.advertiseService("/gobot_base/set_joy_speed",joySpeedSrvCallback);
+
     //not in use now
-    
     ros::ServiceServer continueRobot = nh.advertiseService("/gobot_base/continue_robot",continueRobotSrvCallback);
     ros::ServiceServer pauseRobot = nh.advertiseService("/gobot_base/pause_robot",pauseRobotSrvCallback);
 

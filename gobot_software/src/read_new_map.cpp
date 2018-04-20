@@ -47,7 +47,7 @@ void session(boost::shared_ptr<tcp::socket> sock){
             throw boost::system::system_error(error); // Some other error.
             return;
         }
-
+        ROS_INFO("(MAP_READ) Received Map Data Length: %zu",length);
         // Parse the data as we are supposed to receive : "mapId ; mapDate ; metadata ; map"
         for(int i = 0; i < length; i++){
             if(data[i] == ';' && gotMapData <= 2){
@@ -82,10 +82,9 @@ void session(boost::shared_ptr<tcp::socket> sock){
 
             /// We check if we already have a map with the same id
             std::string mapIdFile;
-            if(n.hasParam("map_id_file")){
-                n.getParam("map_id_file", mapIdFile);
-                ROS_INFO("(MAP_READ) got map id file : %s", mapIdFile.c_str());
-            }
+            n.getParam("map_id_file", mapIdFile);
+            //ROS_INFO("(MAP_READ) got map id file : %s", mapIdFile.c_str());
+
             std::string mapIdFromFile("");
             std::ifstream ifMap(mapIdFile, std::ifstream::in);
             if(ifMap){
@@ -141,7 +140,7 @@ void session(boost::shared_ptr<tcp::socket> sock){
                             std::string originStr = "origin: [" + std::to_string(initPosX) + ", " + std::to_string(initPosY) + ", 0.00]";
                             ofs << "image: used_map.pgm" << std::endl << resolutionStr << std::endl << originStr << std::endl << "negate: 0" << std::endl << "occupied_thresh: 0.65" << std::endl << "free_thresh: 0.196";
                             ofs.close();
-                            ROS_INFO("(MAP_READ) New map config file created in %s", mapConfig.c_str()); 
+                            //ROS_INFO("(MAP_READ) New map config file created in %s", mapConfig.c_str()); 
                         }
                     }
 
@@ -165,7 +164,7 @@ void session(boost::shared_ptr<tcp::socket> sock){
                             }
                             ofs << std::endl;
                             ofs.close();
-                            ROS_INFO("(MAP_READ) New map pgm file created in %s", mapFile.c_str());
+                            //ROS_INFO("(MAP_READ) New map pgm file created in %s", mapFile.c_str());
                         }
 
                         /// Kill gobot move so that we'll restart it with the new map
@@ -179,7 +178,6 @@ void session(boost::shared_ptr<tcp::socket> sock){
                             if(mapType != "IMPT" && mapType != "SCAN"){
                                 /// We delete the old home
                                 SetRobot.setHome("0","0","0","0","0","1");
-                                ROS_INFO("(MAP_READ) Home deleted");
                             }
 
                             if(mapType == "SCAN"){
@@ -195,21 +193,17 @@ void session(boost::shared_ptr<tcp::socket> sock){
                                         ofs << get_home.response.data[0] << " " << get_home.response.data[1] << " " << get_home.response.data[2] << " " << get_home.response.data[3] << " " << get_home.response.data[4] << " "<< get_home.response.data[5];
                                         ofs.close();
                                     }
-                                    ROS_INFO("(MAP_READ) Robot pose recored in scanned map");
                                 }
                             }
                             
                             /// We detele the loop
                             SetRobot.setLoop(0);
-                            ROS_INFO("(MAP_READ) Loop deleted");
 
                             /// We delete the old path
                             SetRobot.clearPath();
-                            ROS_INFO("(MAP_READ) Path deleted");
 
                             /// We delete the old path stage
                             SetRobot.setStage(0);
-                            ROS_INFO("(MAP_READ) Path stage deleted");
                             //#### delete old robot data ####
                         }
 
