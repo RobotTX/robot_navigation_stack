@@ -120,15 +120,9 @@ bool initializePoseSrvCallback(std_srvs::Empty::Request &req, std_srvs::Empty::R
             running = true;
             found_pose=false;
 
-            GetRobot.getStatus(robot_status_);
-            //pause when goal active or goal reached(may wait for human action)
-            if(robot_status_==5){
-                ros::service::call("/gobot_command/pause_path",empty_srv);
-                ROS_INFO("(POSE_ESTIMATION) Cancelled active goal to proceed gobalo localization.");
-            }
-            else if(robot_status_==15){
-                ROS_INFO("(POSE_ESTIMATION) Stop robot home.");
-                ros::service::call("/gobot_command/stopGoDock",empty_srv);
+            int move_status = SetRobot.stopRobotMoving();
+            if(move_status != 0){
+                ROS_INFO("(POSE_ESTIMATION) Stop robot motion, current status: %d.", move_status);
             }
 
             //get pose
@@ -217,15 +211,10 @@ bool globalizePoseSrvCallback(std_srvs::Empty::Request &req, std_srvs::Empty::Re
             int current_stage=START_STAGE;
             running = true;
             found_pose=false;
-
-            GetRobot.getStatus(robot_status_);
-            if(robot_status_==5){
-                ros::service::call("/gobot_command/pause_path",empty_srv);
-                ROS_INFO("(POSE_ESTIMATION) Cancelled active goal to proceed gobalo localization.");
-            }
-            else if(robot_status_==15){
-                ROS_INFO("(POSE_ESTIMATION) Stop robot home.");
-                ros::service::call("/gobot_command/stopGoDock",empty_srv);
+            
+            int move_status = SetRobot.stopRobotMoving();
+            if(move_status != 0){
+                ROS_INFO("(POSE_ESTIMATION) Stop robot motion, current status: %d.", move_status);
             }
             
             while(current_stage!=COMPLETE_STAGE && running && ros::ok()){
@@ -325,13 +314,9 @@ bool goHomeSrvCallback(std_srvs::Empty::Request &req, std_srvs::Empty::Response 
 
     GetRobot.getStatus(robot_status_);
     //pause when goal active or goal reached(may wait for human action)
-    if(robot_status_==5){
-        ros::service::call("/gobot_command/pause_path",empty_srv);
-        ROS_INFO("(POSE_ESTIMATION) Cancelled active goal to go home.");
-    }
-    else if(robot_status_==15){
-        ROS_INFO("(POSE_ESTIMATION) Stop robot home.");
-        ros::service::call("/gobot_command/stopGoDock",empty_srv);
+    int move_status = SetRobot.stopRobotMoving();
+    if(move_status != 0){
+        ROS_INFO("(POSE_ESTIMATION) Stop robot motion, current status: %d.", move_status);
     }
 
     ROS_INFO("(POSE_ESTIMATION) Go Home, sweet home.");

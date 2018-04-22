@@ -83,9 +83,9 @@ class SensorClass {
             gyro_pub_ = nh.advertise<gobot_msg_srv::GyroMsg>("/gobot_base/gyro_topic",1);
             temperature_pub_ = nh.advertise<std_msgs::Float32>("/gobot_base/temperature_topic",1);
 
-            ros::ServiceServer useBumperSrv = nh.advertiseService("/gobot_base/use_bumper", &SensorClass::useBumperSrvCallback, this);
-            ros::ServiceServer useSonarSrv = nh.advertiseService("/gobot_base/use_sonar", &SensorClass::useSonarSrvCallback, this);
-            ros::ServiceServer useCliffSrv = nh.advertiseService("/gobot_base/use_cliff", &SensorClass::useCliffSrvCallback, this);
+            useBumperSrv = nh.advertiseService("/gobot_base/use_bumper", &SensorClass::useBumperSrvCallback, this);
+            useSonarSrv = nh.advertiseService("/gobot_base/use_sonar", &SensorClass::useSonarSrvCallback, this);
+            useCliffSrv = nh.advertiseService("/gobot_base/use_cliff", &SensorClass::useCliffSrvCallback, this);
             shutdownSrv = nh.advertiseService("/gobot_base/shutdown_robot", &SensorClass::shutdownSrvCallback, this);
             displayDataSrv = nh.advertiseService("/gobot_base/displaySensorData", &SensorClass::displaySensorData, this);
 
@@ -690,7 +690,7 @@ class SensorClass {
         ros::Time last_led_time_, reset_wifi_time_;
         ros::Timer ledTimer_;
         ros::Publisher bumper_pub_, ir_pub_, proximity_pub_, sonar_pub_, weight_pub_, battery_pub_, cliff_pub_, button_pub_, gyro_pub_, temperature_pub_;
-        ros::ServiceServer shutdownSrv, displayDataSrv, sensorsReadySrv;
+        ros::ServiceServer shutdownSrv, displayDataSrv, sensorsReadySrv, useBumperSrv, useSonarSrv, useCliffSrv;
         ros::Subscriber led_sub_, sound_sub_, mute_sub_, status_sub_;
 
         boost::thread *sensor_thread_;

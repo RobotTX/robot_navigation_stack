@@ -199,8 +199,6 @@ void initData(){
     nh.param<int>("new_goal_sec", new_goal_sec, 30);
     nh.param<int>("no_frontier_threshold", no_frontier_threshold, 5);
 
-
-    ros::service::waitForService("/gobot_function/play_path",ros::Duration(60));
     //Set lower speed for scan process
     dynamic_reconfigure::Reconfigure config;
     dynamic_reconfigure::DoubleParameter linear_param,angular_param;
@@ -234,8 +232,11 @@ int main(int argc, char* argv[]){
     SetRobot.initialize();
     
     //Startup begin
+    //sleep for 1 second, otherwise waitForService not work properly
+    ros::Duration(1.0).sleep();
     ROS_INFO("(SCAN_EXPLORE) Waiting for Robot setting hardware...");
     ros::service::waitForService("/gobot_startup/pose_ready", ros::Duration(90.0));
+    ros::service::waitForService("/gobot_function/play_path",ros::Duration(90.0));
     ROS_INFO("(SCAN_EXPLORE) Robot setting hardware is ready.");
     //Startup end
 

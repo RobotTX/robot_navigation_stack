@@ -7,6 +7,8 @@ int main(int argc, char** argv){
     std::cout<<"###############START SENSOR INITILIZATION###############"<<std::endl;
     
     //Startup begin
+    //sleep for 1 second, otherwise waitForService not work properly
+    ros::Duration(1.0).sleep();
     ROS_INFO("(SENSOR::START) Waiting for MOTOR to be ready...");
     ros::service::waitForService("/gobot_startup/motor_ready", ros::Duration(60.0));
     ROS_INFO("(SENSOR::START) MOTOR is ready.");
@@ -16,5 +18,5 @@ int main(int argc, char** argv){
     std::cout<<"###############COMPLETE SENSOR INITILIZATION###############"<<std::endl;
     ros::spin();
 
-    return(0);
+    return 0;
 }

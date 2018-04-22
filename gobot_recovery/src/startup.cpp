@@ -5,7 +5,6 @@ std_srvs::Empty empty_srv;
 int count = 1;
 bool buttonOn=true;
 ros::Time action_time;
-std::string restart_sh;
 robot_class::GetRobot GetRobot;
 int robot_status_;
 std::string status_text_;
@@ -88,14 +87,14 @@ int main(int argc, char **argv) {
     ros::init(argc, argv, "startup");
     ros::NodeHandle nh;
     signal(SIGINT, mySigintHandler);
-    
+
     //Startup begin
+    //sleep for 1 second, otherwise waitForService not work properly
+    ros::Duration(1.0).sleep();
     ROS_INFO("(NAV_STARTUP) Waiting for Robot setting hardware...");
     ros::service::waitForService("/gobot_startup/sensors_ready", ros::Duration(60.0));
     ROS_INFO("(NAV_STARTUP) Robot setting hardware is ready.");
     //Startup end
-
-    nh.getParam("restart_file", restart_sh);
     
     ros::Subscriber initialPoseResult = nh.subscribe("/gobot_recovery/find_initial_pose",1, initialPoseResultCallback);
     ros::Subscriber button_sub = nh.subscribe("/gobot_base/button_topic",1,getButtonCallback);

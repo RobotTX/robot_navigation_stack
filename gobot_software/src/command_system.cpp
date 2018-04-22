@@ -71,8 +71,8 @@ bool execCommand(const std::string ip, const std::vector<std::string> command){
             ROS_WARN("(COMMAND_SYSTEM) Gobot is docking.");
             return false;
         }
-        //newCS
-        else if(commandStr.at(0)=='n'){
+        //newCS, startScan
+        else if(commandStr.at(0)=='n' || commandStr.at(0)=='t' || commandStr.at(0)=='g'){
             ros::service::call("/gobot_function/stopDocking", empty_srv);
         }
         //stopPath
@@ -85,8 +85,10 @@ bool execCommand(const std::string ip, const std::vector<std::string> command){
     else if(robot_status_==5){
         //newPath, stop&deletePath
         //goCharging,shutdownRobot
+        //startScan
         if(commandStr.at(0)=='i' || commandStr.at(0)=='m' ||
-           commandStr.at(0)=='o' || commandStr.at(0)=='v'){
+           commandStr.at(0)=='o' || commandStr.at(0)=='v' ||
+           commandStr.at(0)=='t' || commandStr.at(0)=='g'){
             ROS_WARN("(COMMAND_SYSTEM) Gobot is playing path,pause it.");
             ros::service::call("/gobot_function/pause_path", empty_srv);
         }
@@ -632,7 +634,6 @@ bool startNewScan(const std::string ip, const std::vector<std::string> command){
     if(command.size() == 1) {
         //ROS_INFO("(COMMAND_SYSTEM) Gobot start to scan a new map");
         scanning = true;
-
         /// Kill gobot move so that we'll restart it with the new map
         std::string cmd = SetRobot.killList(simulation);
         system(cmd.c_str());
@@ -649,8 +650,6 @@ bool startNewScan(const std::string ip, const std::vector<std::string> command){
 /// First param = u, 2nd is whether or not we want to kill gobot_move
 bool stopScanning(const std::string ip, const std::vector<std::string> command){
     if(command.size() == 2) {
-        //ROS_INFO("(COMMAND_SYSTEM) Gobot stops the scan of the new map");
-
         ros::service::call("/gobot_scan/stopExploration", empty_srv);
 
         if(std::stoi(command.at(1)) == 1){
@@ -842,7 +841,7 @@ void sendCommand(const std::string ip, const std::vector<std::string> command, s
     std::string msg;
     commandMutex.lock();
     bool command_feedback = execCommand(ip, command);
-    if (command_feedback )
+    if (command_feedback)
         //g=scan, t=newscan, u=stopscan, n=receivemap, v=shutdown
         if (command.at(0)!="g" && command.at(0)!="t" && command.at(0)!="u" && command.at(0)!="s" && command.at(0)!="v")
             SetRobot.setSound(1,1);
@@ -1042,20 +1041,19 @@ void sendConnectionData(boost::shared_ptr<tcp::socket> sock){
 
 bool sendMessageToSock(boost::shared_ptr<tcp::socket> sock, const std::string message){
     std::string ip = sock->remote_endpoint().address().to_string();
-
+    
+    socketsMutex.lock();
     try {
-        socketsMutex.lock();
         /// We send the result of the command to the given socket
         boost::asio::write(*sock, boost::asio::buffer(message, message.length()));
 
         //ROS_INFO("(COMMAND_SYSTEM) Message sent to %s succesfully",ip.c_str());
-        socketsMutex.unlock();
-        return true;
-    } catch (std::exception& e) {
+    } 
+    catch (std::exception& e) {
         ROS_ERROR("(COMMAND_SYSTEM) Message not sent : %s", e.what());
-        socketsMutex.unlock();
-        return false;
+
     }
+    socketsMutex.unlock();
 }
 
 bool sendMessageToAll(const std::string message){
@@ -1066,13 +1064,13 @@ bool sendMessageToAll(const std::string message){
             try {
                 // We send the result of the command to every Qt app
                 boost::asio::write(*(elem.second), boost::asio::buffer(message, message.length()));
-            } catch (std::exception& e) {
+            } 
+            catch (std::exception& e) {
                 // can not send msg to the ip, disconnect it
                 ROS_ERROR("(COMMAND_SYSTEM) Message not sent:%s: %s",elem.first.c_str(),e.what());
             }
         }
         socketsMutex.unlock();
-        //ROS_INFO("(COMMAND_SYSTEM) Message sent to ALL succesfully");
         return true;
     }
 }
@@ -1156,7 +1154,8 @@ void session(boost::shared_ptr<tcp::socket> sock){
                 ROS_ERROR("(COMMAND_SYSTEM) Stopping the function\n******************\n");
             }
         }
-    } catch (std::exception& e) {
+    } 
+    catch (std::exception& e) {
         ROS_ERROR("(COMMAND_SYSTEM) Exception in thread, ip : %s => %s ", ip.c_str(), e.what());
     }
 
@@ -1231,6 +1230,8 @@ int main(int argc, char* argv[]){
     SetRobot.initialize();
     
     //Startup begin
+    //sleep for 1 second, otherwise waitForService not work properly
+    ros::Duration(1.0).sleep();
     ros::service::waitForService("/gobot_startup/network_ready", ros::Duration(120.0));
     //Startup end
 

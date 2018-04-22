@@ -5,7 +5,8 @@
 #include <std_srvs/Empty.h>
 #include "gazebo_msgs/ContactsState.h"
 #include "gobot_msg_srv/BumperMsg.h"
-
+#include <iostream>
+#include <fstream>
 
 void newBackLeftBumper(const gazebo_msgs::ContactsState::ConstPtr& msg);
 void newBackLeftCylBumper(const gazebo_msgs::ContactsState::ConstPtr& msg);

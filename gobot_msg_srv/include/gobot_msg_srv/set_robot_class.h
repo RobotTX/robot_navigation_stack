@@ -21,6 +21,8 @@ namespace robot_class {
             ~SetRobot();
             void initialize();
 
+            int stopRobotMoving();
+
             bool setStatus(int status,std::string text);
             
             bool setDock(int status);

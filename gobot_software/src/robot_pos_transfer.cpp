@@ -9,7 +9,6 @@ std::mutex socketsMutex;
 std::map<std::string, boost::shared_ptr<tcp::socket>> sockets;
 std::string robot_string;
 std::string lastPoseFile;
-bool simulation = false;
 bool found_pose = false;
 
 double last_pos_x=0.0,last_pos_y=0.0,last_pos_yaw=0.0,last_ang_x=0.0,last_ang_y=0.0,last_ang_z=0.0,last_ang_w=1.0;
@@ -21,7 +20,8 @@ void sendRobotPosTimer(const ros::TimerEvent&){
         for(auto const &elem : sockets){
             try {
                 boost::asio::write(*(elem.second), boost::asio::buffer(robot_string, robot_string.length()));
-            } catch (std::exception& e) {
+            } 
+            catch (std::exception& e) {
                 //can not send pose to the ip
                 //ROS_ERROR("(POS_TRANSFER) Exception %s : %s", elem.first.c_str(), e.what());
             }
@@ -42,15 +42,20 @@ void saveRobotPosTimer(const ros::TimerEvent&){
 }
 
 void getRobotPos(const geometry_msgs::Pose::ConstPtr& msg){
-    double yaw = tf::getYaw(tf::Quaternion(msg->orientation.x, msg->orientation.y, msg->orientation.z, msg->orientation.w));
-    robot_string = std::to_string(msg->position.x) + " " + std::to_string(msg->position.y) + " " + std::to_string(yaw) + " ";
-    last_pos_x = msg->position.x;
-    last_pos_y = msg->position.y;
-    last_ang_x = msg->orientation.x;
-    last_ang_y = msg->orientation.y;
-    last_ang_z = msg->orientation.z;
-    last_ang_w = msg->orientation.w;
-    found_pose = true;
+    if(ros::service::exists("/gobot_startup/pose_ready",false)){
+        double yaw = tf::getYaw(tf::Quaternion(msg->orientation.x, msg->orientation.y, msg->orientation.z, msg->orientation.w));
+        robot_string = std::to_string(msg->position.x) + " " + std::to_string(msg->position.y) + " " + std::to_string(yaw) + " ";
+        last_pos_x = msg->position.x;
+        last_pos_y = msg->position.y;
+        last_ang_x = msg->orientation.x;
+        last_ang_y = msg->orientation.y;
+        last_ang_z = msg->orientation.z;
+        last_ang_w = msg->orientation.w;
+        found_pose = true;
+    }
+    else{
+        found_pose = false;
+    }
 }
 
 /*********************************** CONNECTION FUNCTIONS ***********************************/
@@ -131,6 +136,8 @@ int main(int argc, char **argv){
     signal(SIGINT, mySigintHandler);
     
     //Startup begin
+    //sleep for 1 second, otherwise waitForService not work properly
+    ros::Duration(1.0).sleep();
     ros::service::waitForService("/gobot_startup/network_ready", ros::Duration(120.0));
     //Startup end
 

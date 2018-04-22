@@ -37,6 +37,8 @@ int main(int argc, char* argv[]){
     
     std::cout<<"###############START NETWORK INITILIZATION###############"<<std::endl;
     //Startup begin
+    //sleep for 1 second, otherwise waitForService not work properly
+    ros::Duration(1.0).sleep();
     ROS_INFO("(CHECK_SERVERS) Waiting for Robot finding initial pose...");
     ros::service::waitForService("/gobot_startup/pose_ready", ros::Duration(90.0));
     ROS_INFO("(CHECK_SERVERS) Robot finding initial pose is ready.");

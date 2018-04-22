@@ -494,6 +494,8 @@ int main(int argc, char **argv){
     SetRobot.initialize();
     
     //Startup begin
+    //sleep for 1 second, otherwise waitForService not work properly
+    ros::Duration(1.0).sleep();
     ROS_INFO("(startup) Waiting for Robot setting hardware...");
     ros::service::waitForService("/gobot_startup/sensors_ready", ros::Duration(60.0));
     ROS_INFO("(startup) Robot setting hardware is ready.");

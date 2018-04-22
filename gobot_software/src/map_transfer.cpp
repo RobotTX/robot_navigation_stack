@@ -32,7 +32,8 @@ void sendMap(const std::string ip, const std::vector<uint8_t>& my_map){
 		ROS_INFO("(MAP_TRANSFER) Map size to send in uint8_t : %lu", my_map.size());
         if(sockets.count(ip))
 		  boost::asio::write(*(sockets.at(ip)), boost::asio::buffer(my_map), boost::asio::transfer_all(), ignored_error);
-	} catch (std::exception& e) {
+	} 
+	catch (std::exception& e) {
 		e.what();
 	}
 }
@@ -338,6 +339,8 @@ int main(int argc, char **argv){
 	signal(SIGINT, mySigintHandler);
 	
 	//Startup begin
+	//sleep for 1 second, otherwise waitForService not work properly
+    ros::Duration(1.0).sleep();
 	ros::service::waitForService("/gobot_startup/network_ready", ros::Duration(120.0));
 	//Startup end
 

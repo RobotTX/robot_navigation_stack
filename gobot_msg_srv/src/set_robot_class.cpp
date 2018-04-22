@@ -20,6 +20,29 @@ namespace robot_class {
         sound_pub_ = nh_.advertise<gobot_msg_srv::SoundMsg>("/gobot_base/set_sound", 1);
     }
 
+    int SetRobot::stopRobotMoving(){
+        gobot_msg_srv::GetGobotStatus get_gobot_status;
+        ros::service::call("/gobot_status/get_gobot_status",get_gobot_status);
+
+        //if robot is navigation / auto docking / scanning, then return the status
+        if(get_gobot_status.response.status==5){
+            ros::service::call("/gobot_command/pause_path",empty_srv);
+            return get_gobot_status.response.status;
+        }
+        else if(get_gobot_status.response.status==15){
+            ros::service::call("/gobot_command/stopGoDock",empty_srv);
+            return get_gobot_status.response.status;
+        }
+        else if(get_gobot_status.response.status==25){
+            ros::service::call("/gobot_command/stop_explore",empty_srv);
+            return get_gobot_status.response.status;
+        }
+        else{
+            //if robot is not moving, then return 0
+            return 0;
+        }
+    }
+
     bool SetRobot::setStatus(int status,std::string text){
         set_gobot_status_.request.status = status;
         set_gobot_status_.request.text = text;
@@ -132,14 +155,14 @@ namespace robot_class {
         ros::service::call("/gobot_motor/resetOdom",empty_srv);
 
         std::string cmd;
-        ros::Duration(4.0).sleep();
+        ros::Duration(3.0).sleep();
         /// Relaunch gobot_navigation
        if(simulation)
             cmd = "gnome-terminal -x bash -c \"source /opt/ros/kinetic/setup.bash;source ~/catkin_ws/devel/setup.bash;roslaunch gobot_gazebo gazebo_slam.launch\"";
         else
             cmd = "gnome-terminal -x bash -c \"source /opt/ros/kinetic/setup.bash;source ~/catkin_ws/devel/setup.bash;roslaunch gobot_navigation gobot_navigation.launch >> ~/catkin_ws/src/robot_navigation_stack/robot_log/navigation_log.txt\"";
         system(cmd.c_str());
-        ros::Duration(4.0).sleep();
+        ros::Duration(6.0).sleep();
     }
 
     void SetRobot::runScan(bool simulation){
@@ -148,14 +171,14 @@ namespace robot_class {
         ros::service::call("/gobot_motor/resetOdom",empty_srv);
         
         std::string cmd;
-        ros::Duration(4.0).sleep();
+        ros::Duration(3.0).sleep();
         /// Relaunch gobot_scan
         if(simulation)
             cmd = "gnome-terminal -x bash -c \"source /opt/ros/kinetic/setup.bash;source ~/catkin_ws/devel/setup.bash;roslaunch gobot_gazebo gazebo_scan.launch\"";
         else
             cmd = "gnome-terminal -x bash -c \"source /opt/ros/kinetic/setup.bash;source ~/catkin_ws/devel/setup.bash;roslaunch gobot_navigation gobot_scan.launch >> ~/catkin_ws/src/robot_navigation_stack/robot_log/navigation_log.txt\"";
         system(cmd.c_str());
-        ros::Duration(4.0).sleep();
+        ros::Duration(6.0).sleep();
     }
 
     //this two functions only work with robot equipped with speaker and ekho & festival packages

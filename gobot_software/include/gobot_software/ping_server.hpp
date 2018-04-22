@@ -23,15 +23,15 @@ class PingServerClass {
             ros::NodeHandle nh;
             nh.getParam("status_update", STATUS_UPDATE);
 
-            ros::ServiceServer disServersSrv = nh.advertiseService("/gobot_software/disconnet_servers", &PingServerClass::disServersSrvCallback,this);
+            disServersSrv_ = nh.advertiseService("/gobot_software/disconnet_servers", &PingServerClass::disServersSrvCallback,this);
 
             disco_pub_ = nh.advertise<std_msgs::String>("/gobot_software/server_disconnected", 1);
 
             host_pub_ = nh.advertise<gobot_msg_srv::StringArrayMsg>("/gobot_software/connected_servers", 1);
 
-            update_sub_ = nh.subscribe("/gobot_status/update_information", 1, &PingServerClass::updateInfoCallback,this);
+            update_sub_ = nh.subscribe("/gobot_status/update_information", 10, &PingServerClass::updateInfoCallback,this);
 
-            servers_sub_ = nh.subscribe("/gobot_software/online_servers", 1, &PingServerClass::updateServersCallback,this);
+            servers_sub_ = nh.subscribe("/gobot_software/online_servers", 10, &PingServerClass::updateServersCallback,this);
 
             ping_thread_ = new boost::thread(&PingServerClass::PingThread, this);
         }
@@ -39,7 +39,8 @@ class PingServerClass {
         ~PingServerClass(){
             update_sub_.shutdown();
             servers_sub_.shutdown();
-
+            disServersSrv_.shutdown();
+            
             ping_thread_->interrupt();
             ping_thread_->join();
             delete ping_thread_;
@@ -93,12 +94,9 @@ class PingServerClass {
         void updateInfoCallback(const std_msgs::String::ConstPtr& update_status){
             std::vector<std::thread> data_threads;
             ipMutex.lock();
-            if(oldIPs_.size()>0){
-                if((ros::Time::now()-disco_time_).toSec()>STATUS_UPDATE){
-                    std::string dataToSend = update_status->data;
-                    for(int i = 0; i < oldIPs_.size(); ++i)
-                        data_threads.push_back(std::thread(&PingServerClass::pingIP2, this, oldIPs_.at(i).first, dataToSend, 3.0));
-                }
+            if(oldIPs_.size()>0 && (ros::Time::now()-disco_time_).toSec()>STATUS_UPDATE){
+                for(int i = 0; i < oldIPs_.size(); ++i)
+                    data_threads.push_back(std::thread(&PingServerClass::pingIP2, this, oldIPs_.at(i).first, update_status->data, 3.0));
             }
             ipMutex.unlock();
             
@@ -116,6 +114,7 @@ class PingServerClass {
         void pingIP(std::string ip, std::string dataToSend, double sec){
             //ROS_INFO("(PING_SERVERS) Called pingIP : %s", ip.c_str());
             timeout::tcp::Client client;
+            bool valid_server = false;
             try {
                 /// Try to connect to the remote Qt app
                 client.connect(ip, "6000", boost::posix_time::seconds(sec));
@@ -123,16 +122,20 @@ class PingServerClass {
                 std::string read = client.read_some();
                 if(read.compare("OK") == 0){
                     /// Send the required data
-                    client.write_line(dataToSend, boost::posix_time::seconds(sec));
-                    /// Save the IP we just connected to in an array for later
-                    connectedMutex.lock();
-                    connectedIPs_.push_back(ip);
-                    connectedMutex.unlock();
-                    //ROS_INFO("(PING_SERVERS) Connected to %s", ip.c_str());
+                    client.write_line(dataToSend, boost::posix_time::seconds(sec-1.0));
+                    valid_server = true;
                 }
                 
             } catch(std::exception& e) {
                 //ROS_ERROR("(PING_SERVERS) error %s : %s", ip.c_str(), e.what());
+            }
+
+            if(valid_server){
+                /// Save the IP we just connected to in an array for later
+                connectedMutex.lock();
+                connectedIPs_.push_back(ip);
+                connectedMutex.unlock();
+                //ROS_INFO("(PING_SERVERS) Connected to %s", ip.c_str());
             }
         }
 
@@ -149,7 +152,7 @@ class PingServerClass {
                 std::string read = client.read_some();
                 if(read.compare("OK") == 0){
                     /// Send the required data
-                    client.write_line(dataToSend, boost::posix_time::seconds(sec));
+                    client.write_line(dataToSend, boost::posix_time::seconds(sec-1.0));
                     //ROS_INFO("(PING_SERVERS) Connected to %s", ip.c_str());
                 } 
 
@@ -168,27 +171,23 @@ class PingServerClass {
                 std::vector<std::thread> threads;
                 connectedIPs_.clear();
                 serverMutex.lock();
-                if(availableIPs_.size()>0){
+                if(availableIPs_.size()>0 && (ros::Time::now()-disco_time_).toSec()>STATUS_UPDATE){
                     //ROS_INFO("(PING_SERVERS) Data to send : %s", dataToSend.c_str());
                     /// We create threads to ping every IP adress
                     /// => threads reduce the required time to ping from ~12 sec to 2 sec
-                    if((ros::Time::now()-disco_time_).toSec()>STATUS_UPDATE){
-                        /// Get the data to send to the Qt app
-                        std::string dataToSend = getDataToSend();
-                        //ROS_INFO("(PING_SERVERS) Trying to ping everyone %lu", availableIPs_.size());
-                        for(int i = 0; i < availableIPs_.size(); ++i)
-                            threads.push_back(std::thread(&PingServerClass::pingIP, this, availableIPs_.at(i), dataToSend, 4.0));
-                    }
+                    /// Get the data to send to the Qt app
+                    for(int i = 0; i < availableIPs_.size(); ++i)
+                        threads.push_back(std::thread(&PingServerClass::pingIP, this, availableIPs_.at(i), getDataToSend(), 4.0));
                 }
                 serverMutex.unlock();
-
+                
+                ros::Time cur_time = ros::Time::now();
                 if(threads.size()>0){
-                    ros::Time cur_time = ros::Time::now();;
                     /// We join all the threads => we wait for all the threads to be done
                     for(int i = 0; i < threads.size(); ++i)
                         threads.at(i).join();
-                    ROS_INFO("(PING_SERVERS) Done pinging everyone: %f",(ros::Time::now()-cur_time).toSec());
                 }
+                ROS_INFO("(PING_SERVERS) Done pinging everyone. Use %f seconds to ping %zu servers",(ros::Time::now()-cur_time).toSec(),threads.size());
                 updateIP();
                 loop_rate.sleep();        
             }
@@ -202,7 +201,6 @@ class PingServerClass {
         std::string getDataToSend(void){
             gobot_msg_srv::GetString get_update_status;
             ros::service::call("/gobot_status/get_update_status", get_update_status);
-
             /// Form the string to send to the Qt app
             return  get_update_status.response.data;
         }
@@ -222,9 +220,10 @@ class PingServerClass {
                         break;
                     }
                 }
-                if(still_connected)
+                if(still_connected){
                     oldIPs_.at(i).second = 0;
-                else {
+                }
+                else{
                     oldIPs_.at(i).second++;
                     if(oldIPs_.at(i).second >= PING_THRESHOLD){
                         /// Publish a message to the topic /gobot_software/server_disconnected with the IP address of the server which disconnected
@@ -234,9 +233,6 @@ class PingServerClass {
                         disco_pub_.publish(msg);
                         toRemove.push_back(i);
                     } 
-                    else{
-                        //ROS_WARN("(PING_SERVERS) Could not ping IP %s for %d time(s)", oldIPs_.at(i).first.c_str(), oldIPs_.at(i).second);
-                    }
                 }
             }
 
@@ -262,18 +258,18 @@ class PingServerClass {
                 host_ip_msg.data.push_back(oldIPs_.at(i).first);
             }
             host_pub_.publish(host_ip_msg);
-
+            ROS_INFO("(PING_SERVERS) Done update servers IP. %zu servers connected", oldIPs_.size());
             ipMutex.unlock();
         }
 
         double STATUS_UPDATE;
-
         std::vector<std::string> availableIPs_, connectedIPs_;
         std::vector<std::pair<std::string, int>> oldIPs_;
         std::mutex serverMutex, connectedMutex, ipMutex;
 
         boost::thread *ping_thread_;
 
+        ros::ServiceServer disServersSrv_;
         ros::Publisher disco_pub_, host_pub_;
         ros::Subscriber servers_sub_, update_sub_;
         ros::Time disco_time_;

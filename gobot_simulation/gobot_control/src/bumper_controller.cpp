@@ -55,6 +55,10 @@ bool poseReadySrvCallback(std_srvs::Empty::Request &req, std_srvs::Empty::Respon
   return true;
 }
 
+bool sensorsReadySrvCallback(std_srvs::Empty::Request &req, std_srvs::Empty::Response &res){
+  return true;
+}
+
 int main(int argc, char **argv){
 
     ros::init(argc, argv, "bumper_controller");
@@ -76,7 +80,21 @@ int main(int argc, char **argv){
 
     std::cout << "(bumper_controller) launched." << std::endl;
 
+    //reset robot to original
+    std::string lastPoseFile;
+    double begin_x, begin_y;
+    n.getParam("last_known_position_file", lastPoseFile);
+    n.getParam("begin_x", begin_x);
+    n.getParam("begin_y", begin_y);
+    std::ofstream ofs(lastPoseFile, std::ofstream::out | std::ofstream::trunc);
+    if(ofs.is_open()){
+        ofs << begin_x << " " << begin_y << " " << 0 <<" "<< 0 <<" "<< 0 <<" "<< 1;
+        ofs.close();
+    } 
+    
     ros::ServiceServer poseReadySrv = n.advertiseService("/gobot_startup/pose_ready", poseReadySrvCallback);
+    ros::ServiceServer sensorsReadySrv = n.advertiseService("/gobot_startup/sensors_ready", sensorsReadySrvCallback);
+
 
     ros::Rate loop_rate(10);
 

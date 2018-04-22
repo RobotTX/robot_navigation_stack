@@ -1,5 +1,8 @@
 <?xml version="1.0"?>
 <launch>
+    <param name="last_known_position_file" type="string" value="$(find gobot_data)/data/lastKnownPosition.txt" />
+    <param name="begin_x" type="double" value="0.2" />
+    <param name="begin_y" type="double" value="0.0" />
     <node pkg="gobot_control" type="ir_controller" name ="ir_controller" output="screen" required="true"/>
     <node pkg="gobot_control" type="bumper_controller" name ="bumper_controller" output="screen" required="true"/>
     <node pkg="gobot_control" type="proximity_controller" name ="proximity_controller" output="screen" required="true"/>

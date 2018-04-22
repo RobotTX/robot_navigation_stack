@@ -513,19 +513,6 @@ bool PercentService(gobot_msg_srv::GetInt::Request &req, gobot_msg_srv::GetInt::
     return true;
 }
 
-bool disconnectedSrvCallback(std_srvs::Empty::Request &req, std_srvs::Empty::Response &res){
-    /*//test disconnection times
-    disconnected++;
-    std::ofstream ofsDisconnected(disconnectedFile, std::ofstream::out | std::ofstream::trunc);
-    if(ofsDisconnected)
-        ofsDisconnected << disconnected;
-    */
-
-    //test purpose
-    ros::service::call("/gobot_software/disconnet_servers",empty_srv);
-    return true;
-}
-
 bool recordBatterySrvCallback(gobot_msg_srv::SetInt::Request &req, gobot_msg_srv::SetInt::Response &res){
     record_battery_ = req.data;
     if (record_battery_==-1){
@@ -697,70 +684,62 @@ void initialData(){
 }
 
 int main(int argc, char* argv[]){
+    ros::init(argc, argv, "gobot_status");
+    ros::NodeHandle n;
 
-    try{
-        ros::init(argc, argv, "gobot_status");
-        ros::NodeHandle n;
+    SetRobot.initialize();
+    mute_pub = n.advertise<std_msgs::Int8>("/gobot_status/mute", 1, true);
+    update_info_pub = n.advertise<std_msgs::String>("/gobot_status/update_information", 1, true);
+    status_pub = n.advertise<std_msgs::Int8>("/gobot_status/gobot_status", 1, true);
 
-        SetRobot.initialize();
-        mute_pub = n.advertise<std_msgs::Int8>("/gobot_status/mute", 1, true);
-        update_info_pub = n.advertise<std_msgs::String>("/gobot_status/update_information", 1, true);
-        status_pub = n.advertise<std_msgs::Int8>("/gobot_status/gobot_status", 1, true);
+    initialData();
 
-        initialData();
+    initial_pose_publisher = n.advertise<geometry_msgs::PoseWithCovarianceStamped>("/initialpose", 1);
 
-        initial_pose_publisher = n.advertise<geometry_msgs::PoseWithCovarianceStamped>("/initialpose", 1);
+    ros::ServiceServer initializeHome = n.advertiseService("/gobot_recovery/initialize_home",initializeHomeSrcCallback);
 
-        ros::ServiceServer initializeHome = n.advertiseService("/gobot_recovery/initialize_home",initializeHomeSrcCallback);
+    ros::ServiceServer setDockStatusSrv = n.advertiseService("/gobot_status/set_dock_status", setDockStatusSrvCallback);
+    ros::ServiceServer getDockStatusSrv = n.advertiseService("/gobot_status/get_dock_status", getDockStatusSrvCallback);
 
-        ros::ServiceServer setDockStatusSrv = n.advertiseService("/gobot_status/set_dock_status", setDockStatusSrvCallback);
-        ros::ServiceServer getDockStatusSrv = n.advertiseService("/gobot_status/get_dock_status", getDockStatusSrvCallback);
+    ros::ServiceServer setStageSrv = n.advertiseService("/gobot_status/set_stage", setStageSrvCallback);
+    ros::ServiceServer getStageSrv = n.advertiseService("/gobot_status/get_stage", getStageSrvCallback);
 
-        ros::ServiceServer setStageSrv = n.advertiseService("/gobot_status/set_stage", setStageSrvCallback);
-        ros::ServiceServer getStageSrv = n.advertiseService("/gobot_status/get_stage", getStageSrvCallback);
+    ros::ServiceServer setPathSrv = n.advertiseService("/gobot_status/set_path", setPathSrvCallback);
+    ros::ServiceServer getPathSrv = n.advertiseService("/gobot_status/get_path", getPathSrvCallback);
 
-        ros::ServiceServer setPathSrv = n.advertiseService("/gobot_status/set_path", setPathSrvCallback);
-        ros::ServiceServer getPathSrv = n.advertiseService("/gobot_status/get_path", getPathSrvCallback);
+    ros::ServiceServer setLoopSrv = n.advertiseService("/gobot_status/set_loop", setLoopSrvCallback);
+    ros::ServiceServer getLoopSrv = n.advertiseService("/gobot_status/get_loop", getLoopSrvCallback);
 
-        ros::ServiceServer setLoopSrv = n.advertiseService("/gobot_status/set_loop", setLoopSrvCallback);
-        ros::ServiceServer getLoopSrv = n.advertiseService("/gobot_status/get_loop", getLoopSrvCallback);
+    ros::ServiceServer setNameSrv = n.advertiseService("/gobot_status/set_name", setNameSrvCallback);
+    ros::ServiceServer getNameSrv = n.advertiseService("/gobot_status/get_name", getNameSrvCallback);
 
-        ros::ServiceServer setNameSrv = n.advertiseService("/gobot_status/set_name", setNameSrvCallback);
-        ros::ServiceServer getNameSrv = n.advertiseService("/gobot_status/get_name", getNameSrvCallback);
+    ros::ServiceServer setHomeSrv = n.advertiseService("/gobot_status/set_home", setHomeSrvCallback);
+    ros::ServiceServer getHomeSrv = n.advertiseService("/gobot_status/get_home", getHomeSrvCallback);
 
-        ros::ServiceServer setHomeSrv = n.advertiseService("/gobot_status/set_home", setHomeSrvCallback);
-        ros::ServiceServer getHomeSrv = n.advertiseService("/gobot_status/get_home", getHomeSrvCallback);
+    ros::ServiceServer setBatterySrv = n.advertiseService("/gobot_status/set_battery", setBatterySrvCallback);
+    ros::ServiceServer getBatterySrv = n.advertiseService("/gobot_status/get_battery", getBatterySrvCallback);
 
-        ros::ServiceServer setBatterySrv = n.advertiseService("/gobot_status/set_battery", setBatterySrvCallback);
-        ros::ServiceServer getBatterySrv = n.advertiseService("/gobot_status/get_battery", getBatterySrvCallback);
+    ros::ServiceServer setSpeedSrv = n.advertiseService("/gobot_status/set_speed", setSpeedSrvCallback);
+    ros::ServiceServer getSpeedSrv = n.advertiseService("/gobot_status/get_speed", getSpeedSrvCallback);
 
-        ros::ServiceServer setSpeedSrv = n.advertiseService("/gobot_status/set_speed", setSpeedSrvCallback);
-        ros::ServiceServer getSpeedSrv = n.advertiseService("/gobot_status/get_speed", getSpeedSrvCallback);
+    ros::ServiceServer setMuteSrv = n.advertiseService("/gobot_status/set_mute", setMuteSrvCallback);
+    ros::ServiceServer getMuteSrv = n.advertiseService("/gobot_status/get_mute", getMuteSrvCallback);
 
-        ros::ServiceServer setMuteSrv = n.advertiseService("/gobot_status/set_mute", setMuteSrvCallback);
-        ros::ServiceServer getMuteSrv = n.advertiseService("/gobot_status/get_mute", getMuteSrvCallback);
+    ros::ServiceServer setWifiSrv = n.advertiseService("/gobot_status/set_wifi", setWifiSrvCallback);
+    ros::ServiceServer getWifiSrv = n.advertiseService("/gobot_status/get_wifi", getWifiSrvCallback);
 
-        ros::ServiceServer setWifiSrv = n.advertiseService("/gobot_status/set_wifi", setWifiSrvCallback);
-        ros::ServiceServer getWifiSrv = n.advertiseService("/gobot_status/get_wifi", getWifiSrvCallback);
+    ros::ServiceServer isChargingSrv = n.advertiseService("/gobot_status/charging_status", isChargingService);
+    ros::ServiceServer PercentSrv = n.advertiseService("/gobot_status/battery_percent", PercentService);
 
-        ros::ServiceServer isChargingSrv = n.advertiseService("/gobot_status/charging_status", isChargingService);
-        ros::ServiceServer PercentSrv = n.advertiseService("/gobot_status/battery_percent", PercentService);
+    ros::ServiceServer getUpdateStatusSrv = n.advertiseService("/gobot_status/get_update_status", getUpdateStatusSrvCallback);
 
-        ros::ServiceServer getUpdateStatusSrv = n.advertiseService("/gobot_status/get_update_status", getUpdateStatusSrvCallback);
+    ros::ServiceServer setGobotStatusSrv = n.advertiseService("/gobot_status/get_gobot_status", getGobotStatusSrvCallback);
+    ros::ServiceServer getGobotStatusSrv = n.advertiseService("/gobot_status/set_gobot_status", setGobotStatusSrvCallback);
+    
+    ros::Subscriber battery_sub = n.subscribe("/gobot_base/battery_topic",1, batteryCallback);
+    ros::Subscriber bumpers_sub = n.subscribe("/gobot_base/bumpers_topic",1, bumpersCallback);
 
-        ros::ServiceServer disconnectedSrv = n.advertiseService("/gobot_test/disconnected", disconnectedSrvCallback);
-
-        ros::ServiceServer setGobotStatusSrv = n.advertiseService("/gobot_status/get_gobot_status", getGobotStatusSrvCallback);
-        ros::ServiceServer getGobotStatusSrv = n.advertiseService("/gobot_status/set_gobot_status", setGobotStatusSrvCallback);
-        
-        ros::Subscriber battery_sub = n.subscribe("/gobot_base/battery_topic",1, batteryCallback);
-        ros::Subscriber bumpers_sub = n.subscribe("/gobot_base/bumpers_topic",1, bumpersCallback);
-
-        ros::spin();
-        
-    } catch (std::exception& e) {
-        ROS_ERROR("(STATUS_SYSTEM) Exception : %s", e.what());
-    }
+    ros::spin();
 
     return 0;
 }

@@ -67,8 +67,6 @@ bool isChargingService(gobot_msg_srv::IsCharging::Request &req, gobot_msg_srv::I
 
 bool PercentService(gobot_msg_srv::GetInt::Request &req, gobot_msg_srv::GetInt::Response &res);
 
-bool disconnectedSrvCallback(std_srvs::Empty::Request &req, std_srvs::Empty::Response &res);
-
 void batteryCallback(const gobot_msg_srv::BatteryMsg::ConstPtr& msg);
 
 void initialData(void);

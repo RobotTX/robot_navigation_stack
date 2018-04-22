@@ -47,14 +47,13 @@ void session(boost::shared_ptr<tcp::socket> sock){
             throw boost::system::system_error(error); // Some other error.
             return;
         }
-        ROS_INFO("(MAP_READ) Received Map Data Length: %zu",length);
+        //ROS_INFO("(MAP_READ) Received Map Data Length: %zu",length);
         // Parse the data as we are supposed to receive : "mapId ; mapDate ; metadata ; map"
         for(int i = 0; i < length; i++){
             if(data[i] == ';' && gotMapData <= 2){
                 /// The first ; means we got the mapId
                 /// the second means we got the metadata
                 /// the third means we got the map date
-                ROS_INFO("(MAP_READ) ';' found");
                 gotMapData++;
             } 
             else {
@@ -96,16 +95,11 @@ void session(boost::shared_ptr<tcp::socket> sock){
             if(mapIdFromFile.compare(mapId) != 0){
                 
                 //stop the robot for reading new map
-                GetRobot.getStatus(robot_status_);
-                if(robot_status_==15){
-                    ros::service::call("/gobot_command/stopGoDock",empty_srv);
-                    ROS_INFO("(MAP_READ) stop auto docking to read new map.");
+                int move_status = SetRobot.stopRobotMoving();
+                if(move_status != 0){
+                    ROS_INFO("(MAP_READ) Stop robot motion, current status: %d.", move_status);
                 }
-                else if(robot_status_==5){
-                    ros::service::call("/gobot_command/pause_path",empty_srv);
-                    ROS_INFO("(MAP_READ) stop gobot to read new map.");
-                }
-                
+
                 /// Save the id of the new map
                 std::ofstream ofs(mapIdFile, std::ofstream::out | std::ofstream::trunc);
                 if(ofs){
@@ -190,7 +184,8 @@ void session(boost::shared_ptr<tcp::socket> sock){
                                     gobot_msg_srv::GetStringArray get_home;
                                     ros::service::call("/gobot_status/get_home",get_home);
                                     if(ofs.is_open()){
-                                        ofs << get_home.response.data[0] << " " << get_home.response.data[1] << " " << get_home.response.data[2] << " " << get_home.response.data[3] << " " << get_home.response.data[4] << " "<< get_home.response.data[5];
+                                        ofs << get_home.response.data[0] << " " << get_home.response.data[1] << " " << get_home.response.data[2] << " " 
+                                            << get_home.response.data[3] << " " << get_home.response.data[4] << " "<< get_home.response.data[5];
                                         ofs.close();
                                     }
                                 }
@@ -206,6 +201,10 @@ void session(boost::shared_ptr<tcp::socket> sock){
                             SetRobot.setStage(0);
                             //#### delete old robot data ####
                         }
+
+                        //disconnect all other users to receive new map
+                        ROS_INFO("(MAP_READ) Disconnect other uses to update them new map.");
+                        ros::service::call("/gobot_software/disconnet_servers",empty_srv);
 
                         /// Relaunch gobot_navigation
                         SetRobot.runNavi(simulation);
@@ -236,18 +235,15 @@ void session(boost::shared_ptr<tcp::socket> sock){
             mapMetadata = "";
             map.clear();
 
+            /*no need to write to socket as we alrd disconnected all servers
             /// Send a message to the application to tell we finished
             boost::asio::write(*sock, boost::asio::buffer(message, message.length()), boost::asio::transfer_all(), error);
-
             if(error) 
                 ROS_INFO("(MAP_READ) Error : %s", error.message().c_str());
             else if(message ==  "done 1"){
                 ROS_INFO("(MAP_READ) Message sent succesfully : %lu bytes sent", message.length());
-                //disconnect all other users to receive new map
-                ROS_INFO("(MAP_READ) Disconnect other uses to update them new map.");
-                //disconnect all server
-                ros::service::call("/gobot_software/disconnet_servers",empty_srv);
-            }   
+            }
+            */   
         }
     }
 }
@@ -318,6 +314,8 @@ int main(int argc, char **argv){
     SetRobot.initialize();
     
     //Startup begin
+    //sleep for 1 second, otherwise waitForService not work properly
+    ros::Duration(1.0).sleep();
     ros::service::waitForService("/gobot_startup/network_ready", ros::Duration(120.0));
     //Startup end
 

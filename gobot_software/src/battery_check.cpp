@@ -37,6 +37,8 @@ int main(int argc, char* argv[]){
     ros::NodeHandle nh;
     
     //Startup begin
+    //sleep for 1 second, otherwise waitForService not work properly
+    ros::Duration(1.0).sleep();
     ros::service::waitForService("/gobot_startup/pose_ready", ros::Duration(90.0));
     //Startup end
 

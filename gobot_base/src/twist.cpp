@@ -279,12 +279,10 @@ void joyCallback(const sensor_msgs::Joy::ConstPtr& joy){
 
 void newCmdVel(const geometry_msgs::Twist::ConstPtr& twist){
     if(enable_joy){
-        if(robot_status_==5)
-            ros::service::call("/gobot_command/pause_path",empty_srv);
-        else if(robot_status_==15)
-            ros::service::call("/gobot_command/stopGoDock",empty_srv);
-        else if(robot_status_==25)
-            ros::service::call("/gobot_command/stop_explore",empty_srv);
+        int move_status = SetRobot.stopRobotMoving();
+        if(move_status != 0){
+            ROS_INFO("(TWIST) Stop robot motion, current status: %d.", move_status);
+        }
     }
     /// Received a new velocity cmd
     else if(!bumper_on && !cliff_on){
@@ -337,9 +335,13 @@ int main(int argc, char **argv) {
 
     SetRobot.initialize();
     
+    //Startup begin
+    //sleep for 1 second, otherwise waitForService not work properly
+    ros::Duration(1.0).sleep();
     ROS_INFO("(TWIST::START) Waiting for SENSORS to be ready...");
     ros::service::waitForService("/gobot_startup/sensors_ready", ros::Duration(60.0));
     ROS_INFO("(TWIST::START) SENSORS is ready.");
+    //Startup end
     
     initParams(nh);
 

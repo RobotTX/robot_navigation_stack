@@ -450,7 +450,6 @@ void initData(){
 
     config.request.config.doubles.push_back(linear_param);
     config.request.config.doubles.push_back(angular_param);
-	ros::service::waitForService("/move_base/TebLocalPlannerROS/set_parameters",ros::Duration(30));
     ros::service::call("/move_base/TebLocalPlannerROS/set_parameters",config);
 
 	//Set lower manual speed for scan process
@@ -476,7 +475,10 @@ int main(int argc, char* argv[]){
 	SetRobot.initialize();
 	
 	//Startup begin
+	//sleep for 1 second, otherwise waitForService not work properly
+    ros::Duration(1.0).sleep();
     ros::service::waitForService("/gobot_startup/pose_ready", ros::Duration(90.0));
+	ros::service::waitForService("/move_base/TebLocalPlannerROS/set_parameters",ros::Duration(90.0));
     //Startup end
 	
 	ac = new MoveBaseClient("move_base", true);
