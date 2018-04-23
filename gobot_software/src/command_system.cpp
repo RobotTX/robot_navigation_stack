@@ -399,7 +399,7 @@ bool nextPath(const std::vector<std::string> command){
 }
 /// First param = f
 bool pauseScan(const std::string ip, const std::vector<std::string> command){
-    if(command.size() == 1) {         
+    if(command.size() == 1){         
         //ROS_INFO("(COMMAND_SYSTEM) Gobot pause the ongoing scan");         
         std_srvs::Empty arg;         
         ros::service::call("/gobot_scan/stopExploration", arg);         
@@ -410,18 +410,16 @@ bool pauseScan(const std::string ip, const std::vector<std::string> command){
 
 /// First param = g
 bool startScanAndAutoExplore(const std::string ip, const std::vector<std::string> command){
-    if(command.size() == 1){    
-        
+    if(command.size() == 1){     
         //ROS_INFO("(COMMAND_SYSTEM) Going to scan automatically");
         //ROS_INFO("(COMMAND_SYSTEM) Gobot start to scan a new map");
         scanning = true;
+        ROS_INFO("(New Map) Start Scan and Explore. We relaunched gobot_scan");
         /// Kill gobot move so that we'll restart it with the new map
-        std::string cmd = SetRobot.killList(simulation);
+        std::string cmd = SetRobot.killList();
         system(cmd.c_str());    
         /// Relaunch gobot_navigation
         SetRobot.runScan(simulation);
-
-        //ROS_INFO("(New Map) We relaunched gobot_scan");
 
         /// 0 : the robot doesn't go back to its starting point at the end of the scan
         /// 1 : robot goes back to its starting point which is its charging station
@@ -634,12 +632,12 @@ bool startNewScan(const std::string ip, const std::vector<std::string> command){
     if(command.size() == 1) {
         //ROS_INFO("(COMMAND_SYSTEM) Gobot start to scan a new map");
         scanning = true;
+        ROS_INFO("(COMMAND_SYSTEM) Start New Scan. We relaunched gobot_scan");
         /// Kill gobot move so that we'll restart it with the new map
-        std::string cmd = SetRobot.killList(simulation);
+        std::string cmd = SetRobot.killList();
         system(cmd.c_str());
         /// Relaunch gobot_navigation
         SetRobot.runScan(simulation);
-        //ROS_INFO("(COMMAND_SYSTEM) We relaunched gobot_scan");
 
         return sendMapAutomatically(ip);
     }
@@ -651,16 +649,16 @@ bool startNewScan(const std::string ip, const std::vector<std::string> command){
 bool stopScanning(const std::string ip, const std::vector<std::string> command){
     if(command.size() == 2) {
         ros::service::call("/gobot_scan/stopExploration", empty_srv);
-
+        scanning = false;
+        //if scan is cancelled, relaunch navigation here. if scan map is saved, relaunch navigation in read_new_map
         if(std::stoi(command.at(1)) == 1){
-            scanning = false;
+            ROS_INFO("(COMMAND_SYSTEM) Stop New Scan. We relaunched gobot_navigation");
             /// Kill gobot move so that we'll restart it with the new map
-            std::string cmd = SetRobot.killList(simulation);
+            std::string cmd = SetRobot.killList();
             system(cmd.c_str());
  
             /// Relaunch gobot_navigation
             SetRobot.runNavi(simulation);
-            //ROS_INFO("(COMMAND_SYSTEM) We relaunched gobot_navigation");
         }
 
         return stopSendingMapAutomatically(ip);

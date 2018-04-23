@@ -16,7 +16,7 @@ int left_speed_ = 0, right_speed_ = 0;
 
 double UPDATE_DURATION = 5.0;
 
-ros::Publisher vel_pub,foundPose_pub,initial_pose_publisher,goal_pub,lost_pub;
+ros::Publisher vel_pub, foundPose_pub, goal_pub,lost_pub;
 std::string lastPoseFile;
 ros::ServiceServer poseReadySrv;
 ros::Timer pose_timer;
@@ -86,33 +86,6 @@ void findPoseResult(int status){
     foundPose_pub.publish(result);
 }
 
-
-void publishInitialpose(const double position_x, const double position_y, const double angle_x, const double angle_y, const double angle_z, const double angle_w,const double cov1,const double cov2){
-    geometry_msgs::PoseWithCovarianceStamped initialPose;
-    initialPose.header.frame_id = "map";
-    initialPose.header.stamp = ros::Time::now();
-    initialPose.pose.pose.position.x = position_x;
-    initialPose.pose.pose.position.y = position_y;
-    initialPose.pose.pose.orientation.x = angle_x;
-    initialPose.pose.pose.orientation.y = angle_y;
-    initialPose.pose.pose.orientation.z = angle_z;
-    initialPose.pose.pose.orientation.w = angle_w;
-    //x-xy-y,yaw-yaw
-    initialPose.pose.covariance[0] = cov1;
-    initialPose.pose.covariance[7] = cov1;
-    initialPose.pose.covariance[35] = cov2;
-    if(position_x == 0 && position_y == 0 && angle_z == 0 && angle_w == 0){
-        ROS_ERROR("(POSE_ESTIMATION) Robot probably got no home, set it position to map origin");
-        initialPose.pose.pose.orientation.w = 1.0;
-    }
-    
-    // we wait for amcl to launch
-    ros::Duration(1.0).sleep();
-
-    initial_pose_publisher.publish(initialPose);
-    //ROS_INFO("(POSE_ESTIMATION) initialpose published.");
-}
-
 bool initializePoseSrvCallback(std_srvs::Empty::Request &req, std_srvs::Empty::Response &res){
     if(!running){
         std::thread([](){
@@ -140,34 +113,31 @@ bool initializePoseSrvCallback(std_srvs::Empty::Request &req, std_srvs::Empty::R
                     case CHARGING_STAGE:
                         //if robot is charging, it is in CS station 
                         if(charging_flag_){
-                            publishInitialpose(home_pos_x,home_pos_y,home_ang_x,home_ang_y,home_ang_z,home_ang_w,initial_cov_xy,initial_cov_yaw);
-                            ROS_INFO("(POSE_ESTIMATION) Robot is in the charing station");
+                            SetRobot.setInitialpose(home_pos_x,home_pos_y,home_ang_x,home_ang_y,home_ang_z,home_ang_w);
+                            ROS_WARN("(POSE_ESTIMATION) Robot is in the charing station");
                             found_pose=true;
                             current_stage=COMPLETE_STAGE;
                         }
                         else{
-                            ROS_WARN("(POSE_ESTIMATION) Robot is not in the charging station");
                             current_stage=ROSPARAM_POSE_STAGE;
                         }
                         break;
 
                     case ROSPARAM_POSE_STAGE:
-                        ROS_INFO("(POSE_ESTIMATION) Try ROS server pose...");
                         if(evaluatePose(0)){
-                            ROS_INFO("(POSE_ESTIMATION) Robot is near the rosparam server pose.");
+                            ROS_WARN("(POSE_ESTIMATION) Robot is near the rosparam server pose.");
                             found_pose=true;
                             current_stage=COMPLETE_STAGE;
                         }
                         else{
-                            ROS_WARN("(POSE_ESTIMATION) ROS server pose is not reliable");
                             current_stage=LAST_POSE_STAGE;
                         }
                         break;
 
                     case LAST_POSE_STAGE:
                         //try the pose from last stop pose
-                        publishInitialpose(last_pos_x,last_pos_y,last_ang_x,last_ang_y,last_ang_z,last_ang_w,initial_cov_xy,initial_cov_yaw);
-                        ROS_INFO("(POSE_ESTIMATION) Robot is near the last stop pose.");
+                        SetRobot.setInitialpose(last_pos_x,last_pos_y,last_ang_x,last_ang_y,last_ang_z,last_ang_w);
+                        ROS_WARN("(POSE_ESTIMATION) Robot is near the last stop pose.");
                         found_pose=true;
                         current_stage=COMPLETE_STAGE;
                         break;
@@ -403,7 +373,6 @@ int main(int argc, char **argv) {
     nh.getParam("UPDATE_DURATION", UPDATE_DURATION);
 
     vel_pub = nh.advertise<geometry_msgs::Twist>("/cmd_vel",5);
-    initial_pose_publisher = nh.advertise<geometry_msgs::PoseWithCovarianceStamped>("/initialpose", 1);
     goal_pub = nh.advertise<geometry_msgs::PoseStamped>("/move_base_simple/goal",1);
     foundPose_pub = nh.advertise<std_msgs::Int8>("/gobot_recovery/find_initial_pose",1);
     lost_pub = nh.advertise<std_msgs::Int8>("/gobot_recovery/lost_robot",1);

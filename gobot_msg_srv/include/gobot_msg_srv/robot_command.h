@@ -339,6 +339,22 @@ namespace robot_class {
             void getCurrentPose(geometry_msgs::PoseStamped &pose);
 
             /**
+            * @brief two ways to set robot current pose in the global frame:
+            * *1.self-defined data type 'Pose'
+            * *2.ROS-defined data type 'geometry_msgs::PoseWithCovarianceStamped'
+            */
+            /**
+            * @param pose: set the current pose as type 'Pose' 
+            */
+            void setInitialpose(Pose &initial_pose);
+            
+            /**
+            * @param pose: set the current pose as type 'geometry_msgs::PoseWithCovarianceStamped'
+            */
+            void setInitialpose(geometry_msgs::PoseWithCovarianceStamped initial_pose);
+
+
+            /**
             * @BRIEF  Map
             */
 

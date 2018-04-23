@@ -13,7 +13,6 @@
 #include <thread>
 #include <boost/asio.hpp>
 #include <std_srvs/Empty.h>
-#include <geometry_msgs/PoseWithCovarianceStamped.h>
 #include <gobot_msg_srv/set_robot_class.h>
 #include <gobot_msg_srv/get_robot_class.h>
 

@@ -160,10 +160,6 @@ void session(boost::shared_ptr<tcp::socket> sock){
                     ROS_INFO("(MAP_READ) Disconnect other uses to update them new map.");
                     ros::service::call("/gobot_software/disconnet_servers",empty_srv);
                     
-                    /// Kill gobot move so that we'll restart it with the new map
-                    std::string cmd = SetRobot.killList(simulation);
-                    system(cmd.c_str());
-                    ROS_INFO("(MAP_READ) We killed gobot_navigation");
 
                     if(mapType != "EDIT"){
                         //#### delete old robot data ####
@@ -172,22 +168,6 @@ void session(boost::shared_ptr<tcp::socket> sock){
                             SetRobot.setHome("0","0","0","0","0","1");
                         }
 
-                        if(mapType == "SCAN"){
-                            //Record last known pose as home_pose in scanned map
-                            if(n.hasParam("last_known_position_file")){
-                                std::string lastPoseFile;
-                                n.getParam("last_known_position_file", lastPoseFile);
-                                std::ofstream ofs(lastPoseFile, std::ofstream::out | std::ofstream::trunc);
-                                
-                                gobot_msg_srv::GetStringArray get_home;
-                                ros::service::call("/gobot_status/get_home",get_home);
-                                if(ofs.is_open()){
-                                    ofs << get_home.response.data[0] << " " << get_home.response.data[1] << " " << get_home.response.data[2] << " " 
-                                        << get_home.response.data[3] << " " << get_home.response.data[4] << " "<< get_home.response.data[5];
-                                    ofs.close();
-                                }
-                            }
-                        }
                         /// We detele the loop
                         SetRobot.setLoop(0);
                         /// We delete the old path
@@ -195,14 +175,33 @@ void session(boost::shared_ptr<tcp::socket> sock){
                         /// We delete the old path stage
                         SetRobot.setStage(0);
                         //#### delete old robot data ####
-                        /// Relaunch gobot_navigation
-                        SetRobot.runNavi(simulation);
+                    }
+
+                    if(mapType == "EDIT"){
+                        SetRobot.reloadMap();
+                    }
+                    else if(mapType == "IMPT"){
+                        gobot_msg_srv::GetStringArray get_home;
+                        ros::service::call("/gobot_status/get_home",get_home);
+                        SetRobot.setInitialpose(std::stod(get_home.response.data[0]),std::stod(get_home.response.data[1]),std::stod(get_home.response.data[2]),
+                                                std::stod(get_home.response.data[3]),std::stod(get_home.response.data[4]),std::stod(get_home.response.data[5]));
+                        SetRobot.reloadMap();
                     }
                     else{
-                        /// Relaunch gobot_navigation without reset odom
-                        SetRobot.runNavi(simulation, false);
+                        ROS_INFO("(MAP_READ) We relaunched gobot_navigation");
+                        /// Kill gobot move so that we'll restart it with the new map
+                        std::string cmd = SetRobot.killList();
+                        system(cmd.c_str());
+                        ROS_INFO("(MAP_READ) We killed gobot_navigation");
+                        /// Relaunch gobot_navigation
+                        SetRobot.runNavi(simulation);
+
+                        ros::service::waitForService("/gobot_startup/pose_ready", ros::Duration(10.0));
+                        gobot_msg_srv::GetStringArray get_home;
+                        ros::service::call("/gobot_status/get_home",get_home);
+                        SetRobot.setInitialpose(std::stod(get_home.response.data[0]),std::stod(get_home.response.data[1]),std::stod(get_home.response.data[2]),
+                                                std::stod(get_home.response.data[3]),std::stod(get_home.response.data[4]),std::stod(get_home.response.data[5]));
                     }
-                    ROS_INFO("(MAP_READ) We relaunched gobot_navigation");
 
                     message = "done 1";
                 } 

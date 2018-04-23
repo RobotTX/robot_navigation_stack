@@ -3,7 +3,6 @@
 #include <std_srvs/Empty.h>
 #include <geometry_msgs/Twist.h>
 #include <geometry_msgs/PoseStamped.h>
-#include <geometry_msgs/PoseWithCovarianceStamped.h>
 #include <actionlib_msgs/GoalStatusArray.h>
 #include <actionlib_msgs/GoalID.h>
 #include <stdio.h>
@@ -42,8 +41,6 @@ bool evaluatePose(int type);
 bool rotateFindPose(double rot_v,double rot_t);
 
 void findPoseResult(int status);
-
-void publishInitialpose(const double position_x, const double position_y, const double angle_x, const double angle_y, const double angle_z, const double angle_w,const double cov1,const double cov2);
 
 void getAmclPoseCallback(const geometry_msgs::PoseWithCovarianceStamped::ConstPtr& msg);
     

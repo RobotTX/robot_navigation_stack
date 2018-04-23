@@ -20,7 +20,7 @@ DOCK STATUS
 -1 FAILED TO GO TO CHARGING
 */
 
-ros::Publisher initial_pose_publisher, mute_pub, update_info_pub, status_pub;
+ros::Publisher mute_pub, update_info_pub, status_pub;
 
 static const std::string sep = std::string(1, 31);
 
@@ -123,21 +123,6 @@ void robotResponse(int status, std::string text){
     }
 }
 
-//publish pose
-void publishInitialpose(geometry_msgs::PoseWithCovarianceStamped pose){
-    pose.header.frame_id = "map";
-    pose.header.stamp = ros::Time::now();
-    //x-xy-y,yaw-yaw
-    pose.pose.covariance[0] = 0.01;
-    pose.pose.covariance[7] = 0.01;
-    pose.pose.covariance[35] = 0.01;
-    if(pose.pose.pose.position.x == 0 && pose.pose.pose.position.y == 0 && pose.pose.pose.orientation.z == 0&& pose.pose.pose.orientation.w == 0){
-        ROS_ERROR("(STATUS_SYSTEM) Assigned pose is invalid, set it position to map origin");
-        pose.pose.pose.orientation.w = 1.0;
-    }
-    initial_pose_publisher.publish(pose);
-}
-
 void setHomePose(){
     geometry_msgs::PoseWithCovarianceStamped home_pose;
     home_pose.pose.pose.position.x = std::stod(home_.at(0));
@@ -146,7 +131,7 @@ void setHomePose(){
     home_pose.pose.pose.orientation.z = std::stod(home_.at(3));
     home_pose.pose.pose.orientation.z = std::stod(home_.at(4));
     home_pose.pose.pose.orientation.w = std::stod(home_.at(5));
-    publishInitialpose(home_pose);
+    SetRobot.setInitialpose(home_pose);
     ROS_INFO("(STATUS_SYSTEM) Robot is charging, set its pose to be home pose");
 }
 
@@ -693,8 +678,6 @@ int main(int argc, char* argv[]){
     status_pub = n.advertise<std_msgs::Int8>("/gobot_status/gobot_status", 1, true);
 
     initialData();
-
-    initial_pose_publisher = n.advertise<geometry_msgs::PoseWithCovarianceStamped>("/initialpose", 1);
 
     ros::ServiceServer initializeHome = n.advertiseService("/gobot_recovery/initialize_home",initializeHomeSrcCallback);
 

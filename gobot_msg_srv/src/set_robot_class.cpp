@@ -18,6 +18,7 @@ namespace robot_class {
         speed_pub_ = nh_.advertise<gobot_msg_srv::MotorSpeedMsg>("/gobot_motor/motor_speed", 1);
         led_pub_ = nh_.advertise<gobot_msg_srv::LedMsg>("/gobot_base/set_led", 1);
         sound_pub_ = nh_.advertise<gobot_msg_srv::SoundMsg>("/gobot_base/set_sound", 1);
+        initial_pose_pub_ = nh_.advertise<geometry_msgs::PoseWithCovarianceStamped>("/initialpose", 1);
     }
 
     int SetRobot::stopRobotMoving(){
@@ -131,6 +132,31 @@ namespace robot_class {
         sound_pub_.publish(soundCmd);
     }
     
+    void SetRobot::setInitialpose(const double p_x, const double p_y, const double q_x, const double q_y, const double q_z, const double q_w){
+        geometry_msgs::PoseWithCovarianceStamped initial_pose;
+        initial_pose.pose.pose.position.x = p_x;
+        initial_pose.pose.pose.position.y = p_y;
+        initial_pose.pose.pose.orientation.x = q_x;
+        initial_pose.pose.pose.orientation.y = q_y;
+        initial_pose.pose.pose.orientation.z = q_z;
+        initial_pose.pose.pose.orientation.w = q_w;
+        setInitialpose(initial_pose);
+    }
+            
+    void SetRobot::setInitialpose(geometry_msgs::PoseWithCovarianceStamped pose){
+        pose.header.frame_id = "map";
+        pose.header.stamp = ros::Time::now();
+        //x-xy-y,yaw-yaw covariance
+        pose.pose.covariance[0] = 0.01;
+        pose.pose.covariance[7] = 0.01;
+        pose.pose.covariance[35] = 0.01;
+        if(pose.pose.pose.position.x == 0 && pose.pose.pose.position.y == 0 && pose.pose.pose.orientation.z == 0 && pose.pose.pose.orientation.w == 0){
+            ROS_ERROR("(SET_ROBOT_CLASS) Assigned pose is invalid, set it position to map origin");
+            pose.pose.pose.orientation.w = 1.0;
+        }
+        initial_pose_pub_.publish(pose);
+    }
+
     void SetRobot::setBatteryLed(){
         gobot_msg_srv::LedMsg ledCmd; 
         ledCmd.mode = -1;
@@ -145,7 +171,7 @@ namespace robot_class {
         led_pub_.publish(ledCmd);
     }
 
-    std::string SetRobot::killList(bool simulation){
+    std::string SetRobot::killList(){
         return "rosnode kill /move_base"; 
     }
 
@@ -154,7 +180,8 @@ namespace robot_class {
         setLed(0,{"white"});
         std::string cmd = "rosnode kill /map_server";
         system(cmd.c_str());
-        ros::Duration(5.0).sleep();
+        ros::Duration(3.0).sleep();
+        setStatus(-1,"ROBOT_READY");
         setBatteryLed();
     }
 
