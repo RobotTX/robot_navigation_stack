@@ -149,13 +149,24 @@ namespace robot_class {
         return "rosnode kill /move_base"; 
     }
 
-    void SetRobot::runNavi(bool simulation){
+    void SetRobot::reloadMap(){
         setMotorSpeed('F', 0, 'F', 0);
         setLed(0,{"white"});
-        ros::service::call("/gobot_motor/resetOdom",empty_srv);
+        std::string cmd = "rosnode kill /map_server";
+        system(cmd.c_str());
+        ros::Duration(5.0).sleep();
+        setBatteryLed();
+    }
+
+
+    void SetRobot::runNavi(bool simulation, bool reset_odom){
+        setMotorSpeed('F', 0, 'F', 0);
+        setLed(0,{"white"});
+        if(reset_odom)
+            ros::service::call("/gobot_motor/resetOdom",empty_srv);
 
         std::string cmd;
-        ros::Duration(3.0).sleep();
+        ros::Duration(4.0).sleep();
         /// Relaunch gobot_navigation
        if(simulation)
             cmd = "gnome-terminal -x bash -c \"source /opt/ros/kinetic/setup.bash;source ~/catkin_ws/devel/setup.bash;roslaunch gobot_gazebo gazebo_slam.launch\"";
@@ -165,13 +176,14 @@ namespace robot_class {
         ros::Duration(6.0).sleep();
     }
 
-    void SetRobot::runScan(bool simulation){
+    void SetRobot::runScan(bool simulation, bool reset_odom){
         setMotorSpeed('F', 0, 'F', 0);
         setLed(0,{"white"});
-        ros::service::call("/gobot_motor/resetOdom",empty_srv);
+        if(reset_odom)
+            ros::service::call("/gobot_motor/resetOdom",empty_srv);
         
         std::string cmd;
-        ros::Duration(3.0).sleep();
+        ros::Duration(4.0).sleep();
         /// Relaunch gobot_scan
         if(simulation)
             cmd = "gnome-terminal -x bash -c \"source /opt/ros/kinetic/setup.bash;source ~/catkin_ws/devel/setup.bash;roslaunch gobot_gazebo gazebo_scan.launch\"";

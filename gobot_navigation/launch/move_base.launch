@@ -1,7 +1,7 @@
 <?xml version="1.0"?>
 <launch>
     <!--amcl -->
-    <node pkg="map_server" type="map_server" name="map_server" args="$(find gobot_data)/maps/used_map.yaml" required="true">
+    <node pkg="map_server" type="map_server" name="map_server" args="$(find gobot_data)/maps/used_map.yaml" respawn="true">
         <param name="frame_id" type="string" value="/map" />
     </node>
 

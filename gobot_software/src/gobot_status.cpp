@@ -132,7 +132,7 @@ void publishInitialpose(geometry_msgs::PoseWithCovarianceStamped pose){
     pose.pose.covariance[7] = 0.01;
     pose.pose.covariance[35] = 0.01;
     if(pose.pose.pose.position.x == 0 && pose.pose.pose.position.y == 0 && pose.pose.pose.orientation.z == 0&& pose.pose.pose.orientation.w == 0){
-        ROS_ERROR("(STATUS_SYSTEM) Robot probably got no home, set it position to map origin");
+        ROS_ERROR("(STATUS_SYSTEM) Assigned pose is invalid, set it position to map origin");
         pose.pose.pose.orientation.w = 1.0;
     }
     initial_pose_publisher.publish(pose);

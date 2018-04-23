@@ -55,9 +55,11 @@ namespace robot_class {
             
             std::string killList(bool simulation);
 
-            void runNavi(bool simulation);
+            void reloadMap();
+            
+            void runNavi(bool simulation, bool reset_odom=true);
 
-            void runScan(bool simulation);
+            void runScan(bool simulation, bool reset_odom=true);
 
             void speakEnglish(std::string str);
 

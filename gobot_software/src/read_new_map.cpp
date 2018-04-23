@@ -30,7 +30,7 @@ void session(boost::shared_ptr<tcp::socket> sock){
     std::string mapMetadata("");
     std::string mapDate("");
     std::vector<uint8_t> map;
-    std::string message("done 0");
+    std::string message("failed");
 
     while(ros::ok() && sockets.count(ip)){
         
@@ -125,98 +125,86 @@ void session(boost::shared_ptr<tcp::socket> sock){
                     
                     /// Update the config file
                     std::string mapConfig;
-                    if(n.hasParam("map_config_used")){
-                        n.getParam("map_config_used", mapConfig);
-
-                        ofs.open(mapConfig, std::ofstream::out | std::ofstream::trunc);
-                        if(ofs.is_open()){
-                            std::string resolutionStr = "resolution: " + std::to_string(resolution);
-                            std::string originStr = "origin: [" + std::to_string(initPosX) + ", " + std::to_string(initPosY) + ", 0.00]";
-                            ofs << "image: used_map.pgm" << std::endl << resolutionStr << std::endl << originStr << std::endl << "negate: 0" << std::endl << "occupied_thresh: 0.65" << std::endl << "free_thresh: 0.196";
-                            ofs.close();
-                            //ROS_INFO("(MAP_READ) New map config file created in %s", mapConfig.c_str()); 
-                        }
+                    n.getParam("map_config_used", mapConfig);
+                    ofs.open(mapConfig, std::ofstream::out | std::ofstream::trunc);
+                    if(ofs.is_open()){
+                        std::string resolutionStr = "resolution: " + std::to_string(resolution);
+                        std::string originStr = "origin: [" + std::to_string(initPosX) + ", " + std::to_string(initPosY) + ", 0.00]";
+                        ofs << "image: used_map.pgm" << std::endl << resolutionStr << std::endl << originStr << std::endl << "negate: 0" << std::endl << "occupied_thresh: 0.65" << std::endl << "free_thresh: 0.196";
+                        ofs.close();
+                        //ROS_INFO("(MAP_READ) New map config file created in %s", mapConfig.c_str()); 
                     }
 
                     /// We save the file in a the pgm file for amcl navigation
                     std::string mapFile;
-                    if(n.hasParam("map_image_used")){
-                        n.getParam("map_image_used", mapFile);
- 
-                        ofs.open(mapFile, std::ofstream::out | std::ofstream::trunc);
-                        if(ofs.is_open()){
-                            /// pgm file header
-                            ofs << "P5" << std::endl << width << " " << height << std::endl << "255" << std::endl;
-                            /// writes every single pixel to the pgm file
-                            for(int i = 0; i < map.size(); i+=5){
-                                uint8_t color = static_cast<uint8_t> (map.at(i));
-                                uint32_t count2 = static_cast<uint32_t> (static_cast<uint8_t> (map.at(i+1)) << 24) + static_cast<uint32_t> (static_cast<uint8_t> (map.at(i+2)) << 16)
-                                                + static_cast<uint32_t> (static_cast<uint8_t> (map.at(i+3)) << 8) + static_cast<uint32_t> (static_cast<uint8_t> (map.at(i+4)));
-             
-                                for(int j = 0; j < count2; j++)
-                                    ofs << color;
-                            }
-                            ofs << std::endl;
-                            ofs.close();
-                            //ROS_INFO("(MAP_READ) New map pgm file created in %s", mapFile.c_str());
+                    n.getParam("map_image_used", mapFile);
+                    ofs.open(mapFile, std::ofstream::out | std::ofstream::trunc);
+                    if(ofs.is_open()){
+                        /// pgm file header
+                        ofs << "P5" << std::endl << width << " " << height << std::endl << "255" << std::endl;
+                        /// writes every single pixel to the pgm file
+                        for(int i = 0; i < map.size(); i+=5){
+                            uint8_t color = static_cast<uint8_t> (map.at(i));
+                            uint32_t count2 = static_cast<uint32_t> (static_cast<uint8_t> (map.at(i+1)) << 24) + static_cast<uint32_t> (static_cast<uint8_t> (map.at(i+2)) << 16)
+                                            + static_cast<uint32_t> (static_cast<uint8_t> (map.at(i+3)) << 8) + static_cast<uint32_t> (static_cast<uint8_t> (map.at(i+4)));
+            
+                            for(int j = 0; j < count2; j++)
+                                ofs << color;
+                        }
+                        ofs << std::endl;
+                        ofs.close();
+                        //ROS_INFO("(MAP_READ) New map pgm file created in %s", mapFile.c_str());
+                    }
+                    
+                    //disconnect all other users to receive new map
+                    ROS_INFO("(MAP_READ) Disconnect other uses to update them new map.");
+                    ros::service::call("/gobot_software/disconnet_servers",empty_srv);
+                    
+                    /// Kill gobot move so that we'll restart it with the new map
+                    std::string cmd = SetRobot.killList(simulation);
+                    system(cmd.c_str());
+                    ROS_INFO("(MAP_READ) We killed gobot_navigation");
+
+                    if(mapType != "EDIT"){
+                        //#### delete old robot data ####
+                        if(mapType != "IMPT" && mapType != "SCAN"){
+                            /// We delete the old home
+                            SetRobot.setHome("0","0","0","0","0","1");
                         }
 
-                        /// Kill gobot move so that we'll restart it with the new map
-                        std::string cmd = SetRobot.killList(simulation);
-                        system(cmd.c_str());
-
-                        ROS_INFO("(MAP_READ) We killed gobot_navigation");
-
-                        if(mapType != "EDIT"){
-                            //#### delete old robot data ####
-                            if(mapType != "IMPT" && mapType != "SCAN"){
-                                /// We delete the old home
-                                SetRobot.setHome("0","0","0","0","0","1");
-                            }
-
-                            if(mapType == "SCAN"){
-                                //Record last known pose in scanned map
-                                if(n.hasParam("last_known_position_file")){
-                                    std::string lastPoseFile;
-                                    n.getParam("last_known_position_file", lastPoseFile);
-                                    std::ofstream ofs(lastPoseFile, std::ofstream::out | std::ofstream::trunc);
-                                    
-                                    gobot_msg_srv::GetStringArray get_home;
-                                    ros::service::call("/gobot_status/get_home",get_home);
-                                    if(ofs.is_open()){
-                                        ofs << get_home.response.data[0] << " " << get_home.response.data[1] << " " << get_home.response.data[2] << " " 
-                                            << get_home.response.data[3] << " " << get_home.response.data[4] << " "<< get_home.response.data[5];
-                                        ofs.close();
-                                    }
+                        if(mapType == "SCAN"){
+                            //Record last known pose as home_pose in scanned map
+                            if(n.hasParam("last_known_position_file")){
+                                std::string lastPoseFile;
+                                n.getParam("last_known_position_file", lastPoseFile);
+                                std::ofstream ofs(lastPoseFile, std::ofstream::out | std::ofstream::trunc);
+                                
+                                gobot_msg_srv::GetStringArray get_home;
+                                ros::service::call("/gobot_status/get_home",get_home);
+                                if(ofs.is_open()){
+                                    ofs << get_home.response.data[0] << " " << get_home.response.data[1] << " " << get_home.response.data[2] << " " 
+                                        << get_home.response.data[3] << " " << get_home.response.data[4] << " "<< get_home.response.data[5];
+                                    ofs.close();
                                 }
                             }
-                            
-                            /// We detele the loop
-                            SetRobot.setLoop(0);
-
-                            /// We delete the old path
-                            SetRobot.clearPath();
-
-                            /// We delete the old path stage
-                            SetRobot.setStage(0);
-                            //#### delete old robot data ####
                         }
-
-                        //disconnect all other users to receive new map
-                        ROS_INFO("(MAP_READ) Disconnect other uses to update them new map.");
-                        ros::service::call("/gobot_software/disconnet_servers",empty_srv);
-
+                        /// We detele the loop
+                        SetRobot.setLoop(0);
+                        /// We delete the old path
+                        SetRobot.clearPath();
+                        /// We delete the old path stage
+                        SetRobot.setStage(0);
+                        //#### delete old robot data ####
                         /// Relaunch gobot_navigation
                         SetRobot.runNavi(simulation);
-                            
-                        ROS_INFO("(MAP_READ) We relaunched gobot_navigation");
-                        message = "done 1";
-
-                    } 
-                    else {
-                        ROS_INFO("(MAP_READ) Could not open the file to create a new pgm file %s", mapFile.c_str());
-                        message = "failed";
                     }
+                    else{
+                        /// Relaunch gobot_navigation without reset odom
+                        SetRobot.runNavi(simulation, false);
+                    }
+                    ROS_INFO("(MAP_READ) We relaunched gobot_navigation");
+
+                    message = "done 1";
                 } 
                 else {
                     ROS_INFO("(MAP_READ) Map id could not be updated : %s with date %s", mapId.c_str(), mapDate.c_str());
@@ -234,7 +222,8 @@ void session(boost::shared_ptr<tcp::socket> sock){
             mapDate = "";
             mapMetadata = "";
             map.clear();
-
+            
+            return;
             /*no need to write to socket as we alrd disconnected all servers
             /// Send a message to the application to tell we finished
             boost::asio::write(*sock, boost::asio::buffer(message, message.length()), boost::asio::transfer_all(), error);
