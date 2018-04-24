@@ -153,6 +153,10 @@ add_executable(twist src/twist.cpp)
 target_link_libraries(twist ${catkin_LIBRARIES})
 add_dependencies(twist ${${gobot_msg_srv}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
 
+add_executable(brushless_motor src/brushless_motor.cpp)
+target_link_libraries(brushless_motor ${catkin_LIBRARIES})
+add_dependencies(brushless_motor ${${gobot_msg_srv}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
+
 #############
 ## Install ##
 #############
