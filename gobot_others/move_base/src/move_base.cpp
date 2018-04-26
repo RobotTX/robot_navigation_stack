@@ -599,7 +599,12 @@ namespace move_base {
       //run planner
       planner_plan_->clear();
       bool gotPlan = n.ok() && makePlan(temp_goal, *planner_plan_);
-
+      //check distance between robot and nearest obstacle cell
+      tf::Stamped<tf::Pose> global_pose;
+      planner_costmap_ros_->getRobotPose(global_pose);
+      geometry_msgs::PoseStamped current_position;
+      tf::poseStampedTFToMsg(global_pose, current_position);
+      
       if(gotPlan){
         //ROS_INFO("move_base_plan_thread: Got Plan with %zu points!", planner_plan_->size());
         ROS_DEBUG_NAMED("move_base_plan_thread","Got Plan with %zu points!", planner_plan_->size());
@@ -608,13 +613,13 @@ namespace move_base {
         if(!scan_mode_){
           //if temp_goal pose cost value is too high to reach
           int cell_cost = getPoseCost(planner_plan_->back().pose.position.x,planner_plan_->back().pose.position.y);
-          size_t plan_size = planner_plan_->size();
-          bool found_pose = false;
+          size_t plan_size = planner_plan_->size(); 
           //ROS_INFO("Got Plan with %zu points!Last pose cost: %d", plan_size,cell_cost);
           if(cell_cost > costmap_threshold_value_){
+            bool found_pose = false;
             for (int i=plan_size-2;i>0;i--){
               cell_cost = getPoseCost(planner_plan_->at(i).pose.position.x,planner_plan_->at(i).pose.position.y);
-              if(cell_cost <= costmap_threshold_value_){
+              if(cell_cost <= costmap_threshold_value_ - 10){
                 planner_plan_->erase(planner_plan_->begin()+i,planner_plan_->end());
                 planner_plan_->back().pose.orientation = temp_goal.pose.orientation;
                 //ROS_INFO("Test near obs goal: original size:%d, changed size: %zu; goal pose: %.2f,%.2f, changed pose:%.2f,%.2f",plan_size, planner_plan_->size(), 
@@ -623,12 +628,18 @@ namespace move_base {
                 break;
               }
             }
-          }
-          //if all points along the path is high cost value, assume the robot alrd reached the nearest position to the goal pose
-          if(!found_pose && plan_size<30){
-            planner_plan_->erase(planner_plan_->begin()+1,planner_plan_->end());
-            planner_plan_->back().pose.orientation = temp_goal.pose.orientation;
-            //ROS_INFO("No low cost value pose found along planned path. Stop robot on the current spot");
+            //if all points along the path is high cost value, assume the robot alrd reached the nearest position to the goal pose
+            if(!found_pose && plan_size<30){
+              planner_plan_->erase(planner_plan_->begin()+1,planner_plan_->end());
+              planner_plan_->back().pose.orientation = temp_goal.pose.orientation;
+              //ROS_INFO("No low cost value pose found along planned path. Stop robot on the current spot");
+            }
+            //if robot is near to goal and goal is unreachable, set goal to be the nearest safe pose
+            double goal_distance = distance(current_position,temp_goal);
+            if(goal_distance<1.0){
+              planner_goal_ = planner_plan_->back();
+              ROS_WARN("Goal is unreachable, set goal to nearest safe pose (distance to original goal:%.3f)",goal_distance);
+            }
           }
         }
         //tx//end
@@ -650,6 +661,7 @@ namespace move_base {
           state_ = CONTROLLING;
         if(planner_frequency_ <= 0)
           runPlanner_ = false;
+
         lock.unlock();
       }
       //if we didn't get a plan and we are in the planning state (the robot isn't moving)
@@ -687,11 +699,6 @@ namespace move_base {
         for(int i=0;i<latest_plan_->size();i++){
           cell_cost = getPoseCost(latest_plan_->at(i).pose.position.x,latest_plan_->at(i).pose.position.y);
           if (cell_cost >= costmap_2d::INSCRIBED_INFLATED_OBSTACLE && cell_cost != costmap_2d::NO_INFORMATION){
-            //check distance between robot and nearest obstacle cell
-            tf::Stamped<tf::Pose> global_pose;
-            planner_costmap_ros_->getRobotPose(global_pose);
-            geometry_msgs::PoseStamped current_position;
-            tf::poseStampedTFToMsg(global_pose, current_position);
             double obs_distance = distance(current_position,latest_plan_->at(i));
             //if distance is too near, stop the robot
             //ROS_INFO("Test obs distance :%d, %zu, %f",i, latest_plan_->size(),obs_distance);
@@ -699,7 +706,7 @@ namespace move_base {
               state_ = PLANNING;
               publishZeroVelocity();
               SetRobot.setSound(2,2);
-              ROS_WARN("move_base failed to find a path and state is not planning, reset state to PLANNING (distance to obstacle:%.3f",obs_distance);
+              ROS_WARN("move_base failed to find a path and state is not planning, reset state to PLANNING (distance to obstacle:%.3f)",obs_distance);
             }
             break;
           }

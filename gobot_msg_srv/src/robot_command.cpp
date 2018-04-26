@@ -114,15 +114,9 @@ namespace robot_class {
     */
     //motor speed ranges from 0 to 128. Positive indicates forward, and negative indicates backward
     void RobotCommand::motorSpdCallback(const gobot_msg_srv::MotorSpeedMsg::ConstPtr& speed){
-        if(speed->velocityL <= 127 && speed->velocityR <= 127){
-             // compare returns 0 if strings are equal
-             left_speed_ = speed->directionL.compare("F") == 0 ? speed->velocityL : -speed->velocityL;
-             right_speed_ = speed->directionR.compare("F") == 0 ? speed->velocityR : -speed->velocityR;
-        }
-        else{
-            left_speed_ = 128;
-            right_speed_ = 128;
-        } 
+        // compare returns 0 if strings are equal
+        left_speed_ = speed->directionL.compare("F") == 0 ? speed->velocityL : -speed->velocityL;
+        right_speed_ = speed->directionR.compare("F") == 0 ? speed->velocityR : -speed->velocityR;
     }
 
     /**

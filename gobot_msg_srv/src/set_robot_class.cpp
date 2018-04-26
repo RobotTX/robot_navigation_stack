@@ -116,8 +116,8 @@ namespace robot_class {
 
     //Do remember to initilize class after ros::init if setMotorSpeed is used
     bool SetRobot::setMotorSpeed(const char directionR, const int velocityR, const char directionL, const int velocityL){ 
-        motor_speed_.directionR = std::string(1, directionR);
         //maximum of int8 is 127
+        motor_speed_.directionR = std::string(1, directionR);
         motor_speed_.velocityR = velocityR>127 ? 127 : velocityR;
         motor_speed_.directionL = std::string(1, directionL);
         motor_speed_.velocityL = velocityL>127 ? 127 : velocityL;
@@ -190,7 +190,7 @@ namespace robot_class {
         setMotorSpeed('F', 0, 'F', 0);
         setLed(0,{"white"});
         if(reset_odom)
-            ros::service::call("/gobot_motor/resetOdom",empty_srv);
+            ros::service::call("/gobot_motor/reset_odom",empty_srv);
 
         std::string cmd;
         ros::Duration(4.0).sleep();
@@ -207,7 +207,7 @@ namespace robot_class {
         setMotorSpeed('F', 0, 'F', 0);
         setLed(0,{"white"});
         if(reset_odom)
-            ros::service::call("/gobot_motor/resetOdom",empty_srv);
+            ros::service::call("/gobot_motor/reset_odom",empty_srv);
         
         std::string cmd;
         ros::Duration(4.0).sleep();

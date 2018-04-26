@@ -45,7 +45,7 @@ linear_spd_incre: 0.03  #when linear velocity increases, its increasement should
 angular_spd_limit: 0.2 
 angular_spd_size: 4 #rolling mean window size
 
-costmap_threshold_value: 220
+costmap_threshold_value: 225
 
 conservative_reset_dist: 2.2
 

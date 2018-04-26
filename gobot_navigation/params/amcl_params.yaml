@@ -1,7 +1,7 @@
 #wiki.ros.org/amcl?distro=kinetic
 
 # Overall filter parameters
-min_particles: 150
+min_particles: 100
 max_particles: 5000
 #Translational/Rotational movement required before performing a filter update
 update_min_d: 0.25 

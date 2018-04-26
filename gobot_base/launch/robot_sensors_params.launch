@@ -7,10 +7,10 @@
     <param name="WEIGHT_MAX" type="int" value="200000" />
     <!-- MOTOR RELATED -->
     <param name="MOTOR_PORT" type="string" value="/dev/MD" />
+    <param name="TICKS_PER_ROT" type="double" value="982" />
     <param name="ODOM_RATE" type="int" value="10" />
     <param name="WHEEL_SEP" type="double" value="0.35" />
     <param name="WHEEL_RADIUS" type="double" value="0.075" />
-    <param name="TICKS_PER_ROT" type="double" value="982" />
     <param name="ROLLING_WINDOW_SIZE" type="int" value="5" />
     <param name="WAIT_COLLISION" type="double" value="4.0" />
     <param name="AVOID_SPD" type="int" value="12" />
@@ -44,8 +44,8 @@
     <param name="CLIFF_THRESHOLD" type="double" value="170.0" />
     <param name="CLIFF_OUTRANGE" type="double" value="0.0" />
     <!-- ROBOT RECOVERY RELATED -->
-    <param name="restart_file" type="string" value="$(find gobot_data)/command/restart_robot.sh" />
-    <param name="home_file" type="string" value="$(find gobot_data)/data/home.txt"/>
-    <param name="last_known_position_file" type="string" value="$(find gobot_data)/data/lastKnownPosition.txt"/>
     <param name="UPDATE_DURATION" type="double" value="5.0"/>
+    <param name="UPDATE_NUM" type="int" value="30"/>
+    <param name="restart_file" type="string" value="$(find gobot_data)/command/restart_robot.sh" />
+    <param name="last_known_position_file" type="string" value="$(find gobot_data)/data/lastKnownPosition.txt"/>
 </launch>

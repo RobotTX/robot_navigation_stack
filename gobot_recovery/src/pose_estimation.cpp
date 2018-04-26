@@ -15,6 +15,7 @@ std_srvs::Empty empty_srv;
 int left_speed_ = 0, right_speed_ = 0;
 
 double UPDATE_DURATION = 5.0;
+int UPDATE_NUM = 20, update_count = 0;
 
 ros::Publisher vel_pub, foundPose_pub, goal_pub,lost_pub;
 std::string lastPoseFile;
@@ -349,8 +350,10 @@ void batteryCallback(const gobot_msg_srv::BatteryMsg::ConstPtr& msg){
 void motorSpdCallback(const gobot_msg_srv::MotorSpeedMsg::ConstPtr& speed){
     left_speed_ = speed->velocityL;
     right_speed_ = speed->velocityR;
-    if(left_speed_!=0 || right_speed_!=0)
+    if(left_speed_!=0 || right_speed_!=0){
         zero_vel_time = ros::Time::now();
+        update_count = 0;
+    }
 }
 
 
@@ -358,9 +361,12 @@ void motorSpdCallback(const gobot_msg_srv::MotorSpeedMsg::ConstPtr& speed){
 void UpdateRobotPosTimer(const ros::TimerEvent&){
     if(ros::service::exists("/request_nomotion_update",false)){
         //if robot stopped for more than x sec and not charging, we start to update pose particles
-        if((ros::Time::now()-zero_vel_time).toSec()>UPDATE_DURATION && !charging_flag_)
-            if(left_speed_==0 && right_speed_==0)
+        if((ros::Time::now()-zero_vel_time).toSec()>UPDATE_DURATION && !charging_flag_){
+            if(left_speed_==0 && right_speed_==0 && update_count<UPDATE_NUM){
                 ros::service::call("/request_nomotion_update",empty_srv);
+                update_count++;
+            }
+        }
     }
 }
 
@@ -371,7 +377,8 @@ int main(int argc, char **argv) {
     SetRobot.initialize();
     
     nh.getParam("UPDATE_DURATION", UPDATE_DURATION);
-
+    nh.getParam("UPDATE_NUM", UPDATE_NUM);
+    
     vel_pub = nh.advertise<geometry_msgs::Twist>("/cmd_vel",5);
     goal_pub = nh.advertise<geometry_msgs::PoseStamped>("/move_base_simple/goal",1);
     foundPose_pub = nh.advertise<std_msgs::Int8>("/gobot_recovery/find_initial_pose",1);

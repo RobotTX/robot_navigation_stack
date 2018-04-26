@@ -19,8 +19,8 @@
 #define ERROR_THRESHOLD 3
 
 std::vector<uint8_t> REQUEST_DATA_CMD = {0x10, 0x01, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x1B};
-std::vector<uint8_t> RESET_MCU_CMD = {0xD0, 0x01, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x1B};
-std::vector<uint8_t> SHUT_DOWN_CMD = {0xF0, 0x01, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00 ,0x1B};
+std::vector<uint8_t> RESET_MCU_CMD =    {0xD0, 0x01, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x1B};
+std::vector<uint8_t> SHUT_DOWN_CMD =    {0xF0, 0x01, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00 ,0x1B};
 
 class SensorClass {
     public:
@@ -308,10 +308,10 @@ class SensorClass {
                             }
                             //if fully charged
                             else{
-                                battery_data.ChargingFlag = battery_data.ChargingCurrent<-400 ? false : true;
+                                battery_data.ChargingFlag = battery_data.ChargingCurrent<-500 ? false : true;
                             }
                             */
-                            battery_data.ChargingFlag = battery_data.ChargingCurrent<-400 ? false : true;
+                            battery_data.ChargingFlag = battery_data.ChargingCurrent<-500 ? false : true;
                             if(!charging_flag_){
                                 charge_check_ = battery_data.ChargingFlag ? charge_check_+1 : 0;
                             }
