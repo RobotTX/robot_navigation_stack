@@ -411,8 +411,6 @@ bool pauseScan(const std::string ip, const std::vector<std::string> command){
 /// First param = g
 bool startScanAndAutoExplore(const std::string ip, const std::vector<std::string> command){
     if(command.size() == 1){     
-        //ROS_INFO("(COMMAND_SYSTEM) Going to scan automatically");
-        //ROS_INFO("(COMMAND_SYSTEM) Gobot start to scan a new map");
         scanning = true;
         ROS_INFO("(New Map) Start Scan and Explore. We relaunched gobot_scan");
         /// Kill gobot move so that we'll restart it with the new map
@@ -492,7 +490,7 @@ bool playPoint(const std::vector<std::string> command){
         set_point.request.data.push_back(command.at(4));
         set_point.request.data.push_back(command.at(5));
         if(ros::service::call("/gobot_function/play_point", set_point)){
-            ROS_INFO("(COMMAND_SYSTEM) Play the point");
+            //ROS_INFO("(COMMAND_SYSTEM) Play the point");
             return true;
         }
     } 
@@ -613,7 +611,6 @@ bool sendMapOnce(const std::string ip, const std::vector<std::string> command){
         // 0 : scan 
         // 1 : application requesting at connection time
         // 2 : to merge
-        //~ROS_INFO("(COMMAND_SYSTEM) Launching the service to get the map once");
 
         gobot_msg_srv::SendMap srv;
         srv.request.who = std::stoi(command.at(1));
@@ -630,7 +627,6 @@ bool sendMapOnce(const std::string ip, const std::vector<std::string> command){
 /// First param = t
 bool startNewScan(const std::string ip, const std::vector<std::string> command){
     if(command.size() == 1) {
-        //ROS_INFO("(COMMAND_SYSTEM) Gobot start to scan a new map");
         scanning = true;
         ROS_INFO("(COMMAND_SYSTEM) Start New Scan. We relaunched gobot_scan");
         /// Kill gobot move so that we'll restart it with the new map
@@ -1113,7 +1109,7 @@ void session(boost::shared_ptr<tcp::socket> sock){
                 if(static_cast<int>(data[i]) != 0){
                     //ETB
                     if(static_cast<int>(data[i]) == 23){
-                        ROS_INFO("(COMMAND_SYSTEM) Read command '%c' completed from '%s'", commandStr[0], ip.c_str());
+                        ROS_INFO("(COMMAND_SYSTEM) Completed reading command '%c' from ip '%s'", commandStr[0], ip.c_str());
                         finishedCmd = 1;
                         i = length;
                     } 
