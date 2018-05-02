@@ -74,24 +74,27 @@ class BrushlessMotorClass {
 
         ~BrushlessMotorClass(){
             motorSpd_sub_.shutdown();
+            
+            odom_thread_->interrupt();
+            odom_thread_->join();
+            delete odom_thread_;
 
             vel_thread_->interrupt();
             vel_thread_->join();
             delete vel_thread_;
 
-            odom_thread_->interrupt();
-            odom_thread_->join();
-            delete odom_thread_;
 
             serialMutex_.lock();
             try{
-                //set speed to 0 when shutdown
-                std::vector<uint8_t> buff;
-                serialConnection.write(ZERO_SPEED);
-                serialConnection.read(buff, 1);
-                serialConnection.close();
+                if(serialConnection.isOpen()){
+                    //set speed to 0 when shutdown
+                    serialConnection.write(ZERO_SPEED);
+                    ros::Duration(1.0).sleep();
+                    serialConnection.flush();
+                    serialConnection.close();
+                }
             } catch (std::exception& e) {
-                ROS_ERROR("(MOTOR::Shutdown) exception : %s", e.what());
+                std::cout<<"(MOTOR::Shutdown) exception : "<<e.what()<<std::endl;
             }
             serialMutex_.unlock();
         }
@@ -120,14 +123,7 @@ class BrushlessMotorClass {
                 serialConnection.write(RESET_MOTOR);
                 std::vector<uint8_t> buff;
                 serialConnection.read(buff, 1);
-                ros::Duration(0.5).sleep();
-                if(!buff.empty()){
-                    int i = buff[0];
-                    std::cout<< "initial feedback: " << i << std::endl;
-                }
-                else{
-                    std::cout<< "No initial feedback"<<std::endl;
-                }
+                ros::Duration(1.0).sleep();
                 ROS_INFO("(MOTOR::initSerial) Established connection to motor.");
                 serialMutex_.unlock();
                 return true;
@@ -209,7 +205,7 @@ class BrushlessMotorClass {
                         odom_y_ += delta_y;
                         odom_th_ += delta_th;  
                     }
-                    ROS_INFO("(MOTOR) Linear vel:%.3f, Angular vel:%.3f",vel,vth);
+                    //ROS_INFO("(MOTOR) Linear vel:%.3f, Angular vel:%.3f",vel,vth);
 
                     geometry_msgs::Quaternion odom_quat = tf::createQuaternionMsgFromYaw(odom_th_);
 
@@ -246,8 +242,6 @@ class BrushlessMotorClass {
                 }
                 else{
                     ROS_WARN("(MOTOR::getEncoders) Got the wrong number of encoders data : %lu", encoders.size());
-                    last_left_encoder_ = 0;
-                    last_right_encoder_ = 0;
                 }
 
                 r.sleep();
@@ -267,7 +261,7 @@ class BrushlessMotorClass {
                     cur_leftSpeed_ = leftSpeed_;
                     cur_rightSpeed_ = rightSpeed_;
 
-                    writeAndRead(ZERO_SPEED, 1);
+                    writeAndRead(ZERO_SPEED);
                 }
                 else{
                     if(cur_leftSpeed_ - leftSpeed_ > step_threshold_)
@@ -290,7 +284,7 @@ class BrushlessMotorClass {
                     spd_cmd[2] = cur_leftSpeed_>=128 ? 0x00 : 0x01;
                     spd_cmd[3] = cur_rightSpeed_>=128 ? 2*(cur_rightSpeed_-128) : 2*(128-cur_rightSpeed_);
                     spd_cmd[4] = cur_rightSpeed_>=128 ? 0x00 : 0x01;
-                    writeAndRead(spd_cmd, 1);
+                    writeAndRead(spd_cmd);
                 }
 
                 r.sleep();

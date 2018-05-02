@@ -1,6 +1,7 @@
-#udevadm info -a -p $(udevadm info -q path -n /dev/ttyUSB0) | grep KERNELS | grep "-" | grep ":" | cut -d '"' -f2
+#udevadm info -a -p $(udevadm info -q path -n /dev/ttyUSB0) | grep KERNELS | grep "-" | grep ":" | cut -d '"' -f2  for ATTRS variables
 #sudo udevadm control --reload-rules && sudo service udev restart && sudo udevadm trigger
 #udevadm test $(udevadm info -q path -n /dev/ttyUSB0)
+#udevadm monitor --udev --environment  for ENV variables
 
 SUBSYSTEM=="tty", ACTION=="add", KERNEL=="ttyUSB*", ENV{ID_MODEL_ID}=="ea70", ENV{ID_USB_INTERFACE_NUM}=="00", MODE="0777", SYMLINK+="STM" 
 

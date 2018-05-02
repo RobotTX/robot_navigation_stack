@@ -6,6 +6,8 @@
     <param name="WHEEL_RADIUS" type="double" value="0.075" />
     <param name="STEP_THRESHOLD" type="int" value="100" />
     <param name="TICKS_PER_ROT" type="double" value="325" />
+    <param name="constant_a" type="double" value="10.55" />
+    <param name="constant_b" type="double" value="8.0" />
     
     <node pkg="gobot_base" type="brushless_motor_node" name="brushless_motor_node" output="screen" required="true"/>
 </launch>

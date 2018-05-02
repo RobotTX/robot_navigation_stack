@@ -90,7 +90,8 @@ void session(boost::shared_ptr<tcp::socket> sock){
         if ((error == boost::asio::error::eof) || (error == boost::asio::error::connection_reset)){
             //~ROS_INFO("(TELE_CONTROL) Connection closed");
             return;
-        } else if (error) {
+        } 
+        else if (error){
             throw boost::system::system_error(error); // Some other error.
             return;
         }
@@ -115,12 +116,7 @@ void server(void){
         std::string ip = sock->remote_endpoint().address().to_string();
         //~ROS_INFO("(TELE_CONTROL) Command socket connected to %s", ip.c_str());
         socketsMutex.lock();
-        /*
-        if(!sockets.count(ip))
-            sockets.insert(std::pair<std::string, boost::shared_ptr<tcp::socket>>(ip, sock));
-        else
-            ROS_ERROR("(TELE_CONTROL) the ip %s is already connected, this should not happen", ip.c_str());
-        */
+
         if(sockets.find(ip)==sockets.end()){ //not find the ip
             sockets.insert(std::pair<std::string, boost::shared_ptr<tcp::socket>>(ip, sock));
         }

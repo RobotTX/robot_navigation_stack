@@ -1,5 +1,6 @@
 #include <gobot_base/brushless_motor.hpp>
 
+
 int main(int argc, char** argv){
   ros::init(argc, argv, "brushless_motor_node");
   ros::NodeHandle n;
@@ -19,6 +20,5 @@ int main(int argc, char** argv){
   BrushlessMotorClass motor_start;
   std::cout<<"###############COMPLETE MOTOR INITILIZATION###############"<<std::endl;
   ros::spin();
-
   return 0;
 }

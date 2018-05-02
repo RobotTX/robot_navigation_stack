@@ -7,13 +7,15 @@
     <param name="WEIGHT_MAX" type="int" value="200000" />
     <!-- MOTOR RELATED -->
     <param name="MOTOR_PORT" type="string" value="/dev/MD" />
-    <param name="TICKS_PER_ROT" type="double" value="982" />
     <param name="ODOM_RATE" type="int" value="10" />
     <param name="WHEEL_SEP" type="double" value="0.35" />
     <param name="WHEEL_RADIUS" type="double" value="0.075" />
     <param name="ROLLING_WINDOW_SIZE" type="int" value="5" />
     <param name="WAIT_COLLISION" type="double" value="4.0" />
     <param name="AVOID_SPD" type="int" value="12" />
+    <param name="constant_a" type="double" value="15.6" />
+    <param name="constant_b" type="double" value="-20.0" />
+    <param name="TICKS_PER_ROT" type="double" value="982" />
     <!-- RPLIDAR RELATED -->
     <param name="serial_port" type="string" value="/dev/rplidar"/>  
     <param name="serial_baudrate" type="int" value="115200"/>

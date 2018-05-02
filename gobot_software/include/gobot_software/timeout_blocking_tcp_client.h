@@ -174,21 +174,6 @@ public:
       throw boost::system::system_error(ec);
   }
 
-  std::string read_some(){
-    char buffer[1024] = {0};
-    boost::system::error_code error;
-
-    socket_.read_some(boost::asio::buffer(buffer), error);
-    if ((error == boost::asio::error::eof) || (error == boost::asio::error::connection_reset)){
-        return "";
-    } 
-    else if (error) {
-        //throw boost::system::system_error(error); // Some other error.
-        return "";
-    }
-
-    return std::string(buffer);
-  }
 
 private:
   void check_deadline()

@@ -76,9 +76,10 @@ class MotorClass {
             try{
                 //set speed to 0 when shutdown
                 serialConnection.write(std::vector<uint8_t>({0x00, 0x31, 0x80, 0x00, 0x32, 0x80}));
+                serialConnection.flush();
                 serialConnection.close();
             } catch (std::exception& e) {
-                ROS_ERROR("(MOTOR::Shutdown) exception : %s", e.what());
+                std::cout<<"(MOTOR::Shutdown) exception : "<<e.what()<<std::endl;
             }
             serialMutex_.unlock();
         }

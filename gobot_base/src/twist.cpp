@@ -320,6 +320,8 @@ void initParams(ros::NodeHandle &nh){
     nh.getParam("WHEEL_RADIUS", wheel_radius_);
     nh.getParam("TICKS_PER_ROT", ticks_per_rot_);
     nh.getParam("WAIT_COLLISION", wait_collision_);
+    nh.getParam("constant_a", a);
+    nh.getParam("constant_b", b);
     nh.getParam("AVOID_SPD", avoid_spd_);
     vel_constant_ = ticks_per_rot_/(2*PI*wheel_radius_);
 }

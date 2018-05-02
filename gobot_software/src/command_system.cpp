@@ -24,9 +24,7 @@ std::string tts_text_;
 
 std_srvs::Empty empty_srv;
 
-ros::Publisher disco_pub;
-ros::Publisher go_pub;
-ros::Publisher teleop_pub;
+ros::Publisher go_pub, teleop_pub;
 
 robot_class::SetRobot SetRobot;
 robot_class::GetRobot GetRobot;
@@ -1087,19 +1085,9 @@ void session(boost::shared_ptr<tcp::socket> sock){
             size_t length = sock->read_some(boost::asio::buffer(data), error);
             if ((error == boost::asio::error::eof) || (error == boost::asio::error::connection_reset)){
                 ROS_WARN("(COMMAND_SYSTEM) Connection error %s. Closed", ip.c_str());
-                /*
-                std_msgs::String msg;
-                msg.data = ip;
-                disco_pub.publish(msg);
-                */
                 return;
             } 
             else if (error) {
-                /*
-                std_msgs::String msg;
-                msg.data = ip;
-                //disco_pub.publish(msg);
-                */
                 throw boost::system::system_error(error); // Some other error.
                 return;
             }
@@ -1131,7 +1119,8 @@ void session(boost::shared_ptr<tcp::socket> sock){
                     finishedCmd = 0;
                     commandStr = "";
                 }
-            } else {
+            } 
+            else{
                 ROS_ERROR("\n******************\n(COMMAND_SYSTEM) Got a bad command to debug :");
                 std::istringstream iss2(data);
 
@@ -1170,19 +1159,14 @@ void server(void){
         std::string ip = sock->remote_endpoint().address().to_string();
         ROS_INFO("(COMMAND_SYSTEM) Command socket connected to %s", ip.c_str());
         socketsMutex.lock();
-        /*
-        if(!sockets.count(ip))
-            sockets.insert(std::pair<std::string, boost::shared_ptr<tcp::socket>>(ip, sock));
-        else
-            ROS_ERROR("(COMMAND_SYSTEM) the ip %s is already connected, this should not happen", ip.c_str());
-        */
+ 
         if(sockets.find(ip)==sockets.end()){ //not find the ip
             sockets.insert(std::pair<std::string, boost::shared_ptr<tcp::socket>>(ip, sock));
         }
         else{   //ip exists in the list
             sockets.find(ip)->second->close();
             sockets.find(ip)->second = sock;
-            ROS_ERROR("(COMMAND_SYSTEM) the ip %s is already connected, this should not happen", ip.c_str());
+            //ROS_ERROR("(COMMAND_SYSTEM) the ip %s is already connected, this should not happen", ip.c_str());
         }
         socketsMutex.unlock();
 
@@ -1234,7 +1218,6 @@ int main(int argc, char* argv[]){
     
     ros::Subscriber sub = n.subscribe("/gobot_software/server_disconnected", 1, serverDisconnected);
 
-    disco_pub = n.advertise<std_msgs::String>("/gobot_software/server_disconnected", 10);
     go_pub = n.advertise<geometry_msgs::PoseStamped>("/move_base_simple/goal", 1);
     teleop_pub = n.advertise<geometry_msgs::Twist>("/cmd_vel", 1);
     

@@ -121,6 +121,7 @@ class SensorClass {
                 serialConnection.write(std::vector<uint8_t>({0xB0,0x03,0x01,0x57,0x00,0x00,0x00,0x00,0x03,0xE8,0x1B}));
                 std::vector<uint8_t> buff; 
                 serialConnection.read(buff, 5);
+                serialConnection.flush();
                 serialConnection.close();
             } catch (std::exception& e) {
                 ROS_ERROR("(SENSORS) Shutdown exception : %s", e.what());
@@ -348,8 +349,8 @@ class SensorClass {
                         error_weight = true;
                         load_weight = 0;
                     }
-                    else{
-                        load_weight = load_weight > max_weight_ ? -(load_weight-max_weight_): load_weight;
+                    else if(load_weight > max_weight_){
+                        load_weight = -(load_weight - max_weight_);
                     }
                     gobot_msg_srv::WeightMsg weight_data;
                     //gram -> kg

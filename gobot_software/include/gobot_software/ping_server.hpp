@@ -36,6 +36,7 @@ class PingServerClass {
             ping_thread_ = new boost::thread(&PingServerClass::PingThread, this);
         }
 
+
         ~PingServerClass(){
             update_sub_.shutdown();
             servers_sub_.shutdown();
@@ -51,6 +52,7 @@ class PingServerClass {
                 disco_pub_.publish(msg);
             }
         }
+
 
         /**
         * Service callback function to disconnect all hosts
@@ -76,6 +78,7 @@ class PingServerClass {
             return true;
         }
 
+
         /**
         * Will update servers' IP address in local network
         **/
@@ -87,6 +90,7 @@ class PingServerClass {
             }
             serverMutex.unlock();
         }
+
 
         /**
         * Will update gobot status when receive any command
@@ -108,6 +112,7 @@ class PingServerClass {
             }
         }
 
+
         /**
         * Will send robot status to every available server's IP, and connect the host if the feedback is correct
         **/
@@ -117,7 +122,7 @@ class PingServerClass {
             try {
                 /// Try to connect to the remote Qt app
                 client.connect(ip, "6000", boost::posix_time::seconds(sec));
-                /// If we succesfully connect to the server, then the server is supposed to send us "OK"
+                /// If we succesfully connect to the server, then the server is supposed to send us "OK\n"
                 std::string read = client.read_line(boost::posix_time::seconds(sec));
                 if(read.compare("OK") == 0){
                     /// Send the required data
@@ -132,6 +137,7 @@ class PingServerClass {
                 //ROS_ERROR("(PING_SERVERS) error %s : %s", ip.c_str(), e.what());
             }
         }
+
 
         /**
         * Will send robot status to every connected host's IP
@@ -149,6 +155,7 @@ class PingServerClass {
                 //ROS_ERROR("(PING_SERVERS) error %s : %s", ip.c_str(), e.what());
             }
         }
+
 
         /**
         * Periodically try to send message to available server's IP
@@ -193,6 +200,7 @@ class PingServerClass {
             /// Form the string to send to the Qt app
             return  get_update_status.response.data;
         }
+
 
         /**
         * Update connected hosts' IP 
