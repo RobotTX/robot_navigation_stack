@@ -511,7 +511,7 @@ int main(int argc, char **argv){
     ros::Subscriber velSub = n.subscribe("cmd_vel", 1, velCallback);
 
 
-    string input_str = "", index_str = "", result = "failed";;
+    string input_str = "", index_str = "", result = "failed";
     int index = 0;
     char command[99], index_char;
     ros::Duration(DELAY).sleep(); 

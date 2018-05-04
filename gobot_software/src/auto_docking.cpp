@@ -363,7 +363,7 @@ void mySigintHandler(int sig)
     bumperSub.shutdown();
     irSub.shutdown();
     batterySub.shutdown();
-    proximitySub.shutdown();;
+    proximitySub.shutdown();
 	delete ac;
     ros::shutdown();
 }

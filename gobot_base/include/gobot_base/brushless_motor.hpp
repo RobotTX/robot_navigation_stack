@@ -223,7 +223,7 @@ class BrushlessMotorClass {
 
                     //next, we'll publish the odometry message over ROS
                     nav_msgs::Odometry odom;
-                    odom.header.stamp = ros::Time::now();;
+                    odom.header.stamp = ros::Time::now();
                     odom.header.frame_id = "odom";
                     //set the position
                     odom.pose.pose.position.x = odom_x_;

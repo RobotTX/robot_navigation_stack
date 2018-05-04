@@ -80,14 +80,6 @@ void sonarBackToCloud(double sonarR,double sonarL,pcl::PointCloud<pcl::PointXYZ>
             cloudR.push_back(pcl::PointXYZ(SONAR_MAX*factor, i, 0));
         }
     }
-    
-    /*
-    for(double i=factor*SONAR_VIEW;i>-y;i=i-SONAR_VIEW/SONAR_RESOLUTION)
-        cloudR.push_back(pcl::PointXYZ(SONAR_MAX*factor, i, 0));
-
-    for(double i=-factor*SONAR_VIEW;i<y;i=i+SONAR_VIEW/SONAR_RESOLUTION)
-        cloudL.push_back(pcl::PointXYZ(SONAR_MAX*factor, i, 0));
-        */
 
     sonarR=(sonarR==SONAR_OUTRANGE || sonarR>SONAR_THRESHOLD) ? SONAR_MAX : sonarR;
     sonarL=(sonarL==SONAR_OUTRANGE || sonarL>SONAR_THRESHOLD) ? SONAR_MAX : sonarL;

@@ -1,7 +1,7 @@
 #include <gobot_base/twist.hpp>
 
 #define CLIFF_THRESHOLD 170
-#define CLIFF_OUTRANGE 1
+#define CLIFF_OUTRANGE 255
 #define PI 3.1415926
 
 bool collision = false, moved_from_collision = true, pause_robot = false;
@@ -18,7 +18,7 @@ double a = 15.6, b = -20.0;
 bool lost_robot = false;
 
 bool enable_joy = false;
-double linear_limit = 0.4, angular_limit = 0.8, joy_linear = 0.4, joy_angular = 0.8; 
+double joy_linear_limit = 0.4, joy_angular_limit = 0.8, joy_linear = 0.4, joy_angular = 0.8; 
 
 int left_speed_ = 0, right_speed_ = 0;
 
@@ -43,49 +43,56 @@ bool pauseRobotSrvCallback(std_srvs::Empty::Request &req, std_srvs::Empty::Respo
 }
 
 bool joySpeedSrvCallback(gobot_msg_srv::SetFloatArray::Request &req, gobot_msg_srv::SetFloatArray::Response &res){
-    linear_limit = req.data[0];
-    angular_limit = req.data[1];
-    joy_linear = linear_limit;
-    joy_angular = angular_limit;
+    joy_linear_limit = req.data[0];
+    joy_angular_limit = req.data[1];
+    joy_linear = joy_linear_limit;
+    joy_angular = joy_angular_limit;
     return true;
 }
 
 void cliffCallback(const gobot_msg_srv::CliffMsg::ConstPtr& cliff){
-    if((cliff->cliff1>CLIFF_THRESHOLD) || (cliff->cliff1==CLIFF_OUTRANGE) || (cliff->cliff2>CLIFF_THRESHOLD) || (cliff->cliff2==CLIFF_OUTRANGE)){
-        if(moved_from_front_cliff){
-            //if robot is moving
-            if(left_speed_ != 0 || right_speed_ != 0){
+    //if robot is moving, check cliff sensors
+    if(left_speed_ != 0 || right_speed_ != 0){
+        if((cliff->cliff1>CLIFF_THRESHOLD) || (cliff->cliff1==CLIFF_OUTRANGE) || (cliff->cliff2>CLIFF_THRESHOLD) || (cliff->cliff2==CLIFF_OUTRANGE)){
+            if(moved_from_front_cliff){
                 if(!bumper_on){
                     moved_from_front_cliff = false;
-                    SetRobot.setSound(3,1);
                     SetRobot.setMotorSpeed('B', avoid_spd_, 'B', avoid_spd_);
+                    SetRobot.setSound(3,1);
+                    SetRobot.setLed(0,{"red"});
                 }
             }
         }
-    }
-    else if(!moved_from_front_cliff){
-        ros::Duration(0.5).sleep();
-        moved_from_front_cliff=true;
-        SetRobot.setMotorSpeed('F', 0, 'F', 0);
-    }
+        else if(!moved_from_front_cliff){
+            ros::Duration(0.5).sleep();
+            moved_from_front_cliff=true;
+            SetRobot.setMotorSpeed('F', 0, 'F', 0);
+            SetRobot.setSound(1,1);
+        }
 
-    if((cliff->cliff3>CLIFF_THRESHOLD) || (cliff->cliff3==CLIFF_OUTRANGE) || (cliff->cliff4>CLIFF_THRESHOLD) || (cliff->cliff4==CLIFF_OUTRANGE)){
-        if(moved_from_back_cliff){
-            //if robot is moving
-            if(left_speed_ != 0 || right_speed_ != 0){
+        if((cliff->cliff3>CLIFF_THRESHOLD) || (cliff->cliff3==CLIFF_OUTRANGE) || (cliff->cliff4>CLIFF_THRESHOLD) || (cliff->cliff4==CLIFF_OUTRANGE)){
+            if(moved_from_back_cliff){
                 if(!bumper_on){
                     moved_from_back_cliff = false;
-                    SetRobot.setSound(3,1);
                     SetRobot.setMotorSpeed('F', avoid_spd_, 'F', avoid_spd_);
+                    SetRobot.setSound(3,1);
+                    SetRobot.setLed(0,{"red"});
                 }
             }
         }
+        else if(!moved_from_back_cliff){
+            ros::Duration(0.5).sleep();
+            moved_from_back_cliff=true;
+            SetRobot.setMotorSpeed('F', 0, 'F', 0);
+            SetRobot.setSound(1,1);
+        }
     }
-    else if(!moved_from_back_cliff){
-        ros::Duration(0.5).sleep();
-        moved_from_back_cliff=true;
-        SetRobot.setMotorSpeed('F', 0, 'F', 0);
+    //if robot is not moving
+    else if(cliff_on){
+        moved_from_front_cliff = true;
+        moved_from_back_cliff = true;
     }
+
     cliff_on = !(moved_from_front_cliff && moved_from_back_cliff);
 }
 
@@ -139,7 +146,7 @@ void newBumpersInfo(const gobot_msg_srv::BumperMsg::ConstPtr& bumpers){
                 moved_from_collision = false; 
                 /// if after wait_collision_ seconds, the obstacle is still there, we go to the opposite direction
                 //if front bumpers are trigered
-                if(front && !back){
+                if(front){
                     std::thread([](){
                         bumpers_broken[0] = !bumpers_data.bumper1;
                         bumpers_broken[1] = !bumpers_data.bumper2;
@@ -155,7 +162,7 @@ void newBumpersInfo(const gobot_msg_srv::BumperMsg::ConstPtr& bumpers){
                     }).detach();
                 } 
                 //if back bumpers are trigered
-                else if(back && !front){
+                else{
                     std::thread([](){
                         bumpers_broken[4] = !bumpers_data.bumper5;
                         bumpers_broken[5] = !bumpers_data.bumper6;
@@ -169,12 +176,6 @@ void newBumpersInfo(const gobot_msg_srv::BumperMsg::ConstPtr& bumpers){
                         collisionTime = ros::Time::now();
                         moved_from_collision = true;
                     }).detach();
-                }
-                //somehow, we are in this stage
-                else{
-                    collision = false;
-                    moved_from_collision = true;
-                    collisionTime = ros::Time::now();
                 }
             }
         } 
@@ -242,12 +243,12 @@ void joyCallback(const sensor_msgs::Joy::ConstPtr& joy){
 
         //reset linear speed limit 0.4
         if(joy->buttons[9]){
-            joy_linear = linear_limit;;
+            joy_linear = joy_linear_limit;
         }
 
         //reset angular speed limit 0.8
         if(joy->buttons[10]){
-            joy_angular = angular_limit;
+            joy_angular = joy_angular_limit;
         }
 
         if(joy->buttons[0])
@@ -271,7 +272,7 @@ void joyCallback(const sensor_msgs::Joy::ConstPtr& joy){
                 double right_vel_speed = (right_vel_m_per_sec * vel_constant_ - b ) / a;
                 double left_vel_speed = (left_vel_m_per_sec * vel_constant_ - b ) / a;
 
-                SetRobot.setMotorSpeed(right_vel_speed >= 0 ? 'F' : 'B', fabs(right_vel_speed), left_vel_speed >= 0 ? 'F' : 'B', fabs(left_vel_speed));;
+                SetRobot.setMotorSpeed(right_vel_speed >= 0 ? 'F' : 'B', fabs(right_vel_speed), left_vel_speed >= 0 ? 'F' : 'B', fabs(left_vel_speed));
             }
         }
     }

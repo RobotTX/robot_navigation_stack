@@ -8,10 +8,9 @@ ros::Publisher cliffFRPublisher,cliffFLPublisher,cliffBRPublisher,cliffBLPublish
 int left_speed_ = 0, right_speed_ = 0;
 
 std::string front_left_cliff_frame, front_right_cliff_frame, back_left_cliff_frame, back_right_cliff_frame;
-bool FLcliff_on = false,FRcliff_on = false,BLcliff_on = false,BRcliff_on = false;
 bool use_pc = true;
 
-bool cliffToCloud(double CliffData,pcl::PointCloud<pcl::PointXYZ> &cloudData, bool cliff_on){
+bool cliffToCloud(double CliffData,pcl::PointCloud<pcl::PointXYZ> &cloudData){
     if(CliffData>CLIFF_THRESHOLD){  //&& CliffData==CLIFF_OUTRANGE){   //CLIFF_OUTRANGE probably back wheel blocked cliff sensors
         cloudData.push_back(pcl::PointXYZ(0, 0, 0));
         return true;
@@ -37,37 +36,10 @@ void cliffCallback(const gobot_msg_srv::CliffMsg::ConstPtr& cliff){
         BLcliffCloud.header.frame_id = back_left_cliff_frame;
         //if robot is moving
         if(left_speed_ != 0 || right_speed_ != 0){
-            if (cliffToCloud(cliff->cliff1,FRcliffCloud,FRcliff_on)){
-                if(!FRcliff_on)
-                    FRcliff_on = true; 
-            }
-            else if(FRcliff_on){
-                FRcliff_on = false;
-            }
-
-            if (cliffToCloud(cliff->cliff2,FLcliffCloud,FLcliff_on)){
-                if(!FLcliff_on)
-                    FLcliff_on = true; 
-            }
-            else if(FLcliff_on){
-                FLcliff_on = false;
-            }
-
-            if (cliffToCloud(cliff->cliff4,BRcliffCloud,BRcliff_on)){
-                if(!BRcliff_on)
-                    BRcliff_on = true; 
-            }
-            else if(BRcliff_on){
-                BRcliff_on = false;
-            }
-
-            if (cliffToCloud(cliff->cliff3,BLcliffCloud,BLcliff_on)){
-                if(!BLcliff_on)
-                    BLcliff_on = true; 
-            }
-            else if(BLcliff_on){
-                BLcliff_on = false;
-            }
+            cliffToCloud(cliff->cliff1,FRcliffCloud);
+            cliffToCloud(cliff->cliff2,FRcliffCloud);
+            cliffToCloud(cliff->cliff3,FRcliffCloud);
+            cliffToCloud(cliff->cliff4,FRcliffCloud);
         }
 
         cliffFRPublisher.publish(FRcliffCloud);
