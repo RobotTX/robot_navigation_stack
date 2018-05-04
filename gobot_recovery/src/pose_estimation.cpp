@@ -393,7 +393,7 @@ int main(int argc, char **argv) {
     ros::Subscriber initialPose_sub = nh.subscribe("/amcl_pose",1,getAmclPoseCallback);
     ros::Subscriber battery_sub = nh.subscribe("/gobot_base/battery_topic",1, batteryCallback);
 
-    //Periodically save robot pose to local file
+    //Periodically update robot pose in the map by amcl
     pose_timer = nh.createTimer(ros::Duration(UPDATE_DURATION), UpdateRobotPosTimer);
     pose_timer.stop();
 

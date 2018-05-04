@@ -13,8 +13,8 @@
     <param name="ROLLING_WINDOW_SIZE" type="int" value="5" />
     <param name="WAIT_COLLISION" type="double" value="4.0" />
     <param name="AVOID_SPD" type="int" value="12" />
-    <param name="constant_a" type="double" value="15.6" />
-    <param name="constant_b" type="double" value="-20.0" />
+    <param name="factor_a" type="double" value="15.6" />
+    <param name="factor_b" type="double" value="-20.0" />
     <param name="TICKS_PER_ROT" type="double" value="982" />
     <!-- RPLIDAR RELATED -->
     <param name="serial_port" type="string" value="/dev/rplidar"/>  
@@ -44,7 +44,7 @@
     <!-- CLIFF CLOUD RELATED -->
     <param name="USE_CLIFF_PC" type="bool" value="true" />
     <param name="CLIFF_THRESHOLD" type="double" value="170.0" />
-    <param name="CLIFF_OUTRANGE" type="double" value="0.0" />
+    <param name="CLIFF_OUTRANGE" type="double" value="255.0" />
     <!-- ROBOT RECOVERY RELATED -->
     <param name="UPDATE_DURATION" type="double" value="5.0"/>
     <param name="UPDATE_NUM" type="int" value="30"/>

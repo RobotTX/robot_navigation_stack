@@ -15,10 +15,9 @@ bool leftFlag = false;
 bool charging = false;
 bool move_from_collision = true;
 
-ros::Time lastIrSignalTime, goal_pub_time;
+ros::Time lastIrSignalTime;
 
 ros::Subscriber goalStatusSub,bumperSub,irSub,batterySub,proximitySub;
-ros::Timer sound_timer;
 
 std_srvs::Empty empty_srv;
 
@@ -48,7 +47,6 @@ bool startDocking(void){
 
         /// Create the goal
         currentGoal.target_pose.header.frame_id = "map";
-        goal_pub_time = ros::Time::now();
         currentGoal.target_pose.header.stamp = ros::Time::now();
         currentGoal.target_pose.pose.position.x = landingPointX;
         currentGoal.target_pose.pose.position.y = landingPointY;

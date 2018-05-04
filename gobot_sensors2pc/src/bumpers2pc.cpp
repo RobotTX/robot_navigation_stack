@@ -6,8 +6,6 @@ double space, bumpers_height,dimension_x, dimension_y;
 bool use_pc = true;
 std::string pc_frame;
 
-
-
 /// Convert the bumpers info to a pointcloud and publish it
 void newBumpersInfo(const gobot_msg_srv::BumperMsg::ConstPtr& bumpers){
     if(use_pc){

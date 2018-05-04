@@ -1,28 +1,30 @@
 #include <gobot_base/twist.hpp>
 
-#define CLIFF_THRESHOLD 170
-#define CLIFF_OUTRANGE 255
 #define PI 3.1415926
 
-bool collision = false, moved_from_collision = true, pause_robot = false;
-double wheel_sep_, wheel_radius_, ticks_per_rot_, wait_collision_, avoid_spd_;
-double vel_constant_;
+ros::Time collision_time;
 
-bool bumper_on=false, cliff_on=false,moved_from_front_cliff = true,moved_from_back_cliff=true;
+bool pause_robot = false;
+double wheel_sep_, wheel_radius_, ticks_per_rot_, wait_collision_, avoid_spd_, vel_constant_;
+
+bool cliff_on=false,moved_from_front_cliff = true,moved_from_back_cliff=true;
+double CLIFF_THRESHOLD = 170.0, CLIFF_OUTRANGE = 255.0;
+
+bool bumper_on=false, collision = false, moved_from_collision = true;
 bool bumpers_broken[8]={false,false,false,false,false,false,false,false};
 
 /// based on tests, the linear regression from the velocity in m/s to the ticks/sec is approx : y=15.606962627075x-2.2598795680051
 //15.606962627075;//-2.2598795680051;
-double a = 15.6, b = -20.0;  
+double factor_a = 15.6, factor_b = -20.0;  
 
 bool lost_robot = false;
 
-bool enable_joy = false;
+bool joy_on = false;
 double joy_linear_limit = 0.4, joy_angular_limit = 0.8, joy_linear = 0.4, joy_angular = 0.8; 
 
 int left_speed_ = 0, right_speed_ = 0;
 
-ros::Time collisionTime;
+ros::Time bumper_collision_time;
 ros::Publisher bumper_pub,bumper_collision_pub;
 
 std_srvs::Empty empty_srv;
@@ -50,38 +52,40 @@ bool joySpeedSrvCallback(gobot_msg_srv::SetFloatArray::Request &req, gobot_msg_s
     return true;
 }
 
+
+bool cliffOutRange(double CliffData){
+    if(CliffData>CLIFF_THRESHOLD || CliffData==CLIFF_OUTRANGE)
+        return true;
+    else
+        return false;
+}
+
 void cliffCallback(const gobot_msg_srv::CliffMsg::ConstPtr& cliff){
     //if robot is moving, check cliff sensors
     if(left_speed_ != 0 || right_speed_ != 0){
-        if((cliff->cliff1>CLIFF_THRESHOLD) || (cliff->cliff1==CLIFF_OUTRANGE) || (cliff->cliff2>CLIFF_THRESHOLD) || (cliff->cliff2==CLIFF_OUTRANGE)){
-            if(moved_from_front_cliff){
-                if(!bumper_on){
-                    moved_from_front_cliff = false;
-                    SetRobot.setMotorSpeed('B', avoid_spd_, 'B', avoid_spd_);
-                    SetRobot.setSound(3,1);
-                    SetRobot.setLed(0,{"red"});
-                }
+        if(cliffOutRange(cliff->cliff1) || cliffOutRange(cliff->cliff2)){
+            if(moved_from_front_cliff && !bumper_on){
+                moved_from_front_cliff = false;
+                SetRobot.setMotorSpeed('B', avoid_spd_, 'B', avoid_spd_);
+                SetRobot.setSound(3,1);
+                SetRobot.setLed(1,{"red","white"});
+                collision_time = ros::Time::now();
             }
-        }
-        else if(!moved_from_front_cliff){
-            ros::Duration(0.5).sleep();
-            moved_from_front_cliff=true;
-            SetRobot.setMotorSpeed('F', 0, 'F', 0);
-            SetRobot.setSound(1,1);
         }
 
-        if((cliff->cliff3>CLIFF_THRESHOLD) || (cliff->cliff3==CLIFF_OUTRANGE) || (cliff->cliff4>CLIFF_THRESHOLD) || (cliff->cliff4==CLIFF_OUTRANGE)){
-            if(moved_from_back_cliff){
-                if(!bumper_on){
-                    moved_from_back_cliff = false;
-                    SetRobot.setMotorSpeed('F', avoid_spd_, 'F', avoid_spd_);
-                    SetRobot.setSound(3,1);
-                    SetRobot.setLed(0,{"red"});
-                }
+        else if(cliffOutRange(cliff->cliff3) || cliffOutRange(cliff->cliff4)){
+            if(moved_from_back_cliff && !bumper_on){
+                moved_from_back_cliff = false;
+                SetRobot.setMotorSpeed('F', avoid_spd_, 'F', avoid_spd_);
+                SetRobot.setSound(3,1);
+                SetRobot.setLed(1,{"red","white"});
+                collision_time = ros::Time::now();
             }
         }
-        else if(!moved_from_back_cliff){
+
+        else if(!moved_from_back_cliff || !moved_from_front_cliff){
             ros::Duration(0.5).sleep();
+            moved_from_front_cliff=true;
             moved_from_back_cliff=true;
             SetRobot.setMotorSpeed('F', 0, 'F', 0);
             SetRobot.setSound(1,1);
@@ -92,7 +96,7 @@ void cliffCallback(const gobot_msg_srv::CliffMsg::ConstPtr& cliff){
         moved_from_front_cliff = true;
         moved_from_back_cliff = true;
     }
-
+    
     cliff_on = !(moved_from_front_cliff && moved_from_back_cliff);
 }
 
@@ -139,9 +143,10 @@ void newBumpersInfo(const gobot_msg_srv::BumperMsg::ConstPtr& bumpers){
                 SetRobot.setMotorSpeed('F', 0, 'F', 0);
                 ROS_WARN("(TWIST::newBumpersInfo) Detect collision");
                 collision = true;
-                collisionTime = ros::Time::now();
+                bumper_collision_time = ros::Time::now();
+                collision_time = ros::Time::now();
             } 
-            else if((ros::Time::now() - collisionTime).toSec()>wait_collision_){
+            else if((ros::Time::now() - bumper_collision_time).toSec()>wait_collision_){
                 bumper_collision_pub.publish(bumpers_data); 
                 moved_from_collision = false; 
                 /// if after wait_collision_ seconds, the obstacle is still there, we go to the opposite direction
@@ -157,7 +162,7 @@ void newBumpersInfo(const gobot_msg_srv::BumperMsg::ConstPtr& bumpers){
                         ros::Duration(1.5).sleep();
                         SetRobot.setMotorSpeed('F', 0, 'F', 0);
                         //ROS_INFO("Front bumper broken: %d,%d,%d,%d",bumpers_broken[0],bumpers_broken[1],bumpers_broken[2],bumpers_broken[3]);
-                        collisionTime = ros::Time::now();
+                        bumper_collision_time = ros::Time::now();
                         moved_from_collision = true;
                     }).detach();
                 } 
@@ -173,7 +178,7 @@ void newBumpersInfo(const gobot_msg_srv::BumperMsg::ConstPtr& bumpers){
                         ros::Duration(1.5).sleep();
                         SetRobot.setMotorSpeed('F', 0, 'F', 0);
                         //ROS_INFO("Back bumper broken: %d,%d,%d,%d",bumpers_broken[4],bumpers_broken[5],bumpers_broken[6],bumpers_broken[7]);
-                        collisionTime = ros::Time::now();
+                        bumper_collision_time = ros::Time::now();
                         moved_from_collision = true;
                     }).detach();
                 }
@@ -181,7 +186,7 @@ void newBumpersInfo(const gobot_msg_srv::BumperMsg::ConstPtr& bumpers){
         } 
         else if(collision){
             /// if we had a collision and the obstacle left
-            ROS_INFO("(TWIST::newBumpersInfo) Obstacle left after %f seconds",(ros::Time::now() - collisionTime).toSec());
+            ROS_INFO("(TWIST::newBumpersInfo) Obstacle left after %f seconds",(ros::Time::now() - bumper_collision_time).toSec());
             ROS_INFO("Front bumper broken: %d,%d,%d,%d",bumpers_broken[0],bumpers_broken[1],bumpers_broken[2],bumpers_broken[3]);
             ROS_INFO("Back bumper broken: %d,%d,%d,%d",bumpers_broken[4],bumpers_broken[5],bumpers_broken[6],bumpers_broken[7]);
             collision = false;
@@ -203,28 +208,28 @@ void lostCallback(const std_msgs::Int8::ConstPtr& msg){
 
 void joyConnectionCallback(const std_msgs::Int8::ConstPtr& data){
     if(data->data == 0){
-        if(enable_joy){
-            enable_joy = false;
-            SetRobot.setSound(3,1);
+        if(joy_on){
+            joy_on = false;
             SetRobot.setMotorSpeed('F', 0, 'F', 0);
         }
     }
+    SetRobot.setSound(2,1);
 }
 
 void joyCallback(const sensor_msgs::Joy::ConstPtr& joy){
     //start -> enable manual control
     if(joy->buttons[7]){
-        enable_joy = true;
+        joy_on = true;
         SetRobot.setMotorSpeed('F', 0, 'F', 0);
         SetRobot.setBatteryLed();
     }
     //back -> disable manual control
     if(joy->buttons[6]){
-        enable_joy = false;
+        joy_on = false;
         SetRobot.setMotorSpeed('F', 0, 'F', 0);
         SetRobot.setBatteryLed();
     }
-    if(enable_joy){
+    if(joy_on){
         //adjust linear speed
         if(joy->axes[7] == 1){
             joy_linear = (joy_linear+0.1) <= 0.9 ? joy_linear+0.1 : 0.9;
@@ -241,12 +246,12 @@ void joyCallback(const sensor_msgs::Joy::ConstPtr& joy){
             joy_angular = (joy_angular-0.1) > 0.2 ? joy_angular-0.1 : 0.2;
         }
 
-        //reset linear speed limit 0.4
+        //reset linear speed limit
         if(joy->buttons[9]){
             joy_linear = joy_linear_limit;
         }
 
-        //reset angular speed limit 0.8
+        //reset angular speed limit
         if(joy->buttons[10]){
             joy_angular = joy_angular_limit;
         }
@@ -263,23 +268,31 @@ void joyCallback(const sensor_msgs::Joy::ConstPtr& joy){
         if(!bumper_on && !cliff_on){
             if(joy->axes[1] == 0 && joy->axes[3] == 0)
                 SetRobot.setMotorSpeed('F', 0, 'F', 0);
-            else {
-                /// calculate the speed of each wheel in m/s
-                double right_vel_m_per_sec = joy_linear * joy->axes[1] + joy_angular * joy->axes[3] * wheel_sep_ / (double)2;
-                double left_vel_m_per_sec = joy_linear * joy->axes[1] - joy_angular * joy->axes[3] * wheel_sep_ / (double)2;
-
-                /// calculate the real value we need to give the MD49
-                double right_vel_speed = (right_vel_m_per_sec * vel_constant_ - b ) / a;
-                double left_vel_speed = (left_vel_m_per_sec * vel_constant_ - b ) / a;
-
-                SetRobot.setMotorSpeed(right_vel_speed >= 0 ? 'F' : 'B', fabs(right_vel_speed), left_vel_speed >= 0 ? 'F' : 'B', fabs(left_vel_speed));
-            }
+            else
+                cmdToMotorSpeed(joy_linear*joy->axes[1], joy_angular*joy->axes[3]);
+        }
+    }
+    else{
+        //LT || RT
+        if(joy->axes[2]==-1 || joy->axes[5]==-1){
+            //button A
+            if(joy->buttons[0])
+                ros::service::call("/gobot_command/play_path",empty_srv);
+            //button B
+            else if(joy->buttons[1])
+                ros::service::call("/gobot_command/stop_path",empty_srv);
+            //button X
+            else if(joy->buttons[2])
+                ros::service::call("/gobot_command/pause_path",empty_srv);
+            //button Y
+            else if(joy->buttons[3])
+                ros::service::call("/gobot_command/goDock",empty_srv);
         }
     }
 }
 
 void newCmdVel(const geometry_msgs::Twist::ConstPtr& twist){
-    if(enable_joy){
+    if(joy_on){
         int move_status = SetRobot.stopRobotMoving();
         if(move_status != 0){
             ROS_INFO("(TWIST) Stop robot motion, current status: %d.", move_status);
@@ -287,23 +300,10 @@ void newCmdVel(const geometry_msgs::Twist::ConstPtr& twist){
     }
     /// Received a new velocity cmd
     else if(!bumper_on && !cliff_on){
-        /// if the velocity cmd is to tell the robot to stop, we just give 0 and don't calculate
-        /// because with the linear regression function we would get a speed of ~0.002 m/s
         if(twist->linear.x == 0 && twist->angular.z == 0)
             SetRobot.setMotorSpeed('F', 0, 'F', 0);
-        else {
-            /// calculate the speed of each wheel in m/s
-            double right_vel_m_per_sec = twist->linear.x + twist->angular.z * wheel_sep_ / 2.0;
-            double left_vel_m_per_sec = twist->linear.x - twist->angular.z * wheel_sep_ / 2.0;
-
-            /// calculate the real value we need to give the MD49
-            double right_vel_speed = (right_vel_m_per_sec * vel_constant_ - b ) / a;
-            double left_vel_speed = (left_vel_m_per_sec * vel_constant_ - b ) / a;
-
-            //ROS_INFO("(TWIST::newCmdVel) new vel %f %f", right_vel_speed, left_vel_speed);
-
-            SetRobot.setMotorSpeed(right_vel_speed >= 0 ? 'F' : 'B', fabs(right_vel_speed), left_vel_speed >= 0 ? 'F' : 'B', fabs(left_vel_speed));
-        }
+        else
+            cmdToMotorSpeed(twist->linear.x, twist->angular.z);
     }
 }
 
@@ -316,19 +316,45 @@ void statusCallback(const std_msgs::Int8::ConstPtr& msg){
     robot_status_ = msg->data;
 }
 
+void cmdToMotorSpeed(double cmd_linear, double cmd_angular){
+    /// calculate the speed of each wheel in m/s
+    double right_vel_m_per_sec = cmd_linear + cmd_angular * wheel_sep_ / 2.0;
+    double left_vel_m_per_sec = cmd_linear - cmd_angular * wheel_sep_ / 2.0;
+
+    /// calculate the real value we need to give the MD49
+    double right_vel_speed = (right_vel_m_per_sec * vel_constant_ - factor_b ) / factor_a;
+    double left_vel_speed = (left_vel_m_per_sec * vel_constant_ - factor_b ) / factor_a;
+
+    //ROS_INFO("(TWIST::newCmdVel) new vel %f %f", right_vel_speed, left_vel_speed);
+    SetRobot.setMotorSpeed(right_vel_speed >= 0 ? 'F' : 'B', fabs(right_vel_speed), left_vel_speed >= 0 ? 'F' : 'B', fabs(left_vel_speed));
+}
+
 void initParams(ros::NodeHandle &nh){
     nh.getParam("WHEEL_SEP", wheel_sep_);
     nh.getParam("WHEEL_RADIUS", wheel_radius_);
     nh.getParam("TICKS_PER_ROT", ticks_per_rot_);
     nh.getParam("WAIT_COLLISION", wait_collision_);
-    nh.getParam("constant_a", a);
-    nh.getParam("constant_b", b);
+    nh.getParam("factor_a", factor_a);
+    nh.getParam("factor_b", factor_b);
     nh.getParam("AVOID_SPD", avoid_spd_);
+    nh.getParam("CLIFF_OUTRANGE", CLIFF_OUTRANGE);
+    nh.getParam("CLIFF_THRESHOLD", CLIFF_THRESHOLD);
+
     vel_constant_ = ticks_per_rot_/(2*PI*wheel_radius_);
 }
 
 void mySigintHandler(int sig){   
     ros::shutdown();
+}
+
+//if robot stays in collision status too long, reset the collision flag
+void checkCollisionTimer(const ros::TimerEvent&){
+    if((ros::Time::now()-collision_time).toSec() > 30.0){
+        if(cliff_on || bumper_on){
+            cliff_on = false;
+            bumper_on = false;
+        }
+    }
 }
 
 int main(int argc, char **argv) {
@@ -366,8 +392,9 @@ int main(int argc, char **argv) {
     ros::ServiceServer continueRobot = nh.advertiseService("/gobot_base/continue_robot",continueRobotSrvCallback);
     ros::ServiceServer pauseRobot = nh.advertiseService("/gobot_base/pause_robot",pauseRobotSrvCallback);
 
-    ros::AsyncSpinner spinner(3); // Use 3 threads
-    spinner.start();
-    ros::waitForShutdown();
+    collision_time = ros::Time::now();
+    ros::Timer collision_timer = nh.createTimer(ros::Duration(20), checkCollisionTimer);
+
+    ros::spin();
     return 0;
 }

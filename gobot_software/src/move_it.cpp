@@ -240,7 +240,7 @@ bool playPointService(gobot_msg_srv::SetStringArray::Request &req, gobot_msg_srv
 
 bool playPathService(std_srvs::Empty::Request &req, std_srvs::Empty::Response &res){
 	if(path.empty()){
-		ROS_ERROR("(MOVE_IT::playPathService) the path is empty, returning false to cmd system");
+		ROS_WARN("(MOVE_IT::playPathService) the path is empty, returning false to cmd system");
 		return false;
 	}
 

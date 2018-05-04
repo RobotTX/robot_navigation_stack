@@ -22,6 +22,8 @@ bool pauseRobotSrvCallback(std_srvs::Empty::Request &req, std_srvs::Empty::Respo
 /// Callback of the subscriber on bumper infoso that if we bump into something, the robot top
 void newBumpersInfo(const gobot_msg_srv::BumperMsg::ConstPtr& bumpers);
 
+bool cliffOutRange(double CliffData);
+
 void cliffCallback(const gobot_msg_srv::CliffMsg::ConstPtr& cliff);
 
 void lostCallback(const std_msgs::Int8::ConstPtr& msg);
@@ -35,4 +37,8 @@ void newCmdVel(const geometry_msgs::Twist::ConstPtr& twist);
 
 void statusCallback(const std_msgs::Int8::ConstPtr& msg);
     
+void cmdToMotorSpeed(double cmd_linear, double cmd_angular);
+
 void initParams(ros::NodeHandle &nh);
+
+void checkCollisionTimer(const ros::TimerEvent&);

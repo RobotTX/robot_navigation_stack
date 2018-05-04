@@ -1,6 +1,4 @@
 #include <gobot_sensors2pc/cliffs2pc.hpp>
-#include <tf/transform_listener.h>
-#include <sensor_msgs/LaserScan.h>
 
 double CLIFF_THRESHOLD=170, CLIFF_OUTRANGE=0;
 
@@ -11,7 +9,7 @@ std::string front_left_cliff_frame, front_right_cliff_frame, back_left_cliff_fra
 bool use_pc = true;
 
 bool cliffToCloud(double CliffData,pcl::PointCloud<pcl::PointXYZ> &cloudData){
-    if(CliffData>CLIFF_THRESHOLD){  //&& CliffData==CLIFF_OUTRANGE){   //CLIFF_OUTRANGE probably back wheel blocked cliff sensors
+    if(CliffData>CLIFF_THRESHOLD || CliffData==CLIFF_OUTRANGE){   //CLIFF_OUTRANGE probably back wheel blocked cliff sensors
         cloudData.push_back(pcl::PointXYZ(0, 0, 0));
         return true;
     }
@@ -29,17 +27,19 @@ void motorSpdCallback(const gobot_msg_srv::MotorSpeedMsg::ConstPtr& speed){
 //cliff1->front right, cliff2->front left, cliff3->back right, cliff4->back left
 void cliffCallback(const gobot_msg_srv::CliffMsg::ConstPtr& cliff){
     if(use_pc){
+        bool cliff1_on, cliff2_on, cliff3_on, cliff4_on;
         pcl::PointCloud<pcl::PointXYZ> FRcliffCloud,FLcliffCloud,BRcliffCloud,BLcliffCloud;
         FRcliffCloud.header.frame_id = front_right_cliff_frame;
         FLcliffCloud.header.frame_id = front_left_cliff_frame;
         BRcliffCloud.header.frame_id = back_right_cliff_frame;
         BLcliffCloud.header.frame_id = back_left_cliff_frame;
+
         //if robot is moving
         if(left_speed_ != 0 || right_speed_ != 0){
-            cliffToCloud(cliff->cliff1,FRcliffCloud);
-            cliffToCloud(cliff->cliff2,FRcliffCloud);
-            cliffToCloud(cliff->cliff3,FRcliffCloud);
-            cliffToCloud(cliff->cliff4,FRcliffCloud);
+            cliff1_on = cliffToCloud(cliff->cliff1,FRcliffCloud);
+            cliff2_on = cliffToCloud(cliff->cliff2,FRcliffCloud);
+            cliff3_on = cliffToCloud(cliff->cliff3,FRcliffCloud);
+            cliff4_on = cliffToCloud(cliff->cliff4,FRcliffCloud);
         }
 
         cliffFRPublisher.publish(FRcliffCloud);
