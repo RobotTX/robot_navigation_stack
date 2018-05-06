@@ -98,7 +98,7 @@ class PingServerClass {
         void updateInfoCallback(const std_msgs::String::ConstPtr& update_status){
             std::vector<std::thread> data_threads;
             ipMutex.lock();
-            if(oldIPs_.size()>0 && (ros::Time::now()-disco_time_).toSec()>STATUS_UPDATE){
+            if(oldIPs_.size()>0 && (ros::Time::now()-disco_time_)>ros::Duration(STATUS_UPDATE)){
                 for(int i = 0; i < oldIPs_.size(); ++i)
                     data_threads.push_back(std::thread(&PingServerClass::pingIP2, this, oldIPs_.at(i).first, update_status->data, 2.0));
             }
@@ -167,7 +167,7 @@ class PingServerClass {
                 std::vector<std::thread> threads;
                 connectedIPs_.clear();
                 serverMutex.lock();
-                if(availableIPs_.size()>0 && (ros::Time::now()-disco_time_).toSec()>STATUS_UPDATE){
+                if(availableIPs_.size()>0 && (ros::Time::now()-disco_time_)>ros::Duration(STATUS_UPDATE)){
                     //ROS_INFO("(PING_SERVERS) Data to send : %s", dataToSend.c_str());
                     /// We create threads to ping every IP adress
                     /// => threads reduce the required time to ping from ~12 sec to 2 sec

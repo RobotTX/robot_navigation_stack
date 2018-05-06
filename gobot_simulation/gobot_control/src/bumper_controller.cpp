@@ -83,7 +83,7 @@ int main(int argc, char **argv){
     //reset robot to original
     std::string lastPoseFile;
     double begin_x, begin_y;
-    n.getParam("last_known_position_file", lastPoseFile);
+    n.getParam("last_pose_file", lastPoseFile);
     n.getParam("begin_x", begin_x);
     n.getParam("begin_y", begin_y);
     std::ofstream ofs(lastPoseFile, std::ofstream::out | std::ofstream::trunc);

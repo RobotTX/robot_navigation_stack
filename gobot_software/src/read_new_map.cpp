@@ -30,7 +30,6 @@ void session(boost::shared_ptr<tcp::socket> sock){
     std::string mapMetadata("");
     std::string mapDate("");
     std::vector<uint8_t> map;
-    std::string message("failed");
 
     while(ros::ok() && sockets.count(ip)){
         
@@ -156,11 +155,10 @@ void session(boost::shared_ptr<tcp::socket> sock){
                         //ROS_INFO("(MAP_READ) New map pgm file created in %s", mapFile.c_str());
                     }
                     
-                    //disconnect all other users to receive new map
+                    //disconnect all other users to receive new map, so no need feedback to TCP
                     ROS_INFO("(MAP_READ) Disconnect other uses to update them new map.");
                     ros::service::call("/gobot_software/disconnet_servers",empty_srv);
                     
-
                     if(mapType != "EDIT"){
                         //#### delete old robot data ####
                         if(mapType != "IMPT" && mapType != "SCAN"){
@@ -181,11 +179,11 @@ void session(boost::shared_ptr<tcp::socket> sock){
                         SetRobot.reloadMap();
                     }
                     else if(mapType == "IMPT"){
+                        SetRobot.reloadMap();
                         gobot_msg_srv::GetStringArray get_home;
                         ros::service::call("/gobot_status/get_home",get_home);
                         SetRobot.setInitialpose(std::stod(get_home.response.data[0]),std::stod(get_home.response.data[1]),std::stod(get_home.response.data[2]),
                                                 std::stod(get_home.response.data[3]),std::stod(get_home.response.data[4]),std::stod(get_home.response.data[5]));
-                        SetRobot.reloadMap();
                     }
                     else{
                         ROS_INFO("(MAP_READ) We relaunched gobot_navigation");
@@ -202,17 +200,18 @@ void session(boost::shared_ptr<tcp::socket> sock){
                         SetRobot.setInitialpose(std::stod(get_home.response.data[0]),std::stod(get_home.response.data[1]),std::stod(get_home.response.data[2]),
                                                 std::stod(get_home.response.data[3]),std::stod(get_home.response.data[4]),std::stod(get_home.response.data[5]));
                     }
-
-                    message = "done 1";
                 } 
                 else {
                     ROS_INFO("(MAP_READ) Map id could not be updated : %s with date %s", mapId.c_str(), mapDate.c_str());
-                    message = "failed";
                 }
+                //close this session
+                return;
             } 
             else{
                 ROS_INFO("(MAP_READ) SAME IDS ");
-                message = "done 0";
+                std::string message = "done 0";
+                //feedback to TCP if receiving same map
+                boost::asio::write(*sock, boost::asio::buffer(message, message.length()), boost::asio::transfer_all(), error);
             }
 
              /// Clear the used variables
@@ -220,18 +219,7 @@ void session(boost::shared_ptr<tcp::socket> sock){
             mapId = "";
             mapDate = "";
             mapMetadata = "";
-            map.clear();
-            
-            return;
-            /*no need to write to socket as we alrd disconnected all servers
-            /// Send a message to the application to tell we finished
-            boost::asio::write(*sock, boost::asio::buffer(message, message.length()), boost::asio::transfer_all(), error);
-            if(error) 
-                ROS_INFO("(MAP_READ) Error : %s", error.message().c_str());
-            else if(message ==  "done 1"){
-                ROS_INFO("(MAP_READ) Message sent succesfully : %lu bytes sent", message.length());
-            }
-            */   
+            map.clear(); 
         }
     }
 }

@@ -53,7 +53,7 @@ namespace move_base {
     blp_loader_("nav_core", "nav_core::BaseLocalPlanner"), 
     recovery_loader_("nav_core", "nav_core::RecoveryBehavior"),
     planner_plan_(NULL), latest_plan_(NULL), controller_plan_(NULL),
-    runPlanner_(false), setup_(false), p_freq_change_(false), c_freq_change_(false), new_global_plan_(false) {
+    runPlanner_(false), setup_(false), p_freq_change_(false), c_freq_change_(false), new_global_plan_(false), obstacle_warning_(false) {
 
     as_ = new MoveBaseActionServer(ros::NodeHandle(), "move_base", boost::bind(&MoveBase::executeCb, this, _1), false);
 
@@ -79,21 +79,20 @@ namespace move_base {
 
     //tx//begin
     //Max times to try recovery behaviour
-    private_nh.param("recovery_count_threshold", recovery_count_threshold_, 4);
-    //How many recovery behaviours tried
-    recovery_count_ = 0;
-    current_linear_spd_ = 0.0;
-    current_angular_spd_ = 0.0;
-
+    private_nh.param("recovery_count_threshold", recovery_count_threshold_, 5);
+    private_nh.param("scan_mode", scan_mode_, false); 
+    private_nh.param("obstacle_stop_dist", obstacle_stop_dist_, 2.0); 
     private_nh.param("angular_spd_size", angular_spd_size_, 4); 
-    angular_spd_ = std::vector<double>(angular_spd_size_,0.0);
-
     private_nh.param("linear_spd_incre", linear_spd_incre_, 0.03); 
     //add these two params to smooth motion 
     private_nh.param("angular_spd_limit", angular_spd_limit_, 0.2); 
     //threshold value for checking end point of planned path
     private_nh.param("costmap_threshold_value", costmap_threshold_value_, 225); 
-    private_nh.param("scan_mode", scan_mode_, false); 
+
+    recovery_count_ = 0;
+    current_linear_spd_ = 0.0;
+    current_angular_spd_ = 0.0;
+    angular_spd_ = std::vector<double>(angular_spd_size_,0.0);
     SetRobot.initialize();
     //tx//end
 
@@ -609,6 +608,7 @@ namespace move_base {
         //ROS_INFO("move_base_plan_thread: Got Plan with %zu points!", planner_plan_->size());
         ROS_DEBUG_NAMED("move_base_plan_thread","Got Plan with %zu points!", planner_plan_->size());
         //tx//assign last point of goal path further from obstacle if it is too near
+        obstacle_warning_ = false;
         lock.lock();
         if(!scan_mode_){
           //if temp_goal pose cost value is too high to reach
@@ -644,7 +644,6 @@ namespace move_base {
         }
         //tx//end
       
-
         //pointer swap the plans under mutex (the controller will pull from latest_plan_)
         std::vector<geometry_msgs::PoseStamped>* temp_plan = planner_plan_;
 
@@ -702,15 +701,22 @@ namespace move_base {
             double obs_distance = distance(current_position,latest_plan_->at(i));
             //if distance is too near, stop the robot
             //ROS_INFO("Test obs distance :%d, %zu, %f",i, latest_plan_->size(),obs_distance);
-            if(obs_distance < conservative_reset_dist_){
+            if(obs_distance < obstacle_stop_dist_){
               state_ = PLANNING;
               publishZeroVelocity();
-              SetRobot.setSound(2,2);
+              obstacle_warning_ = true;
+              start_warning_ = ros::Time::now();
               ROS_WARN("move_base failed to find a path and state is not planning, reset state to PLANNING (distance to obstacle:%.3f)",obs_distance);
             }
             break;
           }
         }
+      }
+      //if encounter obstacle along the path, make some sound to warn after 2 secs 
+      if(obstacle_warning_ && (ros::Time::now()-start_warning_)>=ros::Duration(2.0)){
+        ROS_WARN("make some sound to warn the obstacles");
+        obstacle_warning_ = false;
+        SetRobot.setSound(2,2);
       }
       //tx//end
 
@@ -771,6 +777,9 @@ namespace move_base {
       }
 
       if(as_->isPreemptRequested()){
+        obstacle_warning_ = false;
+        recovery_count_ = 0;
+
         if(as_->isNewGoalAvailable()){
           //if we're active and a new goal is available, we'll accept it, but we won't shut anything down
           move_base_msgs::MoveBaseGoal new_goal = *as_->acceptNewGoal();
@@ -802,7 +811,7 @@ namespace move_base {
           //if the planner fails or returns a zero length plan, planning failed
           if(!gotPlan){
             publishZeroVelocity();
-            ROS_WARN("move_base 1st time failed to find path to goal of x: %.2f, y: %.2f", goal.pose.position.x, goal.pose.position.y);
+            //ROS_WARN("move_base 1st time failed to find path to goal of x: %.2f, y: %.2f", goal.pose.position.x, goal.pose.position.y);
           }
 
           //make sure to reset our timeouts and counters
@@ -810,8 +819,6 @@ namespace move_base {
           last_valid_plan_ = ros::Time::now();
           last_oscillation_reset_ = ros::Time::now();
           planning_retries_ = 0;
-
-          recovery_count_ = 0;
         }
         else {
           //if we've been preempted explicitly we need to shut things down
@@ -1104,7 +1111,7 @@ namespace move_base {
           //tx//begin
           //Check whether robot is close enough to the goal but robot still try to get closer
           recovery_count_++;
-          ROS_INFO("tried %d recovery behaviors,max try:%d",recovery_count_,recovery_count_threshold_);
+          ROS_INFO("Tried %d recovery behaviors of max try %d",recovery_count_,recovery_count_threshold_);
 
           //we'll check if the recovery behavior actually worked
           ROS_DEBUG_NAMED("move_base_recovery","Going back to planning state");
@@ -1136,6 +1143,9 @@ namespace move_base {
           else if(recovery_trigger_ == OSCILLATION_R){
             ROS_ERROR("Aborting because the robot appears to be oscillating over and over. Even after executing all recovery behaviors");
             as_->setAborted(move_base_msgs::MoveBaseResult(), "Robot is oscillating. Even after executing recovery behaviors.");
+          }
+          else{
+            as_->setAborted(move_base_msgs::MoveBaseResult(), "Robot give up.");
           }
       
           resetState();

@@ -513,7 +513,7 @@ void batteryCallback(const gobot_msg_srv::BatteryMsg::ConstPtr& msg){
     battery_percent_ = msg->BatteryStatus;
     charging_current_ = msg->ChargingCurrent;
     /*//for recording test purpose
-    if(record_battery_==1 && (ros::Time::now() - record_time_).toSec() >= 5.0){
+    if(record_battery_==1 && (ros::Time::now() - record_time_) >= ros::Duration(5.0)){
         std::string record_date = getCurrentTime();
         std::ofstream ofsStage(recordBatteryFile, std::ofstream::out | std::ofstream::app);
         if(ofsStage){
@@ -665,7 +665,7 @@ void initialData(){
         ofsDisconnected.close();
     }
 
-    n.getParam("record_battery_file", recordBatteryFile);
+    n.getParam("battery_log", recordBatteryFile);
 }
 
 int main(int argc, char* argv[]){

@@ -1,53 +1,53 @@
 <?xml version="1.0"?>
 <launch>
     <!-- SENSOR RELATED -->
-    <param name="SENSOR_PORT" type="string" value="/dev/STM" />
-    <param name="SENSOR_RATE" type="int" value="4" />
-    <param name="SENSOR_BYTES" type="int" value="63" />  
-    <param name="WEIGHT_MAX" type="int" value="200000" />
+    <param name="SENSOR_PORT"           type="string"       value="/dev/STM" />
+    <param name="SENSOR_RATE"           type="int"          value="4" />
+    <param name="SENSOR_BYTES"          type="int"          value="63" />  
+    <param name="WEIGHT_MAX"            type="int"          value="200000" />
     <!-- MOTOR RELATED -->
-    <param name="MOTOR_PORT" type="string" value="/dev/MD" />
-    <param name="ODOM_RATE" type="int" value="10" />
-    <param name="WHEEL_SEP" type="double" value="0.35" />
-    <param name="WHEEL_RADIUS" type="double" value="0.075" />
-    <param name="ROLLING_WINDOW_SIZE" type="int" value="5" />
-    <param name="WAIT_COLLISION" type="double" value="4.0" />
-    <param name="AVOID_SPD" type="int" value="12" />
-    <param name="factor_a" type="double" value="15.6" />
-    <param name="factor_b" type="double" value="-20.0" />
-    <param name="TICKS_PER_ROT" type="double" value="982" />
+    <param name="MOTOR_PORT"            type="string"       value="/dev/MD" />
+    <param name="ODOM_RATE"             type="int"          value="10" />
+    <param name="WHEEL_SEP"             type="double"       value="0.35" />
+    <param name="WHEEL_RADIUS"          type="double"       value="0.075" />
+    <param name="ROLLING_WINDOW_SIZE"   type="int"          value="5" />
+    <param name="WAIT_COLLISION"        type="double"       value="4.0" />
+    <param name="AVOID_SPD"             type="int"          value="12" />
+    <param name="FACTOR_A"              type="double"       value="15.6" />
+    <param name="FACTOR_B"              type="double"       value="-20.0" />
+    <param name="TICKS_PER_ROT"         type="double"       value="982" />
     <!-- RPLIDAR RELATED -->
-    <param name="serial_port" type="string" value="/dev/rplidar"/>  
-    <param name="serial_baudrate" type="int" value="115200"/>
-    <param name="frame_id" type="string" value="base_laser"/>
-    <param name="inverted" type="bool" value="false"/>
-    <param name="angle_compensate" type="bool" value="true"/>
-    <param name="angle_min" type="double" value="-95.0" />
-    <param name="angle_max" type="double" value="105.0" />
+    <param name="serial_port"           type="string"       value="/dev/rplidar"/>  
+    <param name="serial_baudrate"       type="int"          value="115200"/>
+    <param name="frame_id"              type="string"       value="base_laser"/>
+    <param name="inverted"              type="bool"         value="false"/>
+    <param name="angle_compensate"      type="bool"         value="true"/>
+    <param name="angle_min"             type="double"       value="-95.0" />
+    <param name="angle_max"             type="double"       value="105.0" />
     <!--SENSORS ON/OFF -->
-    <param name="USE_BUMPER" type="bool" value="true" />
-    <param name="USE_SONAR" type="bool" value="true" />
-    <param name="USE_CLIFF" type="bool" value="true" />
+    <param name="USE_BUMPER"            type="bool"         value="true" />
+    <param name="USE_SONAR"             type="bool"         value="true" />
+    <param name="USE_CLIFF"             type="bool"         value="true" />
     <!--BUMPER CLOUD RELATED -->
-    <param name="USE_BUMPER_PC" type="bool" value="true" />
-    <param name="DIM_X" type="double" value="0.255" />
-    <param name="DIM_Y" type="double" value="0.25" />
-    <param name="DIM_Z" type="double" value="0.11" />
-    <param name="PC_FRAME" type="string" value="base_link" />
+    <param name="USE_BUMPER_PC"         type="bool"         value="true" />
+    <param name="DIM_X"                 type="double"       value="0.255" />
+    <param name="DIM_Y"                 type="double"       value="0.25" />
+    <param name="DIM_Z"                 type="double"       value="0.11" />
+    <param name="PC_FRAME"              type="string"       value="base_link" />
     <!-- SONAR CLOUD RELATED -->
-    <param name="USE_SONAR_PC" type="bool" value="true" />
-    <param name="SONAR_THRESHOLD" type="double" value="0.6" />
-    <param name="SONAR_OUTRANGE" type="double" value="0.0" />
-    <param name="SONAR_MAX" type="double" value="1.5" />
-    <param name="SONAR_VIEW" type="double" value="0.15" />
-    <param name="SONAR_RESOLUTION" type="double" value="50.0" />
+    <param name="USE_SONAR_PC"          type="bool"         value="true" />
+    <param name="SONAR_THRESHOLD"       type="double"       value="0.6" />
+    <param name="SONAR_OUTRANGE"        type="double"       value="0.0" />
+    <param name="SONAR_MAX"             type="double"       value="1.5" />
+    <param name="SONAR_VIEW"            type="double"       value="0.15" />
+    <param name="SONAR_RESOLUTION"      type="double"       value="50.0" />
     <!-- CLIFF CLOUD RELATED -->
-    <param name="USE_CLIFF_PC" type="bool" value="true" />
-    <param name="CLIFF_THRESHOLD" type="double" value="170.0" />
-    <param name="CLIFF_OUTRANGE" type="double" value="255.0" />
+    <param name="USE_CLIFF_PC"          type="bool"         value="true" />
+    <param name="CLIFF_THRESHOLD"       type="double"       value="170.0" />
+    <param name="CLIFF_OUTRANGE"        type="double"       value="255.0" />
     <!-- ROBOT RECOVERY RELATED -->
-    <param name="UPDATE_DURATION" type="double" value="5.0"/>
-    <param name="UPDATE_NUM" type="int" value="30"/>
-    <param name="restart_file" type="string" value="$(find gobot_data)/command/restart_robot.sh" />
-    <param name="last_known_position_file" type="string" value="$(find gobot_data)/data/lastKnownPosition.txt"/>
+    <param name="UPDATE_DURATION"       type="double"       value="5.0"/>
+    <param name="UPDATE_NUM"            type="int"          value="30"/>
+    <param name="restart_file"          type="string"       value="$(find gobot_data)/command/restart_robot.sh" />
+    <param name="last_pose_file"        type="string"       value="$(find gobot_data)/data/lastKnownPosition.txt"/>
 </launch>

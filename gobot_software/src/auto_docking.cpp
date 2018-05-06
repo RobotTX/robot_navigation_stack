@@ -222,7 +222,7 @@ void newIrSignal(const gobot_msg_srv::IrMsg::ConstPtr& irSignal){
             } 
             else{
                 /// if we lost the signal for more than 30 seconds, we failed docking, else, the robot should still be turning on itself
-                if((ros::Time::now() - lastIrSignalTime).toSec() > 20.0){
+                if((ros::Time::now() - lastIrSignalTime) > ros::Duration(20.0)){
                     SetRobot.setMotorSpeed('F', 0, 'F', 0);
                     finishedDocking();
                 }

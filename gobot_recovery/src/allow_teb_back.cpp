@@ -16,7 +16,7 @@ void goalResultCallback(const move_base_msgs::MoveBaseActionResult::ConstPtr& ms
             ROS_INFO("(ALLOW_BACKWARD) Goal PREEMPTED and disable teb_local_planner allow_init_with_backwards_motion.");
             break;
         case 3:
-            ROS_INFO("(ALLOW_BACKWARD) Goal PREEMPTED and disable teb_local_planner allow_init_with_backwards_motion.");
+            ROS_INFO("(ALLOW_BACKWARD) Goal SUCCEEDED and disable teb_local_planner allow_init_with_backwards_motion.");
             break;
         case 4:
             ROS_INFO("(ALLOW_BACKWARD) Goal ABORTED and disable teb_local_planner allow_init_with_backwards_motion.");

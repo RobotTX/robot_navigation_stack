@@ -49,7 +49,7 @@ class SensorClass {
             //checking procedure
             ros::Time initilize_time = ros::Time::now();
             while(success<4 && ros::ok()){
-                if((ros::Time::now()-initilize_time).toSec()>10.0){
+                if((ros::Time::now()-initilize_time)>ros::Duration(10.0)){
                     //restart the system as unable to initilize MCU
                     std::string cmd;
                     cmd = "sudo sh " + restart_script;
@@ -291,27 +291,6 @@ class SensorClass {
                         //battery data update slower than requesting rate
                         if(battery_data.ChargingCurrent!=last_charging_current_){
                             int current_diff = battery_data.ChargingCurrent - last_charging_current_;
-                            /*old method: use charging current difference to know whether charging or not
-                            //if not fully charged
-                            if(battery_data.BatteryStatus<90){
-                                if(battery_data.ChargingCurrent > 1000){
-                                    battery_data.ChargingFlag = true;
-                                }
-                                else if(battery_data.ChargingCurrent < -600){
-                                    battery_data.ChargingFlag = false;
-                                }
-                                else if(battery_data.ChargingCurrent > 0){
-                                    battery_data.ChargingFlag = current_diff>100 ? true : false;
-                                }
-                                else{
-                                    battery_data.ChargingFlag = current_diff>200 ? true : false;
-                                }
-                            }
-                            //if fully charged
-                            else{
-                                battery_data.ChargingFlag = battery_data.ChargingCurrent<-500 ? false : true;
-                            }
-                            */
                             battery_data.ChargingFlag = battery_data.ChargingCurrent<-500 ? false : true;
                             if(!charging_flag_){
                                 charge_check_ = battery_data.ChargingFlag ? charge_check_+1 : 0;
@@ -329,12 +308,11 @@ class SensorClass {
                                 displayBatteryLed();
                             }
                             else{
-                                charging_flag_ = false;
                                 if(!battery_data.ChargingFlag){
                                     std::thread t2(&SensorClass::threadFunc, this, 2);
                                     t2.detach();
-                                    displayBatteryLed();
                                 }
+                                charging_flag_ = false;
                                 battery_data.ChargingFlag = false;
                             }
                         }
@@ -425,7 +403,7 @@ class SensorClass {
                         if (USE_CLIFF)
                             cliff_pub_.publish(cliff_data);
                     
-                        if(resetwifi_button==1 && (ros::Time::now()-reset_wifi_time_).toSec()>1.0){
+                        if(resetwifi_button==1 && (ros::Time::now()-reset_wifi_time_)>ros::Duration(1.0)){
                             reset_wifi_time_ = ros::Time::now();
                             setSound(1,2);
                             //if scanning, save the map
@@ -527,7 +505,7 @@ class SensorClass {
                 displayBatteryLed();
                 setSound(1,2);
             }
-            else if(!low_battery_ && !charging_flag_){
+            else if(!low_battery_ && (!charging_flag_ || robot_status_==5)){
                 setLed(led->mode,led->color);
             }
         }
@@ -548,11 +526,11 @@ class SensorClass {
                     setLed(0,{"magenta"});
                 }
                 //Show battery status if no stage for certain period, show battery lvl
-                else if (((ros::Time::now() - last_led_time_).toSec()>300.0)){
+                else if ((ros::Time::now() - last_led_time_)>ros::Duration(300.0)){
                     displayBatteryLed();
                 }   
             }
-            else{
+            else if(robot_status_ != 5){
                 displayBatteryLed();
             }
 

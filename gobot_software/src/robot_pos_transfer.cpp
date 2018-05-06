@@ -121,7 +121,7 @@ void mySigintHandler(int sig){
 
 void initParams(){
     ros::NodeHandle nh;
-    nh.getParam("last_known_position_file", lastPoseFile);
+    nh.getParam("last_pose_file", lastPoseFile);
 }
 
 int main(int argc, char **argv){

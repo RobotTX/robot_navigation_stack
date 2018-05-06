@@ -193,10 +193,12 @@ namespace move_base {
       //tx//begin
       int32_t recovery_count_, recovery_count_threshold_;
       double current_linear_spd_, linear_spd_incre_, current_angular_spd_, angular_spd_limit_;
+      double obstacle_stop_dist_;
       int angular_spd_size_;
       std::vector<double> angular_spd_;
       int costmap_threshold_value_; //no info=255, lethal obs=254, inscribed obs=253
-      bool scan_mode_;
+      bool scan_mode_, obstacle_warning_;
+      ros::Time start_warning_;
       robot_class::SetRobot SetRobot;
       //tx//end
 

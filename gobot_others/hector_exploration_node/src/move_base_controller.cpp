@@ -1,7 +1,8 @@
 #include <hector_exploration_node/move_base_controller.hpp>
 
-int count(0), noFrontiersLeft(0),new_goal_sec(30),no_frontier_threshold(10),back_to_start_when_finished(0);
+int noFrontiersLeft(0),no_frontier_threshold(10),back_to_start_when_finished(0);
 bool exploring(false);
+ros::Time start_goal_time;
 geometry_msgs::Pose startingPose;
 std::string map_frame;
 std::string base_frame;
@@ -82,33 +83,32 @@ void backToStart(){
 void doExploration(void){
     ROS_INFO("(SCAN_EXPLORE) Starting exploration...");
 
-    ros::Rate loop_rate(2);
+    ros::Rate loop_rate(1);
     while(ros::ok() && exploring){
-        /// We want to refresh the goal after a certain time or when we reached it
-        if(count==0 || count>=new_goal_sec*2 || ac->getState()==actionlib::SimpleClientGoalState::SUCCEEDED){
+        /// We want to refresh the goal after a certain time or when we reached/aborted it
+        if(ros::Time::now()>start_goal_time || ac->getState()==actionlib::SimpleClientGoalState::SUCCEEDED || ac->getState()==actionlib::SimpleClientGoalState::ABORTED){
+            ROS_INFO("(SCAN_EXPLORE) %.2f seconds to complete exploring current goal...",(ros::Time::now()-start_goal_time).toSec());
             hector_nav_msgs::GetRobotTrajectory arg;
             /// Get an array of goals to follow
             if(ros::service::call("get_exploration_path", arg)){
                 std::vector<geometry_msgs::PoseStamped> poses = arg.response.trajectory.poses;
                 if(!poses.empty()){
-                    ROS_INFO("(SCAN_EXPLORE) Moving to frontier...");
                     noFrontiersLeft = 0;
                     move_base_msgs::MoveBaseGoal goal;
                     /// The array is a set of goal creating a trajectory but it's used in the hector_navigation stack
                     /// so we only extract the last goal and move_base will be in charge of going there
                     goal.target_pose = poses.back();
-
                     if(ac->isServerConnected() && exploring){
+                        ROS_INFO("(SCAN_EXPLORE) Assign new goal to explore...");
                         /// Send the goal to move_base
                         ac->sendGoal(goal);
                         SetRobot.setStatus(25,"EXPLORING");
+                        start_goal_time = ros::Time::now() + ros::Duration(30.0);
                     }
-                    else 
-                        ROS_INFO("(SCAN_EXPLORE) No action server or we stopped exploring already");
                 } 
-                else {
-                    ROS_INFO("(SCAN_EXPLORE) No frontiers left.");
+                else{
                     noFrontiersLeft++;
+                    ROS_INFO("(SCAN_EXPLORE) No frontiers left, %d.",noFrontiersLeft);
                     /// After no_frontier_threshold attemps at finding a point to explore, we consider the scan finished
                     if(noFrontiersLeft >= no_frontier_threshold){
                         if(exploring){
@@ -124,11 +124,10 @@ void doExploration(void){
                     }
                 }
             } 
-            else
+            else{
                 ROS_WARN("(SCAN_EXPLORE) get_exploration_path service call failed");
+            }
         } 
-        else
-            count++;
 
         ros::spinOnce();
         loop_rate.sleep();
@@ -139,7 +138,6 @@ void doExploration(void){
 bool startExplorationSrv(hector_exploration_node::Exploration::Request &req, hector_exploration_node::Exploration::Response &res){
     if(!exploring){
         back_to_start_when_finished = req.backToStartWhenFinished;
-
         //1-auto charging when complete.  2-go back to starting position when complete.  others-stop when complete
         if(back_to_start_when_finished==1){
             getRobotPos();
@@ -152,8 +150,8 @@ bool startExplorationSrv(hector_exploration_node::Exploration::Request &req, hec
             SetRobot.setMotorSpeed('F', 0, 'F', 0);
             SetRobot.setDock(0);
         }
-        //reset count to start exploration fast
-        count = 0;
+        //reset start_goal_time to start exploration fast
+        start_goal_time = ros::Time::now();
         exploring = true;
         std::thread(doExploration).detach();
         return true;
@@ -196,7 +194,6 @@ void initData(){
     /// Get the data from the parameters server
     nh.param<std::string>("map_frame", map_frame, "map");
     nh.param<std::string>("base_frame", base_frame, "base_link");
-    nh.param<int>("new_goal_sec", new_goal_sec, 30);
     nh.param<int>("no_frontier_threshold", no_frontier_threshold, 5);
 
     //Set lower speed for scan process

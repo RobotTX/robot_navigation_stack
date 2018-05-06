@@ -328,8 +328,8 @@ void getPose(){
     }
 
     //Get last stop pose
-    if(nh.hasParam("last_known_position_file")){
-        nh.getParam("last_known_position_file", lastPoseFile);
+    if(nh.hasParam("last_pose_file")){
+        nh.getParam("last_pose_file", lastPoseFile);
         std::ifstream ifs(lastPoseFile, std::ifstream::in);
         if(ifs){
             ifs >> last_pos_x >> last_pos_y >> last_ang_x >> last_ang_y >> last_ang_z >> last_ang_w;
@@ -361,7 +361,7 @@ void motorSpdCallback(const gobot_msg_srv::MotorSpeedMsg::ConstPtr& speed){
 void UpdateRobotPosTimer(const ros::TimerEvent&){
     if(ros::service::exists("/request_nomotion_update",false)){
         //if robot stopped for more than x sec and not charging, we start to update pose particles
-        if((ros::Time::now()-zero_vel_time).toSec()>UPDATE_DURATION && !charging_flag_){
+        if((ros::Time::now()-zero_vel_time)>ros::Duration(UPDATE_DURATION) && !charging_flag_){
             if(left_speed_==0 && right_speed_==0 && update_count<UPDATE_NUM){
                 ros::service::call("/request_nomotion_update",empty_srv);
                 update_count++;
