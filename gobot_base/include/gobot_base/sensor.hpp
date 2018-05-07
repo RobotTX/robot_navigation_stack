@@ -25,8 +25,8 @@ std::vector<uint8_t> SHUT_DOWN_CMD =    {0xF0, 0x01, 0x00, 0x00, 0x00, 0x00, 0x0
 class SensorClass {
     public:
         SensorClass():
-        battery_percent_(50), robot_status_(-1), charging_flag_(false), low_battery_(false), display_data_(false), last_charging_current_(0),
-        error_count_(0), mute_(0), charge_check_(0)
+        battery_percent_(50), robot_status_(-1), charging_flag_(false), low_battery_(false), display_data_(false), enable_led_(true),
+        last_charging_current_(0), error_count_(0), mute_(0), charge_check_(0)
         {
             ros::NodeHandle nh;
             nh.getParam("SENSOR_BYTES", SENSOR_BYTES);  //61/49
@@ -87,8 +87,8 @@ class SensorClass {
             useSonarSrv = nh.advertiseService("/gobot_base/use_sonar", &SensorClass::useSonarSrvCallback, this);
             useCliffSrv = nh.advertiseService("/gobot_base/use_cliff", &SensorClass::useCliffSrvCallback, this);
             shutdownSrv = nh.advertiseService("/gobot_base/shutdown_robot", &SensorClass::shutdownSrvCallback, this);
+            setChargingSrv = nh.advertiseService("/gobot_base/set_charging", &SensorClass::setChargingSrvCallback, this);
             displayDataSrv = nh.advertiseService("/gobot_base/displaySensorData", &SensorClass::displaySensorData, this);
-
 
             led_sub_ = nh.subscribe("/gobot_base/set_led", 1, &SensorClass::ledCallback, this);
             sound_sub_ = nh.subscribe("/gobot_base/set_sound", 1, &SensorClass::soundCallback, this);
@@ -305,14 +305,19 @@ class SensorClass {
                                 charging_flag_ = true;
                                 std::thread t1(&SensorClass::threadFunc, this, 1);
                                 t1.detach();
+                                enable_led_ = false;
                                 displayBatteryLed();
                             }
                             else{
+                                charging_flag_ = false;
                                 if(!battery_data.ChargingFlag){
                                     std::thread t2(&SensorClass::threadFunc, this, 2);
                                     t2.detach();
+                                    if(!enable_led_){
+                                        enable_led_ = true;
+                                        displayBatteryLed();
+                                    }
                                 }
-                                charging_flag_ = false;
                                 battery_data.ChargingFlag = false;
                             }
                         }
@@ -444,6 +449,8 @@ class SensorClass {
         void threadFunc(int n){
             if(n==1){
                 SetRobot_.setDock(1);
+                if(robot_status_ == 5)
+                    SetRobot_.setStatus(-1,"ROBOT_READY");
             }
             else if(n==2){
                 SetRobot_.setDock(0);
@@ -455,6 +462,11 @@ class SensorClass {
             else if(n==4){
                 SetRobot_.setWifi("","");
             }
+        }
+
+        bool setChargingSrvCallback(gobot_msg_srv::SetBool::Request &req, gobot_msg_srv::SetBool::Response &res){
+            charging_flag_ = req.data;
+            return true;
         }
 
         bool useBumperSrvCallback(gobot_msg_srv::SetBool::Request &req, gobot_msg_srv::SetBool::Response &res){
@@ -505,7 +517,7 @@ class SensorClass {
                 displayBatteryLed();
                 setSound(1,2);
             }
-            else if(!low_battery_ && (!charging_flag_ || robot_status_==5)){
+            else if(!low_battery_ && enable_led_){
                 setLed(led->mode,led->color);
             }
         }
@@ -516,21 +528,26 @@ class SensorClass {
 
         void statusCallback(const std_msgs::Int8::ConstPtr& msg){
             robot_status_ = msg->data;
+            //in case robot is charging and receive move command, set led immediately
+            if(charging_flag_ && robot_status_==5){
+                setLed(1,{"green","white"});
+                enable_led_ = true;
+            }
         }
 
         void ledTimerCallback(const ros::TimerEvent&){
             //for every 30 sec, we change led
             low_battery_ = battery_percent_<10 ? true : false;
-            if (!charging_flag_){
+            if(!charging_flag_){
                 if (low_battery_){
                     setLed(0,{"magenta"});
                 }
                 //Show battery status if no stage for certain period, show battery lvl
-                else if ((ros::Time::now() - last_led_time_)>ros::Duration(300.0)){
+                else if ((ros::Time::now()-last_led_time_)>ros::Duration(300.0)){
                     displayBatteryLed();
                 }   
             }
-            else if(robot_status_ != 5){
+            else if(!enable_led_){
                 displayBatteryLed();
             }
 
@@ -658,8 +675,8 @@ class SensorClass {
         std::string SENSOR_PORT, restart_script;
 
         int16_t last_charging_current_;
-        bool charging_flag_, low_battery_,  display_data_,  USE_BUMPER, USE_SONAR, USE_CLIFF;
-        int battery_percent_,  error_count_,  mute_,  max_weight_,  robot_status_,  charge_check_;
+        bool charging_flag_, low_battery_, display_data_, enable_led_, USE_BUMPER, USE_SONAR, USE_CLIFF;
+        int battery_percent_, error_count_, mute_, max_weight_, robot_status_, charge_check_;
         int SENSOR_RATE, SENSOR_BYTES;
 
         serial::Serial serialConnection;
@@ -669,7 +686,7 @@ class SensorClass {
         ros::Time last_led_time_, reset_wifi_time_;
         ros::Timer ledTimer_;
         ros::Publisher bumper_pub_, ir_pub_, proximity_pub_, sonar_pub_, weight_pub_, battery_pub_, cliff_pub_, button_pub_, gyro_pub_, temperature_pub_;
-        ros::ServiceServer shutdownSrv, displayDataSrv, sensorsReadySrv, useBumperSrv, useSonarSrv, useCliffSrv;
+        ros::ServiceServer shutdownSrv, displayDataSrv, sensorsReadySrv, setChargingSrv, useBumperSrv, useSonarSrv, useCliffSrv;
         ros::Subscriber led_sub_, sound_sub_, mute_sub_, status_sub_;
 
         boost::thread *sensor_thread_;

@@ -256,14 +256,30 @@ void joyCallback(const sensor_msgs::Joy::ConstPtr& joy){
             joy_angular = joy_angular_limit;
         }
 
-        if(joy->buttons[0])
-            SetRobot.setLed(0,{"green"});
-        if(joy->buttons[1])
-            SetRobot.setLed(0,{"red"});
-        if(joy->buttons[2])
-            SetRobot.setLed(0,{"blue"});
-        if(joy->buttons[3])
-            SetRobot.setLed(0,{"yellow"});
+        if(joy->buttons[0]){
+            if(joy->axes[2]==-1 || joy->axes[5]==-1)
+                SetRobot.setLed(1,{"green","white"});
+            else
+                SetRobot.setLed(0,{"green"});
+        }
+        if(joy->buttons[1]){
+            if(joy->axes[2]==-1 || joy->axes[5]==-1)
+                SetRobot.setLed(1,{"red","white"});
+            else
+                SetRobot.setLed(0,{"red"});
+        }
+        if(joy->buttons[2]){
+            if(joy->axes[2]==-1 || joy->axes[5]==-1)
+                SetRobot.setLed(1,{"blue","white"});
+            else
+                SetRobot.setLed(0,{"blue"});
+        }
+        if(joy->buttons[3]){
+            if(joy->axes[2]==-1 || joy->axes[5]==-1)
+                SetRobot.setLed(1,{"yellow","white"});
+            else
+                SetRobot.setLed(0,{"yellow"});
+        }
 
         if(!bumper_on && !cliff_on){
             if(joy->axes[1] == 0 && joy->axes[3] == 0)

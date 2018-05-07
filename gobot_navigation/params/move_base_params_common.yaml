@@ -49,7 +49,7 @@ costmap_threshold_value: 225
 obstacle_stop_dist: 2.0
 ### tx end ###
 
-conservative_reset_dist: 2.2
+conservative_reset_dist: 2.5
 
 TrajectoryPlannerROS:
     acc_lim_th: 0.5

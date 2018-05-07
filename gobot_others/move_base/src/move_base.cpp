@@ -778,7 +778,6 @@ namespace move_base {
 
       if(as_->isPreemptRequested()){
         obstacle_warning_ = false;
-        recovery_count_ = 0;
 
         if(as_->isNewGoalAvailable()){
           //if we're active and a new goal is available, we'll accept it, but we won't shut anything down
@@ -793,6 +792,7 @@ namespace move_base {
 
           //we'll make sure that we reset our state for the next execution cycle
           recovery_index_ = 0;
+          recovery_count_ = 0;
           state_ = PLANNING;
 
           //we have a new goal so make sure the planner is awake
@@ -1298,8 +1298,8 @@ namespace move_base {
     // Reset statemachine
     state_ = PLANNING;
     recovery_index_ = 0;
-    recovery_trigger_ = PLANNING_R;
     recovery_count_ = 0;
+    recovery_trigger_ = PLANNING_R;
     publishZeroVelocity();
 
     //if we shutdown our costmaps when we're deactivated... we'll do that now

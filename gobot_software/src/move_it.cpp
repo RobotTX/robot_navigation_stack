@@ -210,6 +210,8 @@ bool playPointService(gobot_msg_srv::SetStringArray::Request &req, gobot_msg_srv
 		stop_flag = false;
 	}
 
+	setGobotStatus(5,"PLAY_POINT");
+
 	gobot_msg_srv::IsCharging arg;
 	if(ros::service::call("/gobot_status/charging_status", arg) && arg.response.isCharging){
 		ROS_WARN("(MOVE_IT::playPathService) we are charging so we go straight to avoid bumping into the CS when turning");
@@ -232,7 +234,6 @@ bool playPointService(gobot_msg_srv::SetStringArray::Request &req, gobot_msg_srv
 	assigned_point.isHome = false;
 	assigned_point.waitingTime = -1;
 	assigned_point.text = "";
-	setGobotStatus(5,"PLAY_POINT");
 	goNextPoint(assigned_point);
 	
 	return true;
@@ -261,6 +262,8 @@ bool playPathService(std_srvs::Empty::Request &req, std_srvs::Empty::Response &r
 		SetRobot.setStage(stage_);
 	}
 
+	setGobotStatus(5,"PLAY_PATH");
+	
 	gobot_msg_srv::IsCharging arg;
 	if(ros::service::call("/gobot_status/charging_status", arg) && arg.response.isCharging){
 		ROS_WARN("(MOVE_IT::playPathService) we are charging so we go straight to avoid bumping into the CS when turning");
@@ -270,7 +273,6 @@ bool playPathService(std_srvs::Empty::Request &req, std_srvs::Empty::Response &r
 		SetRobot.setDock(0);
 	}
 
-	setGobotStatus(5,"PLAY_PATH");
 	goNextPoint(path.at(stage_));
 	
 	return true;	

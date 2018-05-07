@@ -100,7 +100,7 @@ class PingServerClass {
             ipMutex.lock();
             if(oldIPs_.size()>0 && (ros::Time::now()-disco_time_)>ros::Duration(STATUS_UPDATE)){
                 for(int i = 0; i < oldIPs_.size(); ++i)
-                    data_threads.push_back(std::thread(&PingServerClass::pingIP2, this, oldIPs_.at(i).first, update_status->data, 2.0));
+                    data_threads.push_back(std::thread(&PingServerClass::pingIP2, this, oldIPs_.at(i).first, update_status->data, 3.0));
             }
             ipMutex.unlock();
             

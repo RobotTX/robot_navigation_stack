@@ -66,8 +66,9 @@ std::vector<std::string> home_(6,"0");
 std::string disconnectedFile;
 int disconnected = 0;
 
-bool charging_ = false;
+bool charging_status_ = false, battery_charging_ = false;
 int battery_percent_ = 51;
+ros::Time battery_time_;
 
 std::string recordBatteryFile;
 int charging_current_ = 0;
@@ -137,7 +138,7 @@ void setHomePose(){
 
 //initialize robot to be home if charging
 bool initializeHomeSrcCallback(std_srvs::Empty::Request &req, std_srvs::Empty::Response &res){
-    if(charging_){
+    if(charging_status_){
         setHomePose();
         SetRobot.setSound(1,2);
     }
@@ -442,8 +443,10 @@ bool setDockStatusSrvCallback(gobot_msg_srv::SetInt::Request &req, gobot_msg_srv
     dockStatusMutex.unlock();
     ROS_INFO("(STATUS_SYSTEM) Set Dock status: %d", dock_status_);
     
-    charging_ = dock_status_==1 ? true : false;
-    
+    charging_status_ = dock_status_==1 ? true : false;
+    if(!charging_status_){
+        battery_time_ = ros::Time::now();
+    }
     updateStatus();
 
     if(dock_status_==1 && ros::service::exists("/gobot_startup/pose_ready",false)){
@@ -489,7 +492,7 @@ bool getGobotStatusSrvCallback(gobot_msg_srv::GetGobotStatus::Request &req, gobo
 }
 
 bool isChargingService(gobot_msg_srv::IsCharging::Request &req, gobot_msg_srv::IsCharging::Response &res){
-    res.isCharging = charging_;
+    res.isCharging = charging_status_;
     return true;
 }
 
@@ -512,6 +515,16 @@ bool recordBatterySrvCallback(gobot_msg_srv::SetInt::Request &req, gobot_msg_srv
 void batteryCallback(const gobot_msg_srv::BatteryMsg::ConstPtr& msg){
     battery_percent_ = msg->BatteryStatus;
     charging_current_ = msg->ChargingCurrent;
+    battery_charging_ = msg->ChargingFlag;
+
+    //if battery is charging but recorded info is not charging, reset recorded info to battery charging after 60s
+    if(battery_charging_ && !charging_status_){
+        if(ros::Time::now()-battery_time_ > ros::Duration(60.0)){
+            gobot_msg_srv::SetBool charging;
+            charging.request.data = charging_status_;
+            ros::service::call("/gobot_base/set_charging",charging);
+        }
+    }
     /*//for recording test purpose
     if(record_battery_==1 && (ros::Time::now() - record_time_) >= ros::Duration(5.0)){
         std::string record_date = getCurrentTime();
