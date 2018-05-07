@@ -447,9 +447,10 @@ bool setDockStatusSrvCallback(gobot_msg_srv::SetInt::Request &req, gobot_msg_srv
     if(!charging_status_){
         battery_time_ = ros::Time::now();
     }
+    
     updateStatus();
 
-    if(dock_status_==1 && ros::service::exists("/gobot_startup/pose_ready",false)){
+    if(charging_status_ && ros::service::exists("/gobot_startup/pose_ready",false)){
         if(gobot_status_!=5 || gobot_text_=="WAITING"){
             setHomePose();
         }
@@ -459,14 +460,26 @@ bool setDockStatusSrvCallback(gobot_msg_srv::SetInt::Request &req, gobot_msg_srv
 }
 
 bool getDockStatusSrvCallback(gobot_msg_srv::GetInt::Request &req, gobot_msg_srv::GetInt::Response &res){
-    dockStatusMutex.lock();
-    res.data = dock_status_;
-    dockStatusMutex.unlock();
-    //ROS_INFO("(STATUS_SYSTEM) Get Dock status: %d", dock_status_);
-
+    //in case robot move away from CS, but battery charging status is not changed, so reset battery charging status
+    if(battery_charging_ && !charging_status_){
+        gobot_msg_srv::SetBool charging;
+        charging.request.data = charging_status_;
+        ros::service::call("/gobot_base/set_charging",charging);
+        res.data  = 1;
+        battery_time_ = ros::Time::now();
+    }
+    else{
+        dockStatusMutex.lock();
+        res.data = dock_status_;
+        dockStatusMutex.unlock();
+    }
     return true;
 }
 
+bool isChargingSrvCallback(gobot_msg_srv::IsCharging::Request &req, gobot_msg_srv::IsCharging::Response &res){
+    res.isCharging = charging_status_;
+    return true;
+}
 
 bool setGobotStatusSrvCallback(gobot_msg_srv::SetGobotStatus::Request &req, gobot_msg_srv::SetGobotStatus::Response &res){
     gobotStatusMutex.lock();
@@ -491,11 +504,6 @@ bool getGobotStatusSrvCallback(gobot_msg_srv::GetGobotStatus::Request &req, gobo
     return true;
 }
 
-bool isChargingService(gobot_msg_srv::IsCharging::Request &req, gobot_msg_srv::IsCharging::Response &res){
-    res.isCharging = charging_status_;
-    return true;
-}
-
 bool PercentService(gobot_msg_srv::GetInt::Request &req, gobot_msg_srv::GetInt::Response &res){
     res.data = battery_percent_;
     return true;
@@ -517,7 +525,7 @@ void batteryCallback(const gobot_msg_srv::BatteryMsg::ConstPtr& msg){
     charging_current_ = msg->ChargingCurrent;
     battery_charging_ = msg->ChargingFlag;
 
-    //if battery is charging but recorded info is not charging, reset recorded info to battery charging after 60s
+    //in case robot move away from CS, but battery charging status is not changed, so reset battery charging status after 60s
     if(battery_charging_ && !charging_status_){
         if(ros::Time::now()-battery_time_ > ros::Duration(60.0)){
             gobot_msg_srv::SetBool charging;
@@ -696,6 +704,7 @@ int main(int argc, char* argv[]){
 
     ros::ServiceServer setDockStatusSrv = n.advertiseService("/gobot_status/set_dock_status", setDockStatusSrvCallback);
     ros::ServiceServer getDockStatusSrv = n.advertiseService("/gobot_status/get_dock_status", getDockStatusSrvCallback);
+    ros::ServiceServer isChargingSrv = n.advertiseService("/gobot_status/charging_status", isChargingSrvCallback);
 
     ros::ServiceServer setStageSrv = n.advertiseService("/gobot_status/set_stage", setStageSrvCallback);
     ros::ServiceServer getStageSrv = n.advertiseService("/gobot_status/get_stage", getStageSrvCallback);
@@ -724,7 +733,6 @@ int main(int argc, char* argv[]){
     ros::ServiceServer setWifiSrv = n.advertiseService("/gobot_status/set_wifi", setWifiSrvCallback);
     ros::ServiceServer getWifiSrv = n.advertiseService("/gobot_status/get_wifi", getWifiSrvCallback);
 
-    ros::ServiceServer isChargingSrv = n.advertiseService("/gobot_status/charging_status", isChargingService);
     ros::ServiceServer PercentSrv = n.advertiseService("/gobot_status/battery_percent", PercentService);
 
     ros::ServiceServer getUpdateStatusSrv = n.advertiseService("/gobot_status/get_update_status", getUpdateStatusSrvCallback);

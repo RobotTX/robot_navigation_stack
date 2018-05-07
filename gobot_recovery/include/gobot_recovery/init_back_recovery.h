@@ -25,7 +25,6 @@ namespace init_back_recovery{
       std::string name_;
       tf::TransformListener* tf_;
       bool initialized_;
-      int allow_time_;
   };
 };
 #endif 

@@ -54,16 +54,13 @@ void RotateRecovery::initialize(std::string name, tf::TransformListener* tf,
 
     //get some parameters from the parameter server
     ros::NodeHandle private_nh("~/" + name_);
-    ros::NodeHandle blp_nh("~/TrajectoryPlannerROS");
-
     //we'll simulate every degree by default
-    private_nh.param("sim_granularity", sim_granularity_, 0.017);
-    private_nh.param("frequency", frequency_, 20.0);
-
-    blp_nh.param("acc_lim_th", acc_lim_th_, 3.2);
-    blp_nh.param("max_rotational_vel", max_rotational_vel_, 1.0);
-    blp_nh.param("min_in_place_rotational_vel", min_rotational_vel_, 0.4);
-    blp_nh.param("yaw_goal_tolerance", tolerance_, 0.10);
+    private_nh.param("sim_granularity", sim_granularity_, 0.05);
+    private_nh.param("sim_frequency", frequency_, 10.0);
+    private_nh.param("acc_lim_th", acc_lim_th_, 3.2);
+    private_nh.param("max_rotational_vel", max_rotational_vel_, 1.0);
+    private_nh.param("min_in_place_rotational_vel", min_rotational_vel_, 0.4);
+    private_nh.param("yaw_goal_tolerance", tolerance_, 0.10);
 
     world_model_ = new base_local_planner::CostmapModel(*local_costmap_->getCostmap());
 
@@ -165,9 +162,11 @@ void RotateRecovery::runBehavior(){
 }
 
 void RotateRecovery::robotStatusCallback(const std_msgs::Int8::ConstPtr& msg){
+  //ignore first latched message
   if(latched_msg_){
     latched_msg_ = false;
   }
+  //if rotation recovery is ongoing, check received command
   else if(run_behavior_){
     if(msg->data==1 || msg->data==4 || msg->data==5 || msg->data==11 || msg->data==21){
       ROS_WARN("Goal PREEMPTED/ABORTED. Quit Rotate recovery.");

@@ -25,7 +25,7 @@ std::vector<uint8_t> SHUT_DOWN_CMD =    {0xF0, 0x01, 0x00, 0x00, 0x00, 0x00, 0x0
 class SensorClass {
     public:
         SensorClass():
-        battery_percent_(50), robot_status_(-1), charging_flag_(false), low_battery_(false), display_data_(false), enable_led_(true),
+        battery_percent_(50), robot_status_(-1), charging_flag_(false), low_battery_(false), display_data_(false), led_flag_(true),
         last_charging_current_(0), error_count_(0), mute_(0), charge_check_(0)
         {
             ros::NodeHandle nh;
@@ -305,19 +305,21 @@ class SensorClass {
                                 charging_flag_ = true;
                                 std::thread t1(&SensorClass::threadFunc, this, 1);
                                 t1.detach();
-                                enable_led_ = false;
+                                //disable led change when charging
+                                led_flag_ = false;
                                 displayBatteryLed();
                             }
                             else{
-                                charging_flag_ = false;
                                 if(!battery_data.ChargingFlag){
                                     std::thread t2(&SensorClass::threadFunc, this, 2);
                                     t2.detach();
-                                    if(!enable_led_){
-                                        enable_led_ = true;
+                                    //enable led change when not charging
+                                    if(!led_flag_){
+                                        led_flag_ = true;
                                         displayBatteryLed();
                                     }
                                 }
+                                charging_flag_ = false;
                                 battery_data.ChargingFlag = false;
                             }
                         }
@@ -517,7 +519,8 @@ class SensorClass {
                 displayBatteryLed();
                 setSound(1,2);
             }
-            else if(!low_battery_ && enable_led_){
+            //change led if not low battery and able to change led
+            else if(!low_battery_ && led_flag_){
                 setLed(led->mode,led->color);
             }
         }
@@ -528,33 +531,35 @@ class SensorClass {
 
         void statusCallback(const std_msgs::Int8::ConstPtr& msg){
             robot_status_ = msg->data;
-            //in case robot is charging and receive move command, set led immediately
-            if(charging_flag_ && robot_status_==5){
+            //enable led change when moving away from CS
+            if(!led_flag_ && (robot_status_==5 || robot_status_==25)){
                 setLed(1,{"green","white"});
-                enable_led_ = true;
+                led_flag_ = true;
             }
         }
 
         void ledTimerCallback(const ros::TimerEvent&){
-            //for every 30 sec, we change led
+            //for every 30 sec, we check robot status in order to change led
             low_battery_ = battery_percent_<10 ? true : false;
-            if(!charging_flag_){
+            //change led if able to change led
+            if(led_flag_){
                 if (low_battery_){
                     setLed(0,{"magenta"});
                 }
-                //Show battery status if no stage for certain period, show battery lvl
+                //Show battery status if no stage for certain period, show battery status
                 else if ((ros::Time::now()-last_led_time_)>ros::Duration(300.0)){
                     displayBatteryLed();
                 }   
             }
-            else if(!enable_led_){
+            else{
                 displayBatteryLed();
             }
 
             //if docking or exploring, perdically sound twice
             if(robot_status_==15 || robot_status_==25)
                 setSound(2,1);
-            else if(low_battery_ && !charging_flag_)
+            //change led if low battery and able to change led
+            else if(low_battery_ && led_flag_)
                 setSound(3,2);
         }
 
@@ -609,8 +614,8 @@ class SensorClass {
                 color = "yellow";
             else if(battery_percent_<=100)
                 color = "cyan";
-
-            if(!charging_flag_ || battery_percent_==100)
+            
+            if(led_flag_ || battery_percent_==100)
                 setLed(0,{color});
             else
                 setLed(1,{color,"white"});
@@ -675,7 +680,7 @@ class SensorClass {
         std::string SENSOR_PORT, restart_script;
 
         int16_t last_charging_current_;
-        bool charging_flag_, low_battery_, display_data_, enable_led_, USE_BUMPER, USE_SONAR, USE_CLIFF;
+        bool charging_flag_, low_battery_, display_data_, led_flag_, USE_BUMPER, USE_SONAR, USE_CLIFF;
         int battery_percent_, error_count_, mute_, max_weight_, robot_status_, charge_check_;
         int SENSOR_RATE, SENSOR_BYTES;
 

@@ -735,8 +735,8 @@ bool startAutoExplore(const std::vector<std::string> command){
         /// 1 : robot goes back to its starting point which is its charging station
         /// 2 : robot goes back to its starting point which is not a charging station
         hector_exploration_node::Exploration exploration_srv;
-        gobot_msg_srv::IsCharging arg;
-        if(ros::service::call("/gobot_status/charging_status", arg) && arg.response.isCharging){
+        gobot_msg_srv::IsCharging isCharging;
+        if(ros::service::call("/gobot_status/charging_status", isCharging) && isCharging.response.isCharging){
             exploration_srv.request.backToStartWhenFinished = 1;
         }
         else{

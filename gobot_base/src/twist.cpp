@@ -221,7 +221,7 @@ void joyCallback(const sensor_msgs::Joy::ConstPtr& joy){
     if(joy->buttons[7]){
         joy_on = true;
         SetRobot.setMotorSpeed('F', 0, 'F', 0);
-        SetRobot.setBatteryLed();
+        SetRobot.setLed(1,{"green","cyan","yellow"});
     }
     //back -> disable manual control
     if(joy->buttons[6]){

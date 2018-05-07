@@ -16,7 +16,6 @@ int nb = 20;
 
 bool isChargingService(gobot_msg_srv::IsCharging::Request &req, gobot_msg_srv::IsCharging::Response &res){
     res.isCharging = (chargingFlagLeft & chargingFlagRight);
-
     return true;
 }
 

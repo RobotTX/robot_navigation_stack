@@ -63,11 +63,13 @@ bool startDocking(void){
 
             return true;
         }
-        else 
-            ROS_ERROR("(AUTO_DOCKING::startDocking) no action server");
     } 
-    else
-        ROS_ERROR("(AUTO_DOCKING::startDocking) home is not valid (probably not set)");
+    else{
+        dock_status = -1;
+        SetRobot.setDock(dock_status);
+        SetRobot.setStatus(11,"FAIL_DOCKING");
+        ROS_ERROR("(AUTO_DOCKING::finishedDocking) Auto docking finished->FAILED because home is not valid");
+    }
 
     return false;
 }
@@ -265,10 +267,10 @@ void newProximityInfo(const gobot_msg_srv::ProximityMsg::ConstPtr& proximitySign
 
 void finishedDocking(){
     ros::NodeHandle nh;
-    gobot_msg_srv::IsCharging arg;
     resetDockingParams();
     ros::Duration(6.0).sleep();
-    if(ros::service::call("/gobot_status/charging_status", arg) && arg.response.isCharging){
+    gobot_msg_srv::IsCharging isCharging;
+    if(ros::service::call("/gobot_status/charging_status", isCharging) && isCharging.response.isCharging){
         dock_status = 1;
         SetRobot.setStatus(11,"COMPLETE_DOCKING");
         ROS_INFO("(AUTO_DOCKING::finishedDocking) Auto docking finished->SUCESSFUL.");
@@ -318,10 +320,15 @@ bool stopDockingService(std_srvs::Empty::Request &req, std_srvs::Empty::Response
     resetDockingParams();
     if(ac->isServerConnected())
         ac->cancelAllGoals();
-
-    gobot_msg_srv::IsCharging arg;
-    dock_status=(ros::service::call("/gobot_status/charging_status", arg) && arg.response.isCharging) ? 1 : 0; 
-    SetRobot.setDock(dock_status);
+    
+    gobot_msg_srv::IsCharging isCharging;
+    if(ros::service::call("/gobot_status/charging_status", isCharging) && isCharging.response.isCharging){
+        dock_status= 1; 
+    }
+    else{
+        dock_status= 0; 
+        SetRobot.setDock(dock_status);
+    }
     SetRobot.setStatus(11,"STOP_DOCKING");
     return true;
 }

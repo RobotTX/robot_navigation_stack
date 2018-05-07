@@ -16,9 +16,6 @@ InitBackRecovery::InitBackRecovery(): global_costmap_(NULL), local_costmap_(NULL
         if(!initialized_)
         {
             name_=name;
-            ros::NodeHandle private_nh("~/" + name_);
-
-            private_nh.param("allow_time", allow_time_, 0);
             initialized_ = true;
         }
         else{

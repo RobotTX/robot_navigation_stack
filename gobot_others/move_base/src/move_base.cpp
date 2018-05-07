@@ -681,7 +681,7 @@ namespace move_base {
         //is negative (the default), it is just ignored and we have the same behavior as ever
         lock.lock();
         planning_retries_++;
-        if(runPlanner_ && (ros::Time::now() > attempt_end)){ //|| planning_retries_ > uint32_t(max_planning_retries_))){
+        if(runPlanner_ && (ros::Time::now()>attempt_end)){ //|| planning_retries_ > uint32_t(max_planning_retries_))){
           //we'll move into our obstacle clearing mode
           state_ = CLEARING;
           runPlanner_ = false;  // proper solution for issue #523
@@ -1013,8 +1013,8 @@ namespace move_base {
           //tx//start
           //limit the backward velocity
           //make sure that we send the velocity command to the base
-          if(cmd_vel.linear.x < 0){
-            if(fabs(cmd_vel.angular.z) > angular_spd_limit_)
+          if(cmd_vel.linear.x < 0.0){
+            if(fabs(cmd_vel.angular.z)>angular_spd_limit_ || cmd_vel.linear.x>-0.04)
               cmd_vel.linear.x = 0.0;
             else
               cmd_vel.linear.x = -0.1;
@@ -1023,19 +1023,12 @@ namespace move_base {
 
           //limit linear acceleration
           if((cmd_vel.linear.x-current_linear_spd_) > linear_spd_incre_ && cmd_vel.linear.x!=0){
-            if(current_linear_spd_<0)
+            if(current_linear_spd_<0.0)
               cmd_vel.linear.x = 0.0;
             else
               cmd_vel.linear.x = current_linear_spd_+linear_spd_incre_;
           }
-          /*
-          else if(cmd_vel.linear.x*current_linear_spd_<0.0){
-            cmd_vel.linear.x = 0.0;
-          }
-          else if((cmd_vel.linear.x-current_linear_spd_)<-linear_spd_incre_ && cmd_vel.linear.x<0){
-            cmd_vel.linear.x = current_linear_spd_-linear_spd_incre_;
-          }
-          */
+          current_linear_spd_ = cmd_vel.linear.x;
           
           //limit angular acceleration
           if(cmd_vel.angular.z == 0.0){
@@ -1047,8 +1040,6 @@ namespace move_base {
             angular_spd_.push_back(cmd_vel.angular.z);
             cmd_vel.angular.z = std::accumulate(angular_spd_.begin(),angular_spd_.end(),0.0)/angular_spd_.size();
           }
-
-          current_linear_spd_ = cmd_vel.linear.x;
           current_angular_spd_ = cmd_vel.angular.z;
           //tx//end
 
