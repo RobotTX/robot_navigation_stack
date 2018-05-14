@@ -47,7 +47,7 @@ void goalResultCallback(const move_base_msgs::MoveBaseActionResult::ConstPtr& ms
 					SetRobot.setStage(stage_);
 				}
 				setGobotStatus(0,"ABORTED_PATH");
-				SetRobot.setMotorSpeed('F', 0, 'F', 0);
+				SetRobot.setNavSpeed('F', 0, 'F', 0);
 				break;
 			//OTHER CASE
 			default:
@@ -215,9 +215,9 @@ bool playPointService(gobot_msg_srv::SetStringArray::Request &req, gobot_msg_srv
 	gobot_msg_srv::IsCharging isCharging;
 	if(ros::service::call("/gobot_status/charging_status", isCharging) && isCharging.response.isCharging){
 		ROS_WARN("(MOVE_IT::playPathService) we are charging so we go straight to avoid bumping into the CS when turning");
-		SetRobot.setMotorSpeed('F', 15, 'F', 15);
+		SetRobot.setNavSpeed('F', 15, 'F', 15);
 		ros::Duration(2.5).sleep();
-		SetRobot.setMotorSpeed('F', 0, 'F', 0);
+		SetRobot.setNavSpeed('F', 0, 'F', 0);
 		SetRobot.setDock(0);
 	}
 
@@ -267,9 +267,9 @@ bool playPathService(std_srvs::Empty::Request &req, std_srvs::Empty::Response &r
 	gobot_msg_srv::IsCharging isCharging;
 	if(ros::service::call("/gobot_status/charging_status", isCharging) && isCharging.response.isCharging){
 		ROS_WARN("(MOVE_IT::playPathService) we are charging so we go straight to avoid bumping into the CS when turning");
-		SetRobot.setMotorSpeed('F', 15, 'F', 15);
+		SetRobot.setNavSpeed('F', 15, 'F', 15);
 		ros::Duration(2.5).sleep();
-		SetRobot.setMotorSpeed('F', 0, 'F', 0);
+		SetRobot.setNavSpeed('F', 0, 'F', 0);
 		SetRobot.setDock(0);
 	}
 

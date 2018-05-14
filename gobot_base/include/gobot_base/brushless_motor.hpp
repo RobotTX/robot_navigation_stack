@@ -42,7 +42,6 @@ class BrushlessMotorClass {
             nh.getParam("WHEEL_RADIUS", wheel_radius_);
             nh.getParam("TICKS_PER_ROT", ticks_per_rot_);
             nh.getParam("ODOM_RATE", odom_rate_);
-            nh.getParam("ROLLING_WINDOW_SIZE", rolling_window_size_);
             nh.getParam("STEP_THRESHOLD", step_threshold_);
             step_threshold_ = step_threshold_/2;
             
@@ -179,7 +178,7 @@ class BrushlessMotorClass {
                         delta_right_encoder = 0;
                         writeAndRead(RESET_ENCODER, 1);
                     }
-                    ROS_INFO("(MOTOR) right: %d, delta: %d; left: %d, delta: %d",rightEncoder,delta_right_encoder,leftEncoder,delta_left_encoder);
+                    //ROS_INFO("(MOTOR) right: %d, delta: %d; left: %d, delta: %d",rightEncoder,delta_right_encoder,leftEncoder,delta_left_encoder);
                     last_left_encoder_ = leftEncoder;
                     last_right_encoder_ = rightEncoder;
 
@@ -277,13 +276,14 @@ class BrushlessMotorClass {
                         cur_rightSpeed_ = cur_rightSpeed_ + step_threshold_;
                     else 
                         cur_rightSpeed_ = rightSpeed_;
-
                     std::vector<uint8_t> spd_cmd(5,0x00);
                     spd_cmd[0] = 0x33;
                     spd_cmd[1] = cur_leftSpeed_>=128 ? 2*(cur_leftSpeed_-128) : 2*(128-cur_leftSpeed_);
                     spd_cmd[2] = cur_leftSpeed_>=128 ? 0x00 : 0x01;
                     spd_cmd[3] = cur_rightSpeed_>=128 ? 2*(cur_rightSpeed_-128) : 2*(128-cur_rightSpeed_);
                     spd_cmd[4] = cur_rightSpeed_>=128 ? 0x00 : 0x01;
+
+                    ROS_INFO("left speed: %d,  right speed: %d", spd_cmd[1], spd_cmd[3]);
                     writeAndRead(spd_cmd);
                 }
 
@@ -292,8 +292,8 @@ class BrushlessMotorClass {
         }
 
         void motorSpdCallback(const gobot_msg_srv::MotorSpeedMsg::ConstPtr& speed){
-            uint8_t temp_velocityL = speed->velocityL>95 ? 95 : speed->velocityL;
-            uint8_t temp_velocityR = speed->velocityR>95 ? 95 : speed->velocityR;
+            int temp_velocityL = speed->velocityL>95 ? 95 : speed->velocityL;
+            int temp_velocityR = speed->velocityR>95 ? 95 : speed->velocityR;
             spdMutex_.lock();
             rec_leftSpeed_ = speed->directionL.compare("F") == 0 ? 128 + temp_velocityL : 128 - temp_velocityL;  
             rec_rightSpeed_ = speed->directionR.compare("F") == 0 ? 128 + temp_velocityR : 128 - temp_velocityR; 
@@ -364,9 +364,9 @@ class BrushlessMotorClass {
 
         std::string motor_device_;
         bool test_encoders_, reset_odom_, reset_encoder_;
-        int rolling_window_size_, encoder_limit_, odom_rate_;
+        int encoder_limit_, odom_rate_;
         double odom_x_, odom_y_, odom_th_, wheel_sep_, wheel_radius_ , ticks_per_rot_;
-        uint8_t rec_leftSpeed_, rec_rightSpeed_, leftSpeed_, rightSpeed_, cur_leftSpeed_, cur_rightSpeed_; 
+        int rec_leftSpeed_, rec_rightSpeed_, leftSpeed_, rightSpeed_, cur_leftSpeed_, cur_rightSpeed_; 
         int step_threshold_;
         int32_t last_left_encoder_, last_right_encoder_;
         std::mutex serialMutex_, spdMutex_, encoderMutex_;

@@ -83,11 +83,8 @@ add_service_files(
     GetEncoders.srv
     InitBack.srv
     IsCharging.srv
-    Port.srv
-    PortLaser.srv
     SendMessageToPc.srv
     SetSpeeds.srv
-    LedStrip.srv
     SetBattery.srv
     SendMap.srv
     GetGobotStatus.srv

@@ -26,6 +26,9 @@ void sonarFrontToCloud(double sonarR,double sonarL,pcl::PointCloud<pcl::PointXYZ
         return;
     }
 
+    sonarR=(sonarR==SONAR_OUTRANGE || sonarR>SONAR_THRESHOLD) ? SONAR_MAX : sonarR;
+    sonarL=(sonarL==SONAR_OUTRANGE || sonarL>SONAR_THRESHOLD) ? SONAR_MAX : sonarL;
+
     //turn right
     if(left_speed_>0){
         for(double i=0;i>=-y;i=i-SONAR_VIEW/SONAR_RESOLUTION){
@@ -40,9 +43,6 @@ void sonarFrontToCloud(double sonarR,double sonarL,pcl::PointCloud<pcl::PointXYZ
             cloudR.push_back(pcl::PointXYZ(SONAR_MAX*factor, i, 0));
         }
     }
-
-    sonarR=(sonarR==SONAR_OUTRANGE || sonarR>SONAR_THRESHOLD) ? SONAR_MAX : sonarR;
-    sonarL=(sonarL==SONAR_OUTRANGE || sonarL>SONAR_THRESHOLD) ? SONAR_MAX : sonarL;
 
     if(fabs(sonarR-sonarL)<0.1){
         if (sonarR>sonarL)
@@ -66,6 +66,9 @@ void sonarBackToCloud(double sonarR,double sonarL,pcl::PointCloud<pcl::PointXYZ>
         return;
     }
 
+    sonarR=(sonarR==SONAR_OUTRANGE || sonarR>SONAR_THRESHOLD) ? SONAR_MAX : sonarR;
+    sonarL=(sonarL==SONAR_OUTRANGE || sonarL>SONAR_THRESHOLD) ? SONAR_MAX : sonarL;
+
     //turn right
     if(right_speed_<0){
         for(double i=0;i>=-y;i=i-SONAR_VIEW/SONAR_RESOLUTION){
@@ -80,9 +83,6 @@ void sonarBackToCloud(double sonarR,double sonarL,pcl::PointCloud<pcl::PointXYZ>
             cloudR.push_back(pcl::PointXYZ(SONAR_MAX*factor, i, 0));
         }
     }
-
-    sonarR=(sonarR==SONAR_OUTRANGE || sonarR>SONAR_THRESHOLD) ? SONAR_MAX : sonarR;
-    sonarL=(sonarL==SONAR_OUTRANGE || sonarL>SONAR_THRESHOLD) ? SONAR_MAX : sonarL;
 
     if(fabs(sonarR-sonarL)<0.1){
         if (sonarR>sonarL)
@@ -109,8 +109,8 @@ void newSonarsInfo(const gobot_msg_srv::SonarMsg::ConstPtr& sonars){
         frontLeftCloud.header.frame_id = front_left_frame;
         rearRightCloud.header.frame_id = rear_right_frame;
         rearLeftCloud.header.frame_id = rear_left_frame;
-        if(abs(prev_sonars.distance1-sonars->distance1)>5 || abs(prev_sonars.distance2-sonars->distance2)>5
-            || abs(prev_sonars.distance3-sonars->distance3)>5 || abs(prev_sonars.distance4-sonars->distance4)>5){
+        if((prev_sonars.distance1 != sonars->distance1) || (prev_sonars.distance2 != sonars->distance2)
+            || (prev_sonars.distance3 != sonars->distance3) || abs(prev_sonars.distance4 != sonars->distance4)){
             sonarFrontToCloud(sonars->distance1/100.0,sonars->distance2/100.0,frontRightCloud,frontLeftCloud,0.12,1);
             sonarBackToCloud(sonars->distance3/100.0,sonars->distance4/100.0,rearLeftCloud,rearRightCloud,0.11,1);
         }

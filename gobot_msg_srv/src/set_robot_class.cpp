@@ -16,6 +16,7 @@ namespace robot_class {
     void SetRobot::initialize(){
         ros::NodeHandle nh_;
         speed_pub_ = nh_.advertise<gobot_msg_srv::MotorSpeedMsg>("/gobot_motor/motor_speed", 1);
+        nav_pub_ = nh_.advertise<gobot_msg_srv::MotorSpeedMsg>("/nav_speed", 1);
         led_pub_ = nh_.advertise<gobot_msg_srv::LedMsg>("/gobot_base/set_led", 1);
         sound_pub_ = nh_.advertise<gobot_msg_srv::SoundMsg>("/gobot_base/set_sound", 1);
         initial_pose_pub_ = nh_.advertise<geometry_msgs::PoseWithCovarianceStamped>("/initialpose", 1);
@@ -111,6 +112,15 @@ namespace robot_class {
     bool SetRobot::clearPath(){
         gobot_msg_srv::SetStringArray set_path;
         ros::service::call("/gobot_status/set_path", set_path);
+        return true;
+    }
+
+    bool SetRobot::setNavSpeed(const char directionR, const int velocityR, const char directionL, const int velocityL){ 
+        motor_speed_.directionR = std::string(1, directionR);
+        motor_speed_.velocityR = velocityR>127 ? 127 : velocityR;
+        motor_speed_.directionL = std::string(1, directionL);
+        motor_speed_.velocityL = velocityL>127 ? 127 : velocityL;
+        nav_pub_.publish(motor_speed_);
         return true;
     }
 

@@ -35,7 +35,6 @@ class MotorClass {
             nh.getParam("WHEEL_RADIUS", wheel_radius_);
             nh.getParam("TICKS_PER_ROT", ticks_per_rot_);
             nh.getParam("ODOM_RATE", odom_rate_);
-            nh.getParam("ROLLING_WINDOW_SIZE", rolling_window_size_);
             
             if(!initSerial()){
                 exit(1);
@@ -316,7 +315,7 @@ class MotorClass {
 
         std::string motor_device_;
         bool test_encoders_, reset_odom_, reset_encoder_;
-        int rolling_window_size_, encoder_limit_, odom_rate_;
+        int encoder_limit_, odom_rate_;
         double odom_x_, odom_y_, odom_th_, wheel_sep_, wheel_radius_ , ticks_per_rot_;
         uint8_t leftSpeed_, rightSpeed_, rec_leftSpeed_, rec_rightSpeed_;
         int32_t last_left_encoder_, last_right_encoder_;

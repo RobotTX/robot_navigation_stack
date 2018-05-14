@@ -1,13 +1,14 @@
 <?xml version="1.0"?>
 <launch>     
-    <param name="MOTOR_PORT" type="string" value="/dev/ttyUSB1" />
-    <param name="ODOM_RATE" type="int" value="10" />
-    <param name="WHEEL_SEP" type="double" value="0.35" />
-    <param name="WHEEL_RADIUS" type="double" value="0.075" />
-    <param name="STEP_THRESHOLD" type="int" value="100" />
-    <param name="TICKS_PER_ROT" type="double" value="325" />
-    <param name="factor_a" type="double" value="10.55" />
-    <param name="factor_b" type="double" value="8.0" />
+    <param name="MOTOR_PORT"            type="string"       value="/dev/MD" />
+    <param name="ODOM_RATE"             type="int"          value="10" />
+    <param name="WHEEL_SEP"             type="double"       value="0.35" />
+    <param name="WHEEL_RADIUS"          type="double"       value="0.075" />
+    
+    <param name="STEP_THRESHOLD"        type="int"          value="100" />
+    <param name="TICKS_PER_ROT"         type="double"       value="325" />
+    <param name="FACTOR_A"              type="double"       value="10.55" />
+    <param name="FACTOR_B"              type="double"       value="8.0" />
     
     <node pkg="gobot_base" type="brushless_motor_node" name="brushless_motor_node" output="screen" required="true"/>
 </launch>

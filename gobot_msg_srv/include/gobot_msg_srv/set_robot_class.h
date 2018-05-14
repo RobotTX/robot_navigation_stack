@@ -46,6 +46,8 @@ namespace robot_class {
 
             bool clearPath(void);
 
+            bool setNavSpeed(const char directionR, const int velocityR, const char directionL, const int velocityL);
+
             bool setMotorSpeed(char directionR, int velocityR, char directionL, int velocityL);
 
             void setInitialpose(const double p_x, const double p_y, const double q_x, const double q_y, const double q_z, const double q_w);
@@ -76,7 +78,7 @@ namespace robot_class {
             gobot_msg_srv::SetGobotStatus set_gobot_status_;
             gobot_msg_srv::SetInt set_dock_status_,set_stage_,set_loop_;
             gobot_msg_srv::MotorSpeedMsg motor_speed_;
-            ros::Publisher speed_pub_, sound_pub_, led_pub_, initial_pose_pub_;
+            ros::Publisher speed_pub_, nav_pub_, sound_pub_, led_pub_, initial_pose_pub_;
     };
 };
 

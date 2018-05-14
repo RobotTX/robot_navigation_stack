@@ -68,7 +68,7 @@ bool startDocking(void){
         dock_status = -1;
         SetRobot.setDock(dock_status);
         SetRobot.setStatus(11,"FAIL_DOCKING");
-        ROS_ERROR("(AUTO_DOCKING::finishedDocking) Auto docking finished->FAILED because home is not valid");
+        ROS_ERROR("(AUTO_DOCKING) Auto docking finished->FAILED because home is not valid");
     }
 
     return false;
@@ -91,7 +91,7 @@ void goalResultCallback(const move_base_msgs::MoveBaseActionResult::ConstPtr& ms
                 dock_status = -1;
                 SetRobot.setDock(dock_status);
                 SetRobot.setStatus(11,"FAIL_DOCKING");
-                ROS_WARN("(AUTO_DOCKING::finishedDocking) Auto docking finished->FAILED because goal can not be reached.");
+                ROS_WARN("(AUTO_DOCKING) Auto docking finished->FAILED because goal can not be reached.");
 				break;
 		}
     }
@@ -119,7 +119,7 @@ void newBatteryInfo(const gobot_msg_srv::BatteryMsg::ConstPtr& batteryInfo){
         if(!collision){
             charging = true;
             irSub.shutdown();
-            SetRobot.setMotorSpeed('F', 0, 'F', 0);
+            SetRobot.setNavSpeed('F', 0, 'F', 0);
             finishedDocking();
         }
     }
@@ -175,39 +175,39 @@ void newIrSignal(const gobot_msg_srv::IrMsg::ConstPtr& irSignal){
             lostIrSignal = false;
             /// rear ir received 1 and 2 signal, so robot goes backward
             if (irSignal->rearSignal == 3){
-                SetRobot.setMotorSpeed('B', base_spd, 'B', base_spd);
+                SetRobot.setNavSpeed('B', base_spd, 'B', base_spd);
             }
             else if (irSignal->rearSignal == 2){
                 leftFlag = false;
                 /// rear ir received signal 2, so robot turns left
-                SetRobot.setMotorSpeed('F', 0, 'B', base_spd);
+                SetRobot.setNavSpeed('F', 0, 'B', base_spd);
             }
             else if (irSignal->rearSignal == 1){
                 leftFlag = true;
                 /// rear ir received signal 1, so robot turns right
-                SetRobot.setMotorSpeed('B', base_spd, 'F', 0);
+                SetRobot.setNavSpeed('B', base_spd, 'F', 0);
             }
         }
         else if (irSignal->leftSignal != 0){
             /// received left signal
             leftFlag = true;
             if (irSignal->leftSignal == 3)
-                SetRobot.setMotorSpeed('B', base_spd, 'F', base_spd);
+                SetRobot.setNavSpeed('B', base_spd, 'F', base_spd);
             else if (irSignal->leftSignal == 2)
-                SetRobot.setMotorSpeed('B', base_spd, 'F', base_spd/2);
+                SetRobot.setNavSpeed('B', base_spd, 'F', base_spd/2);
             else if (irSignal->leftSignal == 1)
-                SetRobot.setMotorSpeed('B', base_spd/2, 'F', base_spd);
+                SetRobot.setNavSpeed('B', base_spd/2, 'F', base_spd);
 
         } 
         else if (irSignal->rightSignal != 0){
             /// received right signal
             leftFlag = false;
             if (irSignal->rightSignal == 3)
-                SetRobot.setMotorSpeed('F', base_spd, 'B', base_spd);
+                SetRobot.setNavSpeed('F', base_spd, 'B', base_spd);
             else if (irSignal->rightSignal == 2)
-                SetRobot.setMotorSpeed('F', base_spd, 'B', base_spd/2);
+                SetRobot.setNavSpeed('F', base_spd, 'B', base_spd/2);
             else if (irSignal->rightSignal == 1)
-                SetRobot.setMotorSpeed('F', base_spd/2, 'B', base_spd);
+                SetRobot.setNavSpeed('F', base_spd/2, 'B', base_spd);
         }
 
         if (irSignal->rearSignal == 0){
@@ -218,16 +218,14 @@ void newIrSignal(const gobot_msg_srv::IrMsg::ConstPtr& irSignal){
                 /// make the robot turn on itself
                 if(leftFlag)
                     //if the left sensor is the last which saw the ir signal
-                    SetRobot.setMotorSpeed('B', base_spd, 'F', base_spd);
+                    SetRobot.setNavSpeed('B', base_spd, 'F', base_spd);
                 else
-                    SetRobot.setMotorSpeed('F', base_spd, 'B', base_spd);
+                    SetRobot.setNavSpeed('F', base_spd, 'B', base_spd);
             } 
-            else{
-                /// if we lost the signal for more than 30 seconds, we failed docking, else, the robot should still be turning on itself
-                if((ros::Time::now() - lastIrSignalTime) > ros::Duration(20.0)){
-                    SetRobot.setMotorSpeed('F', 0, 'F', 0);
-                    finishedDocking();
-                }
+            /// if we lost the rear signal for more than 20 seconds, we failed docking, else, the robot should still be turning on itself
+            else if((ros::Time::now() - lastIrSignalTime) > ros::Duration(20.0)){
+                SetRobot.setNavSpeed('F', 0, 'F', 0);
+                finishedDocking(false);
             } 
         }
     }
@@ -244,28 +242,28 @@ void newProximityInfo(const gobot_msg_srv::ProximityMsg::ConstPtr& proximitySign
         /// 0 : object; 1 : no object
         if(proximitySignal->signal1 && proximitySignal->signal2){
             /// we are charging but can't find the charging station on either of the signal (should not happen, tell the user to check)
-            SetRobot.setMotorSpeed('F', 0, 'F', 0);
+            SetRobot.setNavSpeed('F', 0, 'F', 0);
             finishedDocking();
         } else if(!proximitySignal->signal1 && !proximitySignal->signal2){
             /// we are charging and should be aligned
-            SetRobot.setMotorSpeed('F', 0, 'F', 0);
+            SetRobot.setNavSpeed('F', 0, 'F', 0);
             finishedDocking();
         } else if(!proximitySignal->signal1 && proximitySignal->signal2){
             /// left sensor ok, right sensor not ok
-            //SetRobot.setMotorSpeed('F', 1, 'B', 1);
-            SetRobot.setMotorSpeed('F', 0, 'F', 0);
+            //SetRobot.setNavSpeed('F', 1, 'B', 1);
+            SetRobot.setNavSpeed('F', 0, 'F', 0);
             finishedDocking();
         } else if(proximitySignal->signal1 && !proximitySignal->signal2){
             /// left sensor not ok, right sensor ok
-            //SetRobot.setMotorSpeed('B', 1, 'F', 1);
-            SetRobot.setMotorSpeed('F', 0, 'F', 0);
+            //SetRobot.setNavSpeed('B', 1, 'F', 1);
+            SetRobot.setNavSpeed('F', 0, 'F', 0);
             finishedDocking();
         }
     }
     */
 }
 
-void finishedDocking(){
+void finishedDocking(bool move_forward){
     ros::NodeHandle nh;
     resetDockingParams();
     ros::Duration(6.0).sleep();
@@ -273,26 +271,28 @@ void finishedDocking(){
     if(ros::service::call("/gobot_status/charging_status", isCharging) && isCharging.response.isCharging){
         dock_status = 1;
         SetRobot.setStatus(11,"COMPLETE_DOCKING");
-        ROS_INFO("(AUTO_DOCKING::finishedDocking) Auto docking finished->SUCESSFUL.");
+        ROS_INFO("(AUTO_DOCKING) Auto docking finished->SUCESSFUL.");
     }
     else{
         attempt++;
         if(attempt <= 3){
-            ROS_WARN("(AUTO_DOCKING::finishedDocking) Failed docking %d time(s)", attempt);
-            SetRobot.setMotorSpeed('F', 15, 'F', 15);
-            ros::Duration(1.5).sleep();
-            SetRobot.setMotorSpeed('F', 0, 'F', 0);
+            ROS_WARN("(AUTO_DOCKING) Failed docking %d time(s)", attempt);
+            if(move_forward){
+                SetRobot.setNavSpeed('F', 15, 'F', 15);
+                ros::Duration(1.5).sleep();
+                SetRobot.setNavSpeed('F', 0, 'F', 0);
+            }
 
             if(ac->isServerConnected()) {
                 if(attempt == 1){
                     currentGoal.target_pose.header.stamp = ros::Time::now();
-                    currentGoal.target_pose.pose.position.x = landingPointX + 0.01*std::sin(landingYaw);
-                    currentGoal.target_pose.pose.position.y = landingPointY - 0.01*std::cos(landingYaw);
+                    currentGoal.target_pose.pose.position.x = landingPointX + 0.05*std::sin(landingYaw);
+                    currentGoal.target_pose.pose.position.y = landingPointY - 0.05*std::cos(landingYaw);
                 }
                 else if(attempt == 2){
                     currentGoal.target_pose.header.stamp = ros::Time::now();
-                    currentGoal.target_pose.pose.position.x = landingPointX - 0.01*std::sin(landingYaw);
-                    currentGoal.target_pose.pose.position.y = landingPointY + 0.01*std::cos(landingYaw);
+                    currentGoal.target_pose.pose.position.x = landingPointX - 0.05*std::sin(landingYaw);
+                    currentGoal.target_pose.pose.position.y = landingPointY + 0.05*std::cos(landingYaw);
                 }
                 else {
                     currentGoal.target_pose.header.stamp = ros::Time::now();
@@ -307,10 +307,12 @@ void finishedDocking(){
             dock_status = -1;
             SetRobot.setDock(dock_status);
             SetRobot.setStatus(11,"FAIL_DOCKING");
-            ROS_WARN("(AUTO_DOCKING::finishedDocking) Auto docking finished->FAILED.");
-            SetRobot.setMotorSpeed('F', 15, 'F', 15);
-            ros::Duration(2.0).sleep();
-            SetRobot.setMotorSpeed('F', 0, 'F', 0);
+            ROS_WARN("(AUTO_DOCKING) Auto docking finished->FAILED.");
+            if(move_forward){
+                SetRobot.setNavSpeed('F', 15, 'F', 15);
+                ros::Duration(2.0).sleep();
+                SetRobot.setNavSpeed('F', 0, 'F', 0);
+            }
         }
     }
 }
@@ -341,7 +343,7 @@ bool startDockingService(std_srvs::Empty::Request &req, std_srvs::Empty::Respons
 
 
 void resetDockingParams(){
-    SetRobot.setMotorSpeed('F', 0, 'F', 0);
+    SetRobot.setNavSpeed('F', 0, 'F', 0);
     bumperSub.shutdown();
     irSub.shutdown();
     batterySub.shutdown();
@@ -349,9 +351,9 @@ void resetDockingParams(){
     charging = false;
     docking = false;
     collision = false;
-    lostIrSignal = false;
     leftFlag = false;
     move_from_collision = true;
+    lostIrSignal = false;
 }
 
 void startDockingParams(){

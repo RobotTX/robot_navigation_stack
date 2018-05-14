@@ -32,6 +32,8 @@ void joyConnectionCallback(const std_msgs::Int8::ConstPtr& data);
 
 void joyCallback(const sensor_msgs::Joy::ConstPtr& joy);
 
+void navSpeedCallback(const gobot_msg_srv::MotorSpeedMsg::ConstPtr& nav_speed);
+
 /// Callback of the subscriber on velocity commands
 void newCmdVel(const geometry_msgs::Twist::ConstPtr& twist);
 

@@ -1,4 +1,0 @@
-int8 mode
-string[] color
----
-bool ack

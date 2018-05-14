@@ -145,9 +145,9 @@ bool startExplorationSrv(hector_exploration_node::Exploration::Request &req, hec
         gobot_msg_srv::IsCharging isCharging;
         if(ros::service::call("/gobot_status/charging_status", isCharging) && isCharging.response.isCharging){
             ROS_WARN("(SCAN_EXPLORE) we are charging so we go straight to avoid bumping into the CS when turning");
-            SetRobot.setMotorSpeed('F', 15, 'F', 15);
+            SetRobot.setNavSpeed('F', 15, 'F', 15);
 		    ros::Duration(2.5).sleep();
-            SetRobot.setMotorSpeed('F', 0, 'F', 0);
+            SetRobot.setNavSpeed('F', 0, 'F', 0);
             SetRobot.setDock(0);
         }
         //reset start_goal_time to start exploration fast

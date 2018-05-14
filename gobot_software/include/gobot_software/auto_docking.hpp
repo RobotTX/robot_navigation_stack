@@ -29,7 +29,7 @@ void newBumpersInfo(const gobot_msg_srv::BumperMsg::ConstPtr& bumpers);
 void newBatteryInfo(const gobot_msg_srv::BatteryMsg::ConstPtr& batteryInfo);
 void newIrSignal(const gobot_msg_srv::IrMsg::ConstPtr& irSignal);
 void newProximityInfo(const gobot_msg_srv::ProximityMsg::ConstPtr& proximitySignal);
-void finishedDocking(void);
+void finishedDocking(bool move_forward = true);
 bool stopDockingService(std_srvs::Empty::Request &req, std_srvs::Empty::Response &res);
 bool startDockingService(std_srvs::Empty::Request &req, std_srvs::Empty::Response &res);
 void goalResultCallback(const move_base_msgs::MoveBaseActionResult::ConstPtr& msg);
