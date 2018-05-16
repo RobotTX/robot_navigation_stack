@@ -44,9 +44,9 @@ class MotorClass {
             resetEncodersSrv = nh.advertiseService("/gobot_motor/reset_encoders", &MotorClass::resetEncoders, this);
 
             odom_pub_ = nh.advertise<nav_msgs::Odometry>("/odom", 1);
-            odom_test_pub_ = nh.advertise<gobot_msg_srv::OdomTestMsg>("/odom_test", 1);
-            encoder_pub_ = nh.advertise<gobot_msg_srv::EncodersMsg>("/encoders", 1);
             real_vel_pub_ = nh.advertise<geometry_msgs::Twist>("/real_vel", 1);
+            encoder_pub_ = nh.advertise<gobot_msg_srv::EncodersMsg>("/encoders", 1);
+            odom_test_pub_ = nh.advertise<gobot_msg_srv::OdomTestMsg>("/odom_test", 1);
             
             motorSpd_sub_ = nh.subscribe("/gobot_motor/motor_speed", 1, &MotorClass::motorSpdCallback, this);
 

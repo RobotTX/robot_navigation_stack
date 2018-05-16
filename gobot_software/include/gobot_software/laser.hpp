@@ -2,7 +2,6 @@
 #define LASER_TRANSFER
 
 #include <ros/ros.h>
-#include <gobot_msg_srv/PortLaser.h>
 #include <sensor_msgs/LaserScan.h>
 #include <std_msgs/String.h>
 #include <iostream>

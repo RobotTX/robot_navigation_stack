@@ -15,8 +15,10 @@ global_costmap:
     plugins:
         # Add the data from the map to the costmap
         - {name: static_map, type: "costmap_2d::StaticLayer"}
+        # Track the obstacles detected by sonar sensors
+        - {name: sonar_layer, type: "range_sensor_layer::RangeSensorLayer"}
         # Track the obstacle from the sensors and add them to the costmap
-        - {name: obstacles, type: "costmap_2d::VoxelLayer"} # 3D costmap
+        - {name: obstacle_layer, type: "costmap_2d::VoxelLayer"} # 3D costmap
         # Add inflation around the obstacles
         - {name: inflation_layer, type: "costmap_2d::InflationLayer"}
 
@@ -36,7 +38,7 @@ global_costmap:
         origin_z: 0.0
         z_resolution: 0.1
         z_voxels: 5
-        publish_voxel_map: True
+        publish_voxel_map: true
         laser_scan_sensor: {
             obstacle_range: 4.5,
             raytrace_range: 5.0,

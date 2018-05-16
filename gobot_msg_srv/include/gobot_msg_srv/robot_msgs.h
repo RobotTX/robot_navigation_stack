@@ -2,6 +2,7 @@
 #define ROBOT_MSG_HEADER
 
 //ros messages header
+#include <gobot_msg_srv/AllSensorsMsg.h>
 #include <gobot_msg_srv/BatteryMsg.h>
 #include <gobot_msg_srv/BumperMsg.h>
 #include <gobot_msg_srv/CliffMsg.h>
@@ -25,9 +26,6 @@
 #include <gobot_msg_srv/GetStringArray.h>
 #include <gobot_msg_srv/InitBack.h>
 #include <gobot_msg_srv/IsCharging.h>
-#include <gobot_msg_srv/LedStrip.h>
-#include <gobot_msg_srv/Port.h>
-#include <gobot_msg_srv/PortLaser.h>
 #include <gobot_msg_srv/SendMap.h>
 #include <gobot_msg_srv/SendMessageToPc.h>
 #include <gobot_msg_srv/SetBattery.h>

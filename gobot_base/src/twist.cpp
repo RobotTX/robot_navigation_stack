@@ -399,21 +399,21 @@ int main(int argc, char **argv) {
     bumper_pub = nh.advertise<gobot_msg_srv::BumperMsg>("/gobot_base/bumpers_topic", 1);
     bumper_collision_pub = nh.advertise<gobot_msg_srv::BumperMsg>("/gobot_base/bumpers_collision", 1);
 
-    ros::Subscriber cmdVel_sub = nh.subscribe("cmd_vel", 1, newCmdVel);
-    ros::Subscriber bumpers_sub = nh.subscribe("/gobot_base/bumpers_raw_topic", 1, newBumpersInfo);
-    ros::Subscriber cliff_sub = nh.subscribe("/gobot_base/cliff_topic", 1, cliffCallback);
-    ros::Subscriber navSpd_sub = nh.subscribe("/nav_speed", 1, navSpeedCallback);
     ros::Subscriber joy_sub = nh.subscribe("joy", 1, joyCallback);
-    ros::Subscriber joyConnection_sub = nh.subscribe("joy_connection", 1, joyConnectionCallback);
-    ros::Subscriber status_sub = nh.subscribe("/gobot_status/gobot_status", 1, statusCallback);
+    ros::Subscriber cmdVel_sub = nh.subscribe("cmd_vel", 1, newCmdVel);
+    ros::Subscriber navSpd_sub = nh.subscribe("/nav_speed", 1, navSpeedCallback);
+    ros::Subscriber cliff_sub = nh.subscribe("/gobot_base/cliff_topic", 1, cliffCallback);
     ros::Subscriber lostRobot_sub = nh.subscribe("/gobot_recovery/lost_robot",1,lostCallback);
+    ros::Subscriber status_sub = nh.subscribe("/gobot_status/gobot_status", 1, statusCallback);
     ros::Subscriber motorSpd_sub = nh.subscribe("/gobot_motor/motor_speed", 1, motorSpdCallback);
+    ros::Subscriber joyConnection_sub = nh.subscribe("joy_connection", 1, joyConnectionCallback);
+    ros::Subscriber bumpers_sub = nh.subscribe("/gobot_base/bumpers_raw_topic", 1, newBumpersInfo);
 
     ros::ServiceServer joySpeed = nh.advertiseService("/gobot_base/set_joy_speed",joySpeedSrvCallback);
 
     //not in use now
-    ros::ServiceServer continueRobot = nh.advertiseService("/gobot_base/continue_robot",continueRobotSrvCallback);
     ros::ServiceServer pauseRobot = nh.advertiseService("/gobot_base/pause_robot",pauseRobotSrvCallback);
+    ros::ServiceServer continueRobot = nh.advertiseService("/gobot_base/continue_robot",continueRobotSrvCallback);
 
     collision_time = ros::Time::now();
     ros::Timer collision_timer = nh.createTimer(ros::Duration(20), checkCollisionTimer);

@@ -1,160 +1,63 @@
 #include <gobot_sensors2pc/sonars2pc.hpp>
-#include <tf/transform_listener.h>
-#include <sensor_msgs/LaserScan.h>
 
-ros::Publisher rearRightPublisher,rearLeftPublisher;
-ros::Publisher frontLeftPublisher,frontRightPublisher;
-ros::Publisher leftPublisher;
-ros::Publisher rightPublisher;
-ros::Publisher midPublisher;
-ros::Publisher topPublisher;
-int left_speed_ = 0, right_speed_ = 0;
-
-std::string rear_right_frame, rear_left_frame, front_right_frame, front_left_frame, left_frame, right_frame, top_frame, mid_frame;
-double SONAR_THRESHOLD=1.0, SONAR_OUTRANGE=0, SONAR_MAX=1.5, SONAR_VIEW=0.2, SONAR_RESOLUTION=50.0;
+ros::Publisher sonar_range1, sonar_range2, sonar_range3, sonar_range4;
+std::string rear_right_frame, rear_left_frame, front_right_frame, front_left_frame;
+double SONAR_MIN=0, SONAR_MAX=1.5, SONAR_VIEW_ANGLE=0.2, SONAR_OUTRANGE=0.0;
 bool use_pc = true;
 
-gobot_msg_srv::SonarMsg prev_sonars;
-
-void sonarFrontToCloud(double sonarR,double sonarL,pcl::PointCloud<pcl::PointXYZ> &cloudR,pcl::PointCloud<pcl::PointXYZ> &cloudL, double y, double factor){
-    //move back
-    if(left_speed_<=0 && right_speed_<=0){
-        for(double i=y;i>=-y;i=i-SONAR_VIEW/SONAR_RESOLUTION){
-            cloudR.push_back(pcl::PointXYZ(SONAR_MAX*factor, i, 0));
-            cloudL.push_back(pcl::PointXYZ(SONAR_MAX*factor, i, 0));
-        }
-        return;
-    }
-
-    sonarR=(sonarR==SONAR_OUTRANGE || sonarR>SONAR_THRESHOLD) ? SONAR_MAX : sonarR;
-    sonarL=(sonarL==SONAR_OUTRANGE || sonarL>SONAR_THRESHOLD) ? SONAR_MAX : sonarL;
-
-    //turn right
-    if(left_speed_>0){
-        for(double i=0;i>=-y;i=i-SONAR_VIEW/SONAR_RESOLUTION){
-            cloudR.push_back(pcl::PointXYZ(SONAR_MAX*factor, i, 0));
-            cloudL.push_back(pcl::PointXYZ(SONAR_MAX*factor, i, 0));
-        }
-    }
-    //turn left
-    if(right_speed_>0){
-        for(double i=0;i<=y;i=i+SONAR_VIEW/SONAR_RESOLUTION){
-            cloudL.push_back(pcl::PointXYZ(SONAR_MAX*factor, i, 0));
-            cloudR.push_back(pcl::PointXYZ(SONAR_MAX*factor, i, 0));
-        }
-    }
-
-    if(fabs(sonarR-sonarL)<0.1){
-        if (sonarR>sonarL)
-            cloudL.push_back(pcl::PointXYZ(sonarL, 0, 0));
-        else
-            cloudR.push_back(pcl::PointXYZ(sonarR, 0, 0));
-    }
-    else{
-        cloudR.push_back(pcl::PointXYZ(sonarR, 0, 0));
-        cloudL.push_back(pcl::PointXYZ(sonarL, 0, 0));
-    }
+double sonarRawToRange(double sonar_raw){
+    if(sonar_raw>SONAR_MAX)
+        return SONAR_MAX;
+    else
+        return sonar_raw;
 }
 
-void sonarBackToCloud(double sonarR,double sonarL,pcl::PointCloud<pcl::PointXYZ> &cloudR,pcl::PointCloud<pcl::PointXYZ> &cloudL, double y, double factor){
-    //move front
-    if(left_speed_>=0 && right_speed_>=0){
-        for(double i=y;i>=-y;i=i-SONAR_VIEW/SONAR_RESOLUTION){
-            cloudR.push_back(pcl::PointXYZ(SONAR_MAX*factor, i, 0));
-            cloudL.push_back(pcl::PointXYZ(SONAR_MAX*factor, i, 0));
-        }
-        return;
-    }
-
-    sonarR=(sonarR==SONAR_OUTRANGE || sonarR>SONAR_THRESHOLD) ? SONAR_MAX : sonarR;
-    sonarL=(sonarL==SONAR_OUTRANGE || sonarL>SONAR_THRESHOLD) ? SONAR_MAX : sonarL;
-
-    //turn right
-    if(right_speed_<0){
-        for(double i=0;i>=-y;i=i-SONAR_VIEW/SONAR_RESOLUTION){
-            cloudR.push_back(pcl::PointXYZ(SONAR_MAX*factor, i, 0));
-            cloudL.push_back(pcl::PointXYZ(SONAR_MAX*factor, i, 0));
-        }
-    }
-    //turn left
-    if(left_speed_<0){
-        for(double i=0;i<=y;i=i+SONAR_VIEW/SONAR_RESOLUTION){
-            cloudL.push_back(pcl::PointXYZ(SONAR_MAX*factor, i, 0));
-            cloudR.push_back(pcl::PointXYZ(SONAR_MAX*factor, i, 0));
-        }
-    }
-
-    if(fabs(sonarR-sonarL)<0.1){
-        if (sonarR>sonarL)
-            cloudL.push_back(pcl::PointXYZ(sonarL, 0, 0));
-        else
-            cloudR.push_back(pcl::PointXYZ(sonarR, 0, 0));
-    }
-    else{
-        cloudR.push_back(pcl::PointXYZ(sonarR, 0, 0));
-        cloudL.push_back(pcl::PointXYZ(sonarL, 0, 0));
-    }
-}
-
-void motorSpdCallback(const gobot_msg_srv::MotorSpeedMsg::ConstPtr& speed){
-    left_speed_ = speed->directionL.compare("F") == 0 ? speed->velocityL : -speed->velocityL;
-    right_speed_ = speed->directionR.compare("F") == 0 ? speed->velocityR : -speed->velocityR;
-}
-
-void newSonarsInfo(const gobot_msg_srv::SonarMsg::ConstPtr& sonars){
+void sonarCallback(const gobot_msg_srv::SonarMsg::ConstPtr& sonars){
     if(use_pc){
-        pcl::PointCloud<pcl::PointXYZ> rearRightCloud,rearLeftCloud,frontRightCloud,frontLeftCloud;
-        
-        frontRightCloud.header.frame_id = front_right_frame;
-        frontLeftCloud.header.frame_id = front_left_frame;
-        rearRightCloud.header.frame_id = rear_right_frame;
-        rearLeftCloud.header.frame_id = rear_left_frame;
-        if((prev_sonars.distance1 != sonars->distance1) || (prev_sonars.distance2 != sonars->distance2)
-            || (prev_sonars.distance3 != sonars->distance3) || abs(prev_sonars.distance4 != sonars->distance4)){
-            sonarFrontToCloud(sonars->distance1/100.0,sonars->distance2/100.0,frontRightCloud,frontLeftCloud,0.12,1);
-            sonarBackToCloud(sonars->distance3/100.0,sonars->distance4/100.0,rearLeftCloud,rearRightCloud,0.11,1);
-        }
-        else{
-            frontRightCloud.push_back(pcl::PointXYZ(SONAR_MAX, 0, 0));
-            frontLeftCloud.push_back(pcl::PointXYZ(SONAR_MAX, 0, 0));
-            rearRightCloud.push_back(pcl::PointXYZ(SONAR_MAX, 0, 0));
-            rearLeftCloud.push_back(pcl::PointXYZ(SONAR_MAX, 0, 0));
-        }
+        //transform sonar raw data into sensor_msgs::range format
+        sensor_msgs::Range sonar_msg;
+        std_msgs::Header header;
+        header.stamp = ros::Time::now();
+        sonar_msg.field_of_view = SONAR_VIEW_ANGLE;
+        sonar_msg.min_range = SONAR_MIN;
+        sonar_msg.max_range = SONAR_MAX;
 
-        frontRightPublisher.publish(frontRightCloud);
-        frontLeftPublisher.publish(frontLeftCloud);
-        rearRightPublisher.publish(rearRightCloud);
-        rearLeftPublisher.publish(rearLeftCloud);
+        header.frame_id = front_right_frame;
+        sonar_msg.header = header;
+        sonar_msg.range = sonarRawToRange(sonars->distance1/100.0);
+        sonar_range1.publish(sonar_msg);
 
-        prev_sonars.distance1 = sonars->distance1;
-        prev_sonars.distance2 = sonars->distance2;
-        prev_sonars.distance3 = sonars->distance3;
-        prev_sonars.distance4 = sonars->distance4;
+        header.frame_id = front_left_frame;
+        sonar_msg.header = header;
+        sonar_msg.range = sonarRawToRange(sonars->distance2/100.0);
+        sonar_range2.publish(sonar_msg);
+
+        header.frame_id = rear_left_frame;
+        sonar_msg.header = header;
+        sonar_msg.range = sonarRawToRange(sonars->distance3/100.0);
+        sonar_range3.publish(sonar_msg);
+
+        header.frame_id = rear_right_frame;
+        sonar_msg.header = header;
+        sonar_msg.range = sonarRawToRange(sonars->distance4/100.0);
+        sonar_range4.publish(sonar_msg);
     }
 }
 
 void initParams(){
     ros::NodeHandle nh;
-    /// We get the frames on which the sonars are attached
     nh.param("rear_right_frame", rear_right_frame, std::string("/rear_right_sonar"));
     nh.param("rear_left_frame", rear_left_frame, std::string("/rear_left_sonar"));
     nh.param("front_right_frame", front_right_frame, std::string("/front_right_sonar"));
     nh.param("front_left_frame", front_left_frame, std::string("/front_left_sonar"));
-    nh.param("top_frame", top_frame, std::string("/top_sonar"));
-    nh.param("mid_frame", mid_frame, std::string("/mid_sonar"));
 
-    nh.getParam("SONAR_THRESHOLD", SONAR_THRESHOLD);
-    nh.getParam("SONAR_OUTRANGE", SONAR_OUTRANGE);
+    nh.getParam("SONAR_MIN", SONAR_MIN);
     nh.getParam("SONAR_MAX", SONAR_MAX);
-    nh.getParam("SONAR_VIEW", SONAR_VIEW);
-    nh.getParam("SONAR_RESOLUTION", SONAR_RESOLUTION);
+    nh.getParam("SONAR_VIEW_ANGLE", SONAR_VIEW_ANGLE);
+    nh.getParam("SONAR_OUTRANGE", SONAR_OUTRANGE);
     nh.getParam("USE_SONAR_PC", use_pc);
-    prev_sonars.distance1 = SONAR_MAX;
-    prev_sonars.distance2 = SONAR_MAX;
-    prev_sonars.distance3 = SONAR_MAX;
-    prev_sonars.distance4 = SONAR_MAX;
-    std::cout << "(SONAR2PC::initParams) SONAR THRESHOLD:"<<SONAR_THRESHOLD<<" SONAR OUTRANGE:"<<SONAR_OUTRANGE<<
-    " SONAR MAX:"<<SONAR_MAX<<" SONAR VIEW:"<<SONAR_VIEW<<" SONAR RESOLUTION:"<<SONAR_RESOLUTION<<std::endl;
+
+    std::cout << "(SONAR2PC::initParams) SONAR OUTRANGE:"<<SONAR_MIN<<" SONAR MAX:"<<SONAR_MAX<<" SONAR SONAR_VIEW_ANGLE:"<<SONAR_VIEW_ANGLE<<std::endl;
 }
 
 
@@ -170,18 +73,13 @@ int main(int argc, char* argv[]){
     
     initParams();
 
-    rearRightPublisher = nh.advertise<pcl::PointCloud<pcl::PointXYZ> >("/gobot_pc/rearRight_sonar_pc", 10);
-    rearLeftPublisher = nh.advertise<pcl::PointCloud<pcl::PointXYZ> >("/gobot_pc/rearLeft_sonar_pc", 10);
-    frontLeftPublisher = nh.advertise<pcl::PointCloud<pcl::PointXYZ> >("/gobot_pc/frontLeft_sonar_pc", 10);
-    frontRightPublisher = nh.advertise<pcl::PointCloud<pcl::PointXYZ> >("/gobot_pc/frontRight_sonar_pc", 10);
-    leftPublisher = nh.advertise<pcl::PointCloud<pcl::PointXYZ> >("/gobot_pc/left_sonar_pc", 10);
-    rightPublisher = nh.advertise<pcl::PointCloud<pcl::PointXYZ> >("/gobot_pc/right_sonar_pc", 10);
-    midPublisher = nh.advertise<pcl::PointCloud<pcl::PointXYZ> >("/gobot_pc/mid_sonar_pc", 10);
-    topPublisher = nh.advertise<pcl::PointCloud<pcl::PointXYZ> >("/gobot_pc/top_sonar_pc", 10);
+    sonar_range1 = nh.advertise<sensor_msgs::Range>("/gobot_pc/sonar_range1", 1);
+    sonar_range2 = nh.advertise<sensor_msgs::Range>("/gobot_pc/sonar_range2", 1);
+    sonar_range3 = nh.advertise<sensor_msgs::Range>("/gobot_pc/sonar_range3", 1);
+    sonar_range4 = nh.advertise<sensor_msgs::Range>("/gobot_pc/sonar_range4", 1);
 
     // get the sonars information
-    ros::Subscriber sonarSub = nh.subscribe("/gobot_base/sonar_topic", 1, newSonarsInfo);
-    ros::Subscriber motorSpdSubscriber = nh.subscribe("/gobot_motor/motor_speed", 1, motorSpdCallback);
+    ros::Subscriber sonarSub = nh.subscribe("/gobot_base/sonar_topic", 1, sonarCallback);
 
     ros::spin();
 

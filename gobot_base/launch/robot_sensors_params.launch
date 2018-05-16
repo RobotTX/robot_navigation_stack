@@ -35,11 +35,10 @@
     <param name="PC_FRAME"              type="string"       value="base_link" />
     <!-- SONAR CLOUD RELATED -->
     <param name="USE_SONAR_PC"          type="bool"         value="true" />
-    <param name="SONAR_THRESHOLD"       type="double"       value="0.6" />
     <param name="SONAR_OUTRANGE"        type="double"       value="0.0" />
-    <param name="SONAR_MAX"             type="double"       value="1.5" />
-    <param name="SONAR_VIEW"            type="double"       value="0.15" />
-    <param name="SONAR_RESOLUTION"      type="double"       value="50.0" />
+    <param name="SONAR_MIN"             type="double"       value="0.16" />
+    <param name="SONAR_MAX"             type="double"       value="1.2" />
+    <param name="SONAR_VIEW_ANGLE"      type="double"       value="0.25" />
     <!-- CLIFF CLOUD RELATED -->
     <param name="USE_CLIFF_PC"          type="bool"         value="true" />
     <param name="CLIFF_THRESHOLD"       type="double"       value="170.0" />

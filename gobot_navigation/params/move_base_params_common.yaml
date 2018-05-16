@@ -63,9 +63,15 @@ conservative_reset:
     #The radius away from the robot in meters outside which obstacles will be removed from the costmaps when they are reverted to the static map. 
     #Related to the local costmap rolling window size
     reset_distance: 2.5
+    layer_names:
+        - sonar_layer
+        - obstacle_layer
 
 aggressive_reset:
     reset_distance: 0.5
+    layer_names:
+        - sonar_layer
+        - obstacle_layer
 
 move_slow_and_clear:
     clearing_distance: 0.5

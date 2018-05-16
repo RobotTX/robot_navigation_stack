@@ -2,8 +2,6 @@
 #define COMMAND_SYSTEM
 
 #include <ros/ros.h>
-#include <gobot_msg_srv/Port.h>
-#include <gobot_msg_srv/PortLaser.h>
 #include <gobot_msg_srv/SendMessageToPc.h>
 #include <geometry_msgs/PoseStamped.h>
 #include <std_msgs/String.h>

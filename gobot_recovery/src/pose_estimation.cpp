@@ -163,6 +163,7 @@ bool initializePoseSrvCallback(std_srvs::Empty::Request &req, std_srvs::Empty::R
                 //Startup end
 
                 zero_vel_time = ros::Time::now();
+                update_count = UPDATE_NUM;
                 pose_timer.start();
             }
             running = false;

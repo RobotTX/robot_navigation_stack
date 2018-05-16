@@ -3,13 +3,15 @@ local_costmap:
     global_frame: odom
     robot_base_frame: base_link
     update_frequency: 10.0
-    publish_frequency: 0.5
+    publish_frequency: 0.0
     static_map: false
     rolling_window: true
     width: 4.0
     height: 4.0
     plugins:
+        # Track the obstacles detected by sonar sensors
+        - {name: sonar_layer, type: "range_sensor_layer::RangeSensorLayer"}
         # Track the obstacle from the sensors and add them to the costmap
-        - {name: obstacles, type: "costmap_2d::VoxelLayer"} # 3D costmap
+        - {name: obstacle_layer, type: "costmap_2d::VoxelLayer"} # 3D costmap
         # Add inflation around the obstacle
         - {name: inflation_layer, type: "costmap_2d::InflationLayer"}
