@@ -180,10 +180,14 @@ void session(boost::shared_ptr<tcp::socket> sock){
                     }
                     else if(mapType == "IMPT"){
                         SetRobot.reloadMap();
-                        gobot_msg_srv::GetStringArray get_home;
-                        ros::service::call("/gobot_status/get_home",get_home);
-                        SetRobot.setInitialpose(std::stod(get_home.response.data[0]),std::stod(get_home.response.data[1]),std::stod(get_home.response.data[2]),
-                                                std::stod(get_home.response.data[3]),std::stod(get_home.response.data[4]),std::stod(get_home.response.data[5]));
+                        gobot_msg_srv::IsCharging isCharging;
+                        if(ros::service::call("/gobot_status/charging_status", isCharging) && isCharging.response.isCharging){
+                            gobot_msg_srv::GetStringArray get_home;
+                            ros::service::call("/gobot_status/get_home",get_home);
+                            SetRobot.setInitialpose(std::stod(get_home.response.data[0]),std::stod(get_home.response.data[1]),
+                                                    std::stod(get_home.response.data[2]),std::stod(get_home.response.data[3]),
+                                                    std::stod(get_home.response.data[4]),std::stod(get_home.response.data[5]));
+                        }
                     }
                     else{
                         ROS_INFO("(MAP_READ) We relaunched gobot_navigation");
@@ -197,8 +201,9 @@ void session(boost::shared_ptr<tcp::socket> sock){
                         ros::service::waitForService("/gobot_startup/pose_ready", ros::Duration(10.0));
                         gobot_msg_srv::GetStringArray get_home;
                         ros::service::call("/gobot_status/get_home",get_home);
-                        SetRobot.setInitialpose(std::stod(get_home.response.data[0]),std::stod(get_home.response.data[1]),std::stod(get_home.response.data[2]),
-                                                std::stod(get_home.response.data[3]),std::stod(get_home.response.data[4]),std::stod(get_home.response.data[5]));
+                        SetRobot.setInitialpose(std::stod(get_home.response.data[0]),std::stod(get_home.response.data[1]),
+                                                std::stod(get_home.response.data[2]),std::stod(get_home.response.data[3]),
+                                                std::stod(get_home.response.data[4]),std::stod(get_home.response.data[5]));
                     }
                 } 
                 else {
