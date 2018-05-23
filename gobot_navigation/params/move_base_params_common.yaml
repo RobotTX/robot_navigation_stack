@@ -68,7 +68,7 @@ conservative_reset:
         - obstacle_layer
 
 aggressive_reset:
-    reset_distance: 0.5
+    reset_distance: 0.4
     layer_names:
         - sonar_layer
         - obstacle_layer
