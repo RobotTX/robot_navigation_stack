@@ -420,9 +420,15 @@ bool startScanAndAutoExplore(const std::string ip, const std::vector<std::string
         /// 0 : the robot doesn't go back to its starting point at the end of the scan
         /// 1 : robot goes back to its starting point which is its charging station
         /// 2 : robot goes back to its starting point which is not a charging station
-        hector_exploration_node::Exploration arg;
-        arg.request.backToStartWhenFinished = 2;
-        if(ros::service::call("/gobot_scan/startExploration", arg))
+        hector_exploration_node::Exploration exploration_srv;
+        gobot_msg_srv::IsCharging isCharging;
+        if(ros::service::call("/gobot_status/charging_status", isCharging) && isCharging.response.isCharging){
+            exploration_srv.request.backToStartWhenFinished = 1;
+        }
+        else{
+            exploration_srv.request.backToStartWhenFinished = 0;
+        }
+        if(ros::service::call("/gobot_scan/startExploration", exploration_srv))
             return sendMapAutomatically(ip);
         else
             ROS_ERROR("(COMMAND_SYSTEM) Could not call the service /gobot_scan/startExploration");
@@ -571,7 +577,7 @@ bool stopGoingToChargingStation(const std::vector<std::string> command){
     if(command.size() == 1) {
         GetRobot.getStatus(robot_status_);
         //docking
-        if(robot_status_==15){
+        if(GetRobot.getDock()==3){
             //ROS_INFO("(COMMAND_SYSTEM) Stop sending the robot home");
             return ros::service::call("/gobot_function/stopDocking", empty_srv);
         }

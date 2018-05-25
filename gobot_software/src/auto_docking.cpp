@@ -343,7 +343,6 @@ bool startDockingService(std_srvs::Empty::Request &req, std_srvs::Empty::Respons
 
 
 void resetDockingParams(){
-    SetRobot.setNavSpeed('F', 0, 'F', 0);
     bumperSub.shutdown();
     irSub.shutdown();
     batterySub.shutdown();
@@ -354,6 +353,7 @@ void resetDockingParams(){
     leftFlag = false;
     move_from_collision = true;
     lostIrSignal = false;
+    SetRobot.setNavSpeed('F', 0, 'F', 0);
 }
 
 void startDockingParams(){

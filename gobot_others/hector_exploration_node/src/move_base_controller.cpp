@@ -1,7 +1,7 @@
 #include <hector_exploration_node/move_base_controller.hpp>
 
 int noFrontiersLeft(0),no_frontier_threshold(10),back_to_start_when_finished(0);
-bool exploring(false);
+bool exploring(false), docking(false);
 ros::Time start_goal_time;
 geometry_msgs::Pose startingPose;
 std::string map_frame;
@@ -24,13 +24,13 @@ bool getRobotPos(void){
         listener.lookupTransform(map_frame, base_frame, ros::Time(0), transform);
 
         /// Construct the starting pose
+        startingPose.position.x = transform.getOrigin().getX();
+        startingPose.position.y = transform.getOrigin().getY();
+        startingPose.position.z = transform.getOrigin().getZ();
         startingPose.orientation.x = transform.getRotation().getX();
         startingPose.orientation.y = transform.getRotation().getY();
         startingPose.orientation.z = transform.getRotation().getZ();
         startingPose.orientation.w = transform.getRotation().getW();
-        startingPose.position.x = transform.getOrigin().getX();
-        startingPose.position.y = transform.getOrigin().getY();
-        startingPose.position.z = transform.getOrigin().getZ();
 
         ROS_INFO("(SCAN_EXPLORE) Robot position : (%f, %f, %f) - Robot orientation : (%f, %f, %f, %f)", 
         startingPose.position.x, startingPose.position.y,
@@ -48,30 +48,21 @@ bool getRobotPos(void){
 
 /// To make the robot go back to its starting position
 void backToStart(){
-    ROS_INFO("(SCAN_EXPLORE) Back to start launched...");
+    ROS_INFO("(SCAN_EXPLORE) Back to start state: %d",back_to_start_when_finished);
     move_base_msgs::MoveBaseGoal goal;
     switch(back_to_start_when_finished){
+        case 0:
+            ROS_INFO("(SCAN_EXPLORE) Complete scanning and stop robot");
+            break;
         case 1:
             SetRobot.setHome(std::to_string(startingPose.position.x),std::to_string(startingPose.position.y),std::to_string(startingPose.orientation.x),
             std::to_string(startingPose.orientation.y),std::to_string(startingPose.orientation.z),std::to_string(startingPose.orientation.w));
-        
-            ROS_INFO("(SCAN_EXPLORE) Complete exploration and Set robot home:%.2f,%.2f",startingPose.position.x,startingPose.position.y);
 
-            if(ros::service::call("/gobot_function/startDocking", empty_srv))
-                ROS_INFO("(SCAN_EXPLORE) Complete exploration and Sending robot home");
-            break;
-        case 2:
-            /// We go back to a normal point (not a charging station)
-            goal.target_pose.header.frame_id = "map";
-            goal.target_pose.header.stamp = ros::Time::now();
-            goal.target_pose.pose = startingPose;
-            
-            if(ac->isServerConnected()){
-                ac->sendGoalAndWait(goal, ros::Duration(0), ros::Duration(0));
-                ROS_INFO("(SCAN_EXPLORE) Start position goal achieved");
-            } 
-            else 
-                ROS_ERROR("(SCAN_EXPLORE) No action server to go back to start");
+            ROS_INFO("(SCAN_EXPLORE) Complete exploration and send robot home:%.2f,%.2f",startingPose.position.x,startingPose.position.y);
+
+            if(ros::service::call("/gobot_function/startDocking", empty_srv)){
+                docking = true;
+            }
             break;
         default:
             ROS_ERROR("(SCAN_EXPLORE) back_to_start_when_finished value not defined : %d", back_to_start_when_finished);
@@ -82,12 +73,10 @@ void backToStart(){
 /// Call a service to get the trajectory for exploration from the hector_exploration_planner and send the goal to move_base
 void doExploration(void){
     ROS_INFO("(SCAN_EXPLORE) Starting exploration...");
-
     ros::Rate loop_rate(1);
     while(ros::ok() && exploring){
         /// We want to refresh the goal after a certain time or when we reached/aborted it
         if(ros::Time::now()>start_goal_time || ac->getState()==actionlib::SimpleClientGoalState::SUCCEEDED || ac->getState()==actionlib::SimpleClientGoalState::ABORTED){
-            ROS_INFO("(SCAN_EXPLORE) %.2f seconds to complete exploring current goal...",(ros::Time::now()-start_goal_time).toSec());
             hector_nav_msgs::GetRobotTrajectory arg;
             /// Get an array of goals to follow
             if(ros::service::call("get_exploration_path", arg)){
@@ -114,11 +103,9 @@ void doExploration(void){
                         if(exploring){
                             SetRobot.setStatus(21,"COMPLETE_EXPLORING");
                             stopExploration();
-                        }
-
-                        /// if we want to go back to the starting position
-                        if(back_to_start_when_finished)
+                            /// if we want to go back to the starting position
                             backToStart();
+                        }
 
                         ROS_INFO("(SCAN_EXPLORE) Exploration finished");
                     }
@@ -153,6 +140,7 @@ bool startExplorationSrv(hector_exploration_node::Exploration::Request &req, hec
         //reset start_goal_time to start exploration fast
         start_goal_time = ros::Time::now();
         exploring = true;
+        docking = false;
         std::thread(doExploration).detach();
         return true;
 
@@ -166,6 +154,10 @@ bool startExplorationSrv(hector_exploration_node::Exploration::Request &req, hec
 
 /// Service to stop the exploration
 bool stopExplorationSrv(std_srvs::Empty::Request &req, std_srvs::Empty::Response &res){
+    //check whether robot is docking because it is part of auto-scanning process if robot starts scanning from docking station
+    if(docking){
+        ros::service::call("/gobot_function/stopDocking", empty_srv);
+    }
     if(exploring){
         SetRobot.setStatus(21,"STOP_EXPLORING");
         stopExploration();

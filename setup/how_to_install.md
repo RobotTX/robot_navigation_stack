@@ -165,4 +165,11 @@ sudo ./qt.run
 #roboware studio
 sudo dpkg -i robotware.deb
 
+#ROS on multiple machines (under same local network)
+* master setup 
+    `export ROS_MASTER_URI=http://master_ip:11311`
+    `export ROS_IP=master_ip`
+* slaves setup
+    `export ROS_MASTER_URI=http://master_ip:11311`
+    `export ROS_IP=slave_ip`
 ###################################################
