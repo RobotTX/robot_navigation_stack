@@ -1,6 +1,12 @@
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 Changelog for developed mobile robot
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+1.10.4 (2018-05-24)
+-------------------
+* revised robot behavior after completing auto docking
+  If robot start scanning from docking station, it will go auto docking; otherwise, it will stop where auto scanning ends
+
 1.10.3 (2018-05-23)
 -------------------
 * add support to ethernet connection for robot and UI communication. Now robot can directly connect to PC via ethernet

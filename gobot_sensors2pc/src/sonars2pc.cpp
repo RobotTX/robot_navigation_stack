@@ -2,7 +2,7 @@
 
 ros::Publisher sonar_range1, sonar_range2, sonar_range3, sonar_range4;
 std::string rear_right_frame, rear_left_frame, front_right_frame, front_left_frame;
-double SONAR_MIN=0, SONAR_MAX=1.5, SONAR_VIEW_ANGLE=0.2, SONAR_OUTRANGE=0.0;
+double SONAR_MIN=0, SONAR_MAX=1.5, SONAR_VIEW_ANGLE=0.2;
 bool use_pc = true;
 
 double sonarRawToRange(double sonar_raw){
@@ -54,10 +54,9 @@ void initParams(){
     nh.getParam("SONAR_MIN", SONAR_MIN);
     nh.getParam("SONAR_MAX", SONAR_MAX);
     nh.getParam("SONAR_VIEW_ANGLE", SONAR_VIEW_ANGLE);
-    nh.getParam("SONAR_OUTRANGE", SONAR_OUTRANGE);
     nh.getParam("USE_SONAR_PC", use_pc);
 
-    std::cout << "(SONAR2PC::initParams) SONAR OUTRANGE:"<<SONAR_MIN<<" SONAR MAX:"<<SONAR_MAX<<" SONAR SONAR_VIEW_ANGLE:"<<SONAR_VIEW_ANGLE<<std::endl;
+    std::cout << "(SONAR2PC::initParams) SONAR MIN:"<<SONAR_MIN<<" SONAR MAX:"<<SONAR_MAX<<" SONAR SONAR_VIEW_ANGLE:"<<SONAR_VIEW_ANGLE<<std::endl;
 }
 
 

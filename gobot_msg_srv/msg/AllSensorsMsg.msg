@@ -4,6 +4,10 @@ gobot_msg_srv/BumperMsg bumper
 
 std_msgs/Int8 button
 
+bool charging
+
+std_msgs/Int8 reset_button
+
 gobot_msg_srv/CliffMsg cliff
 
 gobot_msg_srv/GyroMsg gyro

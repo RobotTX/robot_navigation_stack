@@ -363,11 +363,17 @@ class SensorClass {
 
                     sensors_msg.button = button;
 
-                    /// Engage point (not in use) = D44 / B46
-                    int8_t engage_point = buff.at(46);
+                    /// Charging status = D44 / B46
+                    int8_t charging_status = buff.at(46);
 
+                    sensors_msg.charging = charging_status==1 ? true : false;
+                    
                     /// Reset wifi button (double click power button) = D45 / B47
                     int8_t resetwifi_button = buff.at(47);
+                    std_msgs::Int8 reset_button;
+                    reset_button.data = resetwifi_button;
+
+                    sensors_msg.reset_button = reset_button;
 
                     /// Gyro+Accelerametor = D46-D57 / B48-B59
                     gobot_msg_srv::GyroMsg gyro;
@@ -544,7 +550,8 @@ class SensorClass {
                 }
                 //Show battery status if no stage for certain period, show battery status
                 else if ((ros::Time::now()-last_led_time_)>ros::Duration(300.0)){
-                    displayBatteryLed();
+                    if(robot_status_!=5 && robot_status_!=15 && robot_status_!=25)
+                        displayBatteryLed();
                 }   
             }
             else{

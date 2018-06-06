@@ -1,6 +1,6 @@
 #include <gobot_sensors2pc/cliffs2pc.hpp>
 
-double CLIFF_THRESHOLD=170, CLIFF_OUTRANGE=0;
+double CLIFF_THRESHOLD=170;
 
 ros::Publisher cliffFRPublisher,cliffFLPublisher,cliffBRPublisher,cliffBLPublisher;
 int left_speed_ = 0, right_speed_ = 0;
@@ -9,7 +9,7 @@ std::string front_left_cliff_frame, front_right_cliff_frame, back_left_cliff_fra
 bool use_pc = true;
 
 bool cliffToCloud(double CliffData,pcl::PointCloud<pcl::PointXYZ> &cloudData){
-    if(CliffData>CLIFF_THRESHOLD || CliffData==CLIFF_OUTRANGE){   //CLIFF_OUTRANGE probably back wheel blocked cliff sensors
+    if(CliffData>CLIFF_THRESHOLD){  
         cloudData.push_back(pcl::PointXYZ(0, 0, 0));
         return true;
     }
@@ -59,9 +59,8 @@ void initParams(){
     nh.param("back_left_cliff", back_left_cliff_frame, std::string("/back_left_cliff"));
 
     nh.getParam("CLIFF_THRESHOLD", CLIFF_THRESHOLD);
-    nh.getParam("CLIFF_OUTRANGE", CLIFF_OUTRANGE);
     nh.getParam("USE_CLIFF_PC", use_pc);
-    std::cout << "(CLIFF2PC::initParams) CLIFF THRESHOLD:"<<CLIFF_THRESHOLD<<" CLIFF OUTRANGE:"<<CLIFF_OUTRANGE<<std::endl;
+    std::cout << "(CLIFF2PC::initParams) CLIFF THRESHOLD:"<<CLIFF_THRESHOLD<<std::endl;
 }
 
 int main(int argc, char* argv[]){

@@ -15,7 +15,7 @@ ros::Time collision_time, bumper_collision_time;
 gobot_msg_srv::BumperMsg bumpers_data;
 
 bool cliff_on=false,moved_from_front_cliff = true,moved_from_back_cliff=true;
-double CLIFF_THRESHOLD = 170.0, CLIFF_OUTRANGE = 255.0;
+double CLIFF_THRESHOLD = 170.0;
 
 bool bumper_on=false, collision = false, moved_from_collision = true;
 bool bumpers_broken[8]={false,false,false,false,false,false,false,false};
@@ -42,7 +42,7 @@ bool pauseRobotSrvCallback(std_srvs::Empty::Request &req, std_srvs::Empty::Respo
 }
 
 bool cliffOutRange(double CliffData){
-    if(CliffData>CLIFF_THRESHOLD || CliffData==CLIFF_OUTRANGE)
+    if(CliffData>CLIFF_THRESHOLD)
         return true;
     else
         return false;
@@ -358,7 +358,6 @@ void initParams(ros::NodeHandle &nh){
     nh.getParam("WHEEL_RADIUS", WHEEL_RADIUS);
     nh.getParam("TICKS_PER_ROT", TICKS_PER_ROT);
     nh.getParam("WAIT_COLLISION", WAIT_COLLISION);
-    nh.getParam("CLIFF_OUTRANGE", CLIFF_OUTRANGE);
     nh.getParam("CLIFF_THRESHOLD", CLIFF_THRESHOLD);
 
     FACTOP_VEL = TICKS_PER_ROT/(2*PI*WHEEL_RADIUS);

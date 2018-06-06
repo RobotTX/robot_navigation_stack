@@ -1,4 +1,2 @@
-GOBOT_TestNet
-gtdollar123
-
-
+GTDollar Robots
+gtd0011653750
