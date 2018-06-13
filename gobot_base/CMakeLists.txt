@@ -149,6 +149,10 @@ add_executable(sensor_node src/sensor_node.cpp)
 target_link_libraries(sensor_node ${catkin_LIBRARIES})
 add_dependencies(sensor_node ${${gobot_msg_srv}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
 
+add_executable(gyro_node src/gyro_node.cpp)
+target_link_libraries(gyro_node ${catkin_LIBRARIES})
+add_dependencies(gyro_node ${${gobot_msg_srv}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
+
 add_executable(twist src/twist.cpp)
 target_link_libraries(twist ${catkin_LIBRARIES})
 add_dependencies(twist ${${gobot_msg_srv}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})

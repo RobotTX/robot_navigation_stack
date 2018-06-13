@@ -1024,16 +1024,18 @@ namespace move_base {
           }
 
 
-          //limit linear acceleration
+          
+          /*replaced by velocity smoother//limit linear acceleration
           if((cmd_vel.linear.x-current_linear_spd_) > linear_spd_incre_ && cmd_vel.linear.x!=0){
             if(current_linear_spd_<0.0)
               cmd_vel.linear.x = 0.0;
             else
               cmd_vel.linear.x = current_linear_spd_+linear_spd_incre_;
           }
+          */
           current_linear_spd_ = cmd_vel.linear.x;
           
-          //limit angular acceleration
+          /*replaced by velocity smoother//limit angular acceleration
           if(cmd_vel.angular.z == 0.0){
             angular_spd_ = std::vector<double>(angular_spd_size_,0.0);
           }
@@ -1043,6 +1045,7 @@ namespace move_base {
             angular_spd_.push_back(cmd_vel.angular.z);
             cmd_vel.angular.z = std::accumulate(angular_spd_.begin(),angular_spd_.end(),0.0)/angular_spd_.size();
           }
+          */
           current_angular_spd_ = cmd_vel.angular.z;
           //tx//end
 

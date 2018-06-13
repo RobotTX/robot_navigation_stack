@@ -21,11 +21,12 @@ std::string getCurrentTime(){
 }
 
 void getButtonCallback(const std_msgs::Int8::ConstPtr& msg){
-  if(msg->data==0 && buttonOn){
+  // External button 0-No press; 1-press
+  if(msg->data==1 && buttonOn){
 		action_time = ros::Time::now();
 		buttonOn=false;
 	}
-	else if(msg->data==1 && !buttonOn){
+	else if(msg->data==0 && !buttonOn){
     GetRobot.getStatus(robot_status_);
 		buttonOn = true;
     double dt = (ros::Time::now() - action_time).toSec();

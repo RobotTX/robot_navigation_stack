@@ -154,12 +154,12 @@ void textToSpeech(std::string text, double delay){
 }
 
 void getButtonCallback(const std_msgs::Int8::ConstPtr& msg){
-	/// External button 1-No press; 0-press
-	if(msg->data==0 && waitingForAction && readAction){
+	/// External button 0-No press; 1-press
+	if(msg->data==1 && waitingForAction && readAction){
 		action_time = ros::Time::now();
 		readAction=false;
 	}
-	else if(msg->data==1 && !readAction){
+	else if(msg->data==0 && !readAction){
 		readAction = true;
 		double dt = (ros::Time::now()-action_time).toSec();
 		if(dt<5.0){

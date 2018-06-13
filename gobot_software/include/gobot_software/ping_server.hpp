@@ -183,7 +183,7 @@ class PingServerClass {
                     for(int i = 0; i < threads.size(); ++i)
                         threads.at(i).join();
                 }
-                ROS_INFO("(PING_SERVERS) Use %.2f seconds to ping %zu servers",(ros::Time::now()-cur_time).toSec(),threads.size());
+                //ROS_INFO("(PING_SERVERS) Use %.2f seconds to ping %zu servers",(ros::Time::now()-cur_time).toSec(),threads.size());
                 updateIP();
                 loop_rate.sleep();        
             }

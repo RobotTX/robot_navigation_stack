@@ -3,8 +3,8 @@
     <include file="$(find gobot_software)/launch/robot_infos_params.launch"/>
     <include file="$(find gobot_base)/launch/robot_sensors_params.launch"/>
     
-	<node pkg="gobot_software"      type="gobot_status"     name="software_gobot_status"    respawn="true" />
-    <node pkg="gobot_base"          type="sensors"          name="base_sensors"             required="true"/>
-    <node pkg="gobot_base"          type="wheels"           name="base_motors"              required="true"/>"/>
-    <node pkg="robot_hardware_test" type="hardware_check"   name="hardware_check"           output="screen" required="true"/>"/>
+	<node pkg="gobot_software"      type="gobot_status"         name="software_gobot_status"    respawn="true" />
+    <node pkg="gobot_base"          type="sensor_node"          name="base_sensors"             required="true"/>
+    <node pkg="gobot_base"          type="motor_node"           name="base_motors"              required="true"/>
+    <node pkg="robot_hardware_test" type="hardware_check"       name="hardware_check"           output="screen" required="true"/>
 </launch>

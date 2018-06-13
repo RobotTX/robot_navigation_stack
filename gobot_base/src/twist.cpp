@@ -399,7 +399,7 @@ int main(int argc, char **argv) {
     bumper_collision_pub = nh.advertise<gobot_msg_srv::BumperMsg>("/gobot_base/bumpers_collision", 1);
 
     ros::Subscriber joy_sub = nh.subscribe("joy", 1, joyCallback);
-    ros::Subscriber cmdVel_sub = nh.subscribe("cmd_vel", 1, newCmdVel);
+    ros::Subscriber cmdVel_sub = nh.subscribe("smooth_cmd_vel", 1, newCmdVel);
     ros::Subscriber navSpd_sub = nh.subscribe("/nav_speed", 1, navSpeedCallback);
     ros::Subscriber cliff_sub = nh.subscribe("/gobot_base/cliff_topic", 1, cliffCallback);
     ros::Subscriber lostRobot_sub = nh.subscribe("/gobot_recovery/lost_robot",1,lostCallback);

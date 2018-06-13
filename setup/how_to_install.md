@@ -35,17 +35,6 @@ export ROS_PACKAGE_PATH=$ROS_PACKAGE_PATH:~/catkin_ws/src
 #install Driver Packages
 sudo sh ~/catkin_ws/src/robot_navigation_stack/setup/install_script.sh
 #*
-sudo apt install ros-kinetic-navigation
-sudo apt install ros-kinetic-robot-pose-publisher
-sudo apt install ros-kinetic-teb-local-planner
-sudo apt install ros-kinetic-gmapping
-sudo apt install ros-kinetic-openslam-gmapping
-sudo apt install ros-kinetic-hector-nav-msgs
-sudo apt install ros-kinetic-urg-node
-sudo apt install ros-kinetic-hector-sensors-description (gazebo)
-sudo apt install ros-kinetic-hector_gazebo-plugins (gazebo)
-sudo apt-get install libusb-dev
-sudo apt-get install libspnav-dev
 ###################################################
 
 #use usb-connected joystick#

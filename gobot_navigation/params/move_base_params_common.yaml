@@ -42,9 +42,11 @@ oscillation_distance: 0.4 #0.5
 max_planning_retries: 2 #-1
 
 ### tx start ###
-linear_spd_incre: 0.03  #when linear velocity increases, its increasement should not exceed this value
+###replaced by velocity smoother###
+linear_spd_incre: 1.0 #0.03  #when linear velocity increases, its increasement should not exceed this value
+angular_spd_size: 4 #4 #rolling mean window size
+###replaced by velocity smoother###
 angular_spd_limit: 0.2 
-angular_spd_size: 4 #rolling mean window size
 costmap_threshold_value: 225
 obstacle_stop_dist: 2.0
 ### tx end ###

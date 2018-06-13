@@ -48,7 +48,7 @@ class SensorClass {
             ros::Rate r2(2);
             //checking procedure
             ros::Time initilize_time = ros::Time::now();
-            while(success<4 && ros::ok()){
+            while(success<3 && ros::ok()){
                 if((ros::Time::now()-initilize_time)>ros::Duration(10.0)){
                     //restart the system as unable to initilize MCU
                     std::string cmd;
@@ -359,7 +359,7 @@ class SensorClass {
                     /// External button 1-No press; 0-press = D43 / B45
                     int8_t external_button = buff.at(45);
                     std_msgs::Int8 button;
-                    button.data = !external_button;
+                    button.data = external_button;
 
                     sensors_msg.button = button;
 

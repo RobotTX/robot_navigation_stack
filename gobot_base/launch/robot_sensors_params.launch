@@ -15,6 +15,8 @@
     <param name="FACTOR_A"              type="double"       value="15.6" />
     <param name="FACTOR_B"              type="double"       value="-20.0" />
     <param name="TICKS_PER_ROT"         type="double"       value="982" />
+    <!-- GYRO RELATED -->
+    <param name="GYRO_PORT"            type="string"       value="/dev/GYRO" />    
     <!-- RPLIDAR RELATED -->
     <param name="serial_port"           type="string"       value="/dev/rplidar"/>  
     <param name="serial_baudrate"       type="int"          value="115200"/>

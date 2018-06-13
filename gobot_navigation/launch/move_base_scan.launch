@@ -11,7 +11,7 @@
     <node pkg="gobot_recovery" type="scan_startup" name="scan_startup" output="screen" />
     
     <node pkg="robot_pose_publisher" type="robot_pose_publisher" name ="robot_pose_publisher" required="true"/>
-
+    
     <!--move_base -->
     <node pkg="move_base" type="move_base" respawn="false" name="move_base" output="screen" required="true">
         <rosparam file="$(find gobot_navigation)/params/costmap_params_common.yaml"             command="load" ns="global_costmap" />

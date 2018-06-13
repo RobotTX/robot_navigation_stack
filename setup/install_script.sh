@@ -28,6 +28,10 @@ echo "[urg-node] installing..."
 echo "y" | sudo apt install ros-kinetic-urg-node
 echo "[urg-node] installed!"
 sleep 2s
+echo "[ecl] installing..."
+echo "y" | sudo apt install ros-kinetic-ecl
+echo "[ecl] installed!"
+sleep 2s
 echo "#################################"
 echo "All ROS packages are installed!"
 sleep 2s
