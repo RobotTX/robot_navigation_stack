@@ -380,7 +380,7 @@ int main(int argc, char **argv) {
     nh.getParam("UPDATE_DURATION", UPDATE_DURATION);
     nh.getParam("UPDATE_NUM", UPDATE_NUM);
     
-    vel_pub = nh.advertise<geometry_msgs::Twist>("/cmd_vel",5);
+    vel_pub = nh.advertise<geometry_msgs::Twist>("/teleop_cmd_vel",5);
     goal_pub = nh.advertise<geometry_msgs::PoseStamped>("/move_base_simple/goal",1);
     foundPose_pub = nh.advertise<std_msgs::Int8>("/gobot_recovery/find_initial_pose",1);
     lost_pub = nh.advertise<std_msgs::Int8>("/gobot_recovery/lost_robot",1);

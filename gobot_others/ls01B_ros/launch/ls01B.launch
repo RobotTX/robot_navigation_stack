@@ -1,0 +1,17 @@
+<launch>
+
+    <node pkg="tf" type="static_transform_publisher" name="base_link_to_laser" args="0.22 0.0 0.21 0 0 0 /base_link /base_laser 100" required="true"/>
+    
+    <node name="ls01B" pkg="ls01B" type="ls01B" output="screen">
+　　		<param name="scan_topic"    value="scan"/>         #设置激光数据topic名称
+　　	    <param name="laser_link"    value="base_laser"/>     #激光坐标
+　　	    <param name="serial_port"   value="/dev/ttyUSB0"/>  #雷达连接的串口
+         <param name="zero_as_max"   value="true"/>        # 设置为true探测不到区域会变成最大值
+         <param name="min_as_zero"  value="true"/>        # true：探测不到区域为0，false：探测不到区域为inf
+		 <param name="angle_disable_min" value="0"/>    # 角度制，从angle_disable_min到angle_disable_max之前的值为0
+		 <param name="angle_disable_max" value="1360"/>
+         <param name="inverted" value="false"/>           # 如果0度方向在串口线的方向上设置为true 
+    </node>
+
+<!--<node name="rviz" pkg="rviz" type="rviz" args="-d $(find ls01d)/launch/rviz.rviz"/>-->
+</launch>

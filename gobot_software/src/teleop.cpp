@@ -162,8 +162,8 @@ int main(int argc, char **argv){
     /// Subscribe to know when we disconnect from the server
     ros::Subscriber sub = n.subscribe("/gobot_software/server_disconnected", 1, serverDisconnected);
 
-    /// Advertise that we are going to publish to /cmd_vel & /move_base/cancel
-    teleop_pub = n.advertise<geometry_msgs::Twist>("/cmd_vel", 1);
+    /// Advertise that we are going to publish to /teleop_cmd_vel & /move_base/cancel
+    teleop_pub = n.advertise<geometry_msgs::Twist>("/teleop_cmd_vel", 1);
     stop_pub = n.advertise<actionlib_msgs::GoalID>("/move_base/cancel", 1);
 
     std::thread t(server);

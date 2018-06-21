@@ -24,7 +24,9 @@
 
 class GyroClass {
     public:
-        GyroClass(){ 
+        GyroClass():
+        error_count(0)
+        { 
             ros::NodeHandle nh;
             //load parameters
             nh.getParam("GYRO_PORT", gyro_device_);
@@ -79,14 +81,15 @@ class GyroClass {
             ros::Rate loop(10);
             //checking procedure
             while(ros::ok()){
+                serialConnection.flushInput();
                 std::vector<uint8_t> buff;
-                serialConnection.read(buff, 44);
+                serialConnection.read(buff, 45);
                 if(buff.size()==44){
                     int start_address = buff.at(1), end_address = buff.at(34);
                     if(start_address==81 && end_address==89){
                         sensor_msgs::Imu imu_data;
                         imu_data.header.stamp = ros::Time::now();
-                        imu_data.header.frame_id = "base_link";
+                        imu_data.header.frame_id = "imu";
 
                         int16_t temp;
 
@@ -139,14 +142,15 @@ class GyroClass {
                         */
                     }
                     else{
+                        error_count++;
                         findStartByte();
+                        std::cout<<"Data mis-ordered: "<<error_count<<std::endl;
                     }
                 }
                 else{
                     std::cout<<"Wrong data size received!"<<std::endl;
                 }
                 loop.sleep();
-                serialConnection.flushInput();
             }
         } 
 
@@ -160,7 +164,7 @@ class GyroClass {
                 int data = buff.at(0);
                 if(pre_data==85 && data==89){
                     count++;
-                    if(count == 3){
+                    if(count == 2){
                         serialConnection.read(buff, 9);
                         break;
                     }
@@ -169,6 +173,7 @@ class GyroClass {
             }
         }
 
+        int error_count;
         std::string gyro_device_;
         serial::Serial serialConnection;
 

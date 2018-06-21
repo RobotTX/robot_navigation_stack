@@ -214,34 +214,26 @@ class MotorClass {
                     odom_trans.transform.rotation = odom_quat;
                     //send the transform
                     odom_broadcaster_.sendTransform(odom_trans);
-
+                    
                     //next, we'll publish the odometry message over ROS
                     nav_msgs::Odometry odom;
                     odom.header.stamp = ros::Time::now();
                     odom.header.frame_id = "odom";
+                    odom.child_frame_id = "base_link";
                     //set the position
                     odom.pose.pose.position.x = odom_x_;
                     odom.pose.pose.position.y = odom_y_;
                     odom.pose.pose.position.z = 0.0;
                     odom.pose.pose.orientation = odom_quat;
-                    odom.pose.covariance[0] = 0.01;
-                    odom.pose.covariance[7] = 0.01;
-                    odom.pose.covariance[14] = 0.01;
-                    odom.pose.covariance[21] = 0.01;
-                    odom.pose.covariance[28] = 0.01;
-                    odom.pose.covariance[35] = 0.01;
-
                     //set the velocity
-                    odom.child_frame_id = "base_link";
                     odom.twist.twist.linear.x = vel;
                     odom.twist.twist.linear.y = 0.0;
                     odom.twist.twist.angular.z = vth;
-                    odom.twist.covariance[0] = 0.01;
-                    odom.twist.covariance[7] = 0.01;
-                    odom.twist.covariance[14] = 0.01;
-                    odom.twist.covariance[21] = 0.01;
-                    odom.twist.covariance[28] = 0.01;
-                    odom.twist.covariance[35] = 0.01;
+                    //set covariance
+                    for (int i=0;i<6;i++){
+                        odom.pose.covariance[i*7] = 0.01;
+                        odom.twist.covariance[i*7] = 0.01;
+                    }
                     //publish the message
                     odom_pub_.publish(odom);
 

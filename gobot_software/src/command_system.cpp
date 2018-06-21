@@ -1225,7 +1225,7 @@ int main(int argc, char* argv[]){
     ros::Subscriber sub = n.subscribe("/gobot_software/server_disconnected", 1, serverDisconnected);
 
     go_pub = n.advertise<geometry_msgs::PoseStamped>("/move_base_simple/goal", 1);
-    teleop_pub = n.advertise<geometry_msgs::Twist>("/cmd_vel", 1);
+    teleop_pub = n.advertise<geometry_msgs::Twist>("/teleop_cmd_vel", 1);
     
     ros::ServiceServer lowBatterySrv = n.advertiseService("/gobot_command/lowBattery", lowBatterySrvCallback);
     ros::ServiceServer goDockSrv = n.advertiseService("/gobot_command/goDock", goDockSrvCallback);

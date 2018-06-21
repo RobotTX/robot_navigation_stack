@@ -5,22 +5,36 @@
     <!--robot_base -->
     <!--laser to base tf frequency depends on the laser update rate-->
     <node pkg="tf" type="static_transform_publisher" name="base_link_to_laser" args="0.22 0.0 0.21 0 0 0 /base_link /base_laser 100" required="true"/>
-    
-    <!--
+    <!--imu to base tf frequency depends on the imu update rate-->
+    <node pkg="tf" type="static_transform_publisher" name="base_link_to_imu" args="0.0 0.0 0.20 0 0 0 /base_link /imu 100" required="true"/>
+
+    <node pkg="joy"         type="joy_node"     name="joy_node"     output="screen" respawn="true"/>
+    <node pkg="gobot_base"  type="sensor_node"  name="base_sensors" output="screen" required="true"/>
+    <node pkg="gobot_base"  type="motor_node"   name="base_motors"  output="screen" required="true"/>
+    <node pkg="gobot_base"  type="twist"        name="base_twist"   output="screen" respawn="true"/>
+
+    <!-- rp lidar -->
+    <node pkg="rplidar_ros" type="rplidarNode"  name="rplidarNode"  output="screen" respawn="true"/>
+
+    <!-- leishen lidar
+    <node pkg="ls01B"       type="ls01B"        name="ls01B"        output="screen" respawn="true"/>
+    -->
+
+    <!-- hokoyo lidar
     <node pkg="urg_node" type="urg_node" name="hokuyo" output="screen" respawn="true">
         <param name="frame_id" value="base_laser" />
         <param name="angle_min" value="-2.0" />
         <param name="angle_max" value="2.0" />
         <param name="latency" value="-0.1" /> 
     </node>
-    
-    <node pkg="gobot_base"  type="gyro_node"    name="base_gyro"    output="screen" respawn="true"/>
     -->
 
-    <node pkg="rplidar_ros" type="rplidarNode"  name="rplidarNode"  output="screen" respawn="true"/>
-    <node pkg="joy"         type="joy_node"     name="joy_node"     output="screen" respawn="true"/>
-    <node pkg="gobot_base"  type="sensor_node"  name="base_sensors" output="screen" required="true"/>
-    <node pkg="gobot_base"  type="motor_node"   name="base_motors"  output="screen" required="true"/>
-    <node pkg="gobot_base"  type="twist"        name="base_twist"   output="screen" respawn="true"/>
+    <!-- gyro && ekf 
+
+    <node pkg="gobot_base"  type="gyro_node"    name="base_gyro"    output="screen" respawn="true"/>
+    <node pkg="robot_localization" type="ekf_localization_node" name="ekf_se" clear_params="true" output="screen">
+        <rosparam command="load" file="$(find robot_localization)/params/ekf_params.yaml" />
+    </node>
+    -->
 
 </launch>

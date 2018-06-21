@@ -215,7 +215,7 @@ void newIrSignal(const gobot_msg_srv::IrMsg::ConstPtr& irSignal){
                 //ROS_WARN("(AUTO_DOCKING::newIrSignal) just lost the ir signal");
                 lostIrSignal = true;
                 lastIrSignalTime = ros::Time::now();
-                /// make the robot turn on itself
+                //make the robot turn on itself
                 if(leftFlag)
                     //if the left sensor is the last which saw the ir signal
                     SetRobot.setNavSpeed('B', base_spd, 'F', base_spd);

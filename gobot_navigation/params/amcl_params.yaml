@@ -18,7 +18,7 @@ kld_z: 0.99
 
 # Laser model parameters
 laser_min_range: -1.0
-laser_max_range: -1.0
+laser_max_range: 5.0
 #How many evenly-spaced beams in each scan to be used when updating the filter
 #360 degree/ 72 = 5 degree
 #240 degree/ 48 = 5 degree

@@ -11,9 +11,9 @@
   <arg name="robot_cmd_vel_topic"   default="robot_cmd_vel"/>
   <arg name="odom_topic"            default="odom"/>
 
-  <node pkg="nodelet" type="nodelet" name="$(arg nodelet_manager_name)" args="manager"/>
+  <node pkg="nodelet" type="nodelet" name="$(arg nodelet_manager_name)" args="manager" respawn="true"/>
   <node pkg="nodelet" type="nodelet" name="$(arg node_name)"
-        args="load yocs_velocity_smoother/VelocitySmootherNodelet $(arg nodelet_manager_name)">
+        args="load yocs_velocity_smoother/VelocitySmootherNodelet $(arg nodelet_manager_name)" respawn="true">
         
     <!-- parameters -->
     <rosparam file="$(arg config_file)" command="load"/>

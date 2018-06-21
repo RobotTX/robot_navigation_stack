@@ -323,6 +323,26 @@ void newCmdVel(const geometry_msgs::Twist::ConstPtr& twist){
     }
 }
 
+void teleopCmdVel(const geometry_msgs::Twist::ConstPtr& twist){
+    if(!bumper_on && !cliff_on){
+        if(joy_on){
+            int move_status = SetRobot.stopRobotMoving();
+            if(move_status != 0){
+                ROS_INFO("(TWIST) Stop robot motion, current status: %d.", move_status);
+                SetRobot.setLed(1,{"green","cyan","yellow"});
+            }
+        }
+        /// Received a new velocity cmd
+        else{ 
+            if(twist->linear.x == 0 && twist->angular.z == 0)
+                SetRobot.setMotorSpeed('F', 0, 'F', 0);
+            else
+                cmdToMotorSpeed(twist->linear.x, twist->angular.z);
+        }
+    }
+}
+
+
 void navSpeedCallback(const gobot_msg_srv::MotorSpeedMsg::ConstPtr& nav_speed){
     if(!joy_on && !bumper_on && !cliff_on){
         SetRobot.setMotorSpeed(nav_speed->directionR[0], nav_speed->velocityR, nav_speed->directionL[0], nav_speed->velocityL);
@@ -400,6 +420,7 @@ int main(int argc, char **argv) {
 
     ros::Subscriber joy_sub = nh.subscribe("joy", 1, joyCallback);
     ros::Subscriber cmdVel_sub = nh.subscribe("smooth_cmd_vel", 1, newCmdVel);
+    ros::Subscriber teleopVel_sub = nh.subscribe("/teleop_cmd_vel", 1, teleopCmdVel);
     ros::Subscriber navSpd_sub = nh.subscribe("/nav_speed", 1, navSpeedCallback);
     ros::Subscriber cliff_sub = nh.subscribe("/gobot_base/cliff_topic", 1, cliffCallback);
     ros::Subscriber lostRobot_sub = nh.subscribe("/gobot_recovery/lost_robot",1,lostCallback);

@@ -9,6 +9,6 @@ SUBSYSTEM=="tty", ACTION=="add", KERNEL=="ttyUSB*", ENV{ID_MODEL_ID}=="ea70", EN
 
 SUBSYSTEM=="tty", ACTION=="add", KERNEL=="ttyACM*", ATTRS{idVendor}=="15d1", ATTRS{idProduct}=="0000", MODE="0777"
 
-KERNEL=="ttyUSB*", ACTION=="add", ATTRS{idVendor}=="10c4", ATTRS{idProduct}=="ea60", MODE="0777", SYMLINK+="rplidar" 
+KERNEL=="ttyUSB*", ACTION=="add", ATTRS{idVendor}=="10c4", ATTRS{idProduct}=="ea60", MODE="0777", SYMLINK+="2Dlidar" 
 
 KERNEL=="ttyUSB*", ACTION=="add", ATTRS{idVendor}=="1a86", ATTRS{idProduct}=="7523", MODE="0777", SYMLINK+="GYRO" 

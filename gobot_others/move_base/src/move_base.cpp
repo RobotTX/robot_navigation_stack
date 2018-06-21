@@ -1017,13 +1017,8 @@ namespace move_base {
           //limit the backward velocity
           //make sure that we send the velocity command to the base
           if(cmd_vel.linear.x < 0.0){
-            if(fabs(cmd_vel.angular.z)>angular_spd_limit_ || cmd_vel.linear.x>-0.04)
-              cmd_vel.linear.x = 0.0;
-            else
-              cmd_vel.linear.x = -0.1;
+            cmd_vel.linear.x = fabs(cmd_vel.angular.z)>angular_spd_limit_ ? 0.0 : -0.1;
           }
-
-
           
           /*replaced by velocity smoother//limit linear acceleration
           if((cmd_vel.linear.x-current_linear_spd_) > linear_spd_incre_ && cmd_vel.linear.x!=0){

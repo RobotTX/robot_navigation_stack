@@ -24,13 +24,24 @@ echo "[hector-nav-msgs] installing..."
 echo "y" | sudo apt install ros-kinetic-hector-nav-msgs
 echo "[hector-nav-msgs] installed!"
 sleep 2s
+#hokuyo laser
 echo "[urg-node] installing..."
 echo "y" | sudo apt install ros-kinetic-urg-node
 echo "[urg-node] installed!"
 sleep 2s
+#yocs_velocity_smoother package
 echo "[ecl] installing..."
 echo "y" | sudo apt install ros-kinetic-ecl
 echo "[ecl] installed!"
+sleep 2s
+#robot_localization package
+echo "[geographic-msgs] installing..."
+echo "y" | sudo apt install ros-kinetic-geographic-msgs
+echo "[geographic-msgs] installed!"
+sleep 2s
+echo "[tf2-geometry-msgs] installing..."
+echo "y" | sudo apt install ros-kinetic-tf2-geometry-msgs
+echo "[tf2-geometry-msgs] installed!"
 sleep 2s
 echo "#################################"
 echo "All ROS packages are installed!"
