@@ -244,14 +244,13 @@ bool start_motor(std_srvs::Empty::Request &req,
 int main(int argc, char * argv[]) {
     ros::init(argc, argv, "rplidar_node");
 
-    std::string serial_port;
+    std::string serial_port, scan_topic;
     int serial_baudrate = 115200;
     std::string frame_id;
     bool inverted = false;
     bool angle_compensate = true;
 
     ros::NodeHandle nh;
-    ros::Publisher scan_pub = nh.advertise<sensor_msgs::LaserScan>("scan", 1000);
     ros::NodeHandle nh_private("~");
     /*
     nh_private.param<std::string>("serial_port", serial_port, "/dev/ttyUSB0"); 
@@ -262,13 +261,16 @@ int main(int argc, char * argv[]) {
     nh_private.param<float>("angle_min", angle_min_, -180.0);
     nh_private.param<float>("angle_max", angle_max_, 180.0);
     */
-    nh.getParam("serial_port", serial_port);
+    nh.getParam("rp_port", serial_port);
+    nh.getParam("rp_topic", scan_topic);
     nh.getParam("serial_baudrate", serial_baudrate);
-    nh.getParam("frame_id", frame_id);
+    nh.getParam("rp_frame", frame_id);
     nh.getParam("inverted", inverted);
     nh.getParam("angle_compensate", angle_compensate);
     nh.getParam("angle_min", angle_min_);
     nh.getParam("angle_max", angle_max_);
+
+    ros::Publisher scan_pub = nh.advertise<sensor_msgs::LaserScan>(scan_topic, 1000);
 
     ROS_INFO("RPLIDAR angle min:%f, max:%f",angle_min_,angle_max_);
 

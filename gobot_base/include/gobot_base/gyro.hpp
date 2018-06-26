@@ -78,77 +78,77 @@ class GyroClass {
         void gyroThread(){
             findStartByte();
 
-            ros::Rate loop(10);
+            ros::Rate loop(15);
             //checking procedure
             while(ros::ok()){
-                serialConnection.flushInput();
-                std::vector<uint8_t> buff;
-                serialConnection.read(buff, 45);
-                if(buff.size()==44){
-                    int start_address = buff.at(1), end_address = buff.at(34);
-                    if(start_address==81 && end_address==89){
-                        sensor_msgs::Imu imu_data;
-                        imu_data.header.stamp = ros::Time::now();
-                        imu_data.header.frame_id = "imu";
-
-                        int16_t temp;
-
-                        temp = (buff.at(3)<<8)|buff.at(2);
-                        imu_data.linear_acceleration.x=16*9.8*temp/32768.0;
-                        temp = (buff.at(5)<<8)|buff.at(4);
-                        imu_data.linear_acceleration.y=16*9.8*temp/32768.0;
-                        temp = (buff.at(7)<<8)|buff.at(6);
-                        imu_data.linear_acceleration.z=16*9.8*temp/32768.0;
-                        imu_data.linear_acceleration_covariance = {0.1, 0.0, 0.0,
-                                                                0.0, 0.1, 0.0,
-                                                                0.0, 0.0, 0.1};
-                        temp = (buff.at(9)<<8)|buff.at(8);
-                        double temperature = temp/100.0;
-
-                        temp = (buff.at(14)<<8)|buff.at(13);
-                        imu_data.angular_velocity.x = (PI_*2000*temp/32768.0)/180.0;
-                        temp = (buff.at(16)<<8)|buff.at(15);
-                        imu_data.angular_velocity.y = (PI_*2000*temp/32768.0)/180.0;
-                        temp = (buff.at(18)<<8)|buff.at(17);
-                        imu_data.angular_velocity.z = (PI_*2000*temp/32768.0)/180.0;
-                        imu_data.angular_velocity_covariance = {0.05, 0, 0,
-                                                                0, 0.05, 0,
-                                                                0, 0, 0.05};
-                        int32_t height = (buff.at(31)<<24)|(buff.at(30)<<16)|(buff.at(29)<<8)|buff.at(28);
-                        std_msgs::Float32 height_data;
-                        height_data.data = height/100.0;
-
-                        temp = (buff.at(36)<<8)|buff.at(35);
-                        imu_data.orientation.w = temp/32768.0;
-                        temp = (buff.at(38)<<8)|buff.at(37);
-                        imu_data.orientation.x = temp/32768.0;
-                        temp = (buff.at(40)<<8)|buff.at(39);
-                        imu_data.orientation.y = temp/32768.0;
-                        temp = (buff.at(42)<<8)|buff.at(41);
-                        imu_data.orientation.z = temp/32768.0;
-                        imu_data.orientation_covariance = {0.01, 0, 0,
-                                                           0, 0.01, 0,
-                                                           0, 0, 0.01};
-                        double yaw = tf::getYaw(tf::Quaternion(imu_data.orientation.x,imu_data.orientation.y,imu_data.orientation.z,imu_data.orientation.w));
-                        gyro_pub_.publish(imu_data);
-                        height_pub_.publish(height_data);
-
-                        /*
-                        std::cout<<"Data length: "<<buff.size()<<". Start address: " <<start_address<<". End address: " <<end_address<<std::endl;
-                        std::cout<<"Temperature: "<<temperature<<" *C"<<std::endl;
-                        std::cout<<"Height: "<<height_data.data<<" m"<<std::endl;
-                        std::cout << "Yaw: "<<yaw*180/PI_<<" degrees"<<std::endl;
-                        std::cout<<std::endl;
-                        */
-                    }
-                    else{
-                        error_count++;
-                        findStartByte();
-                        std::cout<<"Data mis-ordered: "<<error_count<<std::endl;
+                std::vector<uint8_t> buff, buff_compensate;
+                serialConnection.read(buff, 44);
+                if(buff.size()<44){
+                    serialConnection.read(buff_compensate, 44-buff.size());
+                    for(int i=0;i<buff_compensate.size();i++){
+                        buff.push_back(buff_compensate[i]);
                     }
                 }
+                int start_address = buff.at(1), end_address = buff.at(34);
+                if(start_address==81 && end_address==89){
+                    sensor_msgs::Imu imu_data;
+                    imu_data.header.stamp = ros::Time::now();
+                    imu_data.header.frame_id = "imu";
+
+                    int16_t temp;
+
+                    temp = (buff.at(3)<<8)|buff.at(2);
+                    imu_data.linear_acceleration.x=16*9.8*temp/32768.0;
+                    temp = (buff.at(5)<<8)|buff.at(4);
+                    imu_data.linear_acceleration.y=16*9.8*temp/32768.0;
+                    temp = (buff.at(7)<<8)|buff.at(6);
+                    imu_data.linear_acceleration.z=16*9.8*temp/32768.0;
+                    imu_data.linear_acceleration_covariance = {0.1, 0.0, 0.0,
+                                                            0.0, 0.1, 0.0,
+                                                            0.0, 0.0, 0.1};
+                    temp = (buff.at(9)<<8)|buff.at(8);
+                    double temperature = temp/100.0;
+
+                    temp = (buff.at(14)<<8)|buff.at(13);
+                    imu_data.angular_velocity.x = (PI_*2000*temp/32768.0)/180.0;
+                    temp = (buff.at(16)<<8)|buff.at(15);
+                    imu_data.angular_velocity.y = (PI_*2000*temp/32768.0)/180.0;
+                    temp = (buff.at(18)<<8)|buff.at(17);
+                    imu_data.angular_velocity.z = (PI_*2000*temp/32768.0)/180.0;
+                    imu_data.angular_velocity_covariance = {0.05, 0, 0,
+                                                            0, 0.05, 0,
+                                                            0, 0, 0.05};
+                    int32_t height = (buff.at(31)<<24)|(buff.at(30)<<16)|(buff.at(29)<<8)|buff.at(28);
+                    std_msgs::Float32 height_data;
+                    height_data.data = height/100.0;
+
+                    temp = (buff.at(36)<<8)|buff.at(35);
+                    imu_data.orientation.w = temp/32768.0;
+                    temp = (buff.at(38)<<8)|buff.at(37);
+                    imu_data.orientation.x = temp/32768.0;
+                    temp = (buff.at(40)<<8)|buff.at(39);
+                    imu_data.orientation.y = temp/32768.0;
+                    temp = (buff.at(42)<<8)|buff.at(41);
+                    imu_data.orientation.z = temp/32768.0;
+                    imu_data.orientation_covariance = {0.01, 0, 0,
+                                                        0, 0.01, 0,
+                                                        0, 0, 0.01};
+                    double yaw = tf::getYaw(tf::Quaternion(imu_data.orientation.x,imu_data.orientation.y,imu_data.orientation.z,imu_data.orientation.w));
+                    gyro_pub_.publish(imu_data);
+                    height_pub_.publish(height_data);
+
+                    /*
+                    std::cout<<"Data length: "<<buff.size()<<". Start address: " <<start_address<<". End address: " <<end_address<<std::endl;
+                    std::cout<<"Temperature: "<<temperature<<" *C"<<std::endl;
+                    std::cout<<"Height: "<<height_data.data<<" m"<<std::endl;
+                    std::cout << "Yaw: "<<yaw*180/PI_<<" degrees"<<std::endl;
+                    std::cout<<std::endl;
+                    */
+                }
                 else{
-                    std::cout<<"Wrong data size received!"<<std::endl;
+                    error_count++;
+                    findStartByte();
+                    std::cout<<"Data mis-ordered: "<<error_count<<std::endl;
                 }
                 loop.sleep();
             }

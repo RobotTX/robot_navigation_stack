@@ -164,8 +164,9 @@ int main(int argv, char **argc)
 	ros::param::get("~min_as_zero", min_as_zero);
 	ros::param::get("~inverted", inverted);
 	*/
-	n.getParam("frame_id", laser_link);
-	n.getParam("serial_port", port);
+	n.getParam("ls_frame", laser_link);
+	n.getParam("ls_topic", scan_topic);
+	n.getParam("ls_port", port);
 	n.getParam("angle_disable_min", angle_disable_min);
 	n.getParam("angle_disable_max", angle_disable_max);
 	n.getParam("zero_as_max", zero_as_max);
