@@ -20,6 +20,8 @@ typedef actionlib::SimpleActionClient<move_base_msgs::MoveBaseAction> MoveBaseCl
 
 std::string getCurrentTime();
 
+std::string getUpdateStatus();
+
 void updateStatus(std::string &str);
 
 void robotResponse(int status, std::string text);
@@ -48,6 +50,8 @@ bool getPathSrvCallback(gobot_msg_srv::GetStringArray::Request &req, gobot_msg_s
 
 bool setLoopSrvCallback(gobot_msg_srv::SetInt::Request &req, gobot_msg_srv::SetInt::Response &res);
 bool getLoopSrvCallback(gobot_msg_srv::GetInt::Request &req, gobot_msg_srv::GetInt::Response &res);
+
+bool setModeSrvCallback(gobot_msg_srv::SetInt::Request &req, gobot_msg_srv::SetInt::Response &res);
 
 bool setStageSrvCallback(gobot_msg_srv::SetInt::Request &req, gobot_msg_srv::SetInt::Response &res);
 bool getStageSrvCallback(gobot_msg_srv::GetInt::Request &req, gobot_msg_srv::GetInt::Response &res);

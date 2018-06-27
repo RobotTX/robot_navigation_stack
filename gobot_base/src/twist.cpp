@@ -210,8 +210,10 @@ void joyConnectionCallback(const std_msgs::Int8::ConstPtr& data){
     if(data->data == 0){
         if(joy_on){
             joy_on = false;
+            SetRobot.setMode(0);
             if(!bumper_on && !cliff_on)
                 SetRobot.setMotorSpeed('F', 0, 'F', 0);
+            
         }
     }
     SetRobot.setSound(2,1);
@@ -225,12 +227,14 @@ void joyCallback(const sensor_msgs::Joy::ConstPtr& joy){
         SetRobot.setMotorSpeed('F', 0, 'F', 0);
         SetRobot.setLed(1,{"green","cyan","yellow"});
         SetRobot.setSound(1,2);
+        SetRobot.setMode(1);
     }
     //back -> disable manual control
     if(joy->buttons[6]){
         joy_on = false;
         SetRobot.setMotorSpeed('F', 0, 'F', 0);
         SetRobot.setBatteryLed();
+        SetRobot.setMode(0);
     }
     if(joy_on){
         //adjust linear speed

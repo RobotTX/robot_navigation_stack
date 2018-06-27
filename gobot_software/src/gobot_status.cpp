@@ -79,6 +79,8 @@ bool collision = false;
 
 robot_class::SetRobot SetRobot;
 
+//0-auto, 1-manual
+int robot_mode_ = 0;
 
 std::string getCurrentTime(){
   std::time_t now = std::time(0);
@@ -87,12 +89,17 @@ std::string getCurrentTime(){
   return transTime.str();
 }
 
-//updated information for ping_servers
-void updateStatus(){
+//get updated information
+std::string getUpdateStatus(){
     bool muteFlag = (mute_) ? 1 : 0;
+    return hostname_ + sep + std::to_string(stage_) + sep + std::to_string(battery_percent_) + 
+               sep + std::to_string(muteFlag) + sep + std::to_string(dock_status_) + sep + std::to_string(robot_mode_);
+} 
+
+//send updated information for ping_servers
+void updateStatus(){
     std_msgs::String update_status;
-    update_status.data = hostname_ + sep + std::to_string(stage_) + sep + std::to_string(battery_percent_) + 
-                                    sep + std::to_string(muteFlag) + sep + std::to_string(dock_status_);
+    update_status.data = getUpdateStatus();
     update_info_pub.publish(update_status);
 }
 
@@ -147,9 +154,7 @@ bool initializeHomeSrcCallback(std_srvs::Empty::Request &req, std_srvs::Empty::R
 
 
 bool getUpdateStatusSrvCallback(gobot_msg_srv::GetString::Request &req, gobot_msg_srv::GetString::Response &res){
-    bool muteFlag = (mute_) ? 1 : 0;
-    res.data = hostname_ + sep + std::to_string(stage_) + sep + std::to_string(battery_percent_) + 
-               sep + std::to_string(muteFlag) + sep + std::to_string(dock_status_);
+    res.data = getUpdateStatus();
     return true;
 }
 
@@ -409,6 +414,14 @@ bool getLoopSrvCallback(gobot_msg_srv::GetInt::Request &req, gobot_msg_srv::GetI
     return true;
 }
 
+
+bool setModeSrvCallback(gobot_msg_srv::SetInt::Request &req, gobot_msg_srv::SetInt::Response &res){
+    robot_mode_ = req.data;
+
+    updateStatus();
+
+    return true;
+}
 
 bool setStageSrvCallback(gobot_msg_srv::SetInt::Request &req, gobot_msg_srv::SetInt::Response &res){
     stageMutex.lock();
@@ -708,6 +721,8 @@ int main(int argc, char* argv[]){
 
     ros::ServiceServer setStageSrv = n.advertiseService("/gobot_status/set_stage", setStageSrvCallback);
     ros::ServiceServer getStageSrv = n.advertiseService("/gobot_status/get_stage", getStageSrvCallback);
+
+    ros::ServiceServer setModeSrv = n.advertiseService("/gobot_status/set_mode", setModeSrvCallback);
 
     ros::ServiceServer setPathSrv = n.advertiseService("/gobot_status/set_path", setPathSrvCallback);
     ros::ServiceServer getPathSrv = n.advertiseService("/gobot_status/get_path", getPathSrvCallback);

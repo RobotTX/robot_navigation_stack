@@ -28,13 +28,15 @@ namespace robot_class {
             
             bool setDock(int status);
 
-            bool setStage(int stage);
+            bool setMode(const int mode);
 
-            bool setLoop(int loop);
+            bool setStage(const int stage);
+
+            bool setLoop(const int loop);
 
             bool setWifi(std::string wifi_name,std::string wifi_password);
 
-            bool setMute(int mute);
+            bool setMute(const int mute);
 
             bool setName(std::string robot_name);
 

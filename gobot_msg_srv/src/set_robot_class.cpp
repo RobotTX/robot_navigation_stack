@@ -56,6 +56,12 @@ namespace robot_class {
         return ros::service::call("/gobot_status/set_dock_status",set_dock_status_);
     }
 
+    bool SetRobot::setMode(const int mode){
+        gobot_msg_srv::SetInt set_mode;
+        set_mode.request.data = mode;
+        return ros::service::call("/gobot_status/set_mode", set_mode);
+    }
+
     bool SetRobot::setStage(const int stage){
         set_stage_.request.data = stage;
         return ros::service::call("/gobot_status/set_stage", set_stage_);
