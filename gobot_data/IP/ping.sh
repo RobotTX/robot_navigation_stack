@@ -3,7 +3,7 @@ isAlive="$1"
 wififile="$2"
 defalutwifi="Robot_Hotspot_YYMMDD"
 #check WIFI connection
-wifi=$(nmcli device status | grep wifi |cut -d ' ' -f1)
+wifi=$(nmcli device status | grep wifi | cut -d ' ' -f1 | head -n 1)
 n=1
 #read wifi infomation from local file
 #nmcli device wifi list | grep -w "$wifiname"
@@ -25,10 +25,10 @@ then
     then
         if [ -z "$(nmcli connection show | grep -w Hotspot)" ]
         then
-            nmcli d wifi hotspot ssid "$defalutwifi" password "robotics"
+            nmcli d wifi hotspot ssid "$defalutwifi" password "robotics" ifname $wifi
             echo "(PING WIFI) Robot build its own wifi named #$defalutwifi#"
         else
-            nmcli connection up "Hotspot"
+            nmcli connection up "Hotspot" ifname $wifi
             echo "(PING WIFI) Robot connecting to its own wifi named #$defalutwifi#"
         fi
     else
@@ -49,10 +49,10 @@ else
             fi
             if [ -z "$(nmcli connection show | grep -w "$wifiname")" ]  #if not in the connection list, build new connection
             then
-                    nmcli d wifi connect "$wifiname" password "$wifipassword"
+                    nmcli d wifi connect "$wifiname" password "$wifipassword" ifname $wifi
                     echo "(PING WIFI) Robot build connection to assigned wifi named #$wifiname#"
             else
-                nmcli connection up "$wifiname"
+                nmcli connection up "$wifiname" ifname $wifi
                 echo "(PING WIFI) Robot connecting to assigned wifi named #$wifiname#"
             fi
         else

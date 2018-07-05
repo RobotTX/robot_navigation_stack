@@ -2,6 +2,12 @@
 Changelog for developed mobile robot
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+
+1.1.2 (2018-06-24)
+-------------------
+* add robot mode (auto/manual) into the feedback message to UI side
+
+
 1.1.1 (2018-06-21)
 -------------------
 * add LeiShen ls01B lidar driver, now support this 28m range 2D lidar

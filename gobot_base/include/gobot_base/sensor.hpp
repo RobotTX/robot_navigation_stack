@@ -85,6 +85,7 @@ class SensorClass {
             bumper_pub_ = nh.advertise<gobot_msg_srv::BumperMsg>("/gobot_base/bumpers_raw_topic", 1);
             proximity_pub_ = nh.advertise<gobot_msg_srv::ProximityMsg>("/gobot_base/proximity_topic", 1);
 
+            MagnetSrv = nh.advertiseService("/gobot_base/set_magnet", &SensorClass::MagnetSrvCallback, this);
             useSonarSrv = nh.advertiseService("/gobot_base/use_sonar", &SensorClass::useSonarSrvCallback, this);
             useCliffSrv = nh.advertiseService("/gobot_base/use_cliff", &SensorClass::useCliffSrvCallback, this);
             useBumperSrv = nh.advertiseService("/gobot_base/use_bumper", &SensorClass::useBumperSrvCallback, this);
@@ -474,6 +475,17 @@ class SensorClass {
             }
         }
 
+        bool MagnetSrvCallback(gobot_msg_srv::SetBool::Request &req, gobot_msg_srv::SetBool::Response &res){
+            //Electro magnet on
+            if(req.data)
+                std::vector<uint8_t> buff = writeAndRead(std::vector<uint8_t>({0x20,0x01,0x01,0x01,0x00,0x00,0x00,0x00,0x00,0x00,0x1B}),5);
+            //Electro magenet off
+            else
+                std::vector<uint8_t> buff = writeAndRead(std::vector<uint8_t>({0x20,0x01,0x01,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x1B}),5);
+
+            return true;
+        }
+        
         bool setChargingSrvCallback(gobot_msg_srv::SetBool::Request &req, gobot_msg_srv::SetBool::Response &res){
             charging_flag_ = req.data;
             return true;
@@ -694,7 +706,7 @@ class SensorClass {
         ros::Time last_led_time_, reset_wifi_time_;
         ros::Timer ledTimer_;
         ros::Publisher sensors_pub_, bumper_pub_, ir_pub_, proximity_pub_, sonar_pub_, weight_pub_, battery_pub_, cliff_pub_, button_pub_, gyro_pub_, temperature_pub_;
-        ros::ServiceServer shutdownSrv, displayDataSrv, sensorsReadySrv, setChargingSrv, useBumperSrv, useSonarSrv, useCliffSrv;
+        ros::ServiceServer shutdownSrv, displayDataSrv, sensorsReadySrv, setChargingSrv, useBumperSrv, useSonarSrv, useCliffSrv, MagnetSrv;
         ros::Subscriber led_sub_, sound_sub_, mute_sub_, status_sub_;
 
         boost::thread *sensor_thread_;

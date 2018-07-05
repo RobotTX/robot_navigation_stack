@@ -31,12 +31,12 @@ odom_model_type: diff-corrected
 #From online, depends on the odom model
 #r-r,r-t,t-t,t-r
 #odom_alpha5 only used if model is "omni"
-odom_alpha1: 0.05
-odom_alpha2: 0.05
-odom_alpha3: 0.025
-odom_alpha4: 0.05
+odom_alpha1: 0.03
+odom_alpha2: 0.03
+odom_alpha3: 0.015
+odom_alpha4: 0.03
 odom_alpha5: 0.001
 odom_frame_id: odom
 base_frame_id: base_link
-global_frame_id: map
+global_frame_id: /map
 tf_broadcast: true

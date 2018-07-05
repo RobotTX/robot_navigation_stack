@@ -43,6 +43,11 @@ target_link_libraries(auto_docking ${catkin_LIBRARIES} ${gobot_software} ${Boost
 add_dependencies(auto_docking ${${gobot_msg_srv}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
 
 
+add_executable(qr_detection src/qr_detection.cpp)
+target_link_libraries(qr_detection ${catkin_LIBRARIES} ${gobot_software} ${Boost_FILESYSTEM_LIBRARY} ${Boost_SYSTEM_LIBRARY})
+add_dependencies(qr_detection ${${gobot_msg_srv}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
+
+
 add_executable(gobot_status src/gobot_status.cpp)
 target_link_libraries(gobot_status ${catkin_LIBRARIES} ${gobot_software} ${Boost_FILESYSTEM_LIBRARY} ${Boost_SYSTEM_LIBRARY} )
 add_dependencies(gobot_status ${${gobot_msg_srv}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})

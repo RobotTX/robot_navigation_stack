@@ -191,7 +191,7 @@ bool setWifiSrvCallback(gobot_msg_srv::SetStringArray::Request &req, gobot_msg_s
             ofsWifi << wifi_.at(i) << "\n";
         }
         ofsWifi.close();
-        ROS_INFO("(STATUS_SYSTEM) Set Gobot wifi: name:%s, password:%s",wifi_.at(0).c_str(),wifi_.at(1).c_str());
+        ROS_INFO("(STATUS_SYSTEM) Set robot wifi: name:%s, password:%s",wifi_.at(0).c_str(),wifi_.at(1).c_str());
     }
     wifiMutex.unlock();
 
@@ -223,7 +223,7 @@ bool setHomeSrvCallback(gobot_msg_srv::SetStringArray::Request &req, gobot_msg_s
     if(ofsHome){
         ofsHome << home_.at(0) << " " << home_.at(1) << " " << home_.at(2) << " " << home_.at(3) << " " << home_.at(4) << " " << home_.at(5);
         ofsHome.close();
-        ROS_INFO("(STATUS_SYSTEM) set Gobot home: [%f, %f] [%f, %f, %f, %f]", std::stod(home_.at(0)),std::stod(home_.at(1)),std::stod(home_.at(2)),std::stod(home_.at(3)),std::stod(home_.at(4)),std::stod(home_.at(5)));
+        ROS_INFO("(STATUS_SYSTEM) Set robot home: [%f, %f] [%f, %f, %f, %f]", std::stod(home_.at(0)),std::stod(home_.at(1)),std::stod(home_.at(2)),std::stod(home_.at(3)),std::stod(home_.at(4)),std::stod(home_.at(5)));
     }
 
     return true;
@@ -247,7 +247,7 @@ bool setBatterySrvCallback(gobot_msg_srv::SetString::Request &req, gobot_msg_srv
     if(ofsBattery){
         ofsBattery << low_battery_;
         ofsBattery.close();
-        ROS_INFO("(STATUS_SYSTEM) set Gobot battery level: %.2f", std::stod(low_battery_));
+        ROS_INFO("(STATUS_SYSTEM) Set robot battery level: %.2f", std::stod(low_battery_));
     }
 
     return true;
@@ -275,7 +275,7 @@ bool setSpeedSrvCallback(gobot_msg_srv::SetStringArray::Request &req, gobot_msg_
     if(ofSpeed){
         ofSpeed << linear_spd_ << " " << angular_spd_;
         ofSpeed.close();
-        ROS_INFO("(STATUS_SYSTEM) set Gobot speed: %.2f, %.2f", std::stod(linear_spd_),std::stod(angular_spd_));
+        ROS_INFO("(STATUS_SYSTEM) Set robot speed: %.2f, %.2f", std::stod(linear_spd_),std::stod(angular_spd_));
     }
 
     dynamic_reconfigure::Reconfigure config;
@@ -311,7 +311,7 @@ bool setNameSrvCallback(gobot_msg_srv::SetString::Request &req, gobot_msg_srv::S
     if(ofsName){
         ofsName << hostname_;
         ofsName.close();
-        ROS_INFO("(STATUS_SYSTEM) Set Gobot name: %s",hostname_.c_str());
+        ROS_INFO("(STATUS_SYSTEM) Set robot name: %s",hostname_.c_str());
     }
 
     updateStatus();
@@ -343,7 +343,7 @@ bool setPathSrvCallback(gobot_msg_srv::SetStringArray::Request &req, gobot_msg_s
             ofsPath << path_.at(i) << "\n";
             path_info = path_info+path_.at(i)+", ";
         }
-        ROS_INFO("(STATUS_SYSTEM) Set Gobot path: %s",path_info.c_str());
+        ROS_INFO("(STATUS_SYSTEM) Set robot path: %s",path_info.c_str());
         ofsPath.close();
     }
     
@@ -377,7 +377,7 @@ bool setMuteSrvCallback(gobot_msg_srv::SetInt::Request &req, gobot_msg_srv::SetI
     if(ofsMute){
         ofsMute << mute_;
         ofsMute.close();
-    ROS_INFO("(STATUS_SYSTEM) Set Gobot mute: %d",mute_);
+    ROS_INFO("(STATUS_SYSTEM) Set robot mute: %d",mute_);
     }
     updateStatus();
     
@@ -401,7 +401,7 @@ bool setLoopSrvCallback(gobot_msg_srv::SetInt::Request &req, gobot_msg_srv::SetI
     if(ofsLoop){
         ofsLoop << loop_;
         ofsLoop.close();
-        ROS_INFO("(STATUS_SYSTEM) Set Gobot loop: %d",loop_);
+        ROS_INFO("(STATUS_SYSTEM) Set robot loop: %d",loop_);
     }
 
     return true;
@@ -417,7 +417,7 @@ bool getLoopSrvCallback(gobot_msg_srv::GetInt::Request &req, gobot_msg_srv::GetI
 
 bool setModeSrvCallback(gobot_msg_srv::SetInt::Request &req, gobot_msg_srv::SetInt::Response &res){
     robot_mode_ = req.data;
-
+    ROS_INFO("(STATUS_SYSTEM) Set robot mode: %d",robot_mode_);
     updateStatus();
 
     return true;
@@ -432,7 +432,7 @@ bool setStageSrvCallback(gobot_msg_srv::SetInt::Request &req, gobot_msg_srv::Set
     if(ofsStage){
         ofsStage << stage_;
         ofsStage.close();
-        ROS_INFO("(STATUS_SYSTEM) Set Gobot stage: %d",stage_);
+        ROS_INFO("(STATUS_SYSTEM) Set robot stage: %d",stage_);
     }
     
     updateStatus();
@@ -505,7 +505,7 @@ bool setGobotStatusSrvCallback(gobot_msg_srv::SetGobotStatus::Request &req, gobo
 
     gobotStatusMutex.unlock();
     
-    ROS_INFO("(STATUS_SYSTEM) Set Gobot status: %d,%s",gobot_status_,gobot_text_.c_str());
+    ROS_INFO("(STATUS_SYSTEM) Set robot status: %d,%s",gobot_status_,gobot_text_.c_str());
     return true;
 }
 
@@ -587,7 +587,7 @@ void initialData(){
     if(ifsStage){
         ifsStage >> stage_;
         ifsStage.close();
-        ROS_INFO("(STATUS_SYSTEM) Read Gobot path stage: %d",stage_);
+        ROS_INFO("(STATUS_SYSTEM) Read robot path stage: %d",stage_);
     }
     
     if(stage_<0){
@@ -596,7 +596,7 @@ void initialData(){
             if(ofsStage){
                 ofsStage << stage_;
                 ofsStage.close();
-                ROS_INFO("(STATUS_SYSTEM) Set Gobot stage: %d",stage_);
+                ROS_INFO("(STATUS_SYSTEM) Set robot stage: %d",stage_);
         }
     }    
 
@@ -606,7 +606,7 @@ void initialData(){
     if(ifsMute){
         ifsMute >> mute_;
         ifsMute.close();
-        ROS_INFO("(STATUS_SYSTEM) Read Gobot mute: %d",mute_);
+        ROS_INFO("(STATUS_SYSTEM) Read robot mute: %d",mute_);
         std_msgs::Int8 data;
         data.data = mute_;
         mute_pub.publish(data);
@@ -618,7 +618,7 @@ void initialData(){
     if(ifsLoop){
         ifsLoop >> loop_;
         ifsLoop.close();
-        ROS_INFO("(STATUS_SYSTEM) Read Gobot path loop: %d",loop_);
+        ROS_INFO("(STATUS_SYSTEM) Read robot path loop: %d",loop_);
     } 
 
     //read path
@@ -632,7 +632,7 @@ void initialData(){
         std::string path_info;
         for(int i = 0; i < path_.size(); i++)
             path_info = path_info+path_.at(i)+", ";
-        ROS_INFO("(STATUS_SYSTEM) Read Gobot path: %s",path_info.c_str());
+        ROS_INFO("(STATUS_SYSTEM) Read robot path: %s",path_info.c_str());
     }
 
     //read name
@@ -641,7 +641,7 @@ void initialData(){
     if(ifsName){
         ifsName >> hostname_;
         ifsName.close();
-        ROS_INFO("(STATUS_SYSTEM) Read Gobot name: %s",hostname_.c_str());
+        ROS_INFO("(STATUS_SYSTEM) Read robot name: %s",hostname_.c_str());
     }
 
     //read home
@@ -650,7 +650,7 @@ void initialData(){
     if(ifsHome){
         ifsHome >> home_.at(0) >> home_.at(1) >> home_.at(2) >> home_.at(3) >> home_.at(4) >> home_.at(5);
         ifsHome.close();
-        ROS_INFO("(STATUS_SYSTEM) Read Gobot home: [%.2f, %.2f] [%.2f, %.2f, %.2f, %.2f]", std::stod(home_.at(0)),std::stod(home_.at(1)),std::stod(home_.at(2)),std::stod(home_.at(3)),std::stod(home_.at(4)),std::stod(home_.at(5)));
+        ROS_INFO("(STATUS_SYSTEM) Read robot home: [%.2f, %.2f] [%.2f, %.2f, %.2f, %.2f]", std::stod(home_.at(0)),std::stod(home_.at(1)),std::stod(home_.at(2)),std::stod(home_.at(3)),std::stod(home_.at(4)),std::stod(home_.at(5)));
     }
 
     //read low battery
@@ -659,7 +659,7 @@ void initialData(){
     if(ifsBattery){
         ifsBattery >> low_battery_;
         ifsBattery.close();
-        ROS_INFO("(STATUS_SYSTEM) Read Gobot battery: %d", std::stoi(low_battery_));
+        ROS_INFO("(STATUS_SYSTEM) Read robot battery: %d", std::stoi(low_battery_));
     }
 
     //read speed
@@ -668,7 +668,7 @@ void initialData(){
     if(ifsSpeed){
         ifsSpeed >> linear_spd_ >> angular_spd_;
         ifsSpeed.close();
-        ROS_INFO("(STATUS_SYSTEM) Read Gobot speed: %.2f, %.2f", std::stod(linear_spd_),std::stod(angular_spd_));
+        ROS_INFO("(STATUS_SYSTEM) Read robot speed: %.2f, %.2f", std::stod(linear_spd_),std::stod(angular_spd_));
     }
 
     //read wifi
@@ -689,7 +689,7 @@ void initialData(){
     else if(wifi_.size()<2){
         wifi_.push_back("");
     }
-    ROS_INFO("(STATUS_SYSTEM) Read Gobot wifi: name:%s, password:%s",wifi_.at(0).c_str(),wifi_.at(1).c_str());
+    ROS_INFO("(STATUS_SYSTEM) Read robot wifi: name:%s, password:%s",wifi_.at(0).c_str(),wifi_.at(1).c_str());
     
     //record disconnect times
     n.getParam("disconnected_file", disconnectedFile);

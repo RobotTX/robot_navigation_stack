@@ -13,8 +13,8 @@ TebLocalPlannerROS:
     #1.Clusters are determined using the DBSCAN Algorithm
     #2.In the subsequent stage, clusters are converted into convex polgons.
     costmap_converter/CostmapToPolygonsDBSMCCH:
-        cluster_max_distance: 0.4
+        cluster_max_distance: 0.45
         cluster_min_pts: 2
         cluster_max_pts: 99
         #Clear keypoints/vertices of the convex polygon that are close to each other
-        convex_hull_min_pt_separation: 0.1
+        convex_hull_min_pt_separation: 0.25

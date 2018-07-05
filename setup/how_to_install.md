@@ -124,10 +124,10 @@ Install all dependencies from packages or from sources:
 
 #dd clone system
 sudo fdisk -l
-dd if=/dev/sdb  of=/dev/sdc
-dd bs=512 count=[fdisk命令中最大的end数+1] if=/dev/sdb of=name.img
+sudo dd if=/dev/sdx  of=/dev/sdx
+sudo dd bs=512 count=[fdisk命令中最大的end数+1] if=/dev/sdb of=name.img
 * Monitor
-sudo watch -n 60 killall -USR1 dd
+sudo watch -n 30 killall -USR1 dd
 
 #remote desktop control
 configure "Desktop sharing" to allow "Remmina Remote Desktop Client"

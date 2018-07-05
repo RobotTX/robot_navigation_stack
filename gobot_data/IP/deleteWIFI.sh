@@ -4,7 +4,7 @@ echo "######################Delete Wifi Start######################"
 oldWifiName="$1"
 newWifiName="$2"
 newWifiPasswd="$3"
-wifi=$(nmcli device status | grep wifi |cut -d ' ' -f1)
+wifi=$(nmcli device status | grep wifi | cut -d ' ' -f1 | head -n 1)
 #delete old wifi information
 nmcli device disconnect $wifi    #disconnect current wifi
 if [ "$oldWifiName" = "null_wifi" ]   #if old wifi is Hotspot
@@ -21,7 +21,7 @@ fi
 sleep 1s
 if [ "$newWifiName" = "null_wifi" ]   #if new wifi is Hotspot
 then
-    nmcli connection up "Hotspot"
+    nmcli connection up "Hotspot" ifname $wifi
     echo "(DELETE WIFI) Robot connected to its own wifi"
 else                            #if new wifi is not Hotspot, make a new connetion to it
     if [ -z "$(nmcli device wifi list | grep -w "$newWifiName")" ]      #if can not find new wifi in scan list, then restart network-manager
@@ -30,7 +30,7 @@ else                            #if new wifi is not Hotspot, make a new connetio
         echo "(DELETE WIFI) Restart network-manager as assigned "
         sleep 1s
     fi
-    nmcli d wifi connect "$newWifiName" password "$newWifiPasswd"
+    nmcli d wifi connect "$newWifiName" password "$newWifiPasswd" ifname $wifi
     echo "(DELETE WIFI) Robot build connection to assigned wifi named #$newWifiName#"
 fi
 echo "######################Delete Wifi End######################"
