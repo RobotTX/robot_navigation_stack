@@ -138,6 +138,8 @@ void sendCommand(const std::string ip, const std::vector<std::string> command, s
 double RadToDegree(double rad);
 
 double DegreeToRad(double degree);
+
+double convertYawToPlayPointYaw(double yaw);
 /*********************************** SERVICES ***********************************/
 bool pausePathSrvCallback(std_srvs::Empty::Request &req, std_srvs::Empty::Response &res);
 
@@ -148,7 +150,9 @@ bool stopPathSrvCallback(std_srvs::Empty::Request &req, std_srvs::Empty::Respons
 bool goDockSrvCallback(std_srvs::Empty::Request &req, std_srvs::Empty::Response &res);
 
 bool stopGoDockSrvCallback(std_srvs::Empty::Request &req, std_srvs::Empty::Response &res);
-    
+
+bool highBatterySrvCallback(std_srvs::Empty::Request &req, std_srvs::Empty::Response &res);
+
 bool lowBatterySrvCallback(std_srvs::Empty::Request &req, std_srvs::Empty::Response &res);
 
 bool playPointSrvCallback(gobot_msg_srv::SetStringArray::Request &req, gobot_msg_srv::SetStringArray::Response &res);

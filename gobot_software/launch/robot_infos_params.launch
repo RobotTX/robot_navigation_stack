@@ -6,6 +6,8 @@
     <param name="simulation"        type="bool"       value="false" />
     <param name="status_update"     type="double"     value="8.0" />
     <param name="ip_update"         type="double"     value="30.0" />
+    <!--FUNCTION RELATED-->
+    <param name="resume_work_level" type="int"        value="90" />
     <!-- MAP RELATED -->
 		<param name="map_image_used"    type="string"     value="$(find gobot_data)/maps/used_map.pgm" />
     <param name="map_config_used"   type="string"     value="$(find gobot_data)/maps/used_map.yaml" />

@@ -2,6 +2,11 @@
 Changelog for developed mobile robot
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+1.1.5 (2018-07-12)
+-------------------
+* build Hotspot wifi when assigned wifi can not be found
+* robot will resume to work if low battery auto docking is triggered
+
 1.1.4 (2018-07-11)
 -------------------
 * add pre-load .mp3 files for auto-docking, complete auto-docking, low battery warning, reload map, abort navigation operations

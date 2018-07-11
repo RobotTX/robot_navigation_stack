@@ -131,7 +131,7 @@ bool startExplorationSrv(hector_exploration_node::Exploration::Request &req, hec
         }
         gobot_msg_srv::IsCharging isCharging;
         if(ros::service::call("/gobot_status/charging_status", isCharging) && isCharging.response.isCharging){
-            ROS_WARN("(SCAN_EXPLORE) we are charging so we go straight to avoid bumping into the CS when turning");
+            ROS_WARN("(SCAN_EXPLORE) Go straight because of charging.");
             SetRobot.setNavSpeed('F', 15, 'F', 15);
 		    ros::Duration(2.5).sleep();
             SetRobot.setNavSpeed('F', 0, 'F', 0);

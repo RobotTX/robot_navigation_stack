@@ -13,6 +13,7 @@
 #include <mutex>
 #include <thread>
 #include <boost/asio.hpp>
+#include <gobot_msg_srv/GetStringArray.h>
 
 using boost::asio::ip::tcp;
 
@@ -26,6 +27,7 @@ void sendRobotPos(const ros::TimerEvent&);
  */
 void getRobotPos(const geometry_msgs::Pose::ConstPtr& msg);
 
+bool getRobotPoseSrvCb(gobot_msg_srv::GetStringArray::Request &req, gobot_msg_srv::GetStringArray::Response &res);
 
 /*********************************** CONNECTION FUNCTIONS ***********************************/
 

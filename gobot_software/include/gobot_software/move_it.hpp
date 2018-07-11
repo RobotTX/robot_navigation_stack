@@ -53,8 +53,6 @@ void getButtonCallback(const std_msgs::Int8::ConstPtr& msg);
 
 void goNextPoint(const Point _point);
 
-bool savePointService(gobot_msg_srv::SetStringArray::Request &req, gobot_msg_srv::SetStringArray::Response &res);
-
 bool playPointService(gobot_msg_srv::SetStringArray::Request &req, gobot_msg_srv::SetStringArray::Response &res);
 
 bool playPathService(std_srvs::Empty::Request &req, std_srvs::Empty::Response &res);

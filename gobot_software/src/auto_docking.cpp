@@ -76,7 +76,7 @@ bool startDocking(void){
 
 void goalResultCallback(const move_base_msgs::MoveBaseActionResult::ConstPtr& msg){
     if(docking){
-        ROS_INFO("(AUTO_DOCKING::newBumpersInfo) Goal status %d",msg->status.status);
+        ROS_INFO("(AUTO_DOCKING::goalResultCallback) Goal status %d",msg->status.status);
         switch(msg->status.status){
             case 2:
                 break;

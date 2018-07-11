@@ -11,7 +11,16 @@ int robot_pos_port = 4001;
 int map_port = 4002;
 int laser_port = 4003;
 int recovered_position_port = 4004;
-bool keyboardEnabled = false;
+std::string self_ip = "0.0.0.0";
+
+std::vector<char> slient_command({'g','t','u','s','v'}),
+                  scanning_command({'d','i','j','k','l','m','o'}),
+                  docking_command({'d','j','k','o'}),
+                  pause_path_command({'i','m','o','v','t','g'}),
+                  cancel_resume_command({'d','g','i','j','k','l','m','p','t',','});
+
+bool resume_path = false, resume_point = false;
+std::vector<std::string> resume_pose;
 
 /// Separator which is just a char(31) => unit separator in ASCII
 static const std::string sep = std::string(1, 31);
@@ -26,7 +35,7 @@ std::string tts_text_;
 
 std_srvs::Empty empty_srv;
 
-ros::Publisher go_pub, teleop_pub;
+ros::Publisher teleop_pub;
 
 robot_class::SetRobot SetRobot;
 robot_class::GetRobot GetRobot;
@@ -53,11 +62,8 @@ bool execCommand(const std::string ip, const std::vector<std::string> command){
         //pausePath, newPath, 
         //playPath, playPoint, 
         //stopPath, stop&deletePath,
-        //goCharging, savePoints
-        if(commandStr.at(0)=='d' || commandStr.at(0)=='i' || 
-           commandStr.at(0)=='j' || commandStr.at(0)=='k' ||
-           commandStr.at(0)=='l' || commandStr.at(0)=='m' ||
-           commandStr.at(0)=='o' || commandStr.at(0)=='q'){
+        //goCharging
+        if(std::find(scanning_command.begin(),scanning_command.end(),commandStr.at(0)) != scanning_command.end()){
             ROS_WARN("(COMMAND_SYSTEM) Gobot is scanning.");
             return false;
         }
@@ -66,8 +72,7 @@ bool execCommand(const std::string ip, const std::vector<std::string> command){
     else if(robot_status_==15){
         //pausePath, playPath, 
         //playPoint, goCharging
-        if(commandStr.at(0)=='d' || commandStr.at(0)=='j' ||
-           commandStr.at(0)=='k' || commandStr.at(0)=='o'){
+        if(std::find(docking_command.begin(),docking_command.end(),commandStr.at(0)) != docking_command.end()){
             ROS_WARN("(COMMAND_SYSTEM) Gobot is docking.");
             return false;
         }
@@ -86,9 +91,7 @@ bool execCommand(const std::string ip, const std::vector<std::string> command){
         //newPath, stop&deletePath
         //goCharging,shutdownRobot
         //startScan
-        if(commandStr.at(0)=='i' || commandStr.at(0)=='m' ||
-           commandStr.at(0)=='o' || commandStr.at(0)=='v' ||
-           commandStr.at(0)=='t' || commandStr.at(0)=='g'){
+        if(std::find(pause_path_command.begin(),pause_path_command.end(),commandStr.at(0)) != pause_path_command.end()){
             ROS_WARN("(COMMAND_SYSTEM) Gobot is playing path,pause it.");
             ros::service::call("/gobot_function/pause_path", empty_srv);
         }
@@ -127,6 +130,7 @@ bool execCommand(const std::string ip, const std::vector<std::string> command){
             status = previousPath(command);
         break;
         
+        /// not in use
         /// Command for the robot to move to a point
         case 'c':
             status = newGoal(command);
@@ -223,8 +227,7 @@ bool execCommand(const std::string ip, const std::vector<std::string> command){
             status = stopScanning(ip, command);
         break;
 
-        /// NOT USED NOW
-        /// command to recover the robot's position
+        /// command to shutdown robot
         case 'v':
             status = shutdownRobot(command);
         break;
@@ -337,42 +340,8 @@ bool previousPath(const std::vector<std::string> command){
 
 /// First param = c, second param = goal pos x coordinate, third param = goal pos y coordinate
 bool newGoal(const std::vector<std::string> command){
-    //ROS_INFO("(COMMAND_SYSTEM) Gobot go to point");
-    if(command.size() == 3){
-        double posX = std::stof(command.at(1));
-        double posY = std::stof(command.at(2));
-
-        /// Before setting a new goal, we stop any teleoperation command
-        geometry_msgs::Twist twist;
-        twist.linear.x = 0;
-        twist.linear.y = 0;
-        twist.linear.z = 0;
-        twist.angular.x = 0;
-        twist.angular.y = 0;
-        twist.angular.z = 0;
-
-        teleop_pub.publish(twist);
-
-        /// Send the goal
-        geometry_msgs::PoseStamped msg;
-        msg.header.frame_id = "map";
-        msg.header.stamp = ros::Time::now();
-        msg.pose.position.x = posX;
-        msg.pose.position.y = posY;
-        msg.pose.position.z = 0;
-        msg.pose.orientation.x = 0;
-        msg.pose.orientation.y = 0;
-        msg.pose.orientation.z = 0;
-        msg.pose.orientation.w = 1;
-        
-        go_pub.publish(msg);
 
         return true;
-    } 
-    else 
-        ROS_ERROR("(COMMAND_SYSTEM) Parameter missing");
-
-    return false;
 }
 
 /// First param = d
@@ -590,21 +559,8 @@ bool stopGoingToChargingStation(const std::vector<std::string> command){
 
 /// First param = q
 bool savePoints(const std::vector<std::string> command){
-    if(command.size() == 7) {
-        //name.x.y.ori.home.action
-        gobot_msg_srv::SetStringArray set_point;    
-        set_point.request.data.push_back(command.at(1));
-        set_point.request.data.push_back(command.at(2));
-        set_point.request.data.push_back(command.at(3));
-        set_point.request.data.push_back(command.at(4));
-        set_point.request.data.push_back(command.at(5));
-        set_point.request.data.push_back(command.at(6));
-        if(ros::service::call("/gobot_function/save_point", set_point)){
-            //ROS_INFO("(COMMAND_SYSTEM) Save the point");
-            return true;
-        }
-    } 
-    return false;
+
+    return true;
 }
 
 /// First param = r
@@ -802,6 +758,10 @@ double DegreeToRad(double degree){
     return degree*3.1415926/180;
 }
 
+double convertYawToPlayPointYaw(double yaw){
+    return RadToDegree(-yaw-1.57079);
+}
+
 bool sendMapAutomatically(const std::string ip){
     //ROS_INFO("(COMMAND_SYSTEM) Launching the service to get the map auto");
 
@@ -835,19 +795,27 @@ bool stopSendingMapAutomatically(const std::string ip){
 
 
 void sendCommand(const std::string ip, const std::vector<std::string> command, std::string commandStr){
-    //ROS_INFO("(COMMAND_SYSTEM) Executing command for ip: %s", ip.c_str());
     //ROS_INFO("Command char:'%s', Command from ip: %s", command.at(0).c_str(),ip.c_str());
 
-    std::string msg;
+    //if command is given by user and robot is going to resume previous work after charging
+    if(ip!=self_ip && (resume_path || resume_point)){
+        //if given command can cancel the robot resume
+        if(std::find(cancel_resume_command.begin(),cancel_resume_command.end(),commandStr.at(0)) != cancel_resume_command.end()){
+            resume_path = false;
+            resume_point = false;
+            ROS_WARN("(COMMAND_SYSTEM) Cancel robot resume work due to user interruption");
+        }
+    }
+
     commandMutex.lock();
     bool command_feedback = execCommand(ip, command);
-    if (command_feedback)
-        //g=scan, t=newscan, u=stopscan, n=receivemap, v=shutdown
-        if (command.at(0)!="g" && command.at(0)!="t" && command.at(0)!="u" && command.at(0)!="s" && command.at(0)!="v")
+    if (command_feedback){
+        if(std::find(slient_command.begin(),slient_command.end(),commandStr.at(0)) == slient_command.end())
             SetRobot.setSound(1,1);
+    }
 
-    msg = (command_feedback ? "done" : "failed") + sep + commandStr;
-    sendMessageToAll(msg);
+    std::string feedback_msg = (command_feedback ? "done" : "failed") + sep + commandStr;
+    sendMessageToAll(feedback_msg);
     commandMutex.unlock();
 }
 
@@ -856,14 +824,15 @@ void sendCommand(const std::string ip, const std::vector<std::string> command, s
 bool pausePathSrvCallback(std_srvs::Empty::Request &req, std_srvs::Empty::Response &res){
     std::vector<std::string> command({"d"});
     std::string commandStr = command.at(0) + sep;
-    sendCommand("",command,commandStr);
+    sendCommand(self_ip,command,commandStr);
+
     return true;
 }
 
 bool playPathSrvCallback(std_srvs::Empty::Request &req, std_srvs::Empty::Response &res){
     std::vector<std::string> command({"j"});
     std::string commandStr = command.at(0) + sep;
-    sendCommand("",command,commandStr);
+    sendCommand(self_ip,command,commandStr);
     
     return true;
 }
@@ -871,7 +840,7 @@ bool playPathSrvCallback(std_srvs::Empty::Request &req, std_srvs::Empty::Respons
 bool stopPathSrvCallback(std_srvs::Empty::Request &req, std_srvs::Empty::Response &res){
     std::vector<std::string> command({"l"});
     std::string commandStr = command.at(0) + sep;
-    sendCommand("",command,commandStr);
+    sendCommand(self_ip,command,commandStr);
 
     return true;
 }
@@ -879,7 +848,7 @@ bool stopPathSrvCallback(std_srvs::Empty::Request &req, std_srvs::Empty::Respons
 bool startExploreSrvCallback(std_srvs::Empty::Request &req, std_srvs::Empty::Response &res){
     std::vector<std::string> command({","});
     std::string commandStr = command.at(0) + sep;
-    sendCommand("",command,commandStr);
+    sendCommand(self_ip,command,commandStr);
 
     return true;
 }
@@ -887,7 +856,7 @@ bool startExploreSrvCallback(std_srvs::Empty::Request &req, std_srvs::Empty::Res
 bool stopExploreSrvCallback(std_srvs::Empty::Request &req, std_srvs::Empty::Response &res){
     std::vector<std::string> command({"."});
     std::string commandStr = command.at(0) + sep;
-    sendCommand("",command,commandStr);
+    sendCommand(self_ip,command,commandStr);
 
     return true;
 }
@@ -895,14 +864,47 @@ bool stopExploreSrvCallback(std_srvs::Empty::Request &req, std_srvs::Empty::Resp
 bool goDockSrvCallback(std_srvs::Empty::Request &req, std_srvs::Empty::Response &res){
     std::vector<std::string> command({"o"});
     std::string commandStr = command.at(0) + sep;
-    sendCommand("",command,commandStr);
+    sendCommand(self_ip,command,commandStr);
     return true;
 }
 
 bool stopGoDockSrvCallback(std_srvs::Empty::Request &req, std_srvs::Empty::Response &res){
     std::vector<std::string> command({"p"});
     std::string commandStr = command.at(0) + sep;
-    sendCommand("",command,commandStr);
+    sendCommand(self_ip,command,commandStr);
+    return true;
+}
+
+bool highBatterySrvCallback(std_srvs::Empty::Request &req, std_srvs::Empty::Response &res){
+    if(resume_path){
+        ROS_WARN("(COMMAND_SYSTEM::HighBattery) robot resumes to play previous path.");
+        resume_path = false;
+        std::vector<std::string> command({"j"});
+        std::string commandStr = command.at(0) + sep;
+        sendCommand(self_ip,command,commandStr);
+    }
+    else if(resume_point){
+        ROS_WARN("(COMMAND_SYSTEM::HighBattery) robot resumes to play previous position.");
+        resume_point = false;
+        if(resume_pose.size()==3){
+            //0-name,1-x,2-y,3-orientation, 4-home or not
+            std::vector<std::string> command({"k"});
+            std::string commandStr = command.at(0) + sep;
+            commandStr += "resume_point" + sep;
+            command.push_back("resume_point");
+            for (int i=0;i<resume_pose.size();i++){
+                commandStr += resume_pose[i] + sep;
+                command.push_back(resume_pose[i]);
+            }
+            commandStr += "0" + sep;
+            command.push_back("0");
+            sendCommand(self_ip,command,commandStr);
+        }
+    }
+    else{
+        ROS_WARN("(COMMAND_SYSTEM::HighBattery) robot resume to work has been cancelled before.");
+    }
+
     return true;
 }
 
@@ -918,13 +920,22 @@ bool lowBatterySrvCallback(std_srvs::Empty::Request &req, std_srvs::Empty::Respo
     }
     //robot is doing the path
     else if(ros::service::call("/gobot_function/goDockAfterPath", empty_srv)){
-        ROS_WARN("(COMMAND_SYSTEM::LowBattery) robot will auto dock because of low battery.");
+        resume_path = true;
+        ROS_WARN("(COMMAND_SYSTEM::LowBattery) robot is go to auto dock after completing current path.");
     }
     else{
+        ROS_WARN("(COMMAND_SYSTEM::LowBattery) robot is going to auto dock now.");
+        resume_point = true;
+        resume_pose.clear();
+        gobot_msg_srv::GetStringArray robot_pose;
+        ros::service::call("/gobot_status/get_pose",robot_pose);
+        for(int i=0; i<robot_pose.response.data.size();i++)
+            resume_pose.push_back(robot_pose.response.data[i]);
+        resume_pose.back() = std::to_string(convertYawToPlayPointYaw(std::stod(resume_pose.back())));
         //ROS_INFO("(COMMAND_SYSTEM) Sending the robot home");
         std::vector<std::string> command({"o"});
         std::string commandStr = command.at(0) + sep;
-        sendCommand("",command,commandStr);
+        sendCommand(self_ip,command,commandStr);
     }
 
     return true;
@@ -937,7 +948,7 @@ bool playPointSrvCallback(gobot_msg_srv::SetStringArray::Request &req, gobot_msg
         commandStr = commandStr + req.data[i] + sep;
         command.push_back(req.data[i]);
     }
-    sendCommand("",command,commandStr);
+    sendCommand(self_ip,command,commandStr);
     return true;
 }
 
@@ -948,7 +959,7 @@ bool setPathSrvCallback(gobot_msg_srv::SetStringArray::Request &req, gobot_msg_s
         commandStr = commandStr + req.data[i] + sep;
         command.push_back(req.data[i]);
     }
-    sendCommand("",command,commandStr);
+    sendCommand(self_ip,command,commandStr);
     return true;
 }
 
@@ -959,14 +970,14 @@ bool setSpeedSrvCallback(gobot_msg_srv::SetStringArray::Request &req, gobot_msg_
         commandStr = commandStr + req.data[i] + sep;
         command.push_back(req.data[i]);
     }
-    sendCommand("",command,commandStr);
+    sendCommand(self_ip,command,commandStr);
     return true;
 }
 
 bool shutdownSrvCallback(std_srvs::Empty::Request &req, std_srvs::Empty::Response &res){
     std::vector<std::string> command({"v"});
     std::string commandStr = command.at(0) + sep;
-    sendCommand("",command,commandStr);
+    sendCommand(self_ip,command,commandStr);
     return true;
 }
 
@@ -1224,11 +1235,10 @@ int main(int argc, char* argv[]){
     ROS_INFO("(COMMAND_SYSTEM) simulation : %d", simulation);
     
     ros::Subscriber sub = n.subscribe("/gobot_software/server_disconnected", 1, serverDisconnected);
-
-    go_pub = n.advertise<geometry_msgs::PoseStamped>("/move_base_simple/goal", 1);
     teleop_pub = n.advertise<geometry_msgs::Twist>("/teleop_cmd_vel", 1);
     
     ros::ServiceServer lowBatterySrv    = n.advertiseService("/gobot_command/lowBattery", lowBatterySrvCallback);
+    ros::ServiceServer highBatterySrv   = n.advertiseService("/gobot_command/highBattery", highBatterySrvCallback);
     ros::ServiceServer goDockSrv        = n.advertiseService("/gobot_command/goDock", goDockSrvCallback);
     ros::ServiceServer stopGoDockSrv    = n.advertiseService("/gobot_command/stopGoDock", stopGoDockSrvCallback);
     ros::ServiceServer playPathSrv      = n.advertiseService("/gobot_command/play_path", playPathSrvCallback);

@@ -43,19 +43,27 @@ void saveRobotPosTimer(const ros::TimerEvent&){
 
 void getRobotPos(const geometry_msgs::Pose::ConstPtr& msg){
     if(ros::service::exists("/gobot_startup/pose_ready",false)){
-        double yaw = tf::getYaw(tf::Quaternion(msg->orientation.x, msg->orientation.y, msg->orientation.z, msg->orientation.w));
-        robot_string = std::to_string(msg->position.x) + " " + std::to_string(msg->position.y) + " " + std::to_string(yaw) + " ";
         last_pos_x = msg->position.x;
         last_pos_y = msg->position.y;
         last_ang_x = msg->orientation.x;
         last_ang_y = msg->orientation.y;
         last_ang_z = msg->orientation.z;
         last_ang_w = msg->orientation.w;
+        last_pos_yaw = tf::getYaw(tf::Quaternion(msg->orientation.x, msg->orientation.y, msg->orientation.z, msg->orientation.w));
+        robot_string = std::to_string(last_pos_x) + " " + std::to_string(last_pos_y) + " " + std::to_string(last_pos_yaw) + " ";
         found_pose = true;
     }
     else{
         found_pose = false;
     }
+}
+
+bool getRobotPoseSrvCb(gobot_msg_srv::GetStringArray::Request &req, gobot_msg_srv::GetStringArray::Response &res){
+    res.data.push_back(std::to_string(last_pos_x));
+    res.data.push_back(std::to_string(last_pos_y));
+    res.data.push_back(std::to_string(last_pos_yaw));
+
+    return true;
 }
 
 /*********************************** CONNECTION FUNCTIONS ***********************************/
@@ -141,6 +149,8 @@ int main(int argc, char **argv){
     ros::Subscriber servers_disco_sub = n.subscribe("/gobot_software/server_disconnected", 1000, serverDisconnected);
 
     ros::Subscriber robot_pose_sub = n.subscribe("/robot_pose", 1, getRobotPos);
+
+    ros::ServiceServer getRobotPoseSrv = n.advertiseService("/gobot_status/get_pose", getRobotPoseSrvCb);
 
     //Periodically send robot pose to connected clients
     timer1 = n.createTimer(ros::Duration(0.5), sendRobotPosTimer);

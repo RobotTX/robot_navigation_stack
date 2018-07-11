@@ -2,6 +2,7 @@
 isAlive="$1"
 wififile="$2"
 defalutwifi="Robot_Hotspot_YYMMDD"
+connection="wifi"
 #check WIFI connection
 wifi=$(nmcli device status | grep wifi | cut -d ' ' -f1 | head -n 1)
 n=1
@@ -21,22 +22,7 @@ echo -n "" > $isAlive #clear recorded servers' IP
 #echo "(Ping_Servers)" name:$wifiname password:$wifipassword
 if [ -z "$wifiname" ]  #if no assigned wifi, build hotspot
 then
-    if [ -z "$(nmcli device status | grep -w Hotspot)" ]  #if no created hotspot, build one
-    then
-        if [ -z "$(nmcli connection show | grep -w Hotspot)" ]
-        then
-            nmcli d wifi hotspot ssid "$defalutwifi" password "robotics" ifname $wifi
-            echo "(PING WIFI) Robot build its own wifi named #$defalutwifi#"
-        else
-            nmcli connection up "Hotspot" ifname $wifi
-            echo "(PING WIFI) Robot connecting to its own wifi named #$defalutwifi#"
-        fi
-    else
-        echo "(PING WIFI) Robot connected to its own wifi named #$defalutwifi#"
-    fi
-    #record all available hosts in the server
-    var=$(ifconfig | grep -A 1 $wifi | grep inet | cut -d ':' -f2|cut -f -3 --delimiter='.')
-    fping -r 0 -g "$var.0/24" 2>/dev/null | grep alive | cut -d ' ' -f1 > $isAlive
+    connection="hotspot"
 else 
     if [ "$(nmcli device wifi list | grep -w "$wifiname")" ] #if able to find wifi in the list
     then     
@@ -71,8 +57,30 @@ else
         #delete servers that we don't want to connect
         #sed -i "/$var.33/d" $isAlive
     else
+        #if can not find assigned wifi in the list, build robot hotspot for user to connect
         echo "(PING WIFI) Unable to find assigned wifi:#$wifiname# in the scan list"
+        connection="hotspot"
     fi
+fi
+#if need to build hotspot
+if [ $connection = "hotspot" ]
+then
+    if [ -z "$(nmcli device status | grep -w Hotspot)" ]  #if no created hotspot, build one
+    then
+        if [ -z "$(nmcli connection show | grep -w Hotspot)" ]
+        then
+            nmcli d wifi hotspot ssid "$defalutwifi" password "robotics" ifname $wifi
+            echo "(PING WIFI) Robot build its own wifi named #$defalutwifi#"
+        else
+            nmcli connection up "Hotspot" ifname $wifi
+            echo "(PING WIFI) Robot connecting to its own wifi named #$defalutwifi#"
+        fi
+    else
+        echo "(PING WIFI) Robot connected to its own wifi named #$defalutwifi#"
+    fi
+    #record all available hosts in the server
+    var=$(ifconfig | grep -A 1 $wifi | grep inet | cut -d ':' -f2|cut -f -3 --delimiter='.')
+    fping -r 0 -g "$var.0/24" 2>/dev/null | grep alive | cut -d ' ' -f1 > $isAlive
 fi
 #check USB tethering connection
 usb_device=$(nmcli device status | grep "ethernet" | grep -v "Wired Ethernet" | grep "connected" | cut -d ' ' -f1)

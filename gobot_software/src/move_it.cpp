@@ -198,11 +198,6 @@ void goNextPoint(const Point _point){
 		ROS_ERROR("(MOVE_IT::goNextPoint) no action server");
 }
 
-bool savePointService(gobot_msg_srv::SetStringArray::Request &req, gobot_msg_srv::SetStringArray::Response &res){
-	
-	return true;
-}
-
 bool playPointService(gobot_msg_srv::SetStringArray::Request &req, gobot_msg_srv::SetStringArray::Response &res){
 	if (status_==5 && (text_=="DELAY" || text_=="WAITING")){
 		stop_flag = true;
@@ -215,7 +210,7 @@ bool playPointService(gobot_msg_srv::SetStringArray::Request &req, gobot_msg_srv
 
 	gobot_msg_srv::IsCharging isCharging;
 	if(ros::service::call("/gobot_status/charging_status", isCharging) && isCharging.response.isCharging){
-		ROS_WARN("(MOVE_IT::playPathService) we are charging so we go straight to avoid bumping into the CS when turning");
+		ROS_WARN("(MOVE_IT::playPathService) Go straight because of charging.");
 		SetRobot.setNavSpeed('F', 15, 'F', 15);
 		ros::Duration(2.5).sleep();
 		SetRobot.setNavSpeed('F', 0, 'F', 0);
@@ -267,7 +262,7 @@ bool playPathService(std_srvs::Empty::Request &req, std_srvs::Empty::Response &r
 
 	gobot_msg_srv::IsCharging isCharging;
 	if(ros::service::call("/gobot_status/charging_status", isCharging) && isCharging.response.isCharging){
-		ROS_WARN("(MOVE_IT::playPathService) we are charging so we go straight to avoid bumping into the CS when turning");
+		ROS_WARN("(MOVE_IT::playPathService) Go straight because of charging.");
 		SetRobot.setNavSpeed('F', 15, 'F', 15);
 		ros::Duration(2.5).sleep();
 		SetRobot.setNavSpeed('F', 0, 'F', 0);
@@ -505,8 +500,6 @@ int main(int argc, char* argv[]){
 
 	// service to interrupt delay/human action
 	ros::ServiceServer _interruptDelayService 	= n.advertiseService("/gobot_function/interrupt_delay", interruptDelayService);
-	// service to save the robot's point
-	ros::ServiceServer _savePointPathService 	= n.advertiseService("/gobot_function/save_point", savePointService);
 	// service to play the robot's point
 	ros::ServiceServer _pointPathService 		= n.advertiseService("/gobot_function/play_point", playPointService);
 	// service to play the robot's path
