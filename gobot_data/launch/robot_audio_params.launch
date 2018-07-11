@@ -1,0 +1,11 @@
+<?xml version="1.0"?>
+<launch>
+    <param name="startup_mp3"           type="string"       value="startup.mp3" />
+    <param name="scan_mp3"              type="string"       value="scan.mp3" />
+    <param name="reload_map_mp3"        type="string"       value="reload_map.mp3" />
+    <param name="low_battery_mp3"       type="string"       value="low_battery.mp3" />
+    <param name="poweroff_mp3"          type="string"       value="poweroff.mp3" />
+    <param name="auto_docking_mp3"      type="string"       value="auto_docking.mp3" />
+    <param name="docking_complete_mp3"  type="string"       value="docking_complete.mp3" />
+    <param name="abort_navigation_mp3"  type="string"       value="abort_navigation.mp3" />
+</launch>
