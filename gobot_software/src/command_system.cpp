@@ -1,5 +1,7 @@
 #include "gobot_software/command_system.hpp"
 
+#define CMD_PORT 5600
+
 const int max_length = 1024;
 
 bool scanning = false;
@@ -410,7 +412,7 @@ bool pauseScan(const std::string ip, const std::vector<std::string> command){
 bool startScanAndAutoExplore(const std::string ip, const std::vector<std::string> command){
     if(command.size() == 1){     
         scanning = true;
-        ROS_INFO("(New Map) Start Scan and Explore. We relaunched gobot_scan");
+        ROS_INFO("(COMMAND_SYSTEM::NewMap) Start Scan and Explore. We relaunched gobot_scan");
         /// Kill gobot move so that we'll restart it with the new map
         std::string cmd = SetRobot.killList();
         system(cmd.c_str());    
@@ -632,7 +634,7 @@ bool sendMapOnce(const std::string ip, const std::vector<std::string> command){
 bool startNewScan(const std::string ip, const std::vector<std::string> command){
     if(command.size() == 1) {
         scanning = true;
-        ROS_INFO("(COMMAND_SYSTEM) Start New Scan. We relaunched gobot_scan");
+        ROS_INFO("(COMMAND_SYSTEM::NewScan) Start New Scan. We relaunched gobot_scan");
         /// Kill gobot move so that we'll restart it with the new map
         std::string cmd = SetRobot.killList();
         system(cmd.c_str());
@@ -652,7 +654,7 @@ bool stopScanning(const std::string ip, const std::vector<std::string> command){
         scanning = false;
         //if scan is cancelled, relaunch navigation here. if scan map is saved, relaunch navigation in read_new_map
         if(std::stoi(command.at(1)) == 1){
-            ROS_INFO("(COMMAND_SYSTEM) Stop New Scan. We relaunched gobot_navigation");
+            ROS_INFO("(COMMAND_SYSTEM::StopScan) Stop New Scan. We relaunched gobot_navigation");
             /// Kill gobot move so that we'll restart it with the new map
             std::string cmd = SetRobot.killList();
             system(cmd.c_str());
@@ -907,17 +909,16 @@ bool stopGoDockSrvCallback(std_srvs::Empty::Request &req, std_srvs::Empty::Respo
 bool lowBatterySrvCallback(std_srvs::Empty::Request &req, std_srvs::Empty::Response &res){
     GetRobot.getStatus(robot_status_);
     //scanning process
-    if(robot_status_<=25 && robot_status_>=20)
-        return true;
-        
-    //robot is doing the path
-    if(robot_status_==5){
-        ros::service::call("/gobot_function/goDockAfterPath", empty_srv);
-        ROS_WARN("(COMMAND_SYSTEM) The battery is low, the robot will go back when it stops being busy with its path");
-    }
+    if(robot_status_<=25 && robot_status_>=20){
+        ROS_WARN("(COMMAND_SYSTEM::LowBattery) robot is scanning.");
+    } 
     //robot is docking
     else if(robot_status_==15){
-        ROS_WARN("(COMMAND_SYSTEM) The robot is trying to dock");
+        ROS_WARN("(COMMAND_SYSTEM::LowBattery) robot is docking.");
+    }
+    //robot is doing the path
+    else if(ros::service::call("/gobot_function/goDockAfterPath", empty_srv)){
+        ROS_WARN("(COMMAND_SYSTEM::LowBattery) robot will auto dock because of low battery.");
     }
     else{
         //ROS_INFO("(COMMAND_SYSTEM) Sending the robot home");
@@ -1227,18 +1228,18 @@ int main(int argc, char* argv[]){
     go_pub = n.advertise<geometry_msgs::PoseStamped>("/move_base_simple/goal", 1);
     teleop_pub = n.advertise<geometry_msgs::Twist>("/teleop_cmd_vel", 1);
     
-    ros::ServiceServer lowBatterySrv = n.advertiseService("/gobot_command/lowBattery", lowBatterySrvCallback);
-    ros::ServiceServer goDockSrv = n.advertiseService("/gobot_command/goDock", goDockSrvCallback);
-    ros::ServiceServer stopGoDockSrv = n.advertiseService("/gobot_command/stopGoDock", stopGoDockSrvCallback);
-    ros::ServiceServer playPathSrv = n.advertiseService("/gobot_command/play_path", playPathSrvCallback);
-    ros::ServiceServer pausePathSrv = n.advertiseService("/gobot_command/pause_path", pausePathSrvCallback);
-    ros::ServiceServer stopPathSrv = n.advertiseService("/gobot_command/stop_path", stopPathSrvCallback);
-    ros::ServiceServer startExploreSrv = n.advertiseService("/gobot_command/start_explore", startExploreSrvCallback);
-    ros::ServiceServer stopExploreSrv = n.advertiseService("/gobot_command/stop_explore", stopExploreSrvCallback);
-    ros::ServiceServer playPointSrv = n.advertiseService("/gobot_command/play_point", playPointSrvCallback);
-    ros::ServiceServer setPathSrv = n.advertiseService("/gobot_command/set_path", setPathSrvCallback);
-    ros::ServiceServer shutdownSrv = n.advertiseService("/gobot_command/shutdown", shutdownSrvCallback);
-    ros::ServiceServer setSpeedSrv = n.advertiseService("/gobot_command/set_speed", setSpeedSrvCallback);
+    ros::ServiceServer lowBatterySrv    = n.advertiseService("/gobot_command/lowBattery", lowBatterySrvCallback);
+    ros::ServiceServer goDockSrv        = n.advertiseService("/gobot_command/goDock", goDockSrvCallback);
+    ros::ServiceServer stopGoDockSrv    = n.advertiseService("/gobot_command/stopGoDock", stopGoDockSrvCallback);
+    ros::ServiceServer playPathSrv      = n.advertiseService("/gobot_command/play_path", playPathSrvCallback);
+    ros::ServiceServer pausePathSrv     = n.advertiseService("/gobot_command/pause_path", pausePathSrvCallback);
+    ros::ServiceServer stopPathSrv      = n.advertiseService("/gobot_command/stop_path", stopPathSrvCallback);
+    ros::ServiceServer startExploreSrv  = n.advertiseService("/gobot_command/start_explore", startExploreSrvCallback);
+    ros::ServiceServer stopExploreSrv   = n.advertiseService("/gobot_command/stop_explore", stopExploreSrvCallback);
+    ros::ServiceServer playPointSrv     = n.advertiseService("/gobot_command/play_point", playPointSrvCallback);
+    ros::ServiceServer setPathSrv       = n.advertiseService("/gobot_command/set_path", setPathSrvCallback);
+    ros::ServiceServer shutdownSrv      = n.advertiseService("/gobot_command/shutdown", shutdownSrvCallback);
+    ros::ServiceServer setSpeedSrv      = n.advertiseService("/gobot_command/set_speed", setSpeedSrvCallback);
 
     ROS_INFO("(COMMAND_SYSTEM) Ready to be launched.");
 

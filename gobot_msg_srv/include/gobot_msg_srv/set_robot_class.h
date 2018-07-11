@@ -74,8 +74,10 @@ namespace robot_class {
 
             void speakChinese(std::string str);
 
+            void playVoice(std::string str, int mute = -1);
+
         private:
-            std::string tts_en_, tts_ch_;
+            std::string tts_en_, tts_ch_, voice_file_;
             std_srvs::Empty empty_srv;
             gobot_msg_srv::SetGobotStatus set_gobot_status_;
             gobot_msg_srv::SetInt set_dock_status_,set_stage_,set_loop_;

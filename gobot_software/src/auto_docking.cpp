@@ -381,7 +381,7 @@ int main(int argc, char* argv[]){
     signal(SIGINT, mySigintHandler);
     
     SetRobot.initialize();
-    
+
     //Startup begin
     //sleep for 1 second, otherwise waitForService not work properly
     ros::Duration(1.0).sleep();

@@ -1,5 +1,7 @@
 <?xml version="1.0"?>
 <launch>
+    <include file="$(find gobot_data)/launch/robot_audio_params.launch"/>
+    
     <!--COMMON PARAMETERS -->
     <param name="simulation"        type="bool"       value="false" />
     <param name="status_update"     type="double"     value="8.0" />

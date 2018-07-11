@@ -124,7 +124,8 @@ int main(int argc, char **argv) {
     ROS_INFO("(SCAN_STARTUP) Robot setting hardware is ready.");
     
     SetRobot.setBatteryLed();
-    SetRobot.setStatus(-1,"ROBOT_READY");
+    SetRobot.setStatus(-3,"SCAN_READY");
+    
     ros::ServiceServer poseReadySrv = nh.advertiseService("/gobot_startup/pose_ready", poseReadySrvCallback);
     //Startup end
     

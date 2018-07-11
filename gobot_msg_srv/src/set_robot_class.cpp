@@ -197,7 +197,7 @@ namespace robot_class {
         std::string cmd = "rosnode kill /map_server";
         system(cmd.c_str());
         ros::Duration(3.0).sleep();
-        setStatus(-1,"ROBOT_READY");
+        setStatus(-4,"RELOAD_MAP");
         setBatteryLed();
     }
 
@@ -238,15 +238,36 @@ namespace robot_class {
 
     //this two functions only work with robot equipped with speaker and ekho & festival packages
     void SetRobot::speakEnglish(std::string str){
-        tts_en_ = "echo \"" + str + "\" | festival --tts &";
-        system(tts_en_.c_str());
+        gobot_msg_srv::GetInt get_mute;
+        ros::service::call("/gobot_status/get_mute",get_mute);
+        if(!get_mute.response.data){
+            tts_en_ = "echo \"" + str + "\" | festival --tts &";
+            system(tts_en_.c_str());
+        }
     }
 
     void SetRobot::speakChinese(std::string str){
-        tts_ch_ = "ekho -s -30 \"" + str + "\" &";
-        system(tts_ch_.c_str());
+        gobot_msg_srv::GetInt get_mute;
+        ros::service::call("/gobot_status/get_mute",get_mute);
+        if(!get_mute.response.data){
+            tts_ch_ = "ekho -s -30 \"" + str + "\" &";
+            system(tts_ch_.c_str());
+        }
     }
     //this two functions only work with robot equipped with speaker and ekho & festival packages
+
+    void SetRobot::playVoice(std::string str, int mute){
+        if(mute == -1){
+            gobot_msg_srv::GetInt get_mute;
+            ros::service::call("/gobot_status/get_mute",get_mute);
+            mute = get_mute.response.data;
+        }
+        if(mute == 0){
+            ros::Duration(1.0).sleep();
+            voice_file_ = "sudo play ~/catkin_ws/src/robot_navigation_stack/gobot_data/voice/" + str;
+            system(voice_file_.c_str());
+        }
+    }
     
 };
 

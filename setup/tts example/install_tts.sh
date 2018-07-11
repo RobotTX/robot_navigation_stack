@@ -23,11 +23,5 @@ sleep 2s
 echo "y" | sudo apt install festival-dev
 echo "[festival-dev] installed!"
 sleep 2s
-echo "y" | sudo apt install sox
-echo "[sox] installed!"
-sleep 2s
-echo "y" | sudo apt install libsox-fmt-all
-echo "[libsox-fmt-all] installed!"
-sleep 2s
 echo "#################################"
 echo "All tts tools are installed!"

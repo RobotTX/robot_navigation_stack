@@ -22,10 +22,6 @@
 #include <gobot_msg_srv/get_robot_class.h>
 #include <gobot_msg_srv/SendMap.h>
 
-
-
-#define CMD_PORT 5600
-
 using boost::asio::ip::tcp;
 
 template<typename Out>

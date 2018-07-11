@@ -2,6 +2,7 @@
 <launch>     
     <include file="$(find gobot_base)/launch/robot_sensors_params.launch"/>
     
+    
     <!--robot_base -->
     <!--laser to base tf frequency depends on the laser update rate-->
     <node pkg="tf" type="static_transform_publisher" name="base_link_to_laser" args="0.22 0.0 0.21 0 0 0 /base_link /base_laser 100" required="true"/>

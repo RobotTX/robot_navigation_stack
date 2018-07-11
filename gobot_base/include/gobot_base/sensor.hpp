@@ -35,8 +35,7 @@ class SensorClass {
             nh.getParam("USE_BUMPER", USE_BUMPER);
             nh.getParam("USE_SONAR", USE_SONAR);
             nh.getParam("USE_CLIFF", USE_CLIFF);
-            nh.getParam("WEIGHT_MAX",max_weight_);
-            nh.getParam("restart_file",restart_script);
+            nh.getParam("WEIGHT_MAX", max_weight_);
             //0x52 = Blue,0x47 = Red,0x42 = Green,0x4D = Magenta,0x43 = Cyan,0x59 = Yellow,0x57 = White, 0x00 = Off
             led_color_ = {{"green",0x42}, {"blue",0x52}, {"yellow",0x59}, {"red",0x47}, {"cyan",0x43}, {"white",0x57}, {"magenta",0x4D}, {"off",0x00}};
 
@@ -475,6 +474,10 @@ class SensorClass {
             }
         }
 
+        void threadVoice(std::string file, int mute){
+            SetRobot_.playVoice(file, mute);
+        }
+
         bool MagnetSrvCallback(gobot_msg_srv::SetBool::Request &req, gobot_msg_srv::SetBool::Response &res){
             //Electro magnet on
             if(req.data)
@@ -511,12 +514,17 @@ class SensorClass {
             SetRobot_.setMotorSpeed('F', 0, 'F', 0);
             setSound(2,1);
             //shutdown command
+            ros::NodeHandle n;
+            n.getParam("poweroff_mp3", poweroff_mp3);
+            threadVoice(poweroff_mp3, mute_);
+
             std::vector<uint8_t> buff = writeAndRead(SHUT_DOWN_CMD,5);
             while(buff.size()!=5){
                 ROS_INFO("(SENSORS::Shutdown) Shutdown system. Received %lu bytes", buff.size());
                 buff = writeAndRead(SHUT_DOWN_CMD,5);
                 ros::Duration(1.0).sleep();
             }
+
             return true;
         }
 
@@ -544,11 +552,29 @@ class SensorClass {
         }
 
         void statusCallback(const std_msgs::Int8::ConstPtr& msg){
+            ros::NodeHandle n;
             robot_status_ = msg->data;
             //enable led change when moving away from CS
             if(!led_flag_ && (robot_status_==5 || robot_status_==25)){
                 setLed(1,{"green","white"});
                 led_flag_ = true;
+            }
+            //startup ready
+            else if(robot_status_ == -2){
+                n.getParam("startup_mp3", startup_mp3);
+                std::thread t_voice(&SensorClass::threadVoice, this, startup_mp3, mute_);
+                t_voice.detach();
+            }
+            //scan ready
+            else if(robot_status_ == -3){
+                n.getParam("scan_mp3", scan_mp3);
+                std::thread t_voice(&SensorClass::threadVoice, this, scan_mp3, mute_);
+                t_voice.detach();
+            }
+            else if(robot_status_ == -4){
+                n.getParam("reload_map_mp3", reload_map_mp3);
+                std::thread t_voice(&SensorClass::threadVoice, this, reload_map_mp3, mute_);
+                t_voice.detach();
             }
         }
 
@@ -574,8 +600,13 @@ class SensorClass {
             if(robot_status_==15 || robot_status_==25)
                 setSound(2,1);
             //change led if low battery and able to change led
-            else if(low_battery_ && led_flag_)
+            else if(low_battery_ && led_flag_){
                 setSound(3,2);
+                ros::NodeHandle n;
+                n.getParam("low_battery_mp3", low_battery_mp3);
+                std::thread t_voice(&SensorClass::threadVoice, this, low_battery_mp3, mute_);
+                t_voice.detach();
+            }
         }
 
 
@@ -698,6 +729,7 @@ class SensorClass {
         bool charging_flag_, low_battery_, led_flag_, USE_BUMPER, USE_SONAR, USE_CLIFF;
         int battery_percent_, error_count_, mute_, max_weight_, robot_status_, charge_check_;
         int SENSOR_RATE, SENSOR_BYTES;
+        std::string startup_mp3, scan_mp3, reload_map_mp3, low_battery_mp3, poweroff_mp3;
 
         serial::Serial serialConnection;
         std::mutex serialMutex_;

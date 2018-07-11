@@ -2,16 +2,23 @@
 Changelog for developed mobile robot
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+1.1.4 (2018-07-11)
+-------------------
+* add pre-load .mp3 files for auto-docking, complete auto-docking, low battery warning, reload map, abort navigation operations
+
+1.1.3 (2018-07-06)
+-------------------
+* add feature of playing pre-load .mp3 files for startup, scan, poweroff operations
 
 1.1.2 (2018-06-24)
 -------------------
 * add robot mode (auto/manual) into the feedback message to UI side
-
+* fix gazebo scanning mode manual control issue
 
 1.1.1 (2018-06-21)
 -------------------
 * add LeiShen ls01B lidar driver, now support this 28m range 2D lidar
-* work on robot_localization package
+* working on robot_localization package
 
 1.1.0 (2018-06-13)
 -------------------

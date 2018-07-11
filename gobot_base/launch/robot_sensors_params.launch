@@ -1,5 +1,6 @@
 <?xml version="1.0"?>
 <launch>
+    <include file="$(find gobot_data)/launch/robot_audio_params.launch"/>
     <!-- SENSOR RELATED -->
     <param name="SENSOR_PORT"           type="string"       value="/dev/STM" />
     <param name="SENSOR_RATE"           type="int"          value="4" />

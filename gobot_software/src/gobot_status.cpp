@@ -12,7 +12,9 @@ GOBOT STATUS
 1  STOP_PATH
 0  COMPLETE_PATH/ABORTED_PATH/COMPLETE_POINT
 -1 ROBOT_READY
-
+-2 STARTUP_READY
+-3 SCAN_READY
+-4 MAP_READY
 DOCK STATUS
 3  GO TO CHARGING
 1  CHARING
@@ -26,6 +28,8 @@ static const std::string sep = std::string(1, 31);
 
 std::mutex gobotStatusMutex,dockStatusMutex,stageMutex,pathMutex,nameMutex,homeMutex,loopMutex,muteMutex,wifiMutex,batteryMutex,speedMutex;
 std_srvs::Empty empty_srv;
+
+std::string abort_navigation_mp3, auto_docking_mp3, docking_complete_mp3;
 
 std::string wifiFile, deleteWifi;
 std::vector<std::string> wifi_;
@@ -103,8 +107,14 @@ void updateStatus(){
     update_info_pub.publish(update_status);
 }
 
+
+void threadVoice(std::string file, int mute){
+    SetRobot.playVoice(file, mute);
+}
+
 //change robot led and sound to inform people its status
 void robotResponse(int status, std::string text){
+    ros::NodeHandle n;
     //permanent green case
     if (text=="COMPLETE_EXPLORING" || text=="COMPLETE_PATH" || text=="COMPLETE_POINT") {
         SetRobot.setLed(0,{"green"});
@@ -113,21 +123,30 @@ void robotResponse(int status, std::string text){
     else if(text=="STOP_EXPLORING" || text=="STOP_DOCKING" || text=="STOP_PATH" || text=="PAUSE_PATH"){
         SetRobot.setLed(0,{"blue"});
     }
-    else if(text=="FAIL_DOCKING" || text=="ABORTED_PATH"){
-        SetRobot.setLed(0,{"red"});
-        SetRobot.setSound(3,2);
-    }
     else if(text=="PLAY_PATH" || text=="PLAY_POINT" || text=="EXPLORING"){
         SetRobot.setLed(1,{"green","white"});
     }
     else if(text=="DELAY" || text=="WAITING"){
         SetRobot.setLed(1,{"blue","white"});
     }
+    else if(text=="FAIL_DOCKING" || text=="ABORTED_PATH"){
+        SetRobot.setLed(0,{"red"});
+        SetRobot.setSound(3,2);
+        n.getParam("abort_navigation_mp3", abort_navigation_mp3);
+        std::thread t_voice(threadVoice, abort_navigation_mp3, mute_);
+        t_voice.detach();
+    }
     else if(text=="DOCKING"){
         SetRobot.setLed(1,{"yellow","cyan"});
+        n.getParam("auto_docking_mp3", auto_docking_mp3);
+        std::thread t_voice(threadVoice, auto_docking_mp3, mute_);
+        t_voice.detach();
     }
     else if(text=="COMPLETE_DOCKING"){
         SetRobot.setSound(1,2);
+        n.getParam("docking_complete_mp3", docking_complete_mp3);
+        std::thread t_voice(threadVoice, docking_complete_mp3, mute_);
+        t_voice.detach();
     }
 }
 
@@ -581,6 +600,7 @@ void bumpersCallback(const gobot_msg_srv::BumperMsg::ConstPtr& bumpers){
 
 void initialData(){
     ros::NodeHandle n;
+
     //read stage
     n.getParam("path_stage_file", pathStageFile);
     std::ifstream ifsStage(pathStageFile, std::ifstream::in);

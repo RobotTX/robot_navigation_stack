@@ -69,6 +69,14 @@ sleep 2s
 echo "[libspnav-dev] installing..."
 echo "y" | sudo apt-get install libspnav-dev
 echo "[libspnav-dev] installed!"
+sleep 2s
+#sudo play voice files
+echo "y" | sudo apt install sox
+echo "[sox] installed!"
+sleep 2s
+#support mp3 format
+echo "y" | sudo apt install libsox-fmt-all
+echo "[libsox-fmt-all] installed!"
 echo "#################################"
 echo "All tools are installed!"
 echo "#################################"
