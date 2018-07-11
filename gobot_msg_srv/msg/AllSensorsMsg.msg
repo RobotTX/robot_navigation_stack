@@ -10,6 +10,8 @@ std_msgs/Int8 reset_button
 
 gobot_msg_srv/CliffMsg cliff
 
+std_msgs/Int8 magnet
+
 gobot_msg_srv/GyroMsg gyro
 
 gobot_msg_srv/IrMsg infrared

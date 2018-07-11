@@ -83,6 +83,7 @@ class SensorClass {
             battery_pub_ = nh.advertise<gobot_msg_srv::BatteryMsg>("/gobot_base/battery_topic", 1);
             bumper_pub_ = nh.advertise<gobot_msg_srv::BumperMsg>("/gobot_base/bumpers_raw_topic", 1);
             proximity_pub_ = nh.advertise<gobot_msg_srv::ProximityMsg>("/gobot_base/proximity_topic", 1);
+            magnet_pub_ = nh.advertise<std_msgs::Int8>("/gobot_base/magnet_topic",1);
 
             MagnetSrv = nh.advertiseService("/gobot_base/set_magnet", &SensorClass::MagnetSrvCallback, this);
             useSonarSrv = nh.advertiseService("/gobot_base/use_sonar", &SensorClass::useSonarSrvCallback, this);
@@ -375,6 +376,13 @@ class SensorClass {
 
                     sensors_msg.reset_button = reset_button;
 
+
+                    int8_t magnet_status = buff.at(48);
+                    std_msgs::Int8 magnet_data;
+                    magnet_data.data = magnet_status;
+
+                    sensors_msg.magnet = magnet_data;
+
                     /// Gyro+Accelerametor = D46-D57 / B48-B59
                     gobot_msg_srv::GyroMsg gyro;
                     std_msgs::Float32 temperature;
@@ -405,6 +413,7 @@ class SensorClass {
                         proximity_pub_.publish(proximity_data);
                         button_pub_.publish(button);
                         battery_pub_.publish(battery_data);
+                        magnet_pub_.publish(magnet_data);
 
                         if (!error_weight)
                             weight_pub_.publish(weight_data);
@@ -737,7 +746,8 @@ class SensorClass {
  
         ros::Time last_led_time_, reset_wifi_time_;
         ros::Timer ledTimer_;
-        ros::Publisher sensors_pub_, bumper_pub_, ir_pub_, proximity_pub_, sonar_pub_, weight_pub_, battery_pub_, cliff_pub_, button_pub_, gyro_pub_, temperature_pub_;
+        ros::Publisher sensors_pub_, bumper_pub_, ir_pub_, proximity_pub_, sonar_pub_, weight_pub_, battery_pub_, 
+                       cliff_pub_, button_pub_, gyro_pub_, temperature_pub_, magnet_pub_;
         ros::ServiceServer shutdownSrv, displayDataSrv, sensorsReadySrv, setChargingSrv, useBumperSrv, useSonarSrv, useCliffSrv, MagnetSrv;
         ros::Subscriber led_sub_, sound_sub_, mute_sub_, status_sub_;
 

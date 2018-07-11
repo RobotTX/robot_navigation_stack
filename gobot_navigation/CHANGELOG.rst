@@ -5,6 +5,8 @@ Changelog for developed mobile robot
 1.1.4 (2018-07-11)
 -------------------
 * add pre-load .mp3 files for auto-docking, complete auto-docking, low battery warning, reload map, abort navigation operations
+* add service to control electro-magnet on/off via stm32
+* add topic for magnet connection status by reading it from stm32
 
 1.1.3 (2018-07-06)
 -------------------
