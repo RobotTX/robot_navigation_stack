@@ -2,6 +2,7 @@
 <launch>
 
     <node pkg="robot_lib_test" type="obstacle_detection_avoidance_test" name="obstacle_detection_avoidance_test" output="screen" required="true">
-        <rosparam file="$(find robot_lib_test)/params/robot_lib_params.yaml" command="load" />
+        <rosparam file="$(find gobot_navigation)/params/laser_and_footprint_params.yaml" command="load" ns="global_costmap" />
+        <rosparam file="$(find robot_lib_test)/params/robot_lib_params.yaml" command="load" ns="global_costmap" />
     </node>
 </launch>

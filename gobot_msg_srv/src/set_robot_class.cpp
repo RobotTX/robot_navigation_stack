@@ -236,7 +236,6 @@ namespace robot_class {
         ros::Duration(6.0).sleep();
     }
 
-    //this two functions only work with robot equipped with speaker and ekho & festival packages
     void SetRobot::speakEnglish(std::string str){
         gobot_msg_srv::GetInt get_mute;
         ros::service::call("/gobot_status/get_mute",get_mute);
@@ -254,7 +253,6 @@ namespace robot_class {
             system(tts_ch_.c_str());
         }
     }
-    //this two functions only work with robot equipped with speaker and ekho & festival packages
 
     void SetRobot::playVoice(std::string str, int mute){
         if(mute == -1){
@@ -267,6 +265,13 @@ namespace robot_class {
             voice_file_ = "sudo play ~/catkin_ws/src/robot_navigation_stack/gobot_data/voice/" + str;
             system(voice_file_.c_str());
         }
+    }
+
+    double SetRobot::getPlayPointYaw(double yaw, std::string unit){
+        if(unit.compare("deg")!=0){
+            yaw = yaw*180/3.1415926;
+        }
+        return  (-yaw-90.0);
     }
     
 };

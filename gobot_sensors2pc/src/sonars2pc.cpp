@@ -46,10 +46,10 @@ void sonarCallback(const gobot_msg_srv::SonarMsg::ConstPtr& sonars){
 
 void initParams(){
     ros::NodeHandle nh;
-    nh.param("rear_right_frame", rear_right_frame, std::string("/rear_right_sonar"));
-    nh.param("rear_left_frame", rear_left_frame, std::string("/rear_left_sonar"));
-    nh.param("front_right_frame", front_right_frame, std::string("/front_right_sonar"));
-    nh.param("front_left_frame", front_left_frame, std::string("/front_left_sonar"));
+    nh.param("rear_right_frame", rear_right_frame, std::string("rear_right_sonar"));
+    nh.param("rear_left_frame", rear_left_frame, std::string("rear_left_sonar"));
+    nh.param("front_right_frame", front_right_frame, std::string("front_right_sonar"));
+    nh.param("front_left_frame", front_left_frame, std::string("front_left_sonar"));
 
     nh.getParam("SONAR_MIN", SONAR_MIN);
     nh.getParam("SONAR_MAX", SONAR_MAX);

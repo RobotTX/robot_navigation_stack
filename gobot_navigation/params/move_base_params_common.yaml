@@ -25,7 +25,7 @@ shutdown_costmaps: false # True
 controller_frequency: 10
 
 # Frequency of the global planner
-planner_frequency: 1
+planner_frequency: 2
 
 recovery_behavior_enabled: true
 

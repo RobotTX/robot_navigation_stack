@@ -5,7 +5,8 @@
     <param name="map_id_file"   type="string" value="$(find gobot_data)/maps/mapId.txt" />
     
     <node pkg="gmapping" type="slam_gmapping" name="slam_gmapping" required="true">
-        <rosparam file="$(find gobot_navigation)/params/gmapping_params.yaml" command="load" />
+        <rosparam file="$(find gobot_navigation)/params/laser_and_footprint_params.yaml"    command="load" />
+        <rosparam file="$(find gobot_navigation)/params/gmapping_params.yaml"               command="load" />
     </node>
     
     <node pkg="gobot_recovery" type="scan_startup" name="scan_startup" output="screen" />
@@ -14,14 +15,19 @@
     
     <!--move_base -->
     <node pkg="move_base" type="move_base" respawn="false" name="move_base" output="screen" required="true">
+        <rosparam file="$(find gobot_navigation)/params/laser_and_footprint_params.yaml"        command="load" ns="global_costmap" />
         <rosparam file="$(find gobot_navigation)/params/costmap_params_common.yaml"             command="load" ns="global_costmap" />
+        <rosparam file="$(find gobot_navigation)/params/global_costmap_params_scan.yaml"        command="load" />
+
+        <rosparam file="$(find gobot_navigation)/params/laser_and_footprint_params.yaml"        command="load" ns="local_costmap" />
         <rosparam file="$(find gobot_navigation)/params/costmap_params_common.yaml"             command="load" ns="local_costmap" />
         <rosparam file="$(find gobot_navigation)/params/local_costmap_params_scan.yaml"         command="load" />
-        <rosparam file="$(find gobot_navigation)/params/global_costmap_params_scan.yaml"        command="load" />
+
         <rosparam file="$(find gobot_navigation)/params/move_base_params_scan.yaml"             command="load" />
         <rosparam file="$(find gobot_navigation)/params/move_base_params_common.yaml"           command="load" />
 
         <!-- to use with the teb local planner -->
+        <rosparam file="$(find gobot_navigation)/params/laser_and_footprint_params.yaml"        command="load" ns="TebLocalPlannerROS" />
         <rosparam file="$(find gobot_navigation)/params/teb_local_planner_params_common.yaml"   command="load" ns="TebLocalPlannerROS"/>
         <rosparam file="$(find gobot_navigation)/params/teb_local_planner_params_scan.yaml"     command="load" />
         <rosparam file="$(find gobot_navigation)/params/costmap_converter_params.yaml"          command="load" />
@@ -29,6 +35,7 @@
 
     <!--hector_explore -->
     <node pkg="hector_exploration_node" type="exploration_planner_node" name="hector_exploration_node">
+        <rosparam file="$(find gobot_navigation)/params/laser_and_footprint_params.yaml"        command="load" ns="global_costmap" />
         <rosparam file="$(find gobot_navigation)/params/costmap_params_common.yaml"             command="load" ns="global_costmap" />
         <rosparam file="$(find gobot_navigation)/params/global_costmap_params_scan.yaml"        command="load" />
     </node>

@@ -190,7 +190,7 @@ bool setWifiSrvCallback(gobot_msg_srv::SetStringArray::Request &req, gobot_msg_s
     ros::service::call("/gobot_software/disconnet_servers",empty_srv);
     //stop robot
     std::thread([](){
-        ros::service::call("/gobot_function/pause_path", empty_srv);
+        ros::service::call("/gobot_command/pause_path", empty_srv);
     }).detach();
 
     //if previous wifi is not empty and receive a new wifi, we delete the previous wifi in the netowrk list

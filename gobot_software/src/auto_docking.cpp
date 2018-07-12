@@ -58,8 +58,8 @@ bool startDocking(void){
         
         /// send the goal
         if(ac->isServerConnected()) {
-            ac->sendGoal(currentGoal);
             startDockingParams();
+            ac->sendGoal(currentGoal);
 
             return true;
         }
@@ -299,8 +299,8 @@ void finishedDocking(bool move_forward){
                     currentGoal.target_pose.pose.position.x = landingPointX;
                     currentGoal.target_pose.pose.position.y = landingPointY;
                 }
-                ac->sendGoal(currentGoal);
                 startDockingParams();
+                ac->sendGoal(currentGoal);
             }
         }
         else{ 

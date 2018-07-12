@@ -53,10 +53,10 @@ void initParams(){
     ros::NodeHandle nh;
 
     /// We get the frames on which the cliffs are attached
-    nh.param("front_right_cliff", front_right_cliff_frame, std::string("/front_right_cliff"));
-    nh.param("front_left_cliff", front_left_cliff_frame, std::string("/front_left_cliff"));
-    nh.param("back_right_cliff", back_right_cliff_frame, std::string("/back_right_cliff"));
-    nh.param("back_left_cliff", back_left_cliff_frame, std::string("/back_left_cliff"));
+    nh.param("front_right_cliff", front_right_cliff_frame, std::string("front_right_cliff"));
+    nh.param("front_left_cliff", front_left_cliff_frame, std::string("front_left_cliff"));
+    nh.param("back_right_cliff", back_right_cliff_frame, std::string("back_right_cliff"));
+    nh.param("back_left_cliff", back_left_cliff_frame, std::string("back_left_cliff"));
 
     nh.getParam("CLIFF_THRESHOLD", CLIFF_THRESHOLD);
     nh.getParam("USE_CLIFF_PC", use_pc);

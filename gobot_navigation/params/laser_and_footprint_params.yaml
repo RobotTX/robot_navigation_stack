@@ -1,0 +1,34 @@
+# Define variables for laser and footprint
+laser_distance1: &laser_distance1 4.5
+laser_distance2: &laser_distance2 5.0
+robot_footprint: &robot_footprint   [[0.250,0],  [0.245,-0.165],   [0.215,-0.215],   [0.165,-0.240],
+                                    [0,-0.245],  [-0.165,-0.240],  [-0.215,-0.215],  [-0.245,-0.165],
+                                    [-0.250,0],  [-0.245,0.165],   [-0.215,0.215],   [-0.165,0.240],
+                                    [0,0.245],   [0.165,0.240],    [0.215,0.215],    [0.245,0.165]]
+                                    
+# AMCL laser range for amcl_params.yaml
+## Laser model parameters
+laser_min_range: -1.0
+laser_max_range: *laser_distance2
+
+# COSTMAP laser range for costmap_params_common.yaml
+obstacle_layer:
+    laser_scan_sensor: {
+        obstacle_range: *laser_distance1,
+        raytrace_range: *laser_distance2
+    }
+
+# Gmapping laser range for gmapping_params.yaml
+## maxUrange < maximum range of the real sensor <= maxRange
+maxUrange: *laser_distance1
+maxRange: *laser_distance2
+
+
+# GMAPPING & COSTMAP footprint for costmap_params_common.yaml & gmapping_params.yaml
+footprint: *robot_footprint
+
+# TEB_LOCAL_PLANNER footprint for teb_local_planner_params_common.yaml
+## types: "point", "circular", "two_circles", "line", "polygon"
+footprint_model: 
+    type: "polygon"
+    vertices: *robot_footprint

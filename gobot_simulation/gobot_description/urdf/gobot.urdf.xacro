@@ -89,7 +89,7 @@
 
     <!-- Odometry/Wheel controller -->
     <wheel_controller base_link="base_link" odom_topic="odom" command_topic="cmd_vel" left_wheel_joint="front_left_wheel_joint" right_wheel_joint="front_right_wheel_joint" 
-    update_rate="40" wheel_separation="0.440" wheel_diameter="${driving_wheel_radius*2}" torque="5" />
+    update_rate="10" wheel_separation="0.440" wheel_diameter="${driving_wheel_radius*2}" torque="5" />
 
 
     <!-- caster wheels -->

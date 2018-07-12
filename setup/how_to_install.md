@@ -53,12 +53,12 @@ sudo chmod -R +x ~/catkin_ws/src/robot_navigation_stack
 robot_sensors_param.launch      wheel_separation    middle:0.351  outside:0.402
                                 wheel_radius        0.0725 -> 0.075
                                 ticks_per_rotation  *819.2 -> 980
+
+#*laser_and_footprint_params.yaml includes:
 * footprint
 costmap.yaml/gmapping.yaml/teb_local.yaml
-[[0.250,0],[0.245,-0.165], [0.225,-0.220], [0.165,-0.240],
-[0,-0.245],[-0.165,-0.240],[-0.225,-0.220],[-0.245,-0.165],
-[-0.250,0],[-0.245,0.165], [-0.225,0.220], [-0.165,0.240],
-[0,0.245], [0.165,0.240],  [0.225,0.220],  [0.245,0.165]]
+* laser
+amcl.yaml/costmap_common_params.yaml/gmapping_params.yaml
 
 * TF
 -sonar z=0.3-0.4 front_right:0.243,0.12; front_left:0.243,-0.12; back_right:-0.246,0.112; back_left:-0.246,-0.112
@@ -69,11 +69,8 @@ costmap.yaml/gmapping.yaml/teb_local.yaml
 *costmap_common.yaml/teb_local_planner.yaml
 sqrt(0.255^2+0.25^2) = 0.357  
 inflation_radius = 0.45     0.4/0.45/0.5  
-s
-* laser
-amcl.yaml
-costmap_common_params.yaml
-gmapping_params.yaml
+
+
 
 ###################################################
 

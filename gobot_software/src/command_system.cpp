@@ -7,10 +7,7 @@ const int max_length = 1024;
 bool scanning = false;
 bool simulation = false;
 
-int robot_pos_port = 4001;
-int map_port = 4002;
-int laser_port = 4003;
-int recovered_position_port = 4004;
+int robot_pos_port = 4001, map_port = 4002, laser_port = 4003;
 std::string self_ip = "0.0.0.0";
 
 std::vector<char> slient_command({'g','t','u','s','v'}),
@@ -758,10 +755,6 @@ double DegreeToRad(double degree){
     return degree*3.1415926/180;
 }
 
-double convertYawToPlayPointYaw(double yaw){
-    return RadToDegree(-yaw-1.57079);
-}
-
 bool sendMapAutomatically(const std::string ip){
     //ROS_INFO("(COMMAND_SYSTEM) Launching the service to get the map auto");
 
@@ -931,7 +924,7 @@ bool lowBatterySrvCallback(std_srvs::Empty::Request &req, std_srvs::Empty::Respo
         ros::service::call("/gobot_status/get_pose",robot_pose);
         for(int i=0; i<robot_pose.response.data.size();i++)
             resume_pose.push_back(robot_pose.response.data[i]);
-        resume_pose.back() = std::to_string(convertYawToPlayPointYaw(std::stod(resume_pose.back())));
+        resume_pose.back() = std::to_string(SetRobot.getPlayPointYaw(std::stod(resume_pose.back()),"rad"));
         //ROS_INFO("(COMMAND_SYSTEM) Sending the robot home");
         std::vector<std::string> command({"o"});
         std::string commandStr = command.at(0) + sep;

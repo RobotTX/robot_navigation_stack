@@ -1,6 +1,6 @@
 <launch>
 
-    <node pkg="tf" type="static_transform_publisher" name="base_link_to_laser" args="0.22 0.0 0.21 0 0 0 /base_link /base_laser 100" required="true"/>
+    <node pkg="tf" type="static_transform_publisher" name="base_link_to_laser" args="0.22 0.0 0.21 0 0 0 base_link base_laser 100" required="true"/>
     
     <node name="ls01B" pkg="ls01B" type="ls01B" output="screen">
 　　		<param name="scan_topic"    value="scan"/>         #设置激光数据topic名称

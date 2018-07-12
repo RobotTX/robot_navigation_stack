@@ -138,8 +138,6 @@ void sendCommand(const std::string ip, const std::vector<std::string> command, s
 double RadToDegree(double rad);
 
 double DegreeToRad(double degree);
-
-double convertYawToPlayPointYaw(double yaw);
 /*********************************** SERVICES ***********************************/
 bool pausePathSrvCallback(std_srvs::Empty::Request &req, std_srvs::Empty::Response &res);
 

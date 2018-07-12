@@ -55,11 +55,12 @@ else
             sudo service network-manager restart #restart network-manager if has issue
         fi
         #delete servers that we don't want to connect
-        #sed -i "/$var.33/d" $isAlive
+        #sed -i "/$var.14/d" $isAlive
     else
         #if can not find assigned wifi in the list, build robot hotspot for user to connect
         echo "(PING WIFI) Unable to find assigned wifi:#$wifiname# in the scan list"
-        connection="hotspot"
+        sudo service network-manager restart  #restart network-manager if has issue
+        #connection="hotspot"
     fi
 fi
 #if need to build hotspot

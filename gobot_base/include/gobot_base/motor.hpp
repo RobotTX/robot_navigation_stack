@@ -53,7 +53,6 @@ class MotorClass {
             //set up the planner's thread
             odom_thread_ = new boost::thread(&MotorClass::odomThread, this);
 
-            vel_thread_ = new boost::thread(&MotorClass::velThread, this);
 
             //Startup begin
             motorReadySrv = nh.advertiseService("/gobot_startup/motor_ready", &MotorClass::motorReadySrvCallback,this);
@@ -62,10 +61,6 @@ class MotorClass {
 
         ~MotorClass(){
             motorSpd_sub_.shutdown();
-
-            vel_thread_->interrupt();
-            vel_thread_->join();
-            delete vel_thread_;
 
             odom_thread_->interrupt();
             odom_thread_->join();
@@ -246,23 +241,6 @@ class MotorClass {
             }
         } 
 
-        void velThread(){
-            ros::Rate r(odom_rate_);
-            /*
-            while(ros::ok()){
-                spdMutex_.lock();
-                leftSpeed_ = rec_leftSpeed_;
-                rightSpeed_ = rec_rightSpeed_;
-                
-                spdMutex_.unlock();
-                
-                writeAndRead(std::vector<uint8_t>({0x00, 0x31, leftSpeed_, 0x00, 0x32, rightSpeed_})); 
-
-                r.sleep();
-            }
-            */
-        }
-
 
         void motorSpdCallback(const gobot_msg_srv::MotorSpeedMsg::ConstPtr& speed){
             spdMutex_.lock();
@@ -334,5 +312,5 @@ class MotorClass {
         ros::Publisher odom_pub_, odom_test_pub_, encoder_pub_, real_vel_pub_;
         ros::Subscriber motorSpd_sub_;
 
-        boost::thread *odom_thread_, *vel_thread_;
+        boost::thread *odom_thread_;
 };

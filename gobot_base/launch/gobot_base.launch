@@ -5,9 +5,9 @@
     
     <!--robot_base -->
     <!--laser to base tf frequency depends on the laser update rate-->
-    <node pkg="tf" type="static_transform_publisher" name="base_link_to_laser" args="0.22 0.0 0.21 0 0 0 /base_link /base_laser 100" required="true"/>
+    <node pkg="tf" type="static_transform_publisher" name="base_link_to_laser" args="0.22 0.0 0.21 0 0 0 base_link base_laser 100" required="true"/>
     <!--imu to base tf frequency depends on the imu update rate-->
-    <node pkg="tf" type="static_transform_publisher" name="base_link_to_imu" args="0.0 0.0 0.20 0 0 0 /base_link /imu 100" required="true"/>
+    <node pkg="tf" type="static_transform_publisher" name="base_link_to_imu" args="0.0 0.0 0.20 0 0 0 base_link imu 100" required="true"/>
 
     <node pkg="joy"         type="joy_node"     name="joy_node"     output="screen" respawn="true"/>
     <node pkg="gobot_base"  type="sensor_node"  name="base_sensors" output="screen" required="true"/>

@@ -13,36 +13,17 @@ MoveBaseClient* ac;
 robot_class::SetRobot SetRobot;
 
 /// To get the starting position
-bool getRobotPos(void){
-    try {
-        tf::TransformListener listener;
-        /// Wait for the transform between the map_frame and the base_frame
-        listener.waitForTransform(map_frame, base_frame, ros::Time(), ros::Duration(2.0));
-
-        tf::StampedTransform transform;
-        /// Get the transformation from the map_frame to the base_frame into transform
-        listener.lookupTransform(map_frame, base_frame, ros::Time(0), transform);
-
-        /// Construct the starting pose
-        startingPose.position.x = transform.getOrigin().getX();
-        startingPose.position.y = transform.getOrigin().getY();
-        startingPose.position.z = transform.getOrigin().getZ();
-        startingPose.orientation.x = transform.getRotation().getX();
-        startingPose.orientation.y = transform.getRotation().getY();
-        startingPose.orientation.z = transform.getRotation().getZ();
-        startingPose.orientation.w = transform.getRotation().getW();
-
+bool getRobotPos(){
+    gobot_msg_srv::GetStringArray robot_pose;
+    ros::service::call("/gobot_status/get_pose",robot_pose);
+    if(robot_pose.response.data.size()==3){
+        startingPose.position.x = std::stod(robot_pose.response.data[0]);
+        startingPose.position.y = std::stod(robot_pose.response.data[1]);
+        startingPose.orientation = tf::createQuaternionMsgFromYaw(std::stod(robot_pose.response.data[2]));
         ROS_INFO("(SCAN_EXPLORE) Robot position : (%f, %f, %f) - Robot orientation : (%f, %f, %f, %f)", 
-        startingPose.position.x, startingPose.position.y,
-        startingPose.position.z, startingPose.orientation.x,
-        startingPose.orientation.y, startingPose.orientation.z,
-        startingPose.orientation.w);
-
-    } catch (tf::TransformException &ex) {
-        ROS_ERROR("(SCAN_EXPLORE) Got a transform problem : %s", ex.what());
-        return false;
+        startingPose.position.x, startingPose.position.y,startingPose.position.z, 
+        startingPose.orientation.x,startingPose.orientation.y, startingPose.orientation.z,startingPose.orientation.w);
     }
-
     return true;
 }
 
@@ -225,7 +206,6 @@ int main(int argc, char* argv[]){
     ros::Duration(1.0).sleep();
     ROS_INFO("(SCAN_EXPLORE) Waiting for Robot setting hardware...");
     ros::service::waitForService("/gobot_startup/pose_ready", ros::Duration(90.0));
-    ros::service::waitForService("/gobot_function/play_path",ros::Duration(90.0));
     ROS_INFO("(SCAN_EXPLORE) Robot setting hardware is ready.");
     //Startup end
 

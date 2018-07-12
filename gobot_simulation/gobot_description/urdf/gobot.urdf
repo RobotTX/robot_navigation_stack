@@ -533,7 +533,7 @@
     <plugin filename="libgobot_diff_drive_plugin.so" name="differential_drive_controller">
       <alwaysOn>true</alwaysOn>
       <legacyMode>false</legacyMode>
-      <updateRate>40</updateRate>
+      <updateRate>10</updateRate>
       <leftJoint>front_left_wheel_joint</leftJoint>
       <rightJoint>front_right_wheel_joint</rightJoint>
       <wheelSeparation>0.44</wheelSeparation>

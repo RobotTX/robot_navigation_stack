@@ -6,8 +6,8 @@ local_costmap:
     publish_frequency: 0.0
     static_map: false
     rolling_window: true
-    width: 4.0
-    height: 4.0
+    width: 5.0
+    height: 5.0
     plugins:
         # Track the obstacles detected by sonar sensors
         - {name: sonar_layer, type: "range_sensor_layer::RangeSensorLayer"}

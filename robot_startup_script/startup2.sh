@@ -1,11 +1,11 @@
 #!/bin/bash
 source /opt/ros/kinetic/setup.bash
 source ~/catkin_ws/devel/setup.bash
-var=$(rosclean check | grep 'G')
-if [ ! -z "$var" ] 
+log_data=$(rosclean check | grep 'G')
+if [ "$log_data" ]
 then
     echo "y" | rosclean purge
-    echo "Cleaned ros log data:"$var"G"
+    echo "Cleaned ros log data:"$log_data "G"
 fi
 sudo sh ~/catkin_ws/src/robot_navigation_stack/gobot_data/command/robot_log.sh
 sleep 2s

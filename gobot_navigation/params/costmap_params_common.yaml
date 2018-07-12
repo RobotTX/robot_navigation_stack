@@ -1,12 +1,5 @@
 #http://wiki.ros.org/costmap_2d
 
-# This is the real footprint but we want the footprint to be slightly larger than the robot's real contour
-# New more complex footprint
-footprint: [[0.250,0],[0.245,-0.165], [0.215,-0.215], [0.165,-0.240],
-            [0,-0.245],[-0.165,-0.240],[-0.215,-0.215],[-0.245,-0.165],
-            [-0.250,0],[-0.245,0.165], [-0.215,0.215], [-0.165,0.240],
-            [0,0.245], [0.165,0.240],  [0.215,0.215],  [0.245,0.165]]
-
 footprint_padding: 0.0001
 resolution: 0.04
 transform_tolerance: 0.5
@@ -38,8 +31,6 @@ obstacle_layer:
     z_voxels: 5
     publish_voxel_map: true
     laser_scan_sensor: {
-        obstacle_range: 4.5,
-        raytrace_range: 5.0,
         sensor_frame: base_laser, 
         data_type: LaserScan, 
         topic: /scan, 

@@ -16,9 +16,6 @@ save_pose_rate: 1
 kld_err: 0.05
 kld_z: 0.99
 
-# Laser model parameters
-laser_min_range: -1.0
-laser_max_range: 5.0
 #How many evenly-spaced beams in each scan to be used when updating the filter
 #360 degree/ 72 = 5 degree
 #240 degree/ 48 = 5 degree
@@ -38,5 +35,5 @@ odom_alpha4: 0.03
 odom_alpha5: 0.001
 odom_frame_id: odom
 base_frame_id: base_link
-global_frame_id: /map
+global_frame_id: map
 tf_broadcast: true
