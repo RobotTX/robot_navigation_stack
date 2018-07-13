@@ -5,5 +5,5 @@
 
 	<node pkg="gobot_software" type="move_it" 		name="function_move_it" 		output="screen" respawn="true"/>
 	<node pkg="gobot_software" type="auto_docking" 	name="function_auto_docking" 	output="screen" respawn="true" />
-	<node pkg="gobot_software" type="battery_check" name="function_battery_check" 	output="screen" respawn="true" />
+	<node pkg="gobot_software" type="battery_monitor" name="function_battery_monitor" 	output="screen" respawn="true" />
 </launch>

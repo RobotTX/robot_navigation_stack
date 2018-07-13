@@ -40,7 +40,7 @@
         <rosparam file="$(find gobot_navigation)/params/global_costmap_params_scan.yaml"        command="load" />
     </node>
 
-    <node pkg="hector_exploration_node" type="move_base_controller" name="exploration_controller" output="screen" required="true">
+    <node pkg="gobot_software" type="scan_controller" name="exploration_controller" output="screen" required="true">
         <param name="no_frontier_threshold" type="int" value="5"/>
     </node>
 

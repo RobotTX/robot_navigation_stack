@@ -10,6 +10,7 @@
 #include <gobot_msg_srv/set_robot_class.h>
 #include <gobot_msg_srv/get_robot_class.h>
 #include <gobot_msg_srv/robot_msgs.h>
+#include <gobot_software/robot_move.h>
 
 
 ros::Subscriber magnetSub, alignmentSub, bumperSub;
@@ -130,7 +131,8 @@ int main(int argc, char* argv[]){
     ros::NodeHandle nh;
 
     SetRobot.initialize();
-    
+    RobotMove robot_m;
+    //robot_m.initialize();
 
     ros::ServiceServer startDetectionSrv = nh.advertiseService("/gobot_function/startDetection", startDetectionCb);
     ros::ServiceServer stopDetectionSrv = nh.advertiseService("/gobot_function/stopDetection", stopDetectionCb);

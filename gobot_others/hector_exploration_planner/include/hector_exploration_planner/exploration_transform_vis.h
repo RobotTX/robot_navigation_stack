@@ -66,7 +66,7 @@ namespace hector_exploration_planner{
         float max_f = static_cast<float>(max);
 
         sensor_msgs::PointCloud cloud;
-        cloud.header.frame_id = "/map";
+        cloud.header.frame_id = "map";
         cloud.header.stamp = ros::Time::now();
 
         double x_world, y_world;

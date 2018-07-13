@@ -114,9 +114,6 @@ target_link_libraries(exploration_planner_node
     ${catkin_LIBRARIES}
 )
 
-add_executable(move_base_controller src/move_base_controller.cpp)
-target_link_libraries(move_base_controller ${catkin_LIBRARIES} ${hector_exploration_node})
-
 
 ## Add cmake target dependencies of the executable/library
 ## as an example, message headers may need to be generated before nodes

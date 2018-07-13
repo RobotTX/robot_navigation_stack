@@ -1,6 +1,9 @@
 # Define variables for laser and footprint
+## laser obstacle range
 laser_distance1: &laser_distance1 4.5
+## laser maximum range
 laser_distance2: &laser_distance2 5.0
+## robot footprint
 robot_footprint: &robot_footprint   [[0.250,0],  [0.245,-0.165],   [0.215,-0.215],   [0.165,-0.240],
                                     [0,-0.245],  [-0.165,-0.240],  [-0.215,-0.215],  [-0.245,-0.165],
                                     [-0.250,0],  [-0.245,0.165],   [-0.215,0.215],   [-0.165,0.240],

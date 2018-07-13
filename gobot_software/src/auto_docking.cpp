@@ -266,7 +266,7 @@ void newProximityInfo(const gobot_msg_srv::ProximityMsg::ConstPtr& proximitySign
 void finishedDocking(bool move_forward){
     ros::NodeHandle nh;
     resetDockingParams();
-    ros::Duration(6.0).sleep();
+    ros::Duration(8.0).sleep();
     gobot_msg_srv::IsCharging isCharging;
     if(ros::service::call("/gobot_status/charging_status", isCharging) && isCharging.response.isCharging){
         dock_status = 1;

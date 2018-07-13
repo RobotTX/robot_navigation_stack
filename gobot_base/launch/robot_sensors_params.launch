@@ -8,7 +8,7 @@
     <param name="WEIGHT_MAX"            type="int"          value="200000" />
     <!-- MOTOR RELATED -->
     <param name="MOTOR_PORT"            type="string"       value="/dev/MD" />
-    <param name="ODOM_RATE"             type="int"          value="15" />
+    <param name="ODOM_RATE"             type="int"          value="10" />
     <param name="WHEEL_SEP"             type="double"       value="0.35" />
     <param name="WHEEL_RADIUS"          type="double"       value="0.075" />
     <param name="WAIT_COLLISION"        type="double"       value="4.0" />
@@ -17,7 +17,7 @@
     <param name="FACTOR_B"              type="double"       value="-20.0" />
     <param name="TICKS_PER_ROT"         type="double"       value="982" />
     <!-- GYRO RELATED -->
-    <param name="GYRO_PORT"            type="string"       value="/dev/GYRO" />
+    <param name="GYRO_PORT"             type="string"       value="/dev/GYRO" />
     <!-- LIDAR RELATED -->
     <param name="inverted"              type="bool"         value="false" />
     # RPLIDAR

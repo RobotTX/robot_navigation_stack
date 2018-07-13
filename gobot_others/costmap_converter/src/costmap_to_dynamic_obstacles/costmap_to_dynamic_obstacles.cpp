@@ -198,7 +198,7 @@ void CostmapToDynamicObstacles::compute()
   ObstacleArrayPtr obstacles(new ObstacleArrayMsg);
   // header.seq is automatically filled
   obstacles->header.stamp = ros::Time::now();
-  obstacles->header.frame_id = "/map"; //Global frame /map
+  obstacles->header.frame_id = "map"; //Global frame /map
 
   // For all tracked objects
   for (unsigned int i = 0; i < (unsigned int)tracker_->tracks.size(); ++i)

@@ -83,7 +83,7 @@ def myhook():
 	twist.linear.x = 0; twist.linear.y = 0; twist.linear.z = 0
 	twist.angular.x = 0; twist.angular.y = 0; twist.angular.z = 0
 	pub.publish(twist)
-	print "(teleop) shutdown time!"
+	print "(tcp_teleop_control) shutdown time!"
 
 rospy.on_shutdown(myhook)
 
