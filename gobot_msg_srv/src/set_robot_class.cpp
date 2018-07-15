@@ -22,6 +22,30 @@ namespace robot_class {
         initial_pose_pub_ = nh_.advertise<geometry_msgs::PoseWithCovarianceStamped>("/initialpose", 1);
     }
 
+
+    double SetRobot::degreeToRad(double degree){
+        return degree*3.1415926/180.0;
+    }
+
+    double SetRobot::radToDegree(double rad){
+        return rad*180.0/3.1415926;
+    }
+
+    //yaw's unit must be degree (received from application)
+    double SetRobot::appToRobotYaw(double yaw, std::string unit){
+        if(unit.compare("deg")!=0){
+            yaw = radToDegree(yaw);
+        }
+        return degreeToRad(-(yaw+90));
+    }
+
+    double SetRobot::robotToAppYaw(double yaw, std::string unit){
+        if(unit.compare("deg")!=0){
+            yaw = radToDegree(yaw);
+        }
+        return  (-yaw-90.0);
+    }
+
     int SetRobot::stopRobotMoving(){
         gobot_msg_srv::GetGobotStatus get_gobot_status;
         ros::service::call("/gobot_status/get_gobot_status",get_gobot_status);
@@ -97,7 +121,7 @@ namespace robot_class {
         return ros::service::call("/gobot_status/set_battery",set_battery);
     }
 
-    bool SetRobot::setSpeed(std::string linear, std::string angular){
+    bool SetRobot::setSpeedLimit(std::string linear, std::string angular){
         gobot_msg_srv::SetStringArray set_speed;
         set_speed.request.data.push_back(linear);
         set_speed.request.data.push_back(angular);
@@ -121,6 +145,7 @@ namespace robot_class {
         return true;
     }
 
+    //when activating bumpers/cliffs/manual control, robot will not move
     bool SetRobot::setNavSpeed(const char directionR, const int velocityR, const char directionL, const int velocityL){ 
         motor_speed_.directionR = std::string(1, directionR);
         motor_speed_.velocityR = velocityR>127 ? 127 : velocityR;
@@ -131,6 +156,7 @@ namespace robot_class {
     }
 
     //Do remember to initilize class after ros::init if setMotorSpeed is used
+    //robot will move regardless of robot's sensors and conditions
     bool SetRobot::setMotorSpeed(const char directionR, const int velocityR, const char directionL, const int velocityL){ 
         //maximum of int8 is 127
         motor_speed_.directionR = std::string(1, directionR);
@@ -265,13 +291,6 @@ namespace robot_class {
             voice_file_ = "sudo play ~/catkin_ws/src/robot_navigation_stack/gobot_data/voice/" + str;
             system(voice_file_.c_str());
         }
-    }
-
-    double SetRobot::getPlayPointYaw(double yaw, std::string unit){
-        if(unit.compare("deg")!=0){
-            yaw = yaw*180/3.1415926;
-        }
-        return  (-yaw-90.0);
     }
     
 };

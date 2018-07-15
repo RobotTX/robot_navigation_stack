@@ -41,7 +41,6 @@
   <buildtool_depend>catkin</buildtool_depend>
   <depend>hector_exploration_planner</depend>
   <depend>hector_nav_msgs</depend>
-  <depend>message_generation</depend>
   <depend>gobot_msg_srv</depend>
 
   <!-- The export tag contains other, unspecified, tags -->

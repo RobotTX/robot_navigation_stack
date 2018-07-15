@@ -9,9 +9,6 @@
 #include <std_msgs/Int16.h>
 #include <gobot_msg_srv/set_robot_class.h>
 #include <gobot_msg_srv/get_robot_class.h>
-#include <gobot_msg_srv/robot_msgs.h>
-#include <gobot_software/robot_move.h>
-
 
 ros::Subscriber magnetSub, alignmentSub, bumperSub;
 robot_class::SetRobot SetRobot;
@@ -127,12 +124,9 @@ bool stopDetectionCb(std_srvs::Empty::Request &req, std_srvs::Empty::Response &r
 }
 
 int main(int argc, char* argv[]){
-    ros::init(argc, argv, "detection_alignment");
+    ros::init(argc, argv, "detection_function");
     ros::NodeHandle nh;
-
     SetRobot.initialize();
-    RobotMove robot_m;
-    //robot_m.initialize();
 
     ros::ServiceServer startDetectionSrv = nh.advertiseService("/gobot_function/startDetection", startDetectionCb);
     ros::ServiceServer stopDetectionSrv = nh.advertiseService("/gobot_function/stopDetection", stopDetectionCb);

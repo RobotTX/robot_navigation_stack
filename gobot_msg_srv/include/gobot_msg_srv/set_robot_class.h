@@ -22,6 +22,14 @@ namespace robot_class {
             ~SetRobot();
             void initialize();
 
+            double degreeToRad(double degree);
+
+            double radToDegree(double rad);
+
+            double appToRobotYaw(double yaw, std::string unit = "deg");
+
+            double robotToAppYaw(double yaw, std::string unit = "deg");
+
             int stopRobotMoving();
 
             bool setStatus(int status,std::string text);
@@ -42,7 +50,7 @@ namespace robot_class {
 
             bool setBatteryLvl(std::string battery_lvl);
 
-            bool setSpeed(std::string linear, std::string angular);
+            bool setSpeedLimit(std::string linear, std::string angular);
 
             bool setHome(std::string pos_x,std::string pos_y,std::string ori_x,std::string ori_y,std::string ori_z,std::string ori_w);
 
@@ -75,8 +83,6 @@ namespace robot_class {
             void speakChinese(std::string str);
 
             void playVoice(std::string str, int mute = -1);
-
-            double getPlayPointYaw(double yaw, std::string unit = "deg");
 
         private:
             std::string tts_en_, tts_ch_, voice_file_;

@@ -150,7 +150,7 @@ void startStopCB(const std_msgs::Int32ConstPtr msg)
 
 int main(int argv, char **argc)
 {
-	ros::init(argv, argc, "ls01B");
+	ros::init(argv, argc, "ls01b");
 	ros::NodeHandle n;
 	string scan_topic = "scan";
 	string port = "/dev/ttyUSB0";
@@ -236,7 +236,7 @@ int main(int argv, char **argc)
 			data[i] = distance[i];
 			//data_intensity[i] = angle[i];
 		}
-		//ROS_INFO_THROTTLE(30, "ls01B works fine!");
+		//ROS_INFO_THROTTLE(30, "ls01b works fine!");
 		ends = ros::Time::now();
 		float scan_duration = (ends - starts).toSec() * 1e-3;
 		publish_scan(&scan_pub, data, /*data_intensity,*/ ret, starts, scan_duration);
@@ -245,7 +245,7 @@ int main(int argv, char **argc)
 	driver.SendLidarCommand(DATA_STOP, 0);
 	driver.SendLidarCommand(STOP, 0);
 	driver.CloseLidarSerial();
-	ROS_INFO("Keyboard Interrupt, ls01B stop!");
+	ROS_INFO("Keyboard Interrupt, ls01b stop!");
 
 	return 0;
 }
