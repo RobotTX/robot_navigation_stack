@@ -303,13 +303,11 @@ bool setSpeedSrvCallback(gobot_msg_srv::SetStringArray::Request &req, gobot_msg_
     linear_param.name = "max_vel_x";
     linear_param.value = std::stod(linear_spd_);
     angular_param.name = "max_vel_theta";
-    angular_param.value = std::stod(angular_spd_)*3.14159/180;
+    angular_param.value = SetRobot.degreeToRad(std::stod(angular_spd_));
 
     config.request.config.doubles.push_back(linear_param);
     config.request.config.doubles.push_back(angular_param);
-    if(ros::service::call("/move_base/TebLocalPlannerROS/set_parameters",config)){
-        return true;
-    }
+    ros::service::call("/move_base/TebLocalPlannerROS/set_parameters",config);
 
     return true;
 }
@@ -366,7 +364,10 @@ bool setPathSrvCallback(gobot_msg_srv::SetStringArray::Request &req, gobot_msg_s
         ROS_INFO("(STATUS_SYSTEM) Set robot path: %s",path_info.c_str());
         ofsPath.close();
     }
-    
+
+    //clear the audio files attached to previous path
+    ros::service::call("/gobot_software/clear_audio", empty_srv);
+
     update_path.request.data = req.data;
     std::thread([](){
         ros::service::call("/gobot_function/update_path", update_path);

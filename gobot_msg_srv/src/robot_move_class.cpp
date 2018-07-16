@@ -21,7 +21,7 @@ namespace robot_class {
             ROS_WARN("(ROBOT_MOVE_CLASS) Go straight because of charging.");
             forward(15);
             ros::Duration(2.5).sleep();
-            forward(0);
+            stop();
             setDock(0);
         }
     }
@@ -92,6 +92,10 @@ namespace robot_class {
 
     void RobotMoveClass::forward(const int vel){
         setNavSpeed('F', vel, 'F', vel);
+    }
+
+    void RobotMoveClass::stop(){
+        setNavSpeed('F', 0, 'F', 0);
     }
 
     void RobotMoveClass::getStatus(int &status, std::string &text){

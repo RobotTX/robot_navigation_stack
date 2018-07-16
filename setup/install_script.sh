@@ -1,5 +1,7 @@
 #!/bin/bash
-echo "start installation..."
+echo "#################################"
+echo "START ROS PACKAGES INSTALLMENT..........."
+echo "#################################"
 echo "[navigation] installing..."
 echo "y" | sudo apt install ros-kinetic-navigation
 echo "[navigation] installed!"
@@ -44,7 +46,12 @@ echo "y" | sudo apt install ros-kinetic-tf2-geometry-msgs
 echo "[tf2-geometry-msgs] installed!"
 sleep 2s
 echo "#################################"
-echo "All ROS packages are installed!"
+echo "All ROS PACKAGES ARE INSTALLED!"
+echo "#################################"
+echo ""
+echo "#################################"
+echo "START LINUX TOOLS INSTALLMENT..........."
+echo "#################################"
 sleep 2s
 echo "[fping] installing..."
 echo "y" | sudo apt install fping
@@ -78,10 +85,24 @@ sleep 2s
 echo "y" | sudo apt install libsox-fmt-all
 echo "[libsox-fmt-all] installed!"
 echo "#################################"
-echo "All tools are installed!"
+echo "All LINUX TOOLS ARE INSTALLED!"
+echo "#################################"
+echo ""
+echo "#################################"
+echo "GIVE FILES PERMISSION..........."
+echo "#################################"
+sudo find ~/catkin_ws/src/robot_navigation_stack/ -name "*.cfg" -exec chmod +x {} \;
+echo "#################################"
+echo "FILES PERMISSION ARE GIVEN!"
+echo "#################################"
+echo ""
+echo "#################################"
+echo "MODIFY UDEV RULES..........."
 echo "#################################"
 echo "start changing udev rules..."
 path=$(cd `dirname $0`; pwd)
 sudo sh $path/create_udevrules_script.sh
 sleep 2s
+echo "#################################"
+echo "UDEV RULES MODIFIED!"
 echo "#################################"

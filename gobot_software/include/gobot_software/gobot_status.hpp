@@ -24,7 +24,7 @@ std::string getUpdateStatus();
 
 void updateStatus(std::string &str);
 
-void threadVoice(std::string file, int mute);
+void threadVoice(std::string file, int mute = -1);
 
 void robotResponse(int status, std::string text);
 

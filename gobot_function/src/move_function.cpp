@@ -8,9 +8,10 @@ int stage_ = 0;
 bool looping = false, dockAfterPath = false;
 bool waitingForAction = false, readAction=true, interruptDelay=false, stop_flag=false, delayOn=false;
 std::vector<PathPoint> path_;
-PathPoint currentGoal;
+PathPoint current_goal_;
 int status_ = 0;
-std::string text_ = "";
+std::string text_ = "", audio_ack_ = "!@#$.mp3";
+std::string audio_folder_;
 
 std_srvs::Empty empty_srv;
 ros::Subscriber button_sub;
@@ -87,7 +88,7 @@ bool playPointService(gobot_msg_srv::SetStringArray::Request &req, gobot_msg_srv
 
 	MoveRobot.moveFromCS();
 
-	MoveRobot.moveTo(point.p);
+	moveToGoal(point);
 	
 	return true;
 }
@@ -113,7 +114,7 @@ bool playPathService(std_srvs::Empty::Request &req, std_srvs::Empty::Response &r
 
 	MoveRobot.moveFromCS();
 
-	MoveRobot.moveTo(path_.at(stage_).p);
+	moveToGoal(path_.at(stage_));
 
 	return true;	
 }
@@ -219,7 +220,7 @@ bool skipPathService(gobot_msg_srv::SetInt::Request &req, gobot_msg_srv::SetInt:
 		}
 		MoveRobot.setStatus(5,"PLAY_PATH");
 
-		MoveRobot.moveTo(path_.at(stage_).p);
+		moveToGoal(path_.at(stage_));
 	}
 	return true;
 }
@@ -232,9 +233,15 @@ void goalReached(){
 		return;
 	}
 
-	if(currentGoal.text != "\"\"" && currentGoal.text !=""){   //string "\"\"" means empty
-		std::thread tts_thread(textToSpeech,currentGoal.text,currentGoal.delayText);
-		tts_thread.detach();
+	if(current_goal_.text != "\"\"" && current_goal_.text !=""){   //string "\"\"" means empty
+		if(audio_ack_.compare(current_goal_.text)==0){
+			std::thread play_audio(threadVoice, std::to_string(stage_)+".mp3", current_goal_.delayText);
+        	play_audio.detach();
+		}
+		else{
+			std::thread tts_thread(textToSpeech, current_goal_.text, current_goal_.delayText);
+			tts_thread.detach();
+		}
 	}
 	stage_++;
 
@@ -269,29 +276,33 @@ void goalReached(){
 	checkGoalDelay();
 	if(!stop_flag){
 		MoveRobot.setStatus(5,"PLAY_PATH");
-		MoveRobot.moveTo(path_.at(stage_).p);
+		moveToGoal(path_.at(stage_));
 	}
 	else
 		stop_flag = false;
 }
 
+void moveToGoal(PathPoint goal){
+	current_goal_ = goal;
+	MoveRobot.moveTo(current_goal_.p);
+}
 
 void checkGoalDelay(){
 	delayOn = true;
 	interruptDelay = false;
-	if(currentGoal.waitingTime != 0){	
-		if(currentGoal.waitingTime > 0){
+	if(current_goal_.waitingTime != 0){	
+		if(current_goal_.waitingTime > 0){
 			MoveRobot.setStatus(5,"DELAY");
-			//ROS_INFO("(MOVE_IT::goalReached) goalReached going to sleep for %f seconds", currentGoal.waitingTime);
+			//ROS_INFO("(MOVE_IT::goalReached) goalReached going to sleep for %f seconds", current_goal_.waitingTime);
 			double dt=0.0;
 			ros::Time last_time=ros::Time::now();
-			while(dt<currentGoal.waitingTime && !stop_flag && !interruptDelay && ros::ok()){
+			while(dt<current_goal_.waitingTime && !stop_flag && !interruptDelay && ros::ok()){
 				dt=(ros::Time::now()-last_time).toSec();
 				ros::Duration(0.1).sleep();
 				ros::spinOnce();
 			}
 		}
-		else if(currentGoal.waitingTime == -1){
+		else if(current_goal_.waitingTime == -1){
 			MoveRobot.setStatus(5,"WAITING");
 			ros::NodeHandle n;
 			//ROS_INFO("(MOVE_IT) Goal reached. Waiting for human action.");
@@ -312,6 +323,14 @@ void checkGoalDelay(){
 void textToSpeech(std::string text, double delay){
 	ros::Duration(delay).sleep();
 	MoveRobot.speakChinese(text);
+}
+
+void threadVoice(std::string file, double delay){
+	ros::Duration(delay).sleep();
+	if(GetRobot.getMute() == 0){
+		std::string audio_file = "sudo play " + audio_folder_ + file;
+		system(audio_file.c_str());
+	}
 }
 
 void readPath(std::vector<std::string> &path){
@@ -359,6 +378,9 @@ void goDockAfterPath(){
 }
 
 void initData(){
+	ros::NodeHandle n;
+	n.getParam("audio_folder", audio_folder_);
+
 	looping = GetRobot.getLoop();
 	stage_=GetRobot.getStage();
 	gobot_msg_srv::GetStringArray get_path;

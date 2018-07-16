@@ -23,8 +23,7 @@ std::vector<std::string> resume_pose;
 static const std::string sep = std::string(1, 31);
 static const char sep_c = 31;
 
-std::mutex socketsMutex;
-std::mutex commandMutex;
+std::mutex socketsMutex, commandMutex;
 
 std::map<std::string, boost::shared_ptr<tcp::socket>> sockets;
 
@@ -299,7 +298,7 @@ bool interruptDelay(const std::vector<std::string> command){
 /// Command: 1, 2nd param=linear_vel, 3rd param=angular_vel
 bool adjustSpeed(const std::vector<std::string> command){
     if(command.size() == 3){
-        return SetRobot.setSpeed(command.at(1),command.at(2));
+        return SetRobot.setSpeedLimit(command.at(1),command.at(2));
     }
     return false;
 }
@@ -388,13 +387,14 @@ bool startScanAndAutoExplore(const std::string ip, const std::vector<std::string
         /// 0 : the robot doesn't go back to its starting point at the end of the scan
         /// 1 : robot goes back to its starting point which is its charging station
         /// 2 : robot goes back to its starting point which is not a charging station
-        hector_exploration_node::Exploration exploration_srv;
+        gobot_msg_srv::SetInt exploration_srv;
         gobot_msg_srv::IsCharging isCharging;
-        if(ros::service::call("/gobot_status/charging_status", isCharging) && isCharging.response.isCharging){
-            exploration_srv.request.backToStartWhenFinished = 1;
+        ros::service::call("/gobot_status/charging_status", isCharging);
+        if(isCharging.response.isCharging){
+            exploration_srv.request.data = 1;
         }
         else{
-            exploration_srv.request.backToStartWhenFinished = 0;
+            exploration_srv.request.data = 0;
         }
         if(ros::service::call("/gobot_scan/startExploration", exploration_srv))
             return sendMapAutomatically(ip);
@@ -506,7 +506,7 @@ bool newChargingStation(const std::vector<std::string> command){
         std::string homeX = command.at(1), homeY = command.at(2), homeOri = command.at(3);
         int orientation = std::stoi(homeOri);
         tf::Quaternion quaternion;
-        quaternion.setRPY(0, 0, -DegreeToRad(orientation+90));
+        quaternion.setRPY(0, 0, -SetRobot.degreeToRad(orientation+90));
 
         std::string mapType = homeX.substr(0,1);
         if(mapType == "S"){
@@ -530,6 +530,10 @@ bool goToChargingStation(const std::vector<std::string> command){
         //if go to charging or charging, ignore
         if(GetRobot.getDock()==1){
             ros::service::call("/gobot_recovery/initialize_home",empty_srv);
+            return false;
+        }
+        else if(GetRobot.getDock()==-3){
+            ROS_INFO("(COMMAND_SYSTEM) Unable to go dock now because of unstable battery information.");
             return false;
         }
         else{
@@ -695,13 +699,14 @@ bool startAutoExplore(const std::vector<std::string> command){
         /// 0 : the robot doesn't go back to its starting point at the end of the scan
         /// 1 : robot goes back to its starting point which is its charging station
         /// 2 : robot goes back to its starting point which is not a charging station
-        hector_exploration_node::Exploration exploration_srv;
+        gobot_msg_srv::SetInt exploration_srv;
         gobot_msg_srv::IsCharging isCharging;
-        if(ros::service::call("/gobot_status/charging_status", isCharging) && isCharging.response.isCharging){
-            exploration_srv.request.backToStartWhenFinished = 1;
+        ros::service::call("/gobot_status/charging_status", isCharging);
+        if(isCharging.response.isCharging){
+            exploration_srv.request.data = 1;
         }
         else{
-            exploration_srv.request.backToStartWhenFinished = 0;
+            exploration_srv.request.data = 0;
         }
         if(ros::service::call("/gobot_scan/startExploration", exploration_srv))
             return true;
@@ -747,14 +752,6 @@ bool loopPath(const std::vector<std::string> command){
 
 
 /*********************************** SOME FUNCTIONS USED MULTIPLE TIMES ***********************************/
-double RadToDegree(double rad){
-    return rad*180/3.1415926;
-}
-
-double DegreeToRad(double degree){
-    return degree*3.1415926/180;
-}
-
 bool sendMapAutomatically(const std::string ip){
     //ROS_INFO("(COMMAND_SYSTEM) Launching the service to get the map auto");
 
@@ -924,7 +921,7 @@ bool lowBatterySrvCallback(std_srvs::Empty::Request &req, std_srvs::Empty::Respo
         ros::service::call("/gobot_status/get_pose",robot_pose);
         for(int i=0; i<robot_pose.response.data.size();i++)
             resume_pose.push_back(robot_pose.response.data[i]);
-        resume_pose.back() = std::to_string(SetRobot.getPlayPointYaw(std::stod(resume_pose.back()),"rad"));
+        resume_pose.back() = std::to_string(SetRobot.robotToAppYaw(std::stod(resume_pose.back()),"rad"));
         //ROS_INFO("(COMMAND_SYSTEM) Sending the robot home");
         std::vector<std::string> command({"o"});
         std::string commandStr = command.at(0) + sep;
@@ -991,7 +988,7 @@ void sendConnectionData(boost::shared_ptr<tcp::socket> sock){
     homeX = x==0? "-150" : std::to_string(x);
     homeY = y==0? "-150" : std::to_string(y);
 
-    double homeOri = -RadToDegree(tf::getYaw(tf::Quaternion(oriX , oriY , oriZ, oriW))) - 90.0;
+    double homeOri = -SetRobot.radToDegree(tf::getYaw(tf::Quaternion(oriX , oriY , oriZ, oriW))) - 90.0;
 
     /// we send the path along with the time of the last modification of its file
     std::string path("");

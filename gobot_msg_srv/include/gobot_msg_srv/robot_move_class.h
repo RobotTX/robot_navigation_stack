@@ -59,6 +59,7 @@ namespace robot_class {
       void turnRight(const int vel);
       void backward(const int vel);
       void forward(const int vel);
+      void stop();
 
       void getStatus(int &status, std::string &text);
 

@@ -27,6 +27,7 @@
     <param name="low_battery_file"  type="string"     value="$(find gobot_data)/data/low_battery.txt" />
     <param name="battery_log"       type="string"     value="$(find gobot_data)/data/record_battery.txt" />
     <param name="speed_file"        type="string"     value="$(find gobot_data)/data/speed.txt" />
+    <param name="audio_folder"      type="string"     value="$(find gobot_data)/data/audio/" />
     <!--WIFI RELATED -->
     <param name="wifi_file"         type="string"     value="$(find gobot_data)/data/wifi.txt" />
     <param name="ping_file"         type="string"     value="$(find gobot_data)/IP/ping.sh" />

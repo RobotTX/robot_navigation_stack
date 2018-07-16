@@ -14,7 +14,6 @@
 #include <geometry_msgs/Twist.h>
 #include <tf/transform_broadcaster.h>
 #include <nav_msgs/MapMetaData.h>
-#include <hector_exploration_node/Exploration.h>
 #include <mutex>
 #include <thread>
 #include <boost/asio.hpp>
@@ -134,10 +133,6 @@ bool sendMapAutomatically(const std::string ip);
 bool stopSendingMapAutomatically(const std::string ip);
 
 void sendCommand(const std::string ip, const std::vector<std::string> command, std::string commandStr);
-
-double RadToDegree(double rad);
-
-double DegreeToRad(double degree);
 /*********************************** SERVICES ***********************************/
 bool pausePathSrvCallback(std_srvs::Empty::Request &req, std_srvs::Empty::Response &res);
 

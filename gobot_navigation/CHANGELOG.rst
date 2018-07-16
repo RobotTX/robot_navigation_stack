@@ -2,6 +2,15 @@
 Changelog for developed mobile robot
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+1.1.6 (2018-07-16)
+-------------------
+* #permission for .cfg file
+  sudo find ~/catkin_ws/src/robot_navigation_stack/ -name "*.cfg" -exec chmod +x {} \;
+* add robot_move_class class for robot move functions
+* move robot functions to new package gobot_function
+* standardlize gobot_software nodes name
+* change "ls01B" package name to "ls01b" to avoid catkin_make warning
+
 1.1.5 (2018-07-12)
 -------------------
 * build Hotspot wifi when assigned wifi can not be found

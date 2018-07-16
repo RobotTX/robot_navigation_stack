@@ -42,7 +42,7 @@ void newBatteryInfo(const gobot_msg_srv::BatteryMsg::ConstPtr& batteryInfo){
         if(!collision){
             charging = true;
             irSub.shutdown();
-            MoveRobot.forward(0);
+            MoveRobot.stop();
             finishedDocking();
         }
     }
@@ -147,7 +147,7 @@ void newIrSignal(const gobot_msg_srv::IrMsg::ConstPtr& irSignal){
             } 
             /// if we lost the rear signal for more than 20 seconds, we failed docking, else, the robot should still be turning on itself
             else if((ros::Time::now() - lastIrSignalTime) > ros::Duration(20.0)){
-                MoveRobot.forward(0);
+                MoveRobot.stop();
                 finishedDocking(false);
             } 
         }
@@ -181,7 +181,7 @@ bool startDocking(void){
     /// Get the charging station position from the home file
     GetRobot.getHome(x,y,oriX,oriY,oriZ,oriW);
 
-    if(x != 0 || y != 0 || oriZ != 0){
+    if(x != 0 || y != 0){
         /// We want to go 1 metre in front of the charging station
         homeX = x + 0.5 * std::cos(homeYaw);
         homeY = y + 0.5 * std::sin(homeYaw);
@@ -233,7 +233,7 @@ void finishedDocking(bool move_forward){
             if(move_forward){
                 MoveRobot.forward(15);
                 ros::Duration(1.5).sleep();
-                MoveRobot.forward(0);
+                MoveRobot.stop();
             }
 
             startDockingParams();
@@ -252,7 +252,7 @@ void finishedDocking(bool move_forward){
             if(move_forward){
                 MoveRobot.forward(15);
                 ros::Duration(2.0).sleep();
-                MoveRobot.forward(0);
+                MoveRobot.stop();
             }
         }
     }
@@ -269,7 +269,7 @@ void resetDockingParams(){
     leftFlag = false;
     lostIrSignal = false;
     move_from_collision = true;
-    MoveRobot.forward(0);
+    MoveRobot.stop();
 }
 
 void startDockingParams(){

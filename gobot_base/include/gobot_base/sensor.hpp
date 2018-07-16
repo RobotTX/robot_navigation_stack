@@ -483,7 +483,7 @@ class SensorClass {
             }
         }
 
-        void threadVoice(std::string file, int mute){
+        void threadVoice(std::string file, int mute = -1){
             SetRobot_.playVoice(file, mute);
         }
 

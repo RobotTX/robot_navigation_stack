@@ -47,7 +47,7 @@ robot_navigation_stack
 Then catkin_make, then add the packages above to the src, then catkin_make again.
 
 #permission for .cfg file
-sudo chmod -R +x ~/catkin_ws/src/robot_navigation_stack
+sudo find ~/catkin_ws/src/robot_navigation_stack/ -name "*.cfg" -exec chmod +x {} \;
 
 #footprint & other parameters
 robot_sensors_param.launch      wheel_separation    middle:0.351  outside:0.402

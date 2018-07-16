@@ -67,11 +67,15 @@ bool skipPathService(gobot_msg_srv::SetInt::Request &req, gobot_msg_srv::SetInt:
 //****************************** FUNCTIONS ******************************
 void goalReached();
 
+void moveToGoal(PathPoint goal);
+
 void checkGoalDelay();
 
 void goDockAfterPath();
 
 void textToSpeech(std::string text, double delay);
+
+void threadVoice(std::string file, double delay);
 
 void readPath(std::vector<std::string> &path);
 

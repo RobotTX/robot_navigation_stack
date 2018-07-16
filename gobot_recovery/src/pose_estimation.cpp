@@ -42,7 +42,7 @@ bool evaluatePose(int type){
     }
     //Evaluate Last pose compared to Home pose
     else if(type==1){
-        if(home_pos_x!=0 || home_pos_y!=0 || home_ang_x!=0 || home_ang_y!=0 || home_ang_z!=0 || home_ang_w!=0)
+        if(home_pos_x!=0 || home_pos_y!=0 || home_ang_z!=0)
             if(fabs(home_pos_x-last_pos_x)<0.1 && fabs(home_pos_y-last_pos_y)<0.1){
                 ROS_INFO("(POSE_ESTIMATION) Last recorded post near to charging station.");
                 return true;
