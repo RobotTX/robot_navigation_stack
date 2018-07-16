@@ -12,7 +12,6 @@ find_package(catkin REQUIRED COMPONENTS
     roscpp
     rospy
     gobot_msg_srv
-    message_generation
 )
 
 ## System dependencies are found with CMake's conventions
@@ -56,10 +55,9 @@ find_package(catkin REQUIRED COMPONENTS
 # )
 
 ## Generate services in the 'srv' folder
-add_service_files(
-    FILES
-    Exploration.srv
-)
+#add_service_files(
+    #FILES
+#)
 
 ## Generate actions in the 'action' folder
 # add_action_files(
@@ -113,7 +111,6 @@ add_executable(exploration_planner_node src/exploration_node.cpp)
 target_link_libraries(exploration_planner_node
     ${catkin_LIBRARIES}
 )
-
 
 ## Add cmake target dependencies of the executable/library
 ## as an example, message headers may need to be generated before nodes

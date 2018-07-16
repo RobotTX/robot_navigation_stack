@@ -1,7 +1,7 @@
 #!/bin/bash
 isAlive="$1"
 wififile="$2"
-defalutwifi="Robot_Hotspot_YYMMDD"
+defalutwifi="Robot_Hotspot_GTD002"
 connection="wifi"
 #check WIFI connection
 wifi=$(nmcli device status | grep wifi | cut -d ' ' -f1 | head -n 1)

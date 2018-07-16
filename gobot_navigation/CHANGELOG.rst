@@ -24,7 +24,7 @@ Changelog for developed mobile robot
 
 1.1.1 (2018-06-21)
 -------------------
-* add LeiShen ls01B lidar driver, now support this 28m range 2D lidar
+* add LeiShen ls01b lidar driver, now support this 28m range 2D lidar
 * working on robot_localization package
 
 1.1.0 (2018-06-13)

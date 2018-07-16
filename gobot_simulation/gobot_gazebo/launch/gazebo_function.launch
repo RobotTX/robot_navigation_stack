@@ -1,6 +1,8 @@
 <?xml version="1.0"?>
 <launch>
-	<node pkg="gobot_software" type="move_it" name="function_move_it" output="screen" respawn="true"/>
-	<node pkg="gobot_software" type="auto_docking" name="function_auto_docking" output="screen" respawn="true" />
-	<node pkg="gobot_software" type="battery_monitor" name="function_battery_monitor" 	output="screen" respawn="true" />
+	<include file="$(find gobot_software)/launch/robot_infos_params.launch"/>
+	
+	<node pkg="gobot_function" type="move_function" 			name="move_function" 			output="screen" respawn="true"/>
+	<node pkg="gobot_function" type="docking_function" 			name="docking_function" 		output="screen" respawn="true" />
+	<node pkg="gobot_function" type="battery_monitor_function" 	name="battery_monitor_function" output="screen" respawn="true" />
 </launch>

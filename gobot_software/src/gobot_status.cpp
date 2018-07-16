@@ -20,6 +20,7 @@ DOCK STATUS
 1  CHARING
 0  NOT CHARGING
 -1 FAILED TO GO TO CHARGING
+-3 BATTERY STATUS NOT CLEAR
 */
 
 ros::Publisher mute_pub, update_info_pub, status_pub;
@@ -492,13 +493,10 @@ bool setDockStatusSrvCallback(gobot_msg_srv::SetInt::Request &req, gobot_msg_srv
 }
 
 bool getDockStatusSrvCallback(gobot_msg_srv::GetInt::Request &req, gobot_msg_srv::GetInt::Response &res){
-    //in case robot move away from CS, but battery charging status is not changed, so reset battery charging status
+    //in case robot move away from CS, but battery charging status is not changed
+    //return -3 to indicate this case
     if(battery_charging_ && !charging_status_){
-        gobot_msg_srv::SetBool charging;
-        charging.request.data = charging_status_;
-        ros::service::call("/gobot_base/set_charging",charging);
-        res.data  = 1;
-        battery_time_ = ros::Time::now();
+        res.data = -3;
     }
     else{
         dockStatusMutex.lock();
@@ -561,7 +559,7 @@ void batteryCallback(const gobot_msg_srv::BatteryMsg::ConstPtr& msg){
     if(battery_charging_ && !charging_status_){
         if(ros::Time::now()-battery_time_ > ros::Duration(60.0)){
             gobot_msg_srv::SetBool charging;
-            charging.request.data = charging_status_;
+            charging.request.data = false;
             ros::service::call("/gobot_base/set_charging",charging);
         }
     }

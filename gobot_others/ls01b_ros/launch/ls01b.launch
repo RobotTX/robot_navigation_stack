@@ -2,7 +2,7 @@
 
     <node pkg="tf" type="static_transform_publisher" name="base_link_to_laser" args="0.22 0.0 0.21 0 0 0 base_link base_laser 100" required="true"/>
     
-    <node name="ls01B" pkg="ls01B" type="ls01B" output="screen">
+    <node name="ls01b" pkg="ls01b" type="ls01b" output="screen">
 　　		<param name="scan_topic"    value="scan"/>         #设置激光数据topic名称
 　　	    <param name="laser_link"    value="base_laser"/>     #激光坐标
 　　	    <param name="serial_port"   value="/dev/ttyUSB0"/>  #雷达连接的串口

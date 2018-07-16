@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 2.8.3)
-project(ls01B)
+project(ls01b)
 
 find_package(catkin REQUIRED COMPONENTS
   roscpp
@@ -17,11 +17,11 @@ include_directories(
 
 
 
-add_executable(ls01B src/main.cpp src/ls01b_driver.cpp)
+add_executable(ls01b src/main.cpp src/ls01b_driver.cpp)
 
-target_link_libraries(ls01B ${catkin_LIBRARIES})
+target_link_libraries(ls01b ${catkin_LIBRARIES})
 
-install(TARGETS ls01B
+install(TARGETS ls01b
   ARCHIVE DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
   LIBRARY DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
   RUNTIME DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}

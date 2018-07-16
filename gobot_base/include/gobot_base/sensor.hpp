@@ -357,7 +357,7 @@ class SensorClass {
 
                     sensors_msg.weight = weight_data;
 
-                    /// External button 1-No press; 0-press = D43 / B45
+                    /// External button 0-No press; 1-press = D43 / B45
                     int8_t external_button = buff.at(45);
                     std_msgs::Int8 button;
                     button.data = external_button;
