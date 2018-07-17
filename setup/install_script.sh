@@ -10,14 +10,6 @@ echo "[robot-pose-publisher] installing..."
 echo "y" | sudo apt install ros-kinetic-robot-pose-publisher
 echo "[robot-pose-publisher] installed!"
 sleep 2s
-echo "[gmapping] installing..."
-echo "y" | sudo apt install ros-kinetic-gmapping
-echo "[gmapping] installed!"
-sleep 2s
-echo "[teb-local-planner] installing..."
-echo "y" | sudo apt install ros-kinetic-teb-local-planner
-echo "[teb-local-planner] installed!"
-sleep 2s
 echo "[openslam-gmapping] installing..."
 echo "y" | sudo apt install ros-kinetic-openslam-gmapping
 echo "[openslam-gmapping] installed!"
@@ -25,11 +17,6 @@ sleep 2s
 echo "[hector-nav-msgs] installing..."
 echo "y" | sudo apt install ros-kinetic-hector-nav-msgs
 echo "[hector-nav-msgs] installed!"
-sleep 2s
-#hokuyo laser
-echo "[urg-node] installing..."
-echo "y" | sudo apt install ros-kinetic-urg-node
-echo "[urg-node] installed!"
 sleep 2s
 #yocs_velocity_smoother package
 echo "[ecl] installing..."
@@ -47,6 +34,22 @@ echo "[tf2-geometry-msgs] installed!"
 sleep 2s
 echo "#################################"
 echo "All ROS PACKAGES ARE INSTALLED!"
+echo "#################################"
+echo ""
+echo "#################################"
+echo "REMOVE DUPLICATE PACKAGES..........."
+echo "#################################"
+echo "y" | sudo apt remove ros-kinetic-move-base
+echo "[move-base] removed!"
+sleep 2s
+echo "y" | sudo apt remove ros-kinetic-amcl
+echo "[amcl] removed!"
+sleep 2s
+echo "y" | sudo apt remove ros-kinetic-costmap-converter
+echo "[costmap-converter] removed!"
+sleep 2s
+echo "#################################"
+echo "All DUPLICATE PACKAGES ARE REMOVED!"
 echo "#################################"
 echo ""
 echo "#################################"

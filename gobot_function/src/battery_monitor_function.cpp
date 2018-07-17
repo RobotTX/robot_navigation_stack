@@ -30,7 +30,7 @@ void timerCallback(const ros::TimerEvent&){
         }
     }
     if(!canGoCharge || monitor_state == 2){
-        if((battery_percent.response.data>=resume_work_level && isCharging.response.isCharging) || monitor_state == 2){
+        if((battery_percent.response.data >= resume_work_level && isCharging.response.isCharging) || monitor_state == 2){
             ROS_WARN("(BATTERY_MONITOR) Battery current percentage:%d. Resume to work.", battery_percent.response.data);
             std_srvs::Empty arg;
             ros::service::call("/gobot_command/highBattery", arg);

@@ -1212,7 +1212,6 @@ namespace move_base {
             }
 
             boost::shared_ptr<nav_core::RecoveryBehavior> behavior(recovery_loader_.createInstance(behavior_list[i]["type"]));
-
             //shouldn't be possible, but it won't hurt to check
             if(behavior.get() == NULL){
               ROS_ERROR("The ClassLoader returned a null pointer without throwing an exception. This should not happen");

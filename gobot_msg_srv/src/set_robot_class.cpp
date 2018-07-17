@@ -223,8 +223,8 @@ namespace robot_class {
         std::string cmd = "rosnode kill /map_server";
         system(cmd.c_str());
         ros::Duration(3.0).sleep();
-        setStatus(-4,"RELOAD_MAP");
         setBatteryLed();
+        setStatus(-4,"RELOAD_MAP");
     }
 
 

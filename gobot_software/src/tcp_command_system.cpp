@@ -533,8 +533,8 @@ bool goToChargingStation(const std::vector<std::string> command){
             return false;
         }
         else if(GetRobot.getDock()==-3){
-            ROS_INFO("(COMMAND_SYSTEM) Unable to go dock now because of unstable battery information.");
-            return false;
+            ROS_INFO("(COMMAND_SYSTEM) Unable to go dock now because battery not stabilize yet.");
+            return true;
         }
         else{
             //ROS_INFO("(COMMAND_SYSTEM) Sending the robot home");
@@ -1035,8 +1035,13 @@ void sendConnectionData(boost::shared_ptr<tcp::socket> sock){
                 angular_spd=get_speed.response.data[1], 
                 battery_lvl = get_battery.response.data;
 
+    //Send robot information to UI once connected
     sendMessageToSock(sock, std::string("Connected" + sep + mapId + sep + mapDate + sep + homeX + sep + homeY + sep + std::to_string(homeOri) + 
-    sep + scan + sep + laserStr + sep + following_path_str + sep + looping_str + sep + linear_spd + sep +angular_spd + sep+ battery_lvl + sep +path));
+                                       sep + scan + sep + laserStr + sep + following_path_str + sep + looping_str + sep + linear_spd + sep + 
+                                       angular_spd + sep+ battery_lvl + sep +path));
+
+    //Send more robot information to UI once connected
+    ros::service::call("/gobot_status/update_status",empty_srv);
 }
 
 bool sendMessageToSock(boost::shared_ptr<tcp::socket> sock, const std::string message){

@@ -1,7 +1,7 @@
 #!/bin/bash
 isAlive="$1"
 wififile="$2"
-defalutwifi="Robot_Hotspot_GTD002"
+defalutwifi="Robot_Hotspot_DDMMYY"
 connection="wifi"
 #check WIFI connection
 wifi=$(nmcli device status | grep wifi | cut -d ' ' -f1 | head -n 1)
@@ -54,8 +54,10 @@ else
             echo "(PING WIFI) restart network-mangager due to connection issue"
             sudo service network-manager restart #restart network-manager if has issue
         fi
-        #delete servers that we don't want to connect
+        ###delete servers that we don't want to connect###
         #sed -i "/$var.14/d" $isAlive
+        ###only one server available for simulation purpose###
+        #echo "$var.19" > $isAlive
     else
         #if can not find assigned wifi in the list, build robot hotspot for user to connect
         echo "(PING WIFI) Unable to find assigned wifi:#$wifiname# in the scan list"

@@ -1,8 +1,10 @@
 #include <gobot_software/gobot_status.hpp>
 #include <std_msgs/String.h>
 /*
+========================
 GOBOT STATUS
 25 EXPLORING
+22 START_EXPLORING
 21 STOP_EXPLORING/COMPLETE_EXPLORING
 20 EXPLORATION
 15 DOCKING
@@ -15,6 +17,7 @@ GOBOT STATUS
 -2 STARTUP_READY
 -3 SCAN_READY
 -4 MAP_READY
+===================================
 DOCK STATUS
 3  GO TO CHARGING
 1  CHARING
@@ -30,7 +33,7 @@ static const std::string sep = std::string(1, 31);
 std::mutex gobotStatusMutex,dockStatusMutex,stageMutex,pathMutex,nameMutex,homeMutex,loopMutex,muteMutex,wifiMutex,batteryMutex,speedMutex;
 std_srvs::Empty empty_srv;
 
-std::string abort_navigation_mp3, auto_docking_mp3, docking_complete_mp3;
+std::string abort_navigation_mp3, auto_docking_mp3, docking_complete_mp3, auto_scan_mp3, scan_complete_mp3, startup_mp3, scan_mp3, reload_map_mp3;
 
 std::string wifiFile, deleteWifi;
 std::vector<std::string> wifi_;
@@ -87,82 +90,55 @@ robot_class::SetRobot SetRobot;
 //0-auto, 1-manual
 int robot_mode_ = 0;
 
-std::string getCurrentTime(){
-  std::time_t now = std::time(0);
-  std::stringstream transTime;
-  transTime << std::put_time(localtime(&now), "%F-%H:%M:%S");
-  return transTime.str();
+
+//****************************** CALLBACK ******************************
+void batteryCallback(const gobot_msg_srv::BatteryMsg::ConstPtr& msg){
+    battery_percent_ = msg->BatteryStatus;
+    charging_current_ = msg->ChargingCurrent;
+    battery_charging_ = msg->ChargingFlag;
+
+    //in case robot move away from CS, but battery charging status is not changed, so reset battery charging status after 60s
+    if(battery_charging_ && !charging_status_){
+        if(ros::Time::now()-battery_time_ > ros::Duration(60.0)){
+            gobot_msg_srv::SetBool charging;
+            charging.request.data = false;
+            ros::service::call("/gobot_base/set_charging",charging);
+        }
+    }
+    /*//for recording test purpose
+    if(record_battery_==1 && (ros::Time::now() - record_time_) >= ros::Duration(5.0)){
+        std::string record_date = getCurrentTime();
+        std::ofstream ofsStage(recordBatteryFile, std::ofstream::out | std::ofstream::app);
+        if(ofsStage){
+            ofsStage << record_date << "  " <<charging_current_<<std::endl;
+            ofsStage.close();
+            ROS_INFO("(STATUS_SYSTEM) Recorded battery data: %s  %d",record_date.c_str(),charging_current_);
+            record_time_ = ros::Time::now();
+        }
+    }
+    */
 }
 
-//get updated information
-std::string getUpdateStatus(){
-    bool muteFlag = (mute_) ? 1 : 0;
-    return hostname_ + sep + std::to_string(stage_) + sep + std::to_string(battery_percent_) + 
-               sep + std::to_string(muteFlag) + sep + std::to_string(dock_status_) + sep + std::to_string(robot_mode_);
-} 
-
-//send updated information for ping_servers
-void updateStatus(){
-    std_msgs::String update_status;
-    update_status.data = getUpdateStatus();
-    update_info_pub.publish(update_status);
-}
-
-
-void threadVoice(std::string file, int mute){
-    SetRobot.playVoice(file, mute);
-}
-
-//change robot led and sound to inform people its status
-void robotResponse(int status, std::string text){
-    ros::NodeHandle n;
-    //permanent green case
-    if (text=="COMPLETE_EXPLORING" || text=="COMPLETE_PATH" || text=="COMPLETE_POINT") {
-        SetRobot.setLed(0,{"green"});
-        SetRobot.setSound(1,2);
-    }
-    else if(text=="STOP_EXPLORING" || text=="STOP_DOCKING" || text=="STOP_PATH" || text=="PAUSE_PATH"){
-        SetRobot.setLed(0,{"blue"});
-    }
-    else if(text=="PLAY_PATH" || text=="PLAY_POINT" || text=="EXPLORING"){
-        SetRobot.setLed(1,{"green","white"});
-    }
-    else if(text=="DELAY" || text=="WAITING"){
-        SetRobot.setLed(1,{"blue","white"});
-    }
-    else if(text=="FAIL_DOCKING" || text=="ABORTED_PATH"){
-        SetRobot.setLed(0,{"red"});
-        SetRobot.setSound(3,2);
-        n.getParam("abort_navigation_mp3", abort_navigation_mp3);
-        std::thread t_voice(threadVoice, abort_navigation_mp3, mute_);
-        t_voice.detach();
-    }
-    else if(text=="DOCKING"){
-        SetRobot.setLed(1,{"yellow","cyan"});
-        n.getParam("auto_docking_mp3", auto_docking_mp3);
-        std::thread t_voice(threadVoice, auto_docking_mp3, mute_);
-        t_voice.detach();
-    }
-    else if(text=="COMPLETE_DOCKING"){
-        SetRobot.setSound(1,2);
-        n.getParam("docking_complete_mp3", docking_complete_mp3);
-        std::thread t_voice(threadVoice, docking_complete_mp3, mute_);
-        t_voice.detach();
+//for changing led/sound purpose. There should be no change when docking
+void bumpersCallback(const gobot_msg_srv::BumperMsg::ConstPtr& bumpers){
+    if(gobot_status_!=15){
+        bool front = !(bumpers->bumper1 && bumpers->bumper2 && bumpers->bumper3 && bumpers->bumper4);
+        bool back = !(bumpers->bumper5 && bumpers->bumper6 && bumpers->bumper7 && bumpers->bumper8);
+        if(front || back){
+            if(!collision){
+                collision = true;
+                SetRobot.setLed(1,{"red","white"});
+                SetRobot.setSound(3,1);
+            }
+        }
+        else if(collision){
+            collision = false;
+            SetRobot.setSound(1,1);
+        }
     }
 }
 
-void setHomePose(){
-    geometry_msgs::PoseWithCovarianceStamped home_pose;
-    home_pose.pose.pose.position.x = std::stod(home_.at(0));
-    home_pose.pose.pose.position.y = std::stod(home_.at(1));
-    home_pose.pose.pose.orientation.z = std::stod(home_.at(2));
-    home_pose.pose.pose.orientation.z = std::stod(home_.at(3));
-    home_pose.pose.pose.orientation.z = std::stod(home_.at(4));
-    home_pose.pose.pose.orientation.w = std::stod(home_.at(5));
-    SetRobot.setInitialpose(home_pose);
-    ROS_INFO("(STATUS_SYSTEM) Robot is charging, set its pose to be home pose");
-}
-
+//****************************** SERVICE ******************************
 //initialize robot to be home if charging
 bool initializeHomeSrcCallback(std_srvs::Empty::Request &req, std_srvs::Empty::Response &res){
     if(charging_status_){
@@ -172,6 +148,10 @@ bool initializeHomeSrcCallback(std_srvs::Empty::Request &req, std_srvs::Empty::R
     return true;
 }
 
+bool updateStatusSrvCb(std_srvs::Empty::Request &req, std_srvs::Empty::Response &res){
+    updateStatus();
+    return true;
+}
 
 bool getUpdateStatusSrvCallback(gobot_msg_srv::GetString::Request &req, gobot_msg_srv::GetString::Response &res){
     res.data = getUpdateStatus();
@@ -551,50 +531,106 @@ bool recordBatterySrvCallback(gobot_msg_srv::SetInt::Request &req, gobot_msg_srv
     return true;
 }
 
-void batteryCallback(const gobot_msg_srv::BatteryMsg::ConstPtr& msg){
-    battery_percent_ = msg->BatteryStatus;
-    charging_current_ = msg->ChargingCurrent;
-    battery_charging_ = msg->ChargingFlag;
-
-    //in case robot move away from CS, but battery charging status is not changed, so reset battery charging status after 60s
-    if(battery_charging_ && !charging_status_){
-        if(ros::Time::now()-battery_time_ > ros::Duration(60.0)){
-            gobot_msg_srv::SetBool charging;
-            charging.request.data = false;
-            ros::service::call("/gobot_base/set_charging",charging);
-        }
-    }
-    /*//for recording test purpose
-    if(record_battery_==1 && (ros::Time::now() - record_time_) >= ros::Duration(5.0)){
-        std::string record_date = getCurrentTime();
-        std::ofstream ofsStage(recordBatteryFile, std::ofstream::out | std::ofstream::app);
-        if(ofsStage){
-            ofsStage << record_date << "  " <<charging_current_<<std::endl;
-            ofsStage.close();
-            ROS_INFO("(STATUS_SYSTEM) Recorded battery data: %s  %d",record_date.c_str(),charging_current_);
-            record_time_ = ros::Time::now();
-        }
-    }
-    */
+//****************************** FUNCTIONS ******************************
+std::string getCurrentTime(){
+  std::time_t now = std::time(0);
+  std::stringstream transTime;
+  transTime << std::put_time(localtime(&now), "%F-%H:%M:%S");
+  return transTime.str();
 }
 
-//for changing led/sound purpose. There should be no change when docking
-void bumpersCallback(const gobot_msg_srv::BumperMsg::ConstPtr& bumpers){
-    if(gobot_status_!=15){
-        bool front = !(bumpers->bumper1 && bumpers->bumper2 && bumpers->bumper3 && bumpers->bumper4);
-        bool back = !(bumpers->bumper5 && bumpers->bumper6 && bumpers->bumper7 && bumpers->bumper8);
-        if(front || back){
-            if(!collision){
-                collision = true;
-                SetRobot.setLed(1,{"red","white"});
-                SetRobot.setSound(3,1);
-            }
-        }
-        else if(collision){
-            collision = false;
-            SetRobot.setSound(1,1);
+//get updated information
+std::string getUpdateStatus(){
+    bool muteFlag = (mute_) ? 1 : 0;
+    return hostname_ + sep + std::to_string(stage_) + sep + std::to_string(battery_percent_) + 
+               sep + std::to_string(muteFlag) + sep + std::to_string(dock_status_) + sep + std::to_string(robot_mode_);
+} 
+
+//send updated information for ping_servers
+void updateStatus(){
+    std_msgs::String update_status;
+    update_status.data = getUpdateStatus();
+    update_info_pub.publish(update_status);
+}
+
+
+void threadVoice(std::string file, int mute){
+    SetRobot.playVoice(file, mute);
+}
+
+//change robot led and sound to inform people its status
+void robotResponse(int status, std::string text){
+    ros::NodeHandle n;
+    //permanent green case
+    if (text=="COMPLETE_EXPLORING" || text=="COMPLETE_PATH" || text=="COMPLETE_POINT") {
+        SetRobot.setLed(0,{"green"});
+        SetRobot.setSound(1,2);
+        if(text=="COMPLETE_EXPLORING"){
+            n.getParam("scan_complete", scan_complete_mp3);
+            std::thread t_voice(threadVoice, scan_complete_mp3, mute_);
+            t_voice.detach();
         }
     }
+    else if(text=="STOP_EXPLORING" || text=="STOP_DOCKING" || text=="STOP_PATH" || text=="PAUSE_PATH"){
+        SetRobot.setLed(0,{"blue"});
+    }
+    else if(text=="PLAY_PATH" || text=="PLAY_POINT" || text=="EXPLORING"){
+        SetRobot.setLed(1,{"green","white"});
+    }
+    else if(text=="DELAY" || text=="WAITING"){
+        SetRobot.setLed(1,{"blue","white"});
+    }
+    else if(text=="FAIL_DOCKING" || text=="ABORTED_PATH"){
+        SetRobot.setLed(0,{"red"});
+        SetRobot.setSound(3,2);
+        n.getParam("abort_navigation_mp3", abort_navigation_mp3);
+        std::thread t_voice(threadVoice, abort_navigation_mp3, mute_);
+        t_voice.detach();
+    }
+    else if(text=="DOCKING"){
+        SetRobot.setLed(1,{"yellow","cyan"});
+        n.getParam("auto_docking_mp3", auto_docking_mp3);
+        std::thread t_voice(threadVoice, auto_docking_mp3, mute_);
+        t_voice.detach();
+    }
+    else if(text=="COMPLETE_DOCKING"){
+        SetRobot.setSound(1,2);
+        n.getParam("docking_complete_mp3", docking_complete_mp3);
+        std::thread t_voice(threadVoice, docking_complete_mp3, mute_);
+        t_voice.detach();
+    }
+    else if(text=="START_EXPLORING"){
+        n.getParam("auto_scan", auto_scan_mp3);
+        std::thread t_voice(threadVoice, auto_scan_mp3, mute_);
+        t_voice.detach();
+    }
+    else if(text=="STARTUP_READY"){
+        n.getParam("startup_mp3", startup_mp3);
+        std::thread t_voice(threadVoice, startup_mp3, mute_);
+        t_voice.detach();
+    }
+    else if(text=="SCAN_READY"){
+        n.getParam("scan_mp3", scan_mp3);
+        std::thread t_voice(threadVoice, scan_mp3, mute_);
+        t_voice.detach();
+    }
+    else if(text=="RELOAD_MAP"){
+        n.getParam("reload_map_mp3", reload_map_mp3);
+        std::thread t_voice(threadVoice, reload_map_mp3, mute_);
+        t_voice.detach();
+    }
+}
+
+void setHomePose(){
+    geometry_msgs::PoseWithCovarianceStamped home_pose;
+    home_pose.pose.pose.position.x = std::stod(home_.at(0));
+    home_pose.pose.pose.position.y = std::stod(home_.at(1));
+    home_pose.pose.pose.orientation.z = std::stod(home_.at(2));
+    home_pose.pose.pose.orientation.z = std::stod(home_.at(3));
+    home_pose.pose.pose.orientation.z = std::stod(home_.at(4));
+    home_pose.pose.pose.orientation.w = std::stod(home_.at(5));
+    SetRobot.setInitialpose(home_pose);
+    ROS_INFO("(STATUS_SYSTEM) Robot is charging, set its pose to be home pose");
 }
 
 void initialData(){
@@ -770,6 +806,8 @@ int main(int argc, char* argv[]){
     ros::ServiceServer PercentSrv = n.advertiseService("/gobot_status/battery_percent", PercentService);
 
     ros::ServiceServer getUpdateStatusSrv = n.advertiseService("/gobot_status/get_update_status", getUpdateStatusSrvCallback);
+
+    ros::ServiceServer updateStatusSrv = n.advertiseService("/gobot_status/update_status", updateStatusSrvCb);
 
     ros::ServiceServer setGobotStatusSrv = n.advertiseService("/gobot_status/get_gobot_status", getGobotStatusSrvCallback);
     ros::ServiceServer getGobotStatusSrv = n.advertiseService("/gobot_status/set_gobot_status", setGobotStatusSrvCallback);

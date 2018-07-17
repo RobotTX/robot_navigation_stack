@@ -1,14 +1,12 @@
-### To install Ubuntu ###
+####################### To install Ubuntu #######################
 
 install Ubuntu 16.04 LTS using USB drive
 
 #space allocation
 swap=4GB,ext4/boot=2GB,ext4/=20GB,ext4/home=rest
+#####################################################################
 
-###################################################
-
-### To install ROS ###
-
+####################### To install ROS #######################
 install ros-kinetic-desktop (without gazebo)
 http://wiki.ros.org/kinetic/Installation/Ubuntu
 sudo sh -c 'echo "deb http://packages.ros.org/ros/ubuntu $(lsb_release -sc) main" > /etc/apt/sources.list.d/ros-latest.list'
@@ -35,8 +33,9 @@ export ROS_PACKAGE_PATH=$ROS_PACKAGE_PATH:~/catkin_ws/src
 #install Driver Packages
 sudo sh ~/catkin_ws/src/robot_navigation_stack/setup/install_script.sh
 #*
-###################################################
+#####################################################################
 
+####################### To Configure The System #######################
 #use usb-connected joystick#
 #*
 sudo apt-get install libusb-dev
@@ -70,11 +69,6 @@ amcl.yaml/costmap_common_params.yaml/gmapping_params.yaml
 sqrt(0.255^2+0.25^2) = 0.357  
 inflation_radius = 0.45     0.4/0.45/0.5  
 
-
-
-###################################################
-
-### To Configure The System ###
 #avoid password for sudo cmd
 sudo visudo 
 username ALL=(ALL) NOPASSWD: ALL
@@ -96,6 +90,8 @@ cd /home/$username/catkin_ws/src/robot_navigation_stack/gobot_data/command
 ./start_robot.sh $username
 before exit0
     
+#warning:Clock skew detected. Your build may be incomplete. 
+find . -type f | xargs -n 5 touch
 
 #allow fping
 #*
@@ -112,9 +108,10 @@ sudo apt install network-manager
 #permission denied when TAB after roslaunch
 sudo umount /home/useraccount/.gvfs
 sudo rm -rf .gvfs/
+#####################################################################
 
-### Optional Configuration ###
-##modbus Setup
+####################### Optional Configuration #######################
+#modbus Setup
 Install all dependencies from packages or from sources:
 * sudo apt-get install python-pymodbus
 * sudo apt-get install python-pyasn1 python-twisted-conch
@@ -151,6 +148,12 @@ sudo ./qt.run
 #roboware studio
 sudo dpkg -i robotware.deb
 
+#combine two audio files into one
+ffmpeg -i 1.mp3 -i 2.mp3 -filter_complex '[0:0] [1:0] concat=n=2:v=0:a=1 [a]' -map [a] output.mp3
+
+#install .deb files
+sudo dpkg -i /path/to/deb/file
+
 #ROS on multiple machines (under same local network)
 * master setup 
     `export ROS_MASTER_URI=http://master_ip:11311`
@@ -158,4 +161,4 @@ sudo dpkg -i robotware.deb
 * slaves setup
     `export ROS_MASTER_URI=http://master_ip:11311`
     `export ROS_IP=slave_ip`
-###################################################
+#####################################################################

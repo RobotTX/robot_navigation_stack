@@ -16,19 +16,13 @@
 #include <dynamic_reconfigure/Reconfigure.h>
 #include <dynamic_reconfigure/DoubleParameter.h>
 
-typedef actionlib::SimpleActionClient<move_base_msgs::MoveBaseAction> MoveBaseClient;
+//****************************** CALLBACK ******************************
+void batteryCallback(const gobot_msg_srv::BatteryMsg::ConstPtr& msg);
 
-std::string getCurrentTime();
+void bumpersCallback(const gobot_msg_srv::BumperMsg::ConstPtr& bumpers);
 
-std::string getUpdateStatus();
-
-void updateStatus(std::string &str);
-
-void threadVoice(std::string file, int mute = -1);
-
-void robotResponse(int status, std::string text);
-
-void setHomePose(void);
+//****************************** SERVICE ******************************
+bool updateStatusSrvCb(std_srvs::Empty::Request &req, std_srvs::Empty::Response &res);
 
 bool initializeHomeSrcCallback(std_srvs::Empty::Request &req, std_srvs::Empty::Response &res);
 
@@ -70,6 +64,17 @@ bool setLoopSrvCallback(gobot_msg_srv::SetInt::Request &req, gobot_msg_srv::SetI
 
 bool PercentService(gobot_msg_srv::GetInt::Request &req, gobot_msg_srv::GetInt::Response &res);
 
-void batteryCallback(const gobot_msg_srv::BatteryMsg::ConstPtr& msg);
+//****************************** FUNCTIONS ******************************
+std::string getCurrentTime();
+
+std::string getUpdateStatus();
+
+void updateStatus();
+
+void threadVoice(std::string file, int mute = -1);
+
+void robotResponse(int status, std::string text);
+
+void setHomePose(void);
 
 void initialData(void);

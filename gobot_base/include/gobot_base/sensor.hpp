@@ -85,12 +85,12 @@ class SensorClass {
             proximity_pub_ = nh.advertise<gobot_msg_srv::ProximityMsg>("/gobot_base/proximity_topic", 1);
             magnet_pub_ = nh.advertise<std_msgs::Int8>("/gobot_base/magnet_topic",1);
 
-            MagnetSrv = nh.advertiseService("/gobot_base/set_magnet", &SensorClass::MagnetSrvCallback, this);
             useSonarSrv = nh.advertiseService("/gobot_base/use_sonar", &SensorClass::useSonarSrvCallback, this);
             useCliffSrv = nh.advertiseService("/gobot_base/use_cliff", &SensorClass::useCliffSrvCallback, this);
             useBumperSrv = nh.advertiseService("/gobot_base/use_bumper", &SensorClass::useBumperSrvCallback, this);
-            shutdownSrv = nh.advertiseService("/gobot_base/shutdown_robot", &SensorClass::shutdownSrvCallback, this);
+            magnetSrv = nh.advertiseService("/gobot_base/set_magnet", &SensorClass::magnetSrvCallback, this);
             setChargingSrv = nh.advertiseService("/gobot_base/set_charging", &SensorClass::setChargingSrvCallback, this);
+            shutdownSrv = nh.advertiseService("/gobot_base/shutdown_robot", &SensorClass::shutdownSrvCallback, this);
 
             mute_sub_ = nh.subscribe("/gobot_status/mute", 1, &SensorClass::muteCallback, this);
             led_sub_ = nh.subscribe("/gobot_base/set_led", 1, &SensorClass::ledCallback, this);
@@ -210,10 +210,8 @@ class SensorClass {
                     /// First 3 bytes are: 
                     // sensor address=B0, command=B1, data length=B2, so we can ignore it
                     //D for data, B for buff
-
                     gobot_msg_srv::AllSensorsMsg sensors_msg;
                     
-
                     /// Sonars data = D1-D14 / B3-B16
                     //1->front_right,2->front_left,3->back_left,4->back_right
                     gobot_msg_srv::SonarMsg sonar_data;
@@ -221,20 +219,19 @@ class SensorClass {
                     sonar_data.distance2 = (buff.at(5) << 8) | buff.at(6);
                     sonar_data.distance3 = (buff.at(7) << 8) | buff.at(8);
                     sonar_data.distance4 = (buff.at(9) << 8) | buff.at(10);
-                    /*
+                    
                     sonar_data.distance5 = (buff.at(11) << 8) | buff.at(12);
                     sonar_data.distance6 = (buff.at(13) << 8) | buff.at(14);
                     sonar_data.distance7 = (buff.at(15) << 8) | buff.at(16);
-                    */
+                    /*
                     sonar_data.distance5 = -1;
                     sonar_data.distance6 = -1;
                     sonar_data.distance7 = -1;
-
+                    */
                     sensors_msg.sonar = sonar_data;
 
                     /// Bumpers data = D15 / B17
                     gobot_msg_srv::BumperMsg bumper_data;
-
                     if(buff.at(17)){
                         bumper_data.bumper6 = (buff.at(17) & 0b00000001) > 0;
                         bumper_data.bumper3 = (buff.at(17) & 0b00000010) > 0;
@@ -249,7 +246,6 @@ class SensorClass {
                         error_bumper = true;
                         error = true;
                     }
-            
                     sensors_msg.bumper = bumper_data;
 
                     /// Ir signals = D16-D18 / B18-B20
@@ -258,14 +254,12 @@ class SensorClass {
                     ir_data.leftSignal = buff.at(19);
                     ir_data.rightSignal = buff.at(20);
                     //ROS_INFO("(SENSORS::publishSensors) Check IR data : %d %d %d", ir_data.rearSignal,ir_data.leftSignal,ir_data.rightSignal);
-
                     sensors_msg.infrared = ir_data;
 
                     /// Proximity sensors = D19 / B21
                     gobot_msg_srv::ProximityMsg proximity_data;
                     proximity_data.signal1 = (buff.at(21) & 0b00000001) > 0;
                     proximity_data.signal2 = (buff.at(21) & 0b00000010) > 0;
-
                     sensors_msg.proximity = proximity_data;
 
                     /// Cliff sensors = D20-D27 / B22-B29
@@ -279,7 +273,6 @@ class SensorClass {
                     cliff_data.cliff3 = (cliff_data.cliff3>1000) ? 1 : cliff_data.cliff3;
                     cliff_data.cliff4 = (cliff_data.cliff4>1000) ? 1 : cliff_data.cliff4;
                     //ROS_INFO("(SENSORS) %d,%d,%d,%d",cliff_data.cliff1,cliff_data.cliff2,cliff_data.cliff3,cliff_data.cliff4);
-                    
                     sensors_msg.cliff = cliff_data;
 
 
@@ -294,7 +287,6 @@ class SensorClass {
                     battery_data.RemainCapacity = ((buff.at(38) << 8) | buff.at(39))/100;
                     battery_data.FullCapacity = ((buff.at(40) << 8) | buff.at(41))/100;
                     battery_data.Percentage = battery_data.BatteryStatus/100.0;
-
                     if(battery_data.BatteryVoltage <= 0 || battery_data.Temperature <= 0){
                         error = true;
                         ROS_ERROR("(SENSORS::publishSensors ERROR) Check battery data : Status:%d, Voltage:%d, ChargingCurrent:%d, Temperature:%d", 
@@ -339,7 +331,6 @@ class SensorClass {
                         battery_percent_ = battery_data.BatteryStatus;
                         last_charging_current_ = battery_data.ChargingCurrent;
                     }
-
                     sensors_msg.battery = battery_data;
 
                     /// Weight data = D40-D42 / B42-B44 
@@ -354,33 +345,28 @@ class SensorClass {
                     gobot_msg_srv::WeightMsg weight_data;
                     //gram -> kg
                     weight_data.weight = load_weight/1000.0; 
-
                     sensors_msg.weight = weight_data;
 
                     /// External button 0-No press; 1-press = D43 / B45
                     int8_t external_button = buff.at(45);
                     std_msgs::Int8 button;
                     button.data = external_button;
-
                     sensors_msg.button = button;
 
                     /// Charging status = D44 / B46
                     int8_t charging_status = buff.at(46);
-
                     sensors_msg.charging = charging_status==1 ? true : false;
                     
                     /// Reset wifi button (double click power button) = D45 / B47
                     int8_t resetwifi_button = buff.at(47);
                     std_msgs::Int8 reset_button;
                     reset_button.data = resetwifi_button;
-
                     sensors_msg.reset_button = reset_button;
 
 
                     int8_t magnet_status = buff.at(48);
                     std_msgs::Int8 magnet_data;
                     magnet_data.data = magnet_status;
-
                     sensors_msg.magnet = magnet_data;
 
                     /// Gyro+Accelerametor = D46-D57 / B48-B59
@@ -394,13 +380,12 @@ class SensorClass {
                     gyro.gyroy = buff.at(56)<<8 | buff.at(57); 
                     gyro.gyroz = buff.at(58)<<8 | buff.at(59);
                     gyro_pub_.publish(gyro);
-
                     sensors_msg.gyro = gyro;
 
                     /// Temperature = D58-D59 / B60-B61
-                    temperature.data = (((buff.at(60)<<8)|buff.at(61))-21)/333.87 + 21.0;
+                    //temperature.data = (((buff.at(60)<<8)|buff.at(61))-21)/333.87 + 21.0;
+                    temperature.data = battery_data.Temperature;
                     temperature_pub_.publish(temperature);
-
                     sensors_msg.temperature = temperature;
 
                     /// ACK = B62
@@ -487,7 +472,7 @@ class SensorClass {
             SetRobot_.playVoice(file, mute);
         }
 
-        bool MagnetSrvCallback(gobot_msg_srv::SetBool::Request &req, gobot_msg_srv::SetBool::Response &res){
+        bool magnetSrvCallback(gobot_msg_srv::SetBool::Request &req, gobot_msg_srv::SetBool::Response &res){
             //Electro magnet on
             if(req.data)
                 std::vector<uint8_t> buff = writeAndRead(std::vector<uint8_t>({0x20,0x01,0x01,0x01,0x00,0x00,0x00,0x00,0x00,0x00,0x1B}),5);
@@ -567,23 +552,6 @@ class SensorClass {
             if(!led_flag_ && (robot_status_==5 || robot_status_==25)){
                 setLed(1,{"green","white"});
                 led_flag_ = true;
-            }
-            //startup ready
-            else if(robot_status_ == -2){
-                n.getParam("startup_mp3", startup_mp3);
-                std::thread t_voice(&SensorClass::threadVoice, this, startup_mp3, mute_);
-                t_voice.detach();
-            }
-            //scan ready
-            else if(robot_status_ == -3){
-                n.getParam("scan_mp3", scan_mp3);
-                std::thread t_voice(&SensorClass::threadVoice, this, scan_mp3, mute_);
-                t_voice.detach();
-            }
-            else if(robot_status_ == -4){
-                n.getParam("reload_map_mp3", reload_map_mp3);
-                std::thread t_voice(&SensorClass::threadVoice, this, reload_map_mp3, mute_);
-                t_voice.detach();
             }
         }
 
@@ -738,7 +706,7 @@ class SensorClass {
         bool charging_flag_, low_battery_, led_flag_, USE_BUMPER, USE_SONAR, USE_CLIFF;
         int battery_percent_, error_count_, mute_, max_weight_, robot_status_, charge_check_;
         int SENSOR_RATE, SENSOR_BYTES;
-        std::string startup_mp3, scan_mp3, reload_map_mp3, low_battery_mp3, poweroff_mp3;
+        std::string low_battery_mp3, poweroff_mp3;
 
         serial::Serial serialConnection;
         std::mutex serialMutex_;
@@ -748,7 +716,7 @@ class SensorClass {
         ros::Timer ledTimer_;
         ros::Publisher sensors_pub_, bumper_pub_, ir_pub_, proximity_pub_, sonar_pub_, weight_pub_, battery_pub_, 
                        cliff_pub_, button_pub_, gyro_pub_, temperature_pub_, magnet_pub_;
-        ros::ServiceServer shutdownSrv, displayDataSrv, sensorsReadySrv, setChargingSrv, useBumperSrv, useSonarSrv, useCliffSrv, MagnetSrv;
+        ros::ServiceServer shutdownSrv, displayDataSrv, sensorsReadySrv, setChargingSrv, useBumperSrv, useSonarSrv, useCliffSrv, magnetSrv;
         ros::Subscriber led_sub_, sound_sub_, mute_sub_, status_sub_;
 
         boost::thread *sensor_thread_;

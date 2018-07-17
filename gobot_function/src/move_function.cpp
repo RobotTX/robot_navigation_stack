@@ -235,7 +235,7 @@ void goalReached(){
 
 	if(current_goal_.text != "\"\"" && current_goal_.text !=""){   //string "\"\"" means empty
 		if(audio_ack_.compare(current_goal_.text)==0){
-			std::thread play_audio(threadVoice, std::to_string(stage_)+".mp3", current_goal_.delayText);
+			std::thread play_audio(threadVoice, audio_folder_+std::to_string(stage_)+".mp3", current_goal_.delayText);
         	play_audio.detach();
 		}
 		else{
@@ -328,7 +328,7 @@ void textToSpeech(std::string text, double delay){
 void threadVoice(std::string file, double delay){
 	ros::Duration(delay).sleep();
 	if(GetRobot.getMute() == 0){
-		std::string audio_file = "sudo play " + audio_folder_ + file;
+		std::string audio_file = "sudo play " + file;
 		system(audio_file.c_str());
 	}
 }

@@ -47,9 +47,12 @@ bool startExplorationSrv(gobot_msg_srv::SetInt::Request &req, gobot_msg_srv::Set
         new_goal_time = ros::Time::now();
         exploring = true;
         docking = false;
+        noFrontiersLeft = 0;
+        
+        MoveRobot.setStatus(22,"START_EXPLORING");
 
         std::thread(doExploration).detach();
-    } 
+    }   
     else{
         ROS_WARN("(SCAN_EXPLORE) We were already exploring");
     }

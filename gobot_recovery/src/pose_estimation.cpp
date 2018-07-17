@@ -157,9 +157,9 @@ bool initializePoseSrvCallback(std_srvs::Empty::Request &req, std_srvs::Empty::R
 
                 //Startup begin
                 ros::NodeHandle nh;
+                SetRobot.setBatteryLed();
                 SetRobot.setStatus(-2,"STARTUP_READY");
                 poseReadySrv = nh.advertiseService("/gobot_startup/pose_ready", poseReadySrvCallback);
-                SetRobot.setBatteryLed();
                 //Startup end
 
                 zero_vel_time = ros::Time::now();

@@ -68,8 +68,9 @@ void session(boost::shared_ptr<tcp::socket> sock){
         }
 
         // when the last 5 bytes are 254 we know we have received a complete map
-        if(map.size() > 4 && static_cast<int>(map.at(map.size()-5)) == 254 && static_cast<int>(map.at(map.size()-4)) == 254
-             && static_cast<int>(map.at(map.size()-3)) == 254 && static_cast<int>(map.at(map.size()-2)) == 254 && static_cast<int>(map.at(map.size()-1)) == 254){
+        if(map.size() > 4 && static_cast<int>(map.at(map.size()-5)) == 254 && 
+           static_cast<int>(map.at(map.size()-4)) == 254 && static_cast<int>(map.at(map.size()-3)) == 254 && 
+           static_cast<int>(map.at(map.size()-2)) == 254 && static_cast<int>(map.at(map.size()-1)) == 254){
 
             std::string mapType = mapId.substr(0,4);
             ROS_INFO("(MAP_READ) Map Type: %s", mapType.c_str());
@@ -210,8 +211,6 @@ void session(boost::shared_ptr<tcp::socket> sock){
                 else {
                     ROS_INFO("(MAP_READ) Map id could not be updated : %s with date %s", mapId.c_str(), mapDate.c_str());
                 }
-                //close this session
-                return;
             } 
             else{
                 ROS_INFO("(MAP_READ) SAME IDS ");
@@ -220,12 +219,8 @@ void session(boost::shared_ptr<tcp::socket> sock){
                 boost::asio::write(*sock, boost::asio::buffer(message, message.length()), boost::asio::transfer_all(), error);
             }
 
-             /// Clear the used variables
-            gotMapData = 0;
-            mapId = "";
-            mapDate = "";
-            mapMetadata = "";
-            map.clear(); 
+            //close this session
+            return;
         }
     }
 }

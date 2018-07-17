@@ -2,6 +2,12 @@
 Changelog for developed mobile robot
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+1.1.7 (2018-07-17)
+-------------------
+* add pre-load .mp3 files for auto-scanning, complete scanning
+* still working on object tracking based on image
+* delete duplicate open source packages such as move_base
+
 1.1.6 (2018-07-16)
 -------------------
 * #permission for .cfg file
@@ -13,7 +19,7 @@ Changelog for developed mobile robot
 
 1.1.5 (2018-07-12)
 -------------------
-* build Hotspot wifi when assigned wifi can not be found
+* restart network-manager when assigned wifi can not be found
 * robot will resume to work if low battery auto docking is triggered
 
 1.1.4 (2018-07-11)
