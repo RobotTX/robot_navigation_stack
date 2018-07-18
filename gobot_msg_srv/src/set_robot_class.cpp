@@ -280,7 +280,7 @@ namespace robot_class {
         }
     }
 
-    void SetRobot::playVoice(std::string str, int mute){
+    void SetRobot::playAudio(std::string str, int mute){
         if(mute == -1){
             gobot_msg_srv::GetInt get_mute;
             ros::service::call("/gobot_status/get_mute",get_mute);
@@ -293,8 +293,8 @@ namespace robot_class {
         }
     }
 
-    void SetRobot::killVoice(){
-        std::string cmd = "sudo kill $(ps aux | grep \"sudo play\" | grep \"mp3\" | tr -s ' ' | cut -d ' ' -f2)";
+    void SetRobot::killAudio(){
+        std::string cmd = "sudo kill $(ps aux | grep \"sudo play\" | grep \"mp3\" | tr -s ' ' | cut -d ' ' -f2) &";
         system(cmd.c_str());
     }
     

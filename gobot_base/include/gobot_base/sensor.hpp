@@ -468,8 +468,8 @@ class SensorClass {
             }
         }
 
-        void threadVoice(std::string file, int mute = -1){
-            SetRobot_.playVoice(file, mute);
+        void playAudio(std::string file, int mute = -1){
+            SetRobot_.playAudio(file, mute);
         }
 
         bool magnetSrvCallback(gobot_msg_srv::SetBool::Request &req, gobot_msg_srv::SetBool::Response &res){
@@ -510,7 +510,7 @@ class SensorClass {
             //shutdown command
             ros::NodeHandle n;
             n.getParam("poweroff_mp3", poweroff_mp3);
-            threadVoice(poweroff_mp3, mute_);
+            playAudio(poweroff_mp3, mute_);
 
             std::vector<uint8_t> buff = writeAndRead(SHUT_DOWN_CMD,5);
             while(buff.size()!=5){
@@ -581,8 +581,8 @@ class SensorClass {
                 setSound(3,2);
                 ros::NodeHandle n;
                 n.getParam("low_battery_mp3", low_battery_mp3);
-                std::thread t_voice(&SensorClass::threadVoice, this, low_battery_mp3, mute_);
-                t_voice.detach();
+                std::thread t_audio(&SensorClass::playAudio, this, low_battery_mp3, mute_);
+                t_audio.detach();
             }
         }
 

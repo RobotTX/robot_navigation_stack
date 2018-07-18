@@ -5,7 +5,7 @@
 //the stage of the robot within the path (if path going from first point to second point, stage is 0, 
 //if going from point before last point to last point stage is #points-1)
 int stage_ = 0;
-bool looping = false, dockAfterPath = false;
+bool looping = false, dockAfterPath = false, audioOn = false;
 bool waitingForAction = false, readAction=true, interruptDelay=false, stop_flag=false, delayOn=false;
 std::vector<PathPoint> path_;
 PathPoint current_goal_;
@@ -83,6 +83,7 @@ bool playPointService(gobot_msg_srv::SetStringArray::Request &req, gobot_msg_srv
 	point.isHome = false;
 	point.waitingTime = -1;
 	point.text = "";
+	point.audioIndex = -1;
 	
 	MoveRobot.setStatus(5,"PLAY_POINT");
 
@@ -132,13 +133,20 @@ bool updatePathService(gobot_msg_srv::SetStringArray::Request &req, gobot_msg_sr
 }
 
 bool stopPathService(std_srvs::Empty::Request &req, std_srvs::Empty::Response &res){
+	stop_flag = true;
+
+	MoveRobot.cancelMove();
+
+	if(audioOn){
+		MoveRobot.killAudio();
+		audioOn = false;
+	}
+
 	//ROS_INFO("(MOVE_IT::stopPathService) stopPathService called");
 	MoveRobot.setStatus(1,"STOP_PATH");
-	stop_flag = true;
 
 	stage_ = 0;
 	MoveRobot.setStage(stage_);
-	MoveRobot.cancelMove();
 
     if(dockAfterPath){
 		goDockAfterPath();
@@ -148,15 +156,21 @@ bool stopPathService(std_srvs::Empty::Request &req, std_srvs::Empty::Response &r
 }
 
 bool pausePathService(std_srvs::Empty::Request &req, std_srvs::Empty::Response &res){
+	stop_flag = true;
+
+	MoveRobot.cancelMove();
+
+	if(audioOn){
+		MoveRobot.killAudio();
+		audioOn = false;
+	}
+
+	MoveRobot.setStatus(4,"PAUSE_PATH");
+
 	if(stage_ < 0){
 		stage_ = -stage_-1;
 		MoveRobot.setStage(stage_);
 	}
-
-	MoveRobot.setStatus(4,"PAUSE_PATH");
-	stop_flag = true;
-
-	MoveRobot.cancelMove();
 
 	return true;
 }
@@ -233,16 +247,8 @@ void goalReached(){
 		return;
 	}
 
-	if(current_goal_.text != "\"\"" && current_goal_.text !=""){   //string "\"\"" means empty
-		if(audio_ack_.compare(current_goal_.text)==0){
-			std::thread play_audio(threadVoice, audio_folder_+std::to_string(stage_)+".mp3", current_goal_.delayText);
-        	play_audio.detach();
-		}
-		else{
-			std::thread tts_thread(textToSpeech, current_goal_.text, current_goal_.delayText);
-			tts_thread.detach();
-		}
-	}
+	checkSound();
+
 	stage_++;
 
 	if(stage_ >= path_.size()){
@@ -272,6 +278,7 @@ void goalReached(){
 
 	MoveRobot.setSound(1,1);
 	MoveRobot.setStage(stage_);
+
 	// reached a normal/path goal so we sleep the given time
 	checkGoalDelay();
 	if(!stop_flag){
@@ -285,6 +292,27 @@ void goalReached(){
 void moveToGoal(PathPoint goal){
 	current_goal_ = goal;
 	MoveRobot.moveTo(current_goal_.p);
+}
+
+void checkSound(){
+	audioOn = false;
+	if(current_goal_.text != "\"\"" && current_goal_.text !=""){   //string "\"\"" means empty
+		if(audio_ack_.compare(current_goal_.text)==0 && current_goal_.audioIndex>=0){
+			audioOn = true;
+			//robot will complete audio before conituning path 
+			if(current_goal_.delayText == 999){
+				playAudio(audio_folder_+std::to_string(current_goal_.audioIndex)+".mp3", 0);
+			}
+			else{
+				std::thread play_audio(playAudio, audio_folder_+std::to_string(current_goal_.audioIndex)+".mp3", current_goal_.delayText);
+				play_audio.detach();
+			}
+		}
+		else{
+			std::thread tts_thread(textToSpeech, current_goal_.text, current_goal_.delayText);
+			tts_thread.detach();
+		}
+	}
 }
 
 void checkGoalDelay(){
@@ -325,7 +353,7 @@ void textToSpeech(std::string text, double delay){
 	MoveRobot.speakChinese(text);
 }
 
-void threadVoice(std::string file, double delay){
+void playAudio(std::string file, double delay){
 	ros::Duration(delay).sleep();
 	if(GetRobot.getMute() == 0){
 		std::string audio_file = "sudo play " + file;
@@ -335,7 +363,7 @@ void threadVoice(std::string file, double delay){
 
 void readPath(std::vector<std::string> &path){
 	PathPoint pathPoint;
-	int n = 7;
+	int n = 7, audio_index = 0;
 	for(int i=1;i<path.size();i++){
 		switch((i-1)%n){
 			case 1:
@@ -356,6 +384,13 @@ void readPath(std::vector<std::string> &path){
 				break;
 
 			case 5:
+				if (audio_ack_.compare(path.at(i))==0){
+					pathPoint.audioIndex = audio_index;
+					audio_index++;
+				}
+				else{
+					pathPoint.audioIndex = -1;
+				}
 				pathPoint.text = path.at(i);
 				break;
 

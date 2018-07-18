@@ -554,8 +554,8 @@ void updateStatus(){
 }
 
 
-void threadVoice(std::string file, int mute){
-    SetRobot.playVoice(file, mute);
+void playAudio(std::string file, int mute){
+    SetRobot.playAudio(file, mute);
 }
 
 //change robot led and sound to inform people its status
@@ -567,8 +567,8 @@ void robotResponse(int status, std::string text){
         SetRobot.setSound(1,2);
         if(text=="COMPLETE_EXPLORING"){
             n.getParam("scan_complete", scan_complete_mp3);
-            std::thread t_voice(threadVoice, scan_complete_mp3, mute_);
-            t_voice.detach();
+            std::thread t_audio(playAudio, scan_complete_mp3, mute_);
+            t_audio.detach();
         }
     }
     else if(text=="STOP_EXPLORING" || text=="STOP_DOCKING" || text=="STOP_PATH" || text=="PAUSE_PATH"){
@@ -584,40 +584,40 @@ void robotResponse(int status, std::string text){
         SetRobot.setLed(0,{"red"});
         SetRobot.setSound(3,2);
         n.getParam("abort_navigation_mp3", abort_navigation_mp3);
-        std::thread t_voice(threadVoice, abort_navigation_mp3, mute_);
-        t_voice.detach();
+        std::thread t_audio(playAudio, abort_navigation_mp3, mute_);
+        t_audio.detach();
     }
     else if(text=="DOCKING"){
         SetRobot.setLed(1,{"yellow","cyan"});
         n.getParam("auto_docking_mp3", auto_docking_mp3);
-        std::thread t_voice(threadVoice, auto_docking_mp3, mute_);
-        t_voice.detach();
+        std::thread t_audio(playAudio, auto_docking_mp3, mute_);
+        t_audio.detach();
     }
     else if(text=="COMPLETE_DOCKING"){
         SetRobot.setSound(1,2);
         n.getParam("docking_complete_mp3", docking_complete_mp3);
-        std::thread t_voice(threadVoice, docking_complete_mp3, mute_);
-        t_voice.detach();
+        std::thread t_audio(playAudio, docking_complete_mp3, mute_);
+        t_audio.detach();
     }
     else if(text=="START_EXPLORING"){
         n.getParam("auto_scan", auto_scan_mp3);
-        std::thread t_voice(threadVoice, auto_scan_mp3, mute_);
-        t_voice.detach();
+        std::thread t_audio(playAudio, auto_scan_mp3, mute_);
+        t_audio.detach();
     }
     else if(text=="STARTUP_READY"){
         n.getParam("startup_mp3", startup_mp3);
-        std::thread t_voice(threadVoice, startup_mp3, mute_);
-        t_voice.detach();
+        std::thread t_audio(playAudio, startup_mp3, mute_);
+        t_audio.detach();
     }
     else if(text=="SCAN_READY"){
         n.getParam("scan_mp3", scan_mp3);
-        std::thread t_voice(threadVoice, scan_mp3, mute_);
-        t_voice.detach();
+        std::thread t_audio(playAudio, scan_mp3, mute_);
+        t_audio.detach();
     }
     else if(text=="RELOAD_MAP"){
         n.getParam("reload_map_mp3", reload_map_mp3);
-        std::thread t_voice(threadVoice, reload_map_mp3, mute_);
-        t_voice.detach();
+        std::thread t_audio(playAudio, reload_map_mp3, mute_);
+        t_audio.detach();
     }
 }
 

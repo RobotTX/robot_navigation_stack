@@ -71,7 +71,7 @@ std::string getUpdateStatus();
 
 void updateStatus();
 
-void threadVoice(std::string file, int mute = -1);
+void playAudio(std::string file, int mute = -1);
 
 void robotResponse(int status, std::string text);
 

@@ -16,6 +16,7 @@ struct PathPoint {
     double waitingTime;
     std::string text;
     double delayText;
+    int audioIndex;
 };
 
 
@@ -69,13 +70,15 @@ void goalReached();
 
 void moveToGoal(PathPoint goal);
 
+void checkSound();
+
 void checkGoalDelay();
 
 void goDockAfterPath();
 
 void textToSpeech(std::string text, double delay);
 
-void threadVoice(std::string file, double delay);
+void playAudio(std::string file, double delay);
 
 void readPath(std::vector<std::string> &path);
 
