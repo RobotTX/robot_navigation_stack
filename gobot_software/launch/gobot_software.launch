@@ -10,5 +10,6 @@
 	<node pkg="gobot_software" type="tcp_transfer_map" 		name="software_map_transfer" 		output="screen" respawn="true"/>
 	<node pkg="gobot_software" type="tcp_read_map" 			name="software_read_new_map" 		output="screen" respawn="true"/>
 	<node pkg="gobot_software" type="tcp_teleop_control" 	name="software_teleop" 				output="screen" respawn="true"/>
+	<node pkg="gobot_software" type="tcp_read_audio" 		name="tcp_read_audio" 				output="screen" respawn="true" />
 	<node pkg="gobot_software" type="gobot_status" 			name="software_gobot_status" 		output="screen" respawn="true" />
 </launch>

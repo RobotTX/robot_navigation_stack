@@ -7,11 +7,11 @@ add_compile_options(-std=c++11)
 ## if COMPONENTS list like find_package(catkin REQUIRED COMPONENTS xyz)
 ## is used, also find other catkin packages
 find_package(catkin REQUIRED COMPONENTS
+    gobot_msg_srv
     hector_exploration_planner
     hector_nav_msgs
     roscpp
     rospy
-    gobot_msg_srv
 )
 
 ## System dependencies are found with CMake's conventions
@@ -67,10 +67,9 @@ find_package(catkin REQUIRED COMPONENTS
 # )
 
 ## Generate added messages and services with any dependencies listed here
-generate_messages(
-    DEPENDENCIES
-    hector_nav_msgs
-)
+#generate_messages(
+#    DEPENDENCIES
+#)
 
 ###################################
 ## catkin specific configuration ##
