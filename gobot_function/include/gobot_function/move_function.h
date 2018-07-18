@@ -12,11 +12,11 @@
 
 struct PathPoint {
     robot_class::Point p;
-    bool isHome;
-    double waitingTime;
+    bool is_home;
+    double delay_point;
     std::string text;
-    double delayText;
-    int audioIndex;
+    double delay_sound;
+    int audio_index;
 };
 
 

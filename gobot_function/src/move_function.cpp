@@ -80,10 +80,10 @@ bool playPointService(gobot_msg_srv::SetStringArray::Request &req, gobot_msg_srv
 		point.p.x += 0.4 * std::cos(point.p.yaw);
 		point.p.y += 0.4 * std::sin(point.p.yaw);
 	}
-	point.isHome = false;
-	point.waitingTime = -1;
+	point.is_home = false;
+	point.delay_point = -1;
 	point.text = "";
-	point.audioIndex = -1;
+	point.audio_index = -1;
 	
 	MoveRobot.setStatus(5,"PLAY_POINT");
 
@@ -297,19 +297,19 @@ void moveToGoal(PathPoint goal){
 void checkSound(){
 	audioOn = false;
 	if(current_goal_.text != "\"\"" && current_goal_.text !=""){   //string "\"\"" means empty
-		if(audio_ack_.compare(current_goal_.text)==0 && current_goal_.audioIndex>=0){
+		if(audio_ack_.compare(current_goal_.text)==0 && current_goal_.audio_index>=0){
 			audioOn = true;
 			//robot will complete audio before conituning path 
-			if(current_goal_.delayText == 999){
-				playAudio(audio_folder_+std::to_string(current_goal_.audioIndex)+".mp3", 0);
+			if(current_goal_.delay_sound == 999){
+				playAudio(audio_folder_+std::to_string(current_goal_.audio_index)+".mp3", 0);
 			}
 			else{
-				std::thread play_audio(playAudio, audio_folder_+std::to_string(current_goal_.audioIndex)+".mp3", current_goal_.delayText);
+				std::thread play_audio(playAudio, audio_folder_+std::to_string(current_goal_.audio_index)+".mp3", current_goal_.delay_sound);
 				play_audio.detach();
 			}
 		}
 		else{
-			std::thread tts_thread(textToSpeech, current_goal_.text, current_goal_.delayText);
+			std::thread tts_thread(textToSpeech, current_goal_.text, current_goal_.delay_sound);
 			tts_thread.detach();
 		}
 	}
@@ -318,19 +318,19 @@ void checkSound(){
 void checkGoalDelay(){
 	delayOn = true;
 	interruptDelay = false;
-	if(current_goal_.waitingTime != 0){	
-		if(current_goal_.waitingTime > 0){
+	if(current_goal_.delay_point != 0){	
+		if(current_goal_.delay_point > 0){
 			MoveRobot.setStatus(5,"DELAY");
-			//ROS_INFO("(MOVE_IT::goalReached) goalReached going to sleep for %f seconds", current_goal_.waitingTime);
+			//ROS_INFO("(MOVE_IT::goalReached) goalReached going to sleep for %f seconds", current_goal_.delay_point);
 			double dt=0.0;
 			ros::Time last_time=ros::Time::now();
-			while(dt<current_goal_.waitingTime && !stop_flag && !interruptDelay && ros::ok()){
+			while(dt<current_goal_.delay_point && !stop_flag && !interruptDelay && ros::ok()){
 				dt=(ros::Time::now()-last_time).toSec();
 				ros::Duration(0.1).sleep();
 				ros::spinOnce();
 			}
 		}
-		else if(current_goal_.waitingTime == -1){
+		else if(current_goal_.delay_point == -1){
 			MoveRobot.setStatus(5,"WAITING");
 			ros::NodeHandle n;
 			//ROS_INFO("(MOVE_IT) Goal reached. Waiting for human action.");
@@ -375,8 +375,8 @@ void readPath(std::vector<std::string> &path){
 				break;
 
 			case 3:
-				pathPoint.waitingTime=std::stod(path.at(i));
-				pathPoint.isHome = false;
+				pathPoint.delay_point=std::stod(path.at(i));
+				pathPoint.is_home = false;
 				break;
 
 			case 4:
@@ -385,17 +385,17 @@ void readPath(std::vector<std::string> &path){
 
 			case 5:
 				if (audio_ack_.compare(path.at(i))==0){
-					pathPoint.audioIndex = audio_index;
+					pathPoint.audio_index = audio_index;
 					audio_index++;
 				}
 				else{
-					pathPoint.audioIndex = -1;
+					pathPoint.audio_index = -1;
 				}
 				pathPoint.text = path.at(i);
 				break;
 
 			case 6:
-				pathPoint.delayText = path.at(i)=="" ? 0.0 : std::stod(path.at(i));
+				pathPoint.delay_sound = path.at(i)=="" ? 0.0 : std::stod(path.at(i));
 				path_.push_back(pathPoint);
 				break;
 
