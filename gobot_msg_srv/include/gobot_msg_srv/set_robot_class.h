@@ -84,6 +84,8 @@ namespace robot_class {
 
             void playVoice(std::string str, int mute = -1);
 
+            void killVoice();
+
         private:
             std::string tts_en_, tts_ch_, voice_file_;
             std_srvs::Empty empty_srv;

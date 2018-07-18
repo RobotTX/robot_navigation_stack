@@ -1092,7 +1092,6 @@ void session(boost::shared_ptr<tcp::socket> sock){
         /// Finally process any incoming command
         while(sockets.count(ip) && ros::ok()) {
             char data[max_length];
-
             boost::system::error_code error;
             /// We wait to receive some data
             size_t length = sock->read_some(boost::asio::buffer(data), error);
@@ -1114,20 +1113,20 @@ void session(boost::shared_ptr<tcp::socket> sock){
                         finishedCmd = 1;
                         i = length;
                     } 
-                    else
+                    else{
                         commandStr += data[i];
+                    }
                 }
             }
 
             if(commandStr.length() > 0){
-
                 /// Split the command from a str to a vector of str
                 ///cmd+sep+param1+sep+param2+sep+ETB+sep
                 split(commandStr, sep_c, std::back_inserter(command));
 
                 if(finishedCmd){
                     sendCommand(ip,command,commandStr);
-                    
+                    //reset variables
                     command.clear();
                     finishedCmd = 0;
                     commandStr = "";

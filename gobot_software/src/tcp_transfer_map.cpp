@@ -226,10 +226,8 @@ bool sendOnceMap(gobot_msg_srv::SendMap::Request &req,
 	std::vector<int8_t> ori_map;
     std::string mapFileStr;
     ros::NodeHandle n;
-    if(n.hasParam("map_image_used")){
-    	n.getParam("map_image_used", mapFileStr);
-    	ROS_INFO("(MAP_TRANSFER) tcp_transfer_map set map image file to %s", mapFileStr.c_str());
-    }
+	n.getParam("map_image_used", mapFileStr);
+	ROS_INFO("(MAP_TRANSFER) tcp_transfer_map set map image file to %s", mapFileStr.c_str());
 
 	std::string line;
 	std::ifstream mapFile;

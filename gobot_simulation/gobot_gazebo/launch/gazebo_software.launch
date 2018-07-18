@@ -11,6 +11,7 @@
 	<node pkg="gobot_software" type="gobot_status" name="software_gobot_status" output="screen" respawn="true" />
 	<node pkg="gobot_software" type="tcp_read_map" name="software_read_new_map" output="screen" respawn="true"/>
 	<node pkg="gobot_software" type="tcp_teleop_control" name="software_teleop" output="screen" respawn="true">
+	<node pkg="gobot_software" type="tcp_read_audio" 		name="software_read_audio" 			output="screen" respawn="true" />
 		<remap from="/teleop_cmd_vel" to="/cmd_vel"/>
 	</node>
 </launch>

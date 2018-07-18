@@ -292,6 +292,11 @@ namespace robot_class {
             system(voice_file_.c_str());
         }
     }
+
+    void SetRobot::killVoice(){
+        std::string cmd = "sudo kill $(ps aux | grep \"sudo play\" | grep \"mp3\" | tr -s ' ' | cut -d ' ' -f2)";
+        system(cmd.c_str());
+    }
     
 };
 

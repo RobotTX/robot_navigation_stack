@@ -4,6 +4,7 @@
 #include <fstream>
 #include <string>
 #include <ctime>
+#include <signal.h>
 #include <tf/transform_broadcaster.h>
 #include <std_msgs/String.h>
 #include <std_msgs/Int16.h>
@@ -16,14 +17,13 @@ ros::Time lastSignal;
 
 //positive values -> turn right
 //negative values -> turn left
-bool left_turn_ = true, detection_on_ = false, detection_bingo_ = false;
+bool left_turn_ = true, detection_on_ = false;
 
 void stopDetectionFunc(){
     alignmentSub.shutdown();
     magnetSub.shutdown();
     bumperSub.shutdown();
     detection_on_ = false;
-    detection_bingo_ = false;
     left_turn_ = false;
     MoveRobot.stop();
 }
@@ -56,44 +56,46 @@ void bumpersCb(const gobot_msg_srv::BumperMsg::ConstPtr& bumpers){
 
 void alignmentCb(const std_msgs::Int16::ConstPtr& msg){
     if(detection_on_){
-        int base_spd = abs(msg->data)>50 ? 5 : 3;
-        int search_spd = 8, backward_spd = 2;
-        
-        if(abs(msg->data)>60)
-            base_spd = 3;
-        else if(abs(msg->data)>30)
-            base_spd = 2;
-        else
-            base_spd = 1;
+        int base_spd = 2, search_spd = 6;
 
-        if(msg->data == -1){
+        if(msg->data == 0){
             if(ros::Time::now()-lastSignal>ros::Duration(1.0)){
                 if(left_turn_)
-                    MoveRobot.turnLeft(search_spd);
-                else
                     MoveRobot.turnRight(search_spd);
-                }
-            else{
-                MoveRobot.backward(backward_spd);
+                else
+                    MoveRobot.turnLeft(search_spd);
             }
         }
         //backward
-        else if(msg->data == 0){
-            MoveRobot.backward(backward_spd);
-            detection_bingo_ = true;
+        else if(msg->data == 100){
+            MoveRobot.backward(base_spd);
             lastSignal = ros::Time::now();
         }
         //turn right
-        else if(msg->data > 0){
+        else if(msg->data == 1){
+            MoveRobot.turnRight(1);
+            left_turn_ = false;
+        }
+        else if(msg->data == 5){
             MoveRobot.turnRight(base_spd);
             left_turn_ = false;
-            detection_bingo_ = false;
+        }
+        else if(msg->data == 10){
+            MoveRobot.turnRight(base_spd*2, 0);
+            left_turn_ = false;
         }
         //turn left
-        else if(msg->data < 0){
+        else if(msg->data == -1){
+            MoveRobot.turnLeft(1);
+            left_turn_ = true;
+        }
+        else if(msg->data == -5){
             MoveRobot.turnLeft(base_spd);
             left_turn_ = true;
-            detection_bingo_ = false;
+        }
+        else if(msg->data == -10){
+            MoveRobot.turnLeft(0, base_spd*2);
+            left_turn_ = true;
         }
     }
 
@@ -123,10 +125,19 @@ bool stopDetectionCb(std_srvs::Empty::Request &req, std_srvs::Empty::Response &r
     return true;
 }
 
+void mySigintHandler(int sig)
+{   
+    gobot_msg_srv::SetBool magnet;
+    magnet.request.data = false;
+    ros::service::call("/gobot_base/set_magnet",magnet);
+    ros::shutdown();
+}
+
 int main(int argc, char* argv[]){
     ros::init(argc, argv, "detection_function");
     ros::NodeHandle nh;
-
+    signal(SIGINT, mySigintHandler);
+    
     MoveRobot.moveClientInitialize();
 
     ros::ServiceServer startDetectionSrv = nh.advertiseService("/gobot_function/startDetection", startDetectionCb);

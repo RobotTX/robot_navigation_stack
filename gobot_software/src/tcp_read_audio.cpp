@@ -20,6 +20,7 @@ static const std::string sep = std::string(1, 31);
 const int max_length = 1024, ACK_NUM = 4;
 
 int file_index = 0;
+
 std::vector<char> ACK_DATA({'!','@','#','$'}), END_DATA({'!','!','!','!'});
 
 std::string audio_folder = "/home/tx/audio/", feedback_msg = "done" + sep + "mp3";;
@@ -80,22 +81,19 @@ void session(boost::shared_ptr<tcp::socket> sock){
                 desstr.close();
                 
                 ROS_INFO("(READ_AUDIO) Received the %d audio file, size: %zu.",file_index+1, audio_data.size());
+
+                //reset variables
                 data_size = 0;
                 audio_data.clear();
                 file_index++;
 
-                //feedback to TCP if sth wrong
+                //feedback message to TCP server
                 boost::asio::write(*sock, boost::asio::buffer(feedback_msg, feedback_msg.length()), boost::asio::transfer_all(), error);
-                if (error) 
-                { 
-                    std::cout <<boost::system::system_error(error).what() << std::endl; 
-                }
 
                 //close the session after completing reading the data of last mp3 file
                 if(correct_end){ 
                     ROS_INFO("(READ_AUDIO) Received the last (%d) audio file, size: %zu. Close TCP session.",file_index+1, audio_data.size());
                     file_index = 0;
-                    return;
                 }
             }
         }
