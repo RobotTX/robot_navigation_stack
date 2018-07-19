@@ -23,7 +23,7 @@ int file_index = 0;
 
 std::vector<char> ACK_DATA({'!','@','#','$'}), END_DATA({'!','!','!','!'});
 
-std::string audio_folder = "/home/tx/audio/", feedback_msg = "done" + sep + "mp3";;
+std::string audio_folder = "/home/tx/audio/", feedback_msg = "done.mp3";;
 
 void session(boost::shared_ptr<tcp::socket> sock){
     std::string ip = sock->remote_endpoint().address().to_string();
@@ -67,7 +67,7 @@ void session(boost::shared_ptr<tcp::socket> sock){
                 }
             }
             //if it is the end of mp3 file
-            if(correct_ack | correct_end){
+            if(correct_ack || correct_end){
                 //delete ack message from the received data
                 audio_data.erase(audio_data.end()-ACK_NUM,audio_data.end());
 
@@ -133,7 +133,7 @@ void server(void){
 
 bool fileIndexSrvCb(std_srvs::Empty::Request &req, std_srvs::Empty::Response &res){
     file_index = 0;
-    std::string cmd = "sudo rm -f " + audio_folder +"*.mp3";
+    std::string cmd = "sudo rm -f " + audio_folder + "*.mp3";
     system(cmd.c_str());
     ROS_INFO("(READ_AUDIO) Clear file index and existing audio files");
     return true;

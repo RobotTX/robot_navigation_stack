@@ -16,7 +16,7 @@
 
     <!-- rp lidar -->
     <node pkg="rplidar_ros" type="rplidarNode"  name="rplidarNode"  output="screen" respawn="true"/>
-
+    
     <!-- leishen lidar
     <node pkg="ls01b"       type="ls01b"        name="ls01b"        output="screen" respawn="true"/>
     -->
