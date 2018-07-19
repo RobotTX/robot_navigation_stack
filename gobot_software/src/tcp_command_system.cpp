@@ -14,7 +14,8 @@ std::vector<char> slient_command({'g','t','u','s','v'}),
                   scanning_command({'d','i','j','k','l','m','o'}),
                   docking_command({'d','j','k','o'}),
                   pause_path_command({'i','m','o','v','t','g'}),
-                  cancel_resume_command({'d','g','i','j','k','l','m','p','t',','});
+                  cancel_resume_command({'d','g','i','j','k','l','m','p','t',','}),
+                  cancel_audio_command({'d','g','i','k','l','m','o','t','/','3','y'});
 
 bool resume_path = false, resume_point = false;
 std::vector<std::string> resume_pose;
@@ -84,6 +85,9 @@ bool execCommand(const std::string ip, const std::vector<std::string> command){
     }
     //moving
     else if(robot_status_==5){
+        if(status_text_=="AUDIO_DELAY" && std::find(cancel_audio_command.begin(),cancel_audio_command.end(),commandStr.at(0)) != cancel_audio_command.end()){
+            SetRobot.killAudio();
+        }
         //newPath, stop&deletePath
         //goCharging,shutdownRobot
         //startScan
@@ -538,16 +542,15 @@ bool goToChargingStation(const std::vector<std::string> command){
         }
         else{
             //ROS_INFO("(COMMAND_SYSTEM) Sending the robot home");
-            return ros::service::call("/gobot_function/startDocking", empty_srv);
+            ros::service::call("/gobot_function/startDocking", empty_srv);
         }
     }
-    return false;
+    return true;
 }
 
 /// First param = p
 bool stopGoingToChargingStation(const std::vector<std::string> command){
     if(command.size() == 1) {
-        GetRobot.getStatus(robot_status_);
         //docking
         if(GetRobot.getDock()==3){
             //ROS_INFO("(COMMAND_SYSTEM) Stop sending the robot home");
@@ -732,19 +735,13 @@ bool loopPath(const std::vector<std::string> command){
     if(command.size() == 2) {
         //ROS_INFO("(COMMAND_SYSTEM) Loop the path %s", command.at(1).c_str());
         if(std::stoi(command.at(1)) == 0){
-            if(ros::service::call("/gobot_function/stopLoopPath", empty_srv)){
-                return true;
-            } 
-            else
-                ROS_ERROR("(COMMAND_SYSTEM) Could not call the service /gobot_function/stopLoopPath");
+            ros::service::call("/gobot_function/stopLoopPath", empty_srv);
         } 
         else {
-            if(ros::service::call("/gobot_function/startLoopPath", empty_srv)){
-                return true;
-            } 
-            else
-                ROS_ERROR("(COMMAND_SYSTEM) Could not call the service /gobot_function/startLoopPath");
+            ros::service::call("/gobot_function/startLoopPath", empty_srv);
         }
+
+        return true;
     }
 
     return false;
@@ -899,7 +896,9 @@ bool highBatterySrvCallback(std_srvs::Empty::Request &req, std_srvs::Empty::Resp
 }
 
 bool lowBatterySrvCallback(std_srvs::Empty::Request &req, std_srvs::Empty::Response &res){
-    GetRobot.getStatus(robot_status_);
+    GetRobot.getStatus(robot_status_,status_text_);
+    if(status_text_=="AUDIO_DELAY")
+        SetRobot.killAudio();
     //scanning process
     if(robot_status_<=25 && robot_status_>=20){
         ROS_WARN("(COMMAND_SYSTEM::LowBattery) robot is scanning.");
@@ -1209,7 +1208,6 @@ void mySigintHandler(int sig){
     
     ros::shutdown();
 }
-
 /*********************************** MAIN ***********************************/
 
 int main(int argc, char* argv[]){

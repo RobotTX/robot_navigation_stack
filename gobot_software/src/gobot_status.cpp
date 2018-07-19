@@ -9,7 +9,7 @@ GOBOT STATUS
 20 EXPLORATION
 15 DOCKING
 11 STOP_DOCKING/FAIL_DOKCING/COMPLETE_DOCKING
-5  PLAY_PATH/WAITING/DELAY/PLAY_POINT
+5  PLAY_PATH/PLAY_POINT/WAITING/DELAY/AUDIO_DELAY
 4  PAUSE_PATH
 1  STOP_PATH
 0  COMPLETE_PATH/ABORTED_PATH/COMPLETE_POINT
@@ -572,12 +572,15 @@ void robotResponse(int status, std::string text){
         }
     }
     else if(text=="STOP_EXPLORING" || text=="STOP_DOCKING" || text=="STOP_PATH" || text=="PAUSE_PATH"){
+        if(text=="STOP_PATH" || text=="PAUSE_PATH")
+            SetRobot.killAudio();
+            
         SetRobot.setLed(0,{"blue"});
     }
     else if(text=="PLAY_PATH" || text=="PLAY_POINT" || text=="EXPLORING"){
         SetRobot.setLed(1,{"green","white"});
     }
-    else if(text=="DELAY" || text=="WAITING"){
+    else if(text=="DELAY" || text=="WAITING" || text=="AUDIO_DELAY"){
         SetRobot.setLed(1,{"blue","white"});
     }
     else if(text=="FAIL_DOCKING" || text=="ABORTED_PATH"){
@@ -756,6 +759,7 @@ void initialData(){
 
     n.getParam("battery_log", recordBatteryFile);
 }
+
 
 int main(int argc, char* argv[]){
     ros::init(argc, argv, "gobot_status");

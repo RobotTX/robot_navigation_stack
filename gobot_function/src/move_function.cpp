@@ -5,12 +5,13 @@
 //the stage of the robot within the path (if path going from first point to second point, stage is 0, 
 //if going from point before last point to last point stage is #points-1)
 int stage_ = 0;
-bool looping = false, dockAfterPath = false, audioOn = false;
+bool looping = false, dockAfterPath = false;
 bool waitingForAction = false, readAction=true, interruptDelay=false, stop_flag=false, delayOn=false;
 std::vector<PathPoint> path_;
 PathPoint current_goal_;
 int status_ = 0;
 std::string text_ = "", audio_ack_ = "!@#$.mp3";
+std::vector<std::string> empty_text_set_({"\"\""," ","\" \""});
 std::string audio_folder_;
 
 std_srvs::Empty empty_srv;
@@ -137,11 +138,6 @@ bool stopPathService(std_srvs::Empty::Request &req, std_srvs::Empty::Response &r
 
 	MoveRobot.cancelMove();
 
-	if(audioOn){
-		MoveRobot.killAudio();
-		audioOn = false;
-	}
-
 	//ROS_INFO("(MOVE_IT::stopPathService) stopPathService called");
 	MoveRobot.setStatus(1,"STOP_PATH");
 
@@ -159,11 +155,6 @@ bool pausePathService(std_srvs::Empty::Request &req, std_srvs::Empty::Response &
 	stop_flag = true;
 
 	MoveRobot.cancelMove();
-
-	if(audioOn){
-		MoveRobot.killAudio();
-		audioOn = false;
-	}
 
 	MoveRobot.setStatus(4,"PAUSE_PATH");
 
@@ -295,12 +286,11 @@ void moveToGoal(PathPoint goal){
 }
 
 void checkSound(){
-	audioOn = false;
-	if(current_goal_.text != "\"\"" && current_goal_.text !=""){   //string "\"\"" means empty
+	if(!current_goal_.text.empty()){   //string "\"\"" means empty
 		if(audio_ack_.compare(current_goal_.text)==0 && current_goal_.audio_index>=0){
-			audioOn = true;
 			//robot will complete audio before conituning path 
 			if(current_goal_.delay_sound == 999){
+				MoveRobot.setStatus(5,"AUDIO_DELAY");
 				playAudio(audio_folder_+std::to_string(current_goal_.audio_index)+".mp3", 0);
 			}
 			else{
@@ -391,7 +381,9 @@ void readPath(std::vector<std::string> &path){
 				else{
 					pathPoint.audio_index = -1;
 				}
-				pathPoint.text = path.at(i);
+
+				//check if text is empty string
+				pathPoint.text = std::find(empty_text_set_.begin(),empty_text_set_.end(),path.at(i))==empty_text_set_.end() ? path.at(i) : "";
 				break;
 
 			case 6:
