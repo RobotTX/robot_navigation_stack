@@ -13,7 +13,7 @@ int status_ = 0;
 std::string text_ = "", audio_ack_ = "!@#$.mp3";
 std::vector<std::string> empty_text_set_({"\"\""," ","\" \""});
 std::string audio_folder_;
-
+bool audioOn = false;
 std_srvs::Empty empty_srv;
 ros::Subscriber button_sub;
 ros::Time action_time;
@@ -285,13 +285,26 @@ void moveToGoal(PathPoint goal){
 	MoveRobot.moveTo(current_goal_.p);
 }
 
+void subscribeRosCb(){
+	ros::Rate loop_rate(10);
+	while(ros::ok() && audioOn){
+		ros::spinOnce();
+		loop_rate.sleep();
+	}
+}
+
 void checkSound(){
 	if(!current_goal_.text.empty()){   //string "\"\"" means empty
 		if(audio_ack_.compare(current_goal_.text)==0 && current_goal_.audio_index>=0){
 			//robot will complete audio before conituning path 
 			if(current_goal_.delay_sound == 999){
 				MoveRobot.setStatus(5,"AUDIO_DELAY");
-				playAudio(audio_folder_+std::to_string(current_goal_.audio_index)+".mp3", 0);
+				//playAudio(audio_folder_+std::to_string(current_goal_.audio_index)+".mp3", 0);
+				std::thread play_audio(playAudio, audio_folder_+std::to_string(current_goal_.audio_index)+".mp3", 0);
+				std::thread roscb(subscribeRosCb);
+				audioOn = true;
+				play_audio.join();
+				roscb.join();
 			}
 			else{
 				std::thread play_audio(playAudio, audio_folder_+std::to_string(current_goal_.audio_index)+".mp3", current_goal_.delay_sound);
@@ -309,15 +322,16 @@ void checkGoalDelay(){
 	delayOn = true;
 	interruptDelay = false;
 	if(current_goal_.delay_point != 0){	
+		ros::Rate loop_rate(10);
 		if(current_goal_.delay_point > 0){
 			MoveRobot.setStatus(5,"DELAY");
 			//ROS_INFO("(MOVE_IT::goalReached) goalReached going to sleep for %f seconds", current_goal_.delay_point);
 			double dt=0.0;
 			ros::Time last_time=ros::Time::now();
 			while(dt<current_goal_.delay_point && !stop_flag && !interruptDelay && ros::ok()){
-				dt=(ros::Time::now()-last_time).toSec();
-				ros::Duration(0.1).sleep();
 				ros::spinOnce();
+				dt=(ros::Time::now()-last_time).toSec();
+				loop_rate.sleep();
 			}
 		}
 		else if(current_goal_.delay_point == -1){
@@ -328,8 +342,8 @@ void checkGoalDelay(){
 			readAction = true;
 			button_sub = n.subscribe("/gobot_base/button_topic",1,getButtonCallback);
 			while(waitingForAction && !stop_flag && !interruptDelay && ros::ok()){
-				ros::Duration(0.1).sleep();
 				ros::spinOnce();
+				loop_rate.sleep();
 			}
 			button_sub.shutdown();
 		}
@@ -348,6 +362,7 @@ void playAudio(std::string file, double delay){
 	if(GetRobot.getMute() == 0){
 		std::string audio_file = "sudo play " + file;
 		system(audio_file.c_str());
+		audioOn = false;
 	}
 }
 

@@ -50,7 +50,7 @@ void session(boost::shared_ptr<tcp::socket> sock){
         for(int i=0;i<receive_size;i++)
             audio_data.push_back(data[i]);
         
-        std::cout<<"receive size: "<<receive_size<<" total size: "<< data_size<<std::endl;
+        //std::cout<<"receive size: "<<receive_size<<" total size: "<< data_size<<std::endl;
         //identify the end acknowledgement message
         if(audio_data.size()>ACK_NUM){
             bool correct_ack = true, correct_end = true;
@@ -79,22 +79,23 @@ void session(boost::shared_ptr<tcp::socket> sock){
                     desstr<<audio_data[i];
 
                 desstr.close();
-                
-                ROS_INFO("(READ_AUDIO) Received the %d audio file, size: %zu.",file_index+1, audio_data.size());
+
+                //close the session after completing reading the data of last mp3 file
+                if(correct_end){ 
+                    ROS_INFO("(READ_AUDIO) Received the last (%d) audio file, size: %zu.",file_index+1, audio_data.size());
+                    file_index = 0;
+                }
+                else{
+                    ROS_INFO("(READ_AUDIO) Received the %d audio file, size: %zu.",file_index+1, audio_data.size());
+                    file_index++;
+                }
 
                 //reset variables
                 data_size = 0;
                 audio_data.clear();
-                file_index++;
 
                 //feedback message to TCP server
                 boost::asio::write(*sock, boost::asio::buffer(feedback_msg, feedback_msg.length()), boost::asio::transfer_all(), error);
-
-                //close the session after completing reading the data of last mp3 file
-                if(correct_end){ 
-                    ROS_INFO("(READ_AUDIO) Received the last (%d) audio file, size: %zu. Close TCP session.",file_index+1, audio_data.size());
-                    file_index = 0;
-                }
             }
         }
     }
@@ -132,7 +133,7 @@ void server(void){
 
 bool fileIndexSrvCb(std_srvs::Empty::Request &req, std_srvs::Empty::Response &res){
     file_index = 0;
-    std::string cmd = "sudo rm -f " + audio_folder +"*";
+    std::string cmd = "sudo rm -f " + audio_folder +"*.mp3";
     system(cmd.c_str());
     ROS_INFO("(READ_AUDIO) Clear file index and existing audio files");
     return true;

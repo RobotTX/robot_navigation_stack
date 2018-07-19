@@ -14,8 +14,7 @@ std::vector<char> slient_command({'g','t','u','s','v'}),
                   scanning_command({'d','i','j','k','l','m','o'}),
                   docking_command({'d','j','k','o'}),
                   pause_path_command({'i','m','o','v','t','g'}),
-                  cancel_resume_command({'d','g','i','j','k','l','m','p','t',','}),
-                  cancel_audio_command({'d','g','i','k','l','m','o','t','/','3','y'});
+                  cancel_resume_command({'d','g','i','j','k','l','m','p','t',','});
 
 bool resume_path = false, resume_point = false;
 std::vector<std::string> resume_pose;
@@ -85,9 +84,6 @@ bool execCommand(const std::string ip, const std::vector<std::string> command){
     }
     //moving
     else if(robot_status_==5){
-        if(status_text_=="AUDIO_DELAY" && std::find(cancel_audio_command.begin(),cancel_audio_command.end(),commandStr.at(0)) != cancel_audio_command.end()){
-            SetRobot.killAudio();
-        }
         //newPath, stop&deletePath
         //goCharging,shutdownRobot
         //startScan
@@ -897,8 +893,6 @@ bool highBatterySrvCallback(std_srvs::Empty::Request &req, std_srvs::Empty::Resp
 
 bool lowBatterySrvCallback(std_srvs::Empty::Request &req, std_srvs::Empty::Response &res){
     GetRobot.getStatus(robot_status_,status_text_);
-    if(status_text_=="AUDIO_DELAY")
-        SetRobot.killAudio();
     //scanning process
     if(robot_status_<=25 && robot_status_>=20){
         ROS_WARN("(COMMAND_SYSTEM::LowBattery) robot is scanning.");
