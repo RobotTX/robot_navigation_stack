@@ -49,10 +49,10 @@ namespace robot_class {
         return get_name.response.data;
     }
 
-    int GetRobot::getMute(){
-        gobot_msg_srv::GetInt get_mute;
-        ros::service::call("/gobot_status/get_mute",get_mute);
-        return get_mute.response.data;
+    int GetRobot::getVolume(){
+        gobot_msg_srv::GetInt get_volume;
+        ros::service::call("/gobot_status/get_volume",get_volume);
+        return get_volume.response.data;
     }
 };
 

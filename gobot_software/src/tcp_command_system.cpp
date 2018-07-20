@@ -84,15 +84,18 @@ bool execCommand(const std::string ip, const std::vector<std::string> command){
     }
     //moving
     else if(robot_status_==5){
+        if(status_text_=="AUDIO_DELAY" && (commandStr.at(0)=='j' || commandStr.at(0)=='k')){
+            SetRobot.killAudio();
+        }
         //newPath, stop&deletePath
         //goCharging,shutdownRobot
         //startScan
-        if(std::find(pause_path_command.begin(),pause_path_command.end(),commandStr.at(0)) != pause_path_command.end()){
+        else if(std::find(pause_path_command.begin(),pause_path_command.end(),commandStr.at(0)) != pause_path_command.end()){
             ROS_WARN("(COMMAND_SYSTEM) Gobot is playing path,pause it.");
             ros::service::call("/gobot_function/pause_path", empty_srv);
         }
         //playPoint && stopPath, then pause path
-        if(status_text_=="PLAY_POINT" && commandStr.at(0)=='l'){
+        else if(status_text_=="PLAY_POINT" && commandStr.at(0)=='l'){
             ROS_WARN("(COMMAND_SYSTEM) Gobot is playing point,pause it.");
             ros::service::call("/gobot_function/pause_path", empty_srv);
             return true;
@@ -202,10 +205,9 @@ bool execCommand(const std::string ip, const std::vector<std::string> command){
             status = savePoints(command);
         break;
 
-        /// NOT USED ANYMORE
-        /// Command to stop sending the laser data to the Qt app
+        /// Command for increase/decrease sound volume
         case 'r':
-
+            status = changeVolume(command);
         break;
 
         /// Command for the robot to send its map once
@@ -564,6 +566,18 @@ bool savePoints(const std::vector<std::string> command){
 }
 
 /// First param = r
+bool changeVolume(const std::vector<std::string> command){
+    if(command.size() == 2) {
+        //increase volume
+        if(command.at(1)=="1")
+            SetRobot.setVolume(10);
+        //decrease volume
+        else
+            SetRobot.setVolume(1);
+    }   
+
+    return true;
+}
 
 /// First param = s, second is who -> which widget requires it
 bool sendMapOnce(const std::string ip, const std::vector<std::string> command){
@@ -646,7 +660,7 @@ bool shutdownRobot(const std::vector<std::string> command){
 bool muteOff(const std::vector<std::string> command){
     if(command.size() == 1) {
         //ROS_INFO("(COMMAND_SYSTEM) Disable mute");
-        return SetRobot.setMute(0);
+        return SetRobot.setVolume(70);
     }
 
     return false;
@@ -656,7 +670,7 @@ bool muteOff(const std::vector<std::string> command){
 bool muteOn(const std::vector<std::string> command){
     if(command.size() == 1) {
         //ROS_INFO("(COMMAND_SYSTEM) Enable mute");
-        return SetRobot.setMute(1);
+        return SetRobot.setVolume(0);
     }
 
     return false;

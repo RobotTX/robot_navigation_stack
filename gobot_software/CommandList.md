@@ -18,7 +18,7 @@
      o            auto docking
      p            stop auto docking
      q            send point
-     r            n.a.
+     r            set volume
      s            send map once
      t            start new scan
      u            stop scan

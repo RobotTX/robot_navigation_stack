@@ -28,7 +28,7 @@ namespace robot_class {
             int getDock();
             int getLoop();
             int getStage();
-            int getMute();
+            int getVolume();
 
             std::string getName();
 

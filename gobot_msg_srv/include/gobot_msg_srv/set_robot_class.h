@@ -44,7 +44,7 @@ namespace robot_class {
 
             bool setWifi(std::string wifi_name,std::string wifi_password);
 
-            bool setMute(const int mute);
+            bool setVolume(const int volume);
 
             bool setName(std::string robot_name);
 
@@ -82,7 +82,7 @@ namespace robot_class {
 
             void speakChinese(std::string str);
 
-            void playAudio(std::string str, int mute = -1);
+            void playAudio(std::string str, int volume = -1);
 
             void killAudio();
 

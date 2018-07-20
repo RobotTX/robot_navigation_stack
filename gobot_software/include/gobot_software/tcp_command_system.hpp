@@ -92,6 +92,7 @@ bool stopGoingToChargingStation(const std::vector<std::string> command);
 bool savePoints(const std::vector<std::string> command);
 
 /// r
+bool changeVolume(const std::vector<std::string> command);
 
 /// s
 bool sendMapOnce(const std::string ip, const std::vector<std::string> command);

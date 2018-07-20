@@ -26,7 +26,7 @@ class SensorClass {
     public:
         SensorClass():
         battery_percent_(50), robot_status_(-1), charging_flag_(false), low_battery_(false), led_flag_(true),
-        last_charging_current_(0), error_count_(0), mute_(0), charge_check_(0)
+        last_charging_current_(0), error_count_(0), volume_(0), charge_check_(0)
         {
             ros::NodeHandle nh;
             nh.getParam("SENSOR_BYTES", SENSOR_BYTES);  //61/49
@@ -92,7 +92,7 @@ class SensorClass {
             setChargingSrv = nh.advertiseService("/gobot_base/set_charging", &SensorClass::setChargingSrvCallback, this);
             shutdownSrv = nh.advertiseService("/gobot_base/shutdown_robot", &SensorClass::shutdownSrvCallback, this);
 
-            mute_sub_ = nh.subscribe("/gobot_status/mute", 1, &SensorClass::muteCallback, this);
+            mute_sub_ = nh.subscribe("/gobot_status/volume", 1, &SensorClass::muteCallback, this);
             led_sub_ = nh.subscribe("/gobot_base/set_led", 1, &SensorClass::ledCallback, this);
             sound_sub_ = nh.subscribe("/gobot_base/set_sound", 1, &SensorClass::soundCallback, this);
             status_sub_ = nh.subscribe("/gobot_status/gobot_status", 1, &SensorClass::statusCallback, this);
@@ -510,7 +510,7 @@ class SensorClass {
             //shutdown command
             ros::NodeHandle n;
             n.getParam("poweroff_mp3", poweroff_mp3);
-            playAudio(poweroff_mp3, mute_);
+            playAudio(poweroff_mp3, volume_);
 
             std::vector<uint8_t> buff = writeAndRead(SHUT_DOWN_CMD,5);
             while(buff.size()!=5){
@@ -542,7 +542,7 @@ class SensorClass {
         }
 
         void muteCallback(const std_msgs::Int8::ConstPtr& msg){
-            mute_ = msg->data;
+            volume_ = msg->data;
         }
 
         void statusCallback(const std_msgs::Int8::ConstPtr& msg){
@@ -581,7 +581,7 @@ class SensorClass {
                 setSound(3,2);
                 ros::NodeHandle n;
                 n.getParam("low_battery_mp3", low_battery_mp3);
-                std::thread t_audio(&SensorClass::playAudio, this, low_battery_mp3, mute_);
+                std::thread t_audio(&SensorClass::playAudio, this, low_battery_mp3, volume_);
                 t_audio.detach();
             }
         }
@@ -672,11 +672,11 @@ class SensorClass {
         }
 
         bool setSound(int num,int time_on){
-            if(mute_)
+            if(volume_)
                 return true;
 
             uint8_t n = num;
-            uint8_t time_off = n==1 ? 0x00 : 0x96;
+            uint8_t time_off = 0x96;
             std::vector<uint8_t> sound_cmd = {0xE0, 0x01, 0x05, n, 0x00, 0x64, 0X00, time_off, 0X00, 0X00, 0x1B};
             switch (time_on){
                 //100ms
@@ -704,7 +704,7 @@ class SensorClass {
 
         int16_t last_charging_current_;
         bool charging_flag_, low_battery_, led_flag_, USE_BUMPER, USE_SONAR, USE_CLIFF;
-        int battery_percent_, error_count_, mute_, max_weight_, robot_status_, charge_check_;
+        int battery_percent_, error_count_, volume_, max_weight_, robot_status_, charge_check_;
         int SENSOR_RATE, SENSOR_BYTES;
         std::string low_battery_mp3, poweroff_mp3;
 

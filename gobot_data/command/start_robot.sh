@@ -14,6 +14,8 @@ if [ "$(pacmd list | grep $audio_device)" ]
 then
     pacmd set-default-sink $audio_device
 fi
+#Set sound volume to be 80%
+amixer set Master 80%
 #copy the lastest log files, and clear them to store new logs
 sudo sh ~/catkin_ws/src/robot_navigation_stack/gobot_data/command/robot_log.sh
 sleep 5s

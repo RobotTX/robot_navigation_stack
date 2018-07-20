@@ -103,10 +103,10 @@ namespace robot_class {
         return ros::service::call("/gobot_status/set_wifi",set_wifi); 
     }  
 
-    bool SetRobot::setMute(const int mute){
-        gobot_msg_srv::SetInt set_mute;
-        set_mute.request.data = mute;
-        return ros::service::call("/gobot_status/set_mute", set_mute);
+    bool SetRobot::setVolume(const int volume){
+        gobot_msg_srv::SetInt set_volume;
+        set_volume.request.data = volume;
+        return ros::service::call("/gobot_status/set_volume", set_volume);
     }
 
     bool SetRobot::setName(std::string robot_name){
@@ -263,30 +263,30 @@ namespace robot_class {
     }
 
     void SetRobot::speakEnglish(std::string str){
-        gobot_msg_srv::GetInt get_mute;
-        ros::service::call("/gobot_status/get_mute",get_mute);
-        if(!get_mute.response.data){
+        gobot_msg_srv::GetInt get_volume;
+        ros::service::call("/gobot_status/get_volume",get_volume);
+        if(get_volume.response.data!=0){
             tts_en_ = "echo \"" + str + "\" | festival --tts &";
             system(tts_en_.c_str());
         }
     }
 
     void SetRobot::speakChinese(std::string str){
-        gobot_msg_srv::GetInt get_mute;
-        ros::service::call("/gobot_status/get_mute",get_mute);
-        if(!get_mute.response.data){
+        gobot_msg_srv::GetInt get_volume;
+        ros::service::call("/gobot_status/get_volume",get_volume);
+        if(get_volume.response.data!=0){
             tts_ch_ = "ekho -s -30 \"" + str + "\" &";
             system(tts_ch_.c_str());
         }
     }
 
-    void SetRobot::playAudio(std::string str, int mute){
-        if(mute == -1){
-            gobot_msg_srv::GetInt get_mute;
-            ros::service::call("/gobot_status/get_mute",get_mute);
-            mute = get_mute.response.data;
+    void SetRobot::playAudio(std::string str, int volume){
+        if(volume == -1){
+            gobot_msg_srv::GetInt get_volume;
+            ros::service::call("/gobot_status/get_volume",get_volume);
+            volume = get_volume.response.data;
         }
-        if(mute == 0){
+        if(volume != 0){
             ros::Duration(1.0).sleep();
             voice_file_ = "sudo play ~/catkin_ws/src/robot_navigation_stack/gobot_data/voice/" + str;
             system(voice_file_.c_str());

@@ -238,8 +238,6 @@ void goalReached(){
 		return;
 	}
 
-	checkSound();
-
 	stage_++;
 
 	if(stage_ >= path_.size()){
@@ -250,7 +248,7 @@ void goalReached(){
 				//if looping, check the last point delay status before go docking
 				MoveRobot.setSound(1,1); 
 				MoveRobot.setStage(stage_);
-				// reached a normal/path goal so we sleep the given time
+				// reached a normal/path goal so we play the sound and then sleep the given time
 				checkGoalDelay();
 				goDockAfterPath();
 				return;
@@ -258,8 +256,10 @@ void goalReached(){
 		}
 		//complete path without looping
 		else {
-			MoveRobot.setStatus(0,"COMPLETE_PATH");
+			//for the last point of the path, only check sound but not point delay
+			checkSound();
 			MoveRobot.setStage(stage_);
+			MoveRobot.setStatus(0,"COMPLETE_PATH");
 			if(dockAfterPath){
 				goDockAfterPath();
 			}
@@ -270,14 +270,15 @@ void goalReached(){
 	MoveRobot.setSound(1,1);
 	MoveRobot.setStage(stage_);
 
-	// reached a normal/path goal so we sleep the given time
+	// reached a normal/path goal so we play the sound and then sleep the given time
 	checkGoalDelay();
 	if(!stop_flag){
 		MoveRobot.setStatus(5,"PLAY_PATH");
 		moveToGoal(path_.at(stage_));
 	}
-	else
+	else{
 		stop_flag = false;
+	}
 }
 
 void moveToGoal(PathPoint goal){
@@ -285,40 +286,11 @@ void moveToGoal(PathPoint goal){
 	MoveRobot.moveTo(current_goal_.p);
 }
 
-void subscribeRosCb(){
-	ros::Rate loop_rate(10);
-	while(ros::ok() && audioOn){
-		ros::spinOnce();
-		loop_rate.sleep();
-	}
-}
-
-void checkSound(){
-	if(!current_goal_.text.empty()){   //string "\"\"" means empty
-		if(audio_ack_.compare(current_goal_.text)==0 && current_goal_.audio_index>=0){
-			//robot will complete audio before conituning path 
-			if(current_goal_.delay_sound == 999){
-				MoveRobot.setStatus(5,"AUDIO_DELAY");
-				//playAudio(audio_folder_+std::to_string(current_goal_.audio_index)+".mp3", 0);
-				std::thread play_audio(playAudio, audio_folder_+std::to_string(current_goal_.audio_index)+".mp3", 0);
-				std::thread roscb(subscribeRosCb);
-				audioOn = true;
-				play_audio.join();
-				roscb.join();
-			}
-			else{
-				std::thread play_audio(playAudio, audio_folder_+std::to_string(current_goal_.audio_index)+".mp3", current_goal_.delay_sound);
-				play_audio.detach();
-			}
-		}
-		else{
-			std::thread tts_thread(textToSpeech, current_goal_.text, current_goal_.delay_sound);
-			tts_thread.detach();
-		}
-	}
-}
-
 void checkGoalDelay(){
+	checkSound();
+	if(stop_flag)
+		return;
+		
 	delayOn = true;
 	interruptDelay = false;
 	if(current_goal_.delay_point != 0){	
@@ -351,15 +323,51 @@ void checkGoalDelay(){
 	delayOn = false;
 }
 
+void checkSound(){
+	if(!current_goal_.text.empty()){   //string "\"\"" means empty
+		if(audio_ack_.compare(current_goal_.text)==0 && current_goal_.audio_index>=0){
+			//robot will complete audio before conituning path 
+			if(current_goal_.delay_sound == 999){
+				MoveRobot.setStatus(5,"AUDIO_DELAY");
+				audioOn = true;
+				delayOn = true;
+				//playAudio(audio_folder_+std::to_string(current_goal_.audio_index)+".mp3", 0);
+				std::thread play_audio(playAudio, audio_folder_+std::to_string(current_goal_.audio_index)+".mp3", 0);
+				std::thread roscb(subscribeRosCb);
+				play_audio.join();
+				roscb.join();
+				delayOn = false;
+			}
+			else{
+				std::thread play_audio(playAudio, audio_folder_+std::to_string(current_goal_.audio_index)+".mp3", current_goal_.delay_sound);
+				play_audio.detach();
+			}
+		}
+		else{
+			std::thread tts_thread(textToSpeech, current_goal_.text, current_goal_.delay_sound);
+			tts_thread.detach();
+		}
+	}
+}
+
+void subscribeRosCb(){
+	ros::Rate loop_rate(10);
+	while(ros::ok() && audioOn){
+		ros::spinOnce();
+		loop_rate.sleep();
+	}
+}
 
 void textToSpeech(std::string text, double delay){
-	ros::Duration(delay).sleep();
-	MoveRobot.speakChinese(text);
+	if(GetRobot.getVolume() != 0){
+		ros::Duration(delay).sleep();
+		MoveRobot.speakChinese(text);
+	}
 }
 
 void playAudio(std::string file, double delay){
-	ros::Duration(delay).sleep();
-	if(GetRobot.getMute() == 0){
+	if(GetRobot.getVolume() != 0){
+		ros::Duration(delay).sleep();
 		std::string audio_file = "sudo play " + file;
 		system(audio_file.c_str());
 		audioOn = false;

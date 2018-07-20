@@ -70,9 +70,11 @@ void goalReached();
 
 void moveToGoal(PathPoint goal);
 
+void checkGoalDelay();
+
 void checkSound();
 
-void checkGoalDelay();
+void subscribeRosCb();
 
 void goDockAfterPath();
 

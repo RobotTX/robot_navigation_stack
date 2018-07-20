@@ -97,6 +97,12 @@ void alignmentCb(const std_msgs::Int16::ConstPtr& msg){
             MoveRobot.turnLeft(0, base_spd*2);
             left_turn_ = true;
         }
+        //end alignment
+        else if(msg->data == 99){
+            MoveRobot.backward(base_spd);
+            ros::Duration(1.0).sleep();
+            MoveRobot.stop();
+        }
     }
 
 }

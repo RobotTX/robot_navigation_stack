@@ -26,7 +26,7 @@ DOCK STATUS
 -3 BATTERY STATUS NOT CLEAR
 */
 
-ros::Publisher mute_pub, update_info_pub, status_pub;
+ros::Publisher volume_pub, update_info_pub, status_pub;
 
 static const std::string sep = std::string(1, 31);
 
@@ -40,8 +40,8 @@ std::vector<std::string> wifi_;
 
 gobot_msg_srv::SetStringArray update_path;
 
-std::string muteFile;
-int mute_ = 0;
+std::string volumeFile;
+int volume_ = 0;
 
 int gobot_status_=-99;
 std::string gobot_text_ = "FREE";
@@ -365,29 +365,50 @@ bool getPathSrvCallback(gobot_msg_srv::GetStringArray::Request &req, gobot_msg_s
 
 
 
-bool setMuteSrvCallback(gobot_msg_srv::SetInt::Request &req, gobot_msg_srv::SetInt::Response &res){
+bool setVolumeSrvCallback(gobot_msg_srv::SetInt::Request &req, gobot_msg_srv::SetInt::Response &res){
     muteMutex.lock();
-    mute_ = req.data;
+    switch (req.data) {
+        case 0:
+            volume_ = 0;
+        break;
+
+        case 1:
+            if(volume_ > 0)
+                volume_ = volume_-10;
+        break;
+
+        case 10:
+            if(volume_ < 100)
+                volume_ = volume_+10;
+        break;
+
+        case 70:
+            volume_ = 70;
+        break;
+
+        default:
+        break;
+    }
 
     std_msgs::Int8 data;
-    data.data = mute_;
-    mute_pub.publish(data);
+    data.data = volume_;
+    volume_pub.publish(data);
     muteMutex.unlock();
 
-    std::ofstream ofsMute(muteFile, std::ofstream::out | std::ofstream::trunc);
+    std::ofstream ofsMute(volumeFile, std::ofstream::out | std::ofstream::trunc);
     if(ofsMute){
-        ofsMute << mute_;
+        ofsMute << volume_;
         ofsMute.close();
-    ROS_INFO("(STATUS_SYSTEM) Set robot mute: %d",mute_);
+    ROS_INFO("(STATUS_SYSTEM) Set robot volume: %d",volume_);
     }
     updateStatus();
     
     return true;
 }
 
-bool getMuteSrvCallback(gobot_msg_srv::GetInt::Request &req, gobot_msg_srv::GetInt::Response &res){
+bool getVolumeSrvCallback(gobot_msg_srv::GetInt::Request &req, gobot_msg_srv::GetInt::Response &res){
     muteMutex.lock();
-    res.data = mute_;
+    res.data = volume_;
     muteMutex.unlock();
     return true;
 }
@@ -541,7 +562,7 @@ std::string getCurrentTime(){
 
 //get updated information
 std::string getUpdateStatus(){
-    bool muteFlag = (mute_) ? 1 : 0;
+    bool muteFlag = (volume_==0) ? 1 : 0;
     return hostname_ + sep + std::to_string(stage_) + sep + std::to_string(battery_percent_) + 
                sep + std::to_string(muteFlag) + sep + std::to_string(dock_status_) + sep + std::to_string(robot_mode_);
 } 
@@ -554,8 +575,8 @@ void updateStatus(){
 }
 
 
-void playAudio(std::string file, int mute){
-    SetRobot.playAudio(file, mute);
+void playAudio(std::string file, int volume){
+    SetRobot.playAudio(file, volume);
 }
 
 //change robot led and sound to inform people its status
@@ -567,7 +588,7 @@ void robotResponse(int status, std::string text){
         SetRobot.setSound(1,2);
         if(text=="COMPLETE_EXPLORING"){
             n.getParam("scan_complete", scan_complete_mp3);
-            std::thread t_audio(playAudio, scan_complete_mp3, mute_);
+            std::thread t_audio(playAudio, scan_complete_mp3, volume_);
             t_audio.detach();
         }
     }
@@ -587,39 +608,39 @@ void robotResponse(int status, std::string text){
         SetRobot.setLed(0,{"red"});
         SetRobot.setSound(3,2);
         n.getParam("abort_navigation_mp3", abort_navigation_mp3);
-        std::thread t_audio(playAudio, abort_navigation_mp3, mute_);
+        std::thread t_audio(playAudio, abort_navigation_mp3, volume_);
         t_audio.detach();
     }
     else if(text=="DOCKING"){
         SetRobot.setLed(1,{"yellow","cyan"});
         n.getParam("auto_docking_mp3", auto_docking_mp3);
-        std::thread t_audio(playAudio, auto_docking_mp3, mute_);
+        std::thread t_audio(playAudio, auto_docking_mp3, volume_);
         t_audio.detach();
     }
     else if(text=="COMPLETE_DOCKING"){
         SetRobot.setSound(1,2);
         n.getParam("docking_complete_mp3", docking_complete_mp3);
-        std::thread t_audio(playAudio, docking_complete_mp3, mute_);
+        std::thread t_audio(playAudio, docking_complete_mp3, volume_);
         t_audio.detach();
     }
     else if(text=="START_EXPLORING"){
         n.getParam("auto_scan", auto_scan_mp3);
-        std::thread t_audio(playAudio, auto_scan_mp3, mute_);
+        std::thread t_audio(playAudio, auto_scan_mp3, volume_);
         t_audio.detach();
     }
     else if(text=="STARTUP_READY"){
         n.getParam("startup_mp3", startup_mp3);
-        std::thread t_audio(playAudio, startup_mp3, mute_);
+        std::thread t_audio(playAudio, startup_mp3, volume_);
         t_audio.detach();
     }
     else if(text=="SCAN_READY"){
         n.getParam("scan_mp3", scan_mp3);
-        std::thread t_audio(playAudio, scan_mp3, mute_);
+        std::thread t_audio(playAudio, scan_mp3, volume_);
         t_audio.detach();
     }
     else if(text=="RELOAD_MAP"){
         n.getParam("reload_map_mp3", reload_map_mp3);
-        std::thread t_audio(playAudio, reload_map_mp3, mute_);
+        std::thread t_audio(playAudio, reload_map_mp3, volume_);
         t_audio.detach();
     }
 }
@@ -658,16 +679,16 @@ void initialData(){
         }
     }    
 
-    //read mute
-    n.getParam("mute_file", muteFile);
-    std::ifstream ifsMute(muteFile, std::ifstream::in);
+    //read volume
+    n.getParam("volume_file", volumeFile);
+    std::ifstream ifsMute(volumeFile, std::ifstream::in);
     if(ifsMute){
-        ifsMute >> mute_;
+        ifsMute >> volume_;
         ifsMute.close();
-        ROS_INFO("(STATUS_SYSTEM) Read robot mute: %d",mute_);
+        ROS_INFO("(STATUS_SYSTEM) Read robot volume: %d",volume_);
         std_msgs::Int8 data;
-        data.data = mute_;
-        mute_pub.publish(data);
+        data.data = volume_;
+        volume_pub.publish(data);
     } 
 
     //read loop
@@ -766,7 +787,7 @@ int main(int argc, char* argv[]){
     ros::NodeHandle n;
 
     SetRobot.initialize();
-    mute_pub = n.advertise<std_msgs::Int8>("/gobot_status/mute", 1, true);
+    volume_pub = n.advertise<std_msgs::Int8>("/gobot_status/volume", 1, true);
     update_info_pub = n.advertise<std_msgs::String>("/gobot_status/update_information", 1, true);
     status_pub = n.advertise<std_msgs::Int8>("/gobot_status/gobot_status", 1, true);
 
@@ -801,8 +822,8 @@ int main(int argc, char* argv[]){
     ros::ServiceServer setSpeedSrv = n.advertiseService("/gobot_status/set_speed", setSpeedSrvCallback);
     ros::ServiceServer getSpeedSrv = n.advertiseService("/gobot_status/get_speed", getSpeedSrvCallback);
 
-    ros::ServiceServer setMuteSrv = n.advertiseService("/gobot_status/set_mute", setMuteSrvCallback);
-    ros::ServiceServer getMuteSrv = n.advertiseService("/gobot_status/get_mute", getMuteSrvCallback);
+    ros::ServiceServer setVolumeSrv = n.advertiseService("/gobot_status/set_volume", setVolumeSrvCallback);
+    ros::ServiceServer getVolumeSrv = n.advertiseService("/gobot_status/get_volume", getVolumeSrvCallback);
 
     ros::ServiceServer setWifiSrv = n.advertiseService("/gobot_status/set_wifi", setWifiSrvCallback);
     ros::ServiceServer getWifiSrv = n.advertiseService("/gobot_status/get_wifi", getWifiSrvCallback);
