@@ -265,7 +265,7 @@ namespace robot_class {
     void SetRobot::speakEnglish(std::string str){
         gobot_msg_srv::GetInt get_volume;
         ros::service::call("/gobot_status/get_volume",get_volume);
-        if(get_volume.response.data!=0){
+        if(get_volume.response.data != 0){
             tts_en_ = "echo \"" + str + "\" | festival --tts &";
             system(tts_en_.c_str());
         }
@@ -274,27 +274,36 @@ namespace robot_class {
     void SetRobot::speakChinese(std::string str){
         gobot_msg_srv::GetInt get_volume;
         ros::service::call("/gobot_status/get_volume",get_volume);
-        if(get_volume.response.data!=0){
+        if(get_volume.response.data != 0){
             tts_ch_ = "ekho -s -30 \"" + str + "\" &";
             system(tts_ch_.c_str());
         }
     }
 
-    void SetRobot::playAudio(std::string str, int volume){
+    void SetRobot::playSystemAudio(std::string str, int volume){
         if(volume == -1){
             gobot_msg_srv::GetInt get_volume;
             ros::service::call("/gobot_status/get_volume",get_volume);
             volume = get_volume.response.data;
         }
         if(volume != 0){
-            ros::Duration(1.0).sleep();
+            changeVolume(95);
+            ros::Duration(0.5).sleep();
             voice_file_ = "sudo play ~/catkin_ws/src/robot_navigation_stack/gobot_data/voice/" + str;
             system(voice_file_.c_str());
+            changeVolume(volume);
         }
     }
 
     void SetRobot::killAudio(){
         std::string cmd = "sudo kill $(ps aux | grep \"sudo play\" | grep \"mp3\" | tr -s ' ' | cut -d ' ' -f2) &";
+        system(cmd.c_str());
+    }
+
+    void SetRobot::changeVolume(int volume){
+        if(volume < 0)
+            volume = 0;
+        std::string cmd = "sudo amixer set Master " + std::to_string(volume);
         system(cmd.c_str());
     }
     

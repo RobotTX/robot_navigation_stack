@@ -92,7 +92,7 @@ class SensorClass {
             setChargingSrv = nh.advertiseService("/gobot_base/set_charging", &SensorClass::setChargingSrvCallback, this);
             shutdownSrv = nh.advertiseService("/gobot_base/shutdown_robot", &SensorClass::shutdownSrvCallback, this);
 
-            mute_sub_ = nh.subscribe("/gobot_status/volume", 1, &SensorClass::muteCallback, this);
+            volume_sub_ = nh.subscribe("/gobot_status/volume", 1, &SensorClass::volumeCallback, this);
             led_sub_ = nh.subscribe("/gobot_base/set_led", 1, &SensorClass::ledCallback, this);
             sound_sub_ = nh.subscribe("/gobot_base/set_sound", 1, &SensorClass::soundCallback, this);
             status_sub_ = nh.subscribe("/gobot_status/gobot_status", 1, &SensorClass::statusCallback, this);
@@ -109,7 +109,7 @@ class SensorClass {
         ~SensorClass(){
             led_sub_.shutdown();
             sound_sub_.shutdown();
-            mute_sub_.shutdown();
+            volume_sub_.shutdown();
             status_sub_.shutdown();
             ledTimer_.stop();
 
@@ -468,8 +468,8 @@ class SensorClass {
             }
         }
 
-        void playAudio(std::string file, int mute = -1){
-            SetRobot_.playAudio(file, mute);
+        void playSystemAudio(std::string file){
+            SetRobot_.playSystemAudio(file, volume_);
         }
 
         bool magnetSrvCallback(gobot_msg_srv::SetBool::Request &req, gobot_msg_srv::SetBool::Response &res){
@@ -510,7 +510,7 @@ class SensorClass {
             //shutdown command
             ros::NodeHandle n;
             n.getParam("poweroff_mp3", poweroff_mp3);
-            playAudio(poweroff_mp3, volume_);
+            playSystemAudio(poweroff_mp3);
 
             std::vector<uint8_t> buff = writeAndRead(SHUT_DOWN_CMD,5);
             while(buff.size()!=5){
@@ -541,7 +541,7 @@ class SensorClass {
             }
         }
 
-        void muteCallback(const std_msgs::Int8::ConstPtr& msg){
+        void volumeCallback(const std_msgs::Int8::ConstPtr& msg){
             volume_ = msg->data;
         }
 
@@ -581,7 +581,7 @@ class SensorClass {
                 setSound(3,2);
                 ros::NodeHandle n;
                 n.getParam("low_battery_mp3", low_battery_mp3);
-                std::thread t_audio(&SensorClass::playAudio, this, low_battery_mp3, volume_);
+                std::thread t_audio(&SensorClass::playSystemAudio, this, low_battery_mp3);
                 t_audio.detach();
             }
         }
@@ -672,7 +672,7 @@ class SensorClass {
         }
 
         bool setSound(int num,int time_on){
-            if(volume_)
+            if(volume_==0)
                 return true;
 
             uint8_t n = num;
@@ -717,7 +717,7 @@ class SensorClass {
         ros::Publisher sensors_pub_, bumper_pub_, ir_pub_, proximity_pub_, sonar_pub_, weight_pub_, battery_pub_, 
                        cliff_pub_, button_pub_, gyro_pub_, temperature_pub_, magnet_pub_;
         ros::ServiceServer shutdownSrv, displayDataSrv, sensorsReadySrv, setChargingSrv, useBumperSrv, useSonarSrv, useCliffSrv, magnetSrv;
-        ros::Subscriber led_sub_, sound_sub_, mute_sub_, status_sub_;
+        ros::Subscriber led_sub_, sound_sub_, volume_sub_, status_sub_;
 
         boost::thread *sensor_thread_;
 

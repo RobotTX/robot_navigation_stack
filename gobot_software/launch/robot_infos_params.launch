@@ -21,7 +21,7 @@
     <param name="disconnected_file" type="string"     value="$(find gobot_data)/data/disconnected.txt" />
     <param name="path_stage_file"   type="string"     value="$(find gobot_data)/data/path_stage.txt" />
     <param name="path_loop_file"    type="string"     value="$(find gobot_data)/data/loop.txt" />
-    <param name="volume_file"         type="string"     value="$(find gobot_data)/data/volume.txt" />
+    <param name="volume_file"       type="string"     value="$(find gobot_data)/data/volume.txt" />
     <param name="home_file"         type="string"     value="$(find gobot_data)/data/home.txt" />
     <param name="robot_name_file"   type="string"     value="$(find gobot_data)/data/name.txt" />
     <param name="low_battery_file"  type="string"     value="$(find gobot_data)/data/low_battery.txt" />

@@ -44,6 +44,8 @@ void goalResultCallback(const move_base_msgs::MoveBaseActionResult::ConstPtr& ms
 
 void getButtonCallback(const std_msgs::Int8::ConstPtr& msg);
 
+void volumeCallback(const std_msgs::Int8::ConstPtr& msg);
+
 //****************************** SERVICE ******************************
 bool playPointService(gobot_msg_srv::SetStringArray::Request &req, gobot_msg_srv::SetStringArray::Response &res);
 

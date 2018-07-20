@@ -2,6 +2,12 @@
 Changelog for Developed Mobile Robot - MOBOT
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+
+1.2.0 (2018-07-20)
+-------------------
+* complete audio (mp3/wav) files transfer feature
+* complete set sound volume feature because of different audio files have different strength for same volume
+
 1.1.7 (2018-07-17)
 -------------------
 * add pre-load .mp3 files for auto-scanning, complete scanning

@@ -82,9 +82,11 @@ namespace robot_class {
 
             void speakChinese(std::string str);
 
-            void playAudio(std::string str, int volume = -1);
+            void playSystemAudio(std::string str, int volume = -1);
 
             void killAudio();
+
+            void changeVolume(int volume);
 
         private:
             std::string tts_en_, tts_ch_, voice_file_;

@@ -30,7 +30,7 @@ ros::Publisher volume_pub, update_info_pub, status_pub;
 
 static const std::string sep = std::string(1, 31);
 
-std::mutex gobotStatusMutex,dockStatusMutex,stageMutex,pathMutex,nameMutex,homeMutex,loopMutex,muteMutex,wifiMutex,batteryMutex,speedMutex;
+std::mutex gobotStatusMutex,dockStatusMutex,stageMutex,pathMutex,nameMutex,homeMutex,loopMutex,volumeMutex,wifiMutex,batteryMutex,speedMutex;
 std_srvs::Empty empty_srv;
 
 std::string abort_navigation_mp3, auto_docking_mp3, docking_complete_mp3, auto_scan_mp3, scan_complete_mp3, startup_mp3, scan_mp3, reload_map_mp3;
@@ -41,7 +41,7 @@ std::vector<std::string> wifi_;
 gobot_msg_srv::SetStringArray update_path;
 
 std::string volumeFile;
-int volume_ = 0;
+int volume_ = 70;
 
 int gobot_status_=-99;
 std::string gobot_text_ = "FREE";
@@ -366,19 +366,27 @@ bool getPathSrvCallback(gobot_msg_srv::GetStringArray::Request &req, gobot_msg_s
 
 
 bool setVolumeSrvCallback(gobot_msg_srv::SetInt::Request &req, gobot_msg_srv::SetInt::Response &res){
-    muteMutex.lock();
+    //sound volume range from 40% to 100%
+    //system volume fix at 95%
+    //volume below 40% is treated as mute
+    volumeMutex.lock();
+    bool pre_volume = volume_;
     switch (req.data) {
         case 0:
             volume_ = 0;
         break;
 
         case 1:
-            if(volume_ > 0)
+            if(volume_ > 40)
                 volume_ = volume_-10;
+            else
+                volume_ = 0;
         break;
 
         case 10:
-            if(volume_ < 100)
+            if(volume_==0)
+                volume_ = 40;
+            else if(volume_ < 100)
                 volume_ = volume_+10;
         break;
 
@@ -393,23 +401,26 @@ bool setVolumeSrvCallback(gobot_msg_srv::SetInt::Request &req, gobot_msg_srv::Se
     std_msgs::Int8 data;
     data.data = volume_;
     volume_pub.publish(data);
-    muteMutex.unlock();
+    volumeMutex.unlock();
 
-    std::ofstream ofsMute(volumeFile, std::ofstream::out | std::ofstream::trunc);
-    if(ofsMute){
-        ofsMute << volume_;
-        ofsMute.close();
+    SetRobot.changeVolume(volume_);
+    //if change from mute to unmute or unmute to mute, update UI side
+    if((pre_volume==0&&volume_>0) || (pre_volume>0&&volume_==0))
+        updateStatus();
+
+    std::ofstream ofsVolume(volumeFile, std::ofstream::out | std::ofstream::trunc);
+    if(ofsVolume){
+        ofsVolume << volume_;
+        ofsVolume.close();
     ROS_INFO("(STATUS_SYSTEM) Set robot volume: %d",volume_);
     }
-    updateStatus();
-    
     return true;
 }
 
 bool getVolumeSrvCallback(gobot_msg_srv::GetInt::Request &req, gobot_msg_srv::GetInt::Response &res){
-    muteMutex.lock();
+    volumeMutex.lock();
     res.data = volume_;
-    muteMutex.unlock();
+    volumeMutex.unlock();
     return true;
 }
 
@@ -575,8 +586,8 @@ void updateStatus(){
 }
 
 
-void playAudio(std::string file, int volume){
-    SetRobot.playAudio(file, volume);
+void playSystemAudio(std::string file){
+    SetRobot.playSystemAudio(file, volume_);
 }
 
 //change robot led and sound to inform people its status
@@ -588,7 +599,7 @@ void robotResponse(int status, std::string text){
         SetRobot.setSound(1,2);
         if(text=="COMPLETE_EXPLORING"){
             n.getParam("scan_complete", scan_complete_mp3);
-            std::thread t_audio(playAudio, scan_complete_mp3, volume_);
+            std::thread t_audio(playSystemAudio, scan_complete_mp3);
             t_audio.detach();
         }
     }
@@ -608,39 +619,39 @@ void robotResponse(int status, std::string text){
         SetRobot.setLed(0,{"red"});
         SetRobot.setSound(3,2);
         n.getParam("abort_navigation_mp3", abort_navigation_mp3);
-        std::thread t_audio(playAudio, abort_navigation_mp3, volume_);
+        std::thread t_audio(playSystemAudio, abort_navigation_mp3);
         t_audio.detach();
     }
     else if(text=="DOCKING"){
         SetRobot.setLed(1,{"yellow","cyan"});
         n.getParam("auto_docking_mp3", auto_docking_mp3);
-        std::thread t_audio(playAudio, auto_docking_mp3, volume_);
+        std::thread t_audio(playSystemAudio, auto_docking_mp3);
         t_audio.detach();
     }
     else if(text=="COMPLETE_DOCKING"){
         SetRobot.setSound(1,2);
         n.getParam("docking_complete_mp3", docking_complete_mp3);
-        std::thread t_audio(playAudio, docking_complete_mp3, volume_);
+        std::thread t_audio(playSystemAudio, docking_complete_mp3);
         t_audio.detach();
     }
     else if(text=="START_EXPLORING"){
         n.getParam("auto_scan", auto_scan_mp3);
-        std::thread t_audio(playAudio, auto_scan_mp3, volume_);
+        std::thread t_audio(playSystemAudio, auto_scan_mp3);
         t_audio.detach();
     }
     else if(text=="STARTUP_READY"){
         n.getParam("startup_mp3", startup_mp3);
-        std::thread t_audio(playAudio, startup_mp3, volume_);
+        std::thread t_audio(playSystemAudio, startup_mp3);
         t_audio.detach();
     }
     else if(text=="SCAN_READY"){
         n.getParam("scan_mp3", scan_mp3);
-        std::thread t_audio(playAudio, scan_mp3, volume_);
+        std::thread t_audio(playSystemAudio, scan_mp3);
         t_audio.detach();
     }
     else if(text=="RELOAD_MAP"){
         n.getParam("reload_map_mp3", reload_map_mp3);
-        std::thread t_audio(playAudio, reload_map_mp3, volume_);
+        std::thread t_audio(playSystemAudio, reload_map_mp3);
         t_audio.detach();
     }
 }
@@ -681,14 +692,16 @@ void initialData(){
 
     //read volume
     n.getParam("volume_file", volumeFile);
-    std::ifstream ifsMute(volumeFile, std::ifstream::in);
-    if(ifsMute){
-        ifsMute >> volume_;
-        ifsMute.close();
+    std::ifstream ifsVolume(volumeFile, std::ifstream::in);
+    if(ifsVolume){
+        ifsVolume >> volume_;
+        ifsVolume.close();
         ROS_INFO("(STATUS_SYSTEM) Read robot volume: %d",volume_);
         std_msgs::Int8 data;
         data.data = volume_;
         volume_pub.publish(data);
+        //set system sound volume
+        SetRobot.changeVolume(volume_);
     } 
 
     //read loop

@@ -4,16 +4,13 @@
 
 //the stage of the robot within the path (if path going from first point to second point, stage is 0, 
 //if going from point before last point to last point stage is #points-1)
-int stage_ = 0;
 bool looping = false, dockAfterPath = false;
-bool waitingForAction = false, readAction=true, interruptDelay=false, stop_flag=false, delayOn=false;
+bool waitingForAction = false, readAction=true, interruptDelay=false, stop_flag=false, delayOn=false, audioOn = false;
 std::vector<PathPoint> path_;
 PathPoint current_goal_;
-int status_ = 0;
-std::string text_ = "", audio_ack_ = "!@#$.mp3";
+int stage_ = 0, status_ = 0, volume_ = 0;
+std::string text_ = "", audio_ack_ = "!@#$.mp3", audio_folder_;
 std::vector<std::string> empty_text_set_({"\"\""," ","\" \""});
-std::string audio_folder_;
-bool audioOn = false;
 std_srvs::Empty empty_srv;
 ros::Subscriber button_sub;
 ros::Time action_time;
@@ -50,6 +47,9 @@ void goalResultCallback(const move_base_msgs::MoveBaseActionResult::ConstPtr& ms
 	}
 }
 
+void volumeCallback(const std_msgs::Int8::ConstPtr& msg){
+	volume_ = msg->data;
+}
 
 void getButtonCallback(const std_msgs::Int8::ConstPtr& msg){
 	/// External button 0-No press; 1-press
@@ -359,14 +359,14 @@ void subscribeRosCb(){
 }
 
 void textToSpeech(std::string text, double delay){
-	if(GetRobot.getVolume() != 0){
+	if(volume_ != 0){
 		ros::Duration(delay).sleep();
 		MoveRobot.speakChinese(text);
 	}
 }
 
 void playAudio(std::string file, double delay){
-	if(GetRobot.getVolume() != 0){
+	if(volume_ != 0){
 		ros::Duration(delay).sleep();
 		std::string audio_file = "sudo play " + file;
 		system(audio_file.c_str());
@@ -471,7 +471,8 @@ int main(int argc, char* argv[]){
 	ROS_INFO("(MOVE_IT) play path main running...");
 
 	// get the current status of the goal 
-	ros::Subscriber goalResult = n.subscribe("/move_base/result",1,goalResultCallback);
+	ros::Subscriber goalResult = n.subscribe("/move_base/result", 1, goalResultCallback);
+	ros::Subscriber volume_sub = n.subscribe("/gobot_status/volume", 1, volumeCallback);
 
 	ros::ServiceServer interruptDelaySrv 	= n.advertiseService("/gobot_function/interrupt_delay", interruptDelayService);
 	ros::ServiceServer pointPathSrv			= n.advertiseService("/gobot_function/play_point", 		playPointService);

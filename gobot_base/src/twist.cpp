@@ -239,15 +239,15 @@ void joyCallback(const sensor_msgs::Joy::ConstPtr& joy){
     if(joy_on){
         //adjust linear speed
         if(joy->axes[7] == 1)
-            joy_linear = (joy_linear+0.1) <= 0.9 ? joy_linear+0.1 : 0.9;
+            joy_linear = joy_linear<0.9 ? joy_linear+0.1 : 0.9;
         else if(joy->axes[7] == -1)
-            joy_linear = (joy_linear-0.1) > 0.1 ? joy_linear-0.1 : 0.1;
+            joy_linear = joy_linear>0.1 ? joy_linear-0.1 : 0.1;
 
         //adjust angular speed
         if(joy->axes[6] == -1)
-            joy_angular = (joy_angular+0.1) <= 2.0 ? joy_angular+0.1 : 2.0;
+            joy_angular = joy_angular<2.0 ? joy_angular+0.1 : 2.0;
         else if(joy->axes[6] == 1)
-            joy_angular = (joy_angular-0.1) > 0.2 ? joy_angular-0.1 : 0.2;
+            joy_angular = joy_angular>0.2 ? joy_angular-0.1 : 0.2;
 
         //reset linear speed limit
         if(joy->buttons[9])
