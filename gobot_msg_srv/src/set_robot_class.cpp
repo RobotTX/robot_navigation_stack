@@ -287,7 +287,7 @@ namespace robot_class {
             volume = get_volume.response.data;
         }
         if(volume != 0){
-            changeVolume(95);
+            changeVolume(99);
             ros::Duration(0.5).sleep();
             voice_file_ = "sudo play ~/catkin_ws/src/robot_navigation_stack/gobot_data/voice/" + str;
             system(voice_file_.c_str());
@@ -303,7 +303,7 @@ namespace robot_class {
     void SetRobot::changeVolume(int volume){
         if(volume < 0)
             volume = 0;
-        std::string cmd = "sudo amixer set Master " + std::to_string(volume);
+        std::string cmd = "amixer -D pulse set Master " + std::to_string(volume) + "%";
         system(cmd.c_str());
     }
     

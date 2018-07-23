@@ -244,7 +244,7 @@ void finishedDocking(bool move_forward){
                 MoveRobot.moveTo(homeX-0.05*std::sin(homeYaw), homeY+0.05*std::cos(homeYaw), homeYaw);
             }
             else {
-                MoveRobot.moveTo(homeX+0.05*std::sin(homeYaw), homeY-0.05*std::cos(homeYaw), homeYaw);
+                MoveRobot.moveTo(homeX, homeY, homeYaw);
             }
         }
         else{ 

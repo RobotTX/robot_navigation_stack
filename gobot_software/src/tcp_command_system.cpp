@@ -84,7 +84,8 @@ bool execCommand(const std::string ip, const std::vector<std::string> command){
     }
     //moving
     else if(robot_status_==5){
-        if(status_text_=="AUDIO_DELAY" && (commandStr.at(0)=='j' || commandStr.at(0)=='k')){
+        //kill audio before proceeding new goal
+        if(commandStr.at(0)=='j' || commandStr.at(0)=='k'){
             SetRobot.killAudio();
         }
         //newPath, stop&deletePath
@@ -660,7 +661,7 @@ bool shutdownRobot(const std::vector<std::string> command){
 bool muteOff(const std::vector<std::string> command){
     if(command.size() == 1) {
         //ROS_INFO("(COMMAND_SYSTEM) Disable mute");
-        return SetRobot.setVolume(70);
+        return SetRobot.setVolume(97);
     }
 
     return false;

@@ -377,21 +377,21 @@ bool setVolumeSrvCallback(gobot_msg_srv::SetInt::Request &req, gobot_msg_srv::Se
         break;
 
         case 1:
-            if(volume_ > 40)
-                volume_ = volume_-10;
+            if(volume_ > 97)
+                volume_ = volume_-1;
             else
                 volume_ = 0;
         break;
 
         case 10:
             if(volume_==0)
-                volume_ = 40;
+                volume_ = 97;
             else if(volume_ < 100)
-                volume_ = volume_+10;
+                volume_ = volume_+1;
         break;
 
-        case 70:
-            volume_ = 70;
+        case 97:
+            volume_ = 97;
         break;
 
         default:
