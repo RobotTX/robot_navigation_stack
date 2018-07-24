@@ -19,22 +19,15 @@ ros::Time lastSignal;
 //negative values -> turn left
 bool left_turn_ = true, detection_on_ = false, y_flag = false;
 
-void stopDetectionFunc(){
-    alignmentSub.shutdown();
-    magnetSub.shutdown();
-    bumperSub.shutdown();
-    detection_on_ = false;
-    left_turn_ = false;
-    MoveRobot.stop();
-}
 
+//****************************** CALLBACK ******************************
 void magnetCb(const std_msgs::Int8::ConstPtr& msg){
     if(detection_on_){
         if(msg->data == 1){
             ROS_INFO("Successfully fing object!");
-            stopDetectionFunc();
             MoveRobot.stop();
             MoveRobot.setLed(0,{"green"});
+            stopDetectionFunc();
         }
     }
 }
@@ -122,10 +115,11 @@ void alignmentCb(const std_msgs::Int16::ConstPtr& msg){
 
 }
 
+//****************************** SERVICE ******************************
 bool startDetectionCb(std_srvs::Empty::Request &req, std_srvs::Empty::Response &res){
     ros::NodeHandle nh;
     alignmentSub = nh.subscribe("/object_alignment",1,alignmentCb);
-    bumperSub = nh.subscribe("/gobot_base/bumpers_topic", 1, bumpersCb);
+    //bumperSub = nh.subscribe("/gobot_base/bumpers_topic", 1, bumpersCb);
     magnetSub = nh.subscribe("/gobot_base/magnet_topic", 1, magnetCb);
     MoveRobot.setLed(1,{"blue","white"});
     gobot_msg_srv::SetBool magnet;
@@ -145,6 +139,17 @@ bool stopDetectionCb(std_srvs::Empty::Request &req, std_srvs::Empty::Response &r
     ROS_INFO("Stop QR Code Detection");
     return true;
 }
+
+//****************************** FUNCTIONS ******************************
+void stopDetectionFunc(){
+    alignmentSub.shutdown();
+    magnetSub.shutdown();
+    bumperSub.shutdown();
+    detection_on_ = false;
+    left_turn_ = false;
+    MoveRobot.stop();
+}
+
 
 void mySigintHandler(int sig)
 {   
