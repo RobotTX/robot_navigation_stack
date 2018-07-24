@@ -210,9 +210,11 @@ void findChargingStation(){
     /// To check for collision
     bumperSub = nh.subscribe("/gobot_base/bumpers_topic", 1, newBumpersInfo);
 
+    lostIrSignal = false;
+    leftFlag = false;
+    lastIrSignalTime = ros::Time::now();
     /// Pid control with the ir signal
     irSub = nh.subscribe("/gobot_base/ir_topic", 1, newIrSignal);
-    lastIrSignalTime = ros::Time::now();
 }
 
 void finishedDocking(bool move_forward){
@@ -266,8 +268,6 @@ void resetDockingParams(){
     charging = false;
     docking = false;
     collision = false;
-    leftFlag = false;
-    lostIrSignal = false;
     move_from_collision = true;
     MoveRobot.stop();
 }

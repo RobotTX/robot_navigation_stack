@@ -17,7 +17,7 @@ ros::Time lastSignal;
 
 //positive values -> turn right
 //negative values -> turn left
-bool left_turn_ = true, detection_on_ = false;
+bool left_turn_ = true, detection_on_ = false, y_flag = false;
 
 void stopDetectionFunc(){
     alignmentSub.shutdown();
@@ -56,52 +56,67 @@ void bumpersCb(const gobot_msg_srv::BumperMsg::ConstPtr& bumpers){
 
 void alignmentCb(const std_msgs::Int16::ConstPtr& msg){
     if(detection_on_){
-        int base_spd = 2, search_spd = 6;
+        int base_spd = 3, search_spd = 6;
 
-        if(msg->data == 0){
-            if(ros::Time::now()-lastSignal>ros::Duration(1.0)){
-                if(left_turn_)
-                    MoveRobot.turnRight(search_spd);
-                else
-                    MoveRobot.turnLeft(search_spd);
+        if(y_flag && msg->data!=0 && abs(msg->data)<=2)
+            y_flag = false;
+            
+        if(y_flag){
+            if(left_turn_)
+                MoveRobot.turnRight(search_spd, 0);
+            else
+                MoveRobot.turnLeft(0, search_spd);
+        }
+        else{   
+            if(msg->data == 0){
+                if(ros::Time::now()-lastSignal>ros::Duration(1.0)){
+                    if(left_turn_){
+                        MoveRobot.turnRight(search_spd);
+                    }
+                    else{
+                        MoveRobot.turnLeft(search_spd);
+                    }
+                }
             }
-        }
-        //backward
-        else if(msg->data == 100){
-            MoveRobot.backward(base_spd);
-            lastSignal = ros::Time::now();
-        }
-        //turn right
-        else if(msg->data == 1){
-            MoveRobot.turnRight(1);
-            left_turn_ = false;
-        }
-        else if(msg->data == 5){
-            MoveRobot.turnRight(base_spd);
-            left_turn_ = false;
-        }
-        else if(msg->data == 10){
-            MoveRobot.turnRight(base_spd*2, 0);
-            left_turn_ = false;
-        }
-        //turn left
-        else if(msg->data == -1){
-            MoveRobot.turnLeft(1);
-            left_turn_ = true;
-        }
-        else if(msg->data == -5){
-            MoveRobot.turnLeft(base_spd);
-            left_turn_ = true;
-        }
-        else if(msg->data == -10){
-            MoveRobot.turnLeft(0, base_spd*2);
-            left_turn_ = true;
-        }
-        //end alignment
-        else if(msg->data == 99){
-            MoveRobot.backward(base_spd);
-            ros::Duration(1.0).sleep();
-            MoveRobot.stop();
+            //backward
+            else if(msg->data == 100){
+                MoveRobot.backward(base_spd);
+                lastSignal = ros::Time::now();
+            }
+            //turn right
+            else if(msg->data == 1){
+                MoveRobot.turnRight(1);
+            }
+            else if(msg->data == 2){
+                MoveRobot.turnRight(2);
+            }
+            else if(msg->data == 5){
+                MoveRobot.turnRight(base_spd);
+            }
+            else if(msg->data == 10){
+                MoveRobot.turnRight(search_spd, 0);
+            }
+            //turn left
+            else if(msg->data == -1){
+                MoveRobot.turnLeft(1);
+            }
+            else if(msg->data == -2){
+                MoveRobot.turnLeft(2);
+            }
+            else if(msg->data == -5){
+                MoveRobot.turnLeft(base_spd);
+            }
+            else if(msg->data == -10){
+                MoveRobot.turnLeft(0, search_spd);
+            }
+            //end alignment
+            else if(msg->data == 99){
+                y_flag = true;
+            }
+
+            if(msg->data != 99 && msg->data != 0){
+                left_turn_ = msg->data>0 ? false : true;
+            }
         }
     }
 

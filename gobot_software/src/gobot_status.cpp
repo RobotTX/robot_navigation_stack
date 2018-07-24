@@ -1,5 +1,4 @@
 #include <gobot_software/gobot_status.hpp>
-#include <std_msgs/String.h>
 /*
 ========================
 GOBOT STATUS
@@ -792,6 +791,13 @@ void initialData(){
     }
 
     n.getParam("battery_log", recordBatteryFile);
+
+    //set sound output device
+    std::string audio_device;
+    n.getParam("audio_device", audio_device);
+    std::string cmd = "pacmd set-default-sink " + audio_device;
+    system(cmd.c_str());
+    ROS_INFO("(STATUS_SYSTEM) Set system sound output: %s",audio_device.c_str());
 }
 
 
