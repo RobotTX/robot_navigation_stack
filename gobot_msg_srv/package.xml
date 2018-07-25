@@ -44,7 +44,6 @@
   <depend>std_msgs</depend>
   <depend>std_srvs</depend>
   <depend>tf</depend>
-  <depend>serial</depend>
   <depend>nav_msgs</depend>
   <depend>actionlib</depend>
   <depend>costmap_2d</depend>

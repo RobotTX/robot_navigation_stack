@@ -8,6 +8,8 @@ GOBOT STATUS
 20 EXPLORATION
 15 DOCKING
 11 STOP_DOCKING/FAIL_DOKCING/COMPLETE_DOCKING
+16 TRACKING
+12 STOP_TRACKING
 5  PLAY_PATH/PLAY_POINT/WAITING/DELAY/AUDIO_DELAY
 4  PAUSE_PATH
 1  STOP_PATH
@@ -32,7 +34,7 @@ static const std::string sep = std::string(1, 31);
 std::mutex gobotStatusMutex,dockStatusMutex,stageMutex,pathMutex,nameMutex,homeMutex,loopMutex,volumeMutex,wifiMutex,batteryMutex,speedMutex;
 std_srvs::Empty empty_srv;
 
-std::string abort_navigation_mp3, auto_docking_mp3, docking_complete_mp3, auto_scan_mp3, scan_complete_mp3, startup_mp3, scan_mp3, reload_map_mp3;
+std::string mission_failed_mp3, auto_docking_mp3, docking_complete_mp3, auto_scan_mp3, scan_complete_mp3, startup_mp3, scan_mp3, reload_map_mp3;
 
 std::string wifiFile, deleteWifi;
 std::vector<std::string> wifi_;
@@ -602,10 +604,8 @@ void robotResponse(int status, std::string text){
             t_audio.detach();
         }
     }
-    else if(text=="STOP_EXPLORING" || text=="STOP_DOCKING" || text=="STOP_PATH" || text=="PAUSE_PATH"){
-        if(text=="STOP_PATH" || text=="PAUSE_PATH")
-            SetRobot.killAudio();
-            
+    else if(text=="STOP_PATH" || text=="PAUSE_PATH"){
+        SetRobot.killAudio();
         SetRobot.setLed(0,{"blue"});
     }
     else if(text=="PLAY_PATH" || text=="PLAY_POINT" || text=="EXPLORING"){
@@ -617,8 +617,8 @@ void robotResponse(int status, std::string text){
     else if(text=="FAIL_DOCKING" || text=="ABORTED_PATH"){
         SetRobot.setLed(0,{"red"});
         SetRobot.setSound(3,2);
-        n.getParam("abort_navigation_mp3", abort_navigation_mp3);
-        std::thread t_audio(playSystemAudio, abort_navigation_mp3);
+        n.getParam("mission_failed_mp3", mission_failed_mp3);
+        std::thread t_audio(playSystemAudio, mission_failed_mp3);
         t_audio.detach();
     }
     else if(text=="DOCKING"){
@@ -626,6 +626,12 @@ void robotResponse(int status, std::string text){
         n.getParam("auto_docking_mp3", auto_docking_mp3);
         std::thread t_audio(playSystemAudio, auto_docking_mp3);
         t_audio.detach();
+    }
+    else if(text=="TRACKING"){
+        SetRobot.setLed(1,{"green","blue"});
+    }
+    else if(text=="STOP_EXPLORING" || text=="STOP_DOCKING" || text=="STOP_TRACKING"){
+        SetRobot.setLed(0,{"blue"});
     }
     else if(text=="COMPLETE_DOCKING"){
         SetRobot.setSound(1,2);

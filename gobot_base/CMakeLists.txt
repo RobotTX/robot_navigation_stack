@@ -9,6 +9,7 @@ add_compile_options(-std=c++11)
 ## is used, also find other catkin packages
 find_package(catkin REQUIRED COMPONENTS
     gobot_msg_srv
+    serial
 )
 
 ## System dependencies are found with CMake's conventions
@@ -98,6 +99,8 @@ find_package(catkin REQUIRED COMPONENTS
 ## DEPENDS: system dependencies of this project that dependent projects also need
 catkin_package(
     INCLUDE_DIRS include
+    CATKIN_DEPENDS 
+        serial
 )
 
 ###########

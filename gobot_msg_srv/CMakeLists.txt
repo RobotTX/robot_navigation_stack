@@ -13,7 +13,6 @@ find_package(catkin REQUIRED COMPONENTS
     std_msgs
     std_srvs
     tf
-    serial
     nav_msgs
     actionlib
     costmap_2d
@@ -123,7 +122,6 @@ catkin_package(
     CATKIN_DEPENDS 
         std_srvs
         tf
-        serial
         nav_msgs
         actionlib
         costmap_2d

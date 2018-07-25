@@ -2,6 +2,11 @@
 Changelog for Developed Mobile Robot - MOBOT
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+1.2.1 (2018-07-25)
+-------------------
+* object tracking done
+* add object tracking codes into gobot_function package
+* add object tracking function. Going to combine it with UI side in the next version
 
 1.2.0 (2018-07-20)
 -------------------

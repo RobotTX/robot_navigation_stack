@@ -32,6 +32,26 @@ echo "[tf2-geometry-msgs] installing..."
 echo "y" | sudo apt install ros-kinetic-tf2-geometry-msgs
 echo "[tf2-geometry-msgs] installed!"
 sleep 2s
+#cv_bridge package
+echo "[cv-bridge] installing..."
+echo "y" | sudo apt install ros-kinetic-cv-bridge
+echo "[cv-bridge] installed!"
+sleep 2s
+#image_transport package
+echo "[image-transport] installing..."
+echo "y" | sudo apt install ros-kinetic-image-transport
+echo "[image-transport] installed!"
+sleep 2s
+#usb-cam package
+echo "[usb-cam] installing..."
+echo "y" | sudo apt install ros-kinetic-usb-cam
+echo "[usb-cam] installed!"
+sleep 2s
+#opencv package
+echo "[opencv] installing..."
+echo "y" | sudo apt install ros-kinetic-opencv3
+echo "[opencv] installed!"
+sleep 2s
 echo "#################################"
 echo "All ROS PACKAGES ARE INSTALLED!"
 echo "#################################"

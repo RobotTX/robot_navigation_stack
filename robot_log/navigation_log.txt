@@ -39,7 +39,7 @@ PARAMETERS
  * /WEIGHT_MAX: 200000
  * /WHEEL_RADIUS: 0.075
  * /WHEEL_SEP: 0.35
- * /abort_navigation_mp3: abort_navigation.mp3
+ * /mission_failed_mp3: mission_failed.mp3
  * /angle_compensate: True
  * /angle_disable_max: 1040.0
  * /angle_disable_min: 400.0
@@ -661,7 +661,7 @@ PARAMETERS
  * /WEIGHT_MAX: 200000
  * /WHEEL_RADIUS: 0.075
  * /WHEEL_SEP: 0.35
- * /abort_navigation_mp3: abort_navigation.mp3
+ * /mission_failed_mp3: mission_failed.mp3
  * /amcl/base_frame_id: base_link
  * /amcl/footprint: [[0.25, 0], [0.24...
  * /amcl/footprint_model/type: polygon
@@ -1269,7 +1269,7 @@ PARAMETERS
  * /WEIGHT_MAX: 200000
  * /WHEEL_RADIUS: 0.075
  * /WHEEL_SEP: 0.35
- * /abort_navigation_mp3: abort_navigation.mp3
+ * /mission_failed_mp3: mission_failed.mp3
  * /angle_compensate: True
  * /angle_disable_max: 1040.0
  * /angle_disable_min: 400.0
@@ -1933,7 +1933,7 @@ PARAMETERS
  * /WEIGHT_MAX: 200000
  * /WHEEL_RADIUS: 0.075
  * /WHEEL_SEP: 0.35
- * /abort_navigation_mp3: abort_navigation.mp3
+ * /mission_failed_mp3: mission_failed.mp3
  * /amcl/base_frame_id: base_link
  * /amcl/footprint: [[0.25, 0], [0.24...
  * /amcl/footprint_model/type: polygon
@@ -2441,7 +2441,7 @@ PARAMETERS
  * /WEIGHT_MAX: 200000
  * /WHEEL_RADIUS: 0.075
  * /WHEEL_SEP: 0.35
- * /abort_navigation_mp3: abort_navigation.mp3
+ * /mission_failed_mp3: mission_failed.mp3
  * /angle_compensate: True
  * /angle_disable_max: 1040.0
  * /angle_disable_min: 400.0
@@ -3147,7 +3147,7 @@ PARAMETERS
  * /WEIGHT_MAX: 200000
  * /WHEEL_RADIUS: 0.075
  * /WHEEL_SEP: 0.35
- * /abort_navigation_mp3: abort_navigation.mp3
+ * /mission_failed_mp3: mission_failed.mp3
  * /amcl/base_frame_id: base_link
  * /amcl/footprint: [[0.25, 0], [0.24...
  * /amcl/footprint_model/type: polygon

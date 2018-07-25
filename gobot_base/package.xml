@@ -41,7 +41,7 @@
     <!--   <test_depend>gtest</test_depend> -->
     <buildtool_depend>catkin</buildtool_depend>
     <depend>gobot_msg_srv</depend>
-
+    <depend>serial</depend>
 
     <!-- The export tag contains other, unspecified, tags -->
     <export>

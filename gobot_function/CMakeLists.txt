@@ -9,6 +9,15 @@ add_compile_options(-std=c++11)
 find_package(catkin REQUIRED COMPONENTS
     gobot_msg_srv
     hector_nav_msgs
+    cv_bridge
+    image_transport
+)
+
+find_package(OpenCV REQUIRED)
+catkin_package(
+CATKIN_DEPENDS 
+    cv_bridge 
+    image_transport  
 )
 
 #add_service_files(
@@ -23,6 +32,8 @@ find_package(catkin REQUIRED COMPONENTS
 catkin_package(
     INCLUDE_DIRS include
     CATKIN_DEPENDS 
+        cv_bridge
+        image_transport
 )
 
 ###########
@@ -57,3 +68,7 @@ add_dependencies(scan_function ${${gobot_msg_srv}_EXPORTED_TARGETS} ${catkin_EXP
 add_executable(detection_function src/detection_function.cpp)
 target_link_libraries(detection_function ${catkin_LIBRARIES})
 add_dependencies(detection_function ${${gobot_msg_srv}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
+
+add_executable(shape_detection_node src/shape_detection_node.cpp)
+target_link_libraries(shape_detection_node ${OpenCV_LIBS} ${catkin_LIBRARIES})
+add_dependencies(shape_detection_node ${${gobot_msg_srv}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})

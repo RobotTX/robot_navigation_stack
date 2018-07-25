@@ -1,0 +1,29 @@
+<?xml version="1.0"?>
+<launch>
+    <include file="$(find gobot_software)/launch/robot_infos_params.launch"/>
+    
+    <node name="usb_cam" pkg="usb_cam" type="usb_cam_node" output="screen" >
+        <param name="video_device" value="/dev/video0" />
+        <param name="image_width" value="640" />
+        <param name="image_height" value="480" />
+        <param name="pixel_format" value="yuyv" />  #mjpeg   yuyv
+        <param name="camera_frame_id" value="usb_cam" />
+        <param name="io_method" value="mmap"/>
+        <param name="autofocus" value="true"/>
+        <param name="framerate" value="10"/>
+    </node>
+
+    <node pkg="gobot_function" type="shape_detection_node" name="shape_detection_node"  output="screen" >
+        <param name="ALIGNMENT_THRESHOLD"   type="int"      value="12"/>
+        <param name="AREA_THRESHOLD"        type="double"   value="7000"/>
+        <param name="AREA_DIFF_THRESHOLD"   type="double"   value="10"/>
+    </node>
+
+
+    <node pkg="gobot_function" type="detection_function" name="detection_function"  output="screen" >
+        <param name="SEARCH_SPD"    type="int"          value="6"/>
+        <param name="BASE_SPD"      type="int"          value="4"/>
+    </node>
+
+
+</launch>

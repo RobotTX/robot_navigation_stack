@@ -51,6 +51,8 @@
     <buildtool_depend>catkin</buildtool_depend>
     <depend>gobot_msg_srv</depend>
     <depend>hector_nav_msgs</depend>
+    <depend>cv_bridge</depend>
+    <depend>image_transport</depend>
 
 
   <!-- The export tag contains other, unspecified, tags -->
