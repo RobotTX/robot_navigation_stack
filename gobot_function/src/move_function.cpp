@@ -75,7 +75,7 @@ bool playPointService(gobot_msg_srv::SetStringArray::Request &req, gobot_msg_srv
 	PathPoint point;
 	point.p.x = std::stod(req.data[1]);
 	point.p.y = std::stod(req.data[2]);
-	point.p.yaw = MoveRobot.appToRobotYaw(std::stod(req.data[3]));
+	point.p.yaw = std::stod(req.data[3]);
 	//if charging station, go ahead of it
 	if(req.data[4]=="1"){
 		point.p.x += 0.4 * std::cos(point.p.yaw);
@@ -393,7 +393,7 @@ void readPath(std::vector<std::string> &path){
 				break;
 
 			case 4:
-				pathPoint.p.yaw=MoveRobot.appToRobotYaw(std::stod(path.at(i)));
+				pathPoint.p.yaw=std::stod(path.at(i));
 				break;
 
 			case 5:

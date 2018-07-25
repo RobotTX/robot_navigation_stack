@@ -7,6 +7,7 @@ Changelog for Developed Mobile Robot - MOBOT
 * object tracking done
 * add object tracking codes into gobot_function package
 * add object tracking function. Going to combine it with UI side in the next version
+* all yaw conversions between UI frame and ROBOT frame are executed in command_system node
 
 1.2.0 (2018-07-20)
 -------------------

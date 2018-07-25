@@ -15,6 +15,8 @@
 
 #include <gobot_msg_srv/robot_msgs.h>
 
+#define PI_ 3.1415926
+
 namespace robot_class {
     class SetRobot {
         public:

@@ -24,11 +24,11 @@ namespace robot_class {
 
 
     double SetRobot::degreeToRad(double degree){
-        return degree*3.1415926/180.0;
+        return degree*PI_/180.0;
     }
 
     double SetRobot::radToDegree(double rad){
-        return rad*180.0/3.1415926;
+        return rad*180.0/PI_;
     }
 
     //yaw's unit must be degree (received from application)

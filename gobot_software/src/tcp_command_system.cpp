@@ -425,20 +425,24 @@ bool robotStartup(const std::vector<std::string> command){
     return false;
 }
 
-/// First param = i, then the path name, then quadriplets of parameters to represent path points (path name, point name, posX, posY, waiting time,orientation) 
+/// First param = i, path name, point name, posX, posY, delay, orientation, text, text_delay
 bool newPath(const std::vector<std::string> command){
-    if(command.size() >= 6 && command.size()%7==2){  
+    if(command.size() >= 9 && command.size()%7==2){  
         //ROS_INFO("(COMMAND_SYSTEM) New path received");
         gobot_msg_srv::SetStringArray set_path;
-        for(int i = 1; i < command.size(); i++)
-            set_path.request.data.push_back(command.at(i));
+        for(int i = 1; i < command.size(); i++){
+            //convert point yaw from app frame to robot frame
+            if(i%7==6)
+                set_path.request.data.push_back(std::to_string(SetRobot.appToRobotYaw(std::stod(command.at(i)))));
+            else
+                set_path.request.data.push_back(command.at(i));
+        }
 
-        if(ros::service::call("/gobot_status/set_path", set_path)){
-            return true;
-        } 
+        ros::service::call("/gobot_status/set_path", set_path);
+        return true;
     } 
     else 
-        ROS_ERROR("(COMMAND_SYSTEM) Parameter missing %lu %lu", command.size(), command.size()%5);
+        ROS_ERROR("(COMMAND_SYSTEM) Parameter missing %lu %lu", command.size(), command.size()%9);
 
     return false;
 }
@@ -462,7 +466,8 @@ bool playPoint(const std::vector<std::string> command){
         set_point.request.data.push_back(command.at(1));
         set_point.request.data.push_back(command.at(2));
         set_point.request.data.push_back(command.at(3));
-        set_point.request.data.push_back(command.at(4));
+        //convert yaw from UI frame to robot frame
+        set_point.request.data.push_back(std::to_string(SetRobot.appToRobotYaw(std::stod(command.at(4)))));
         set_point.request.data.push_back(command.at(5));
         if(ros::service::call("/gobot_function/play_point", set_point)){
             //ROS_INFO("(COMMAND_SYSTEM) Play the point");
@@ -509,7 +514,7 @@ bool newChargingStation(const std::vector<std::string> command){
         std::string homeX = command.at(1), homeY = command.at(2), homeOri = command.at(3);
         int orientation = std::stoi(homeOri);
         tf::Quaternion quaternion;
-        quaternion.setRPY(0, 0, -SetRobot.degreeToRad(orientation+90));
+        quaternion.setRPY(0, 0, SetRobot.appToRobotYaw(orientation));
 
         std::string mapType = homeX.substr(0,1);
         if(mapType == "S"){
@@ -988,15 +993,15 @@ void sendConnectionData(boost::shared_ptr<tcp::socket> sock){
     gobot_msg_srv::GetStringArray get_speed;
 
     /// Get the charging station position from the home file
-    std::string homeX, homeY;  
+    std::string homeX, homeY, homeOri;  
     double x,y,oriX,oriY,oriZ,oriW;
 
     GetRobot.getHome(x,y,oriX,oriY,oriZ,oriW);
     //if no home, set it to be (-150,-150) (invisible in the UI side)
-    homeX = x==0? "-150" : std::to_string(x);
-    homeY = y==0? "-150" : std::to_string(y);
+    homeX = x==0 ? "-150" : std::to_string(x);
+    homeY = y==0 ? "-150" : std::to_string(y);
 
-    double homeOri = -SetRobot.radToDegree(tf::getYaw(tf::Quaternion(oriX , oriY , oriZ, oriW))) - 90.0;
+    homeOri = std::to_string(SetRobot.robotToAppYaw(tf::getYaw(tf::Quaternion(oriX , oriY , oriZ, oriW)),"rad"));
 
     /// we send the path along with the time of the last modification of its file
     std::string path("");
@@ -1044,7 +1049,7 @@ void sendConnectionData(boost::shared_ptr<tcp::socket> sock){
                 battery_lvl = get_battery.response.data;
 
     //Send robot information to UI once connected
-    sendMessageToSock(sock, std::string("Connected" + sep + mapId + sep + mapDate + sep + homeX + sep + homeY + sep + std::to_string(homeOri) + 
+    sendMessageToSock(sock, std::string("Connected" + sep + mapId + sep + mapDate + sep + homeX + sep + homeY + sep + homeOri + 
                                        sep + scan + sep + laserStr + sep + following_path_str + sep + looping_str + sep + linear_spd + sep + 
                                        angular_spd + sep+ battery_lvl + sep +path));
 
