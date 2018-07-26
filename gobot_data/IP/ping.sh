@@ -3,7 +3,7 @@ isAlive="$1"
 wififile="$2"
 defalutwifi="Robot_Hotspot_DDMMYY"
 connection="wifi"
-#check WIFI connection
+### check WIFI connection ###
 wifi=$(nmcli device status | grep wifi | cut -d ' ' -f1 | head -n 1)
 n=1
 #read wifi infomation from local file
@@ -54,9 +54,9 @@ else
             echo "(PING WIFI) restart network-mangager due to connection issue"
             sudo service network-manager restart #restart network-manager if has issue
         fi
-        ###delete servers that we don't want to connect###
+        ### delete servers that we don't want to connect ###
         #sed -i "/$var.14/d" $isAlive
-        ###only one server available for simulation purpose###
+        ### only one server available for simulation purpose ###
         #echo "$var.19" > $isAlive
     else
         #if can not find assigned wifi in the list, build robot hotspot for user to connect
@@ -85,21 +85,30 @@ then
     var=$(ifconfig | grep -A 1 $wifi | grep inet | cut -d ':' -f2|cut -f -3 --delimiter='.')
     fping -r 0 -g "$var.0/24" 2>/dev/null | grep alive | cut -d ' ' -f1 > $isAlive
 fi
-#check USB tethering connection
+### check USB tethering connection ###
 usb_device=$(nmcli device status | grep "ethernet" | grep -v "Wired Ethernet" | grep "connected" | cut -d ' ' -f1)
 if [ "$usb_device" ]
 then
     usb_ip=$(route -n | grep $usb_device | grep UG | cut -d ' ' -f10)
     echo $usb_ip >> $isAlive
     echo "(PING WIFI) Detected usb tethering connection"
-    #echo "(PING WIFI) usb device:$usb_device $usb_ip"
+    #echo "(PING WIFI) usb device:$usb_device @ $usb_ip"
 fi
-#check ethernet connection
+### check ethernet connection ###
 ethernet_device=$(nmcli device status | grep "ethernet" | grep "Wired Ethernet" | grep "connected" | cut -d ' ' -f1)
 ethernet_ip="1.2.5.2"
 if [ "$ethernet_device" ]
 then
     echo $ethernet_ip >> $isAlive
     echo "(PING WIFI) Detected ethernet connection"
-    #echo "(PING WIFI) eth device:$ethernet_device $ethernet_ip"
+    #echo "(PING WIFI) eth device:$ethernet_device @ $ethernet_ip"
+fi
+### check wireless bridge ethernet connection ###
+wirelessB_device=$(nmcli device status | grep "ethernet" | grep "Wireless Bridge" | grep "connected" | cut -d ' ' -f1)
+wirelessB_ip="192.168.188"
+if [ "$wirelessB_device" ]
+then
+    fping -r 0 -g "$wirelessB_ip.1" "$wirelessB_ip.100" 2>/dev/null | grep alive | cut -d ' ' -f1 >> $isAlive
+    echo "(PING WIFI) Detected wireless bridge connection"
+    #echo "(PING WIFI) wireless bridge device:$wirelessB_device @ $wirelessB_ip"
 fi

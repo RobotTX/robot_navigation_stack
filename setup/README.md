@@ -1,5 +1,4 @@
 ####################### To install Ubuntu #######################
-
 install Ubuntu 16.04 LTS using USB drive
 
 #space allocation
@@ -25,19 +24,17 @@ catkin_make
 
 #configure .bashrc
 alias cat_make='cd ~/catkin_ws/ && catkin_make && source devel/setup.bash && . ~/catkin_ws/devel/setup.bash'
+alias ccd='cd ~/catkin_ws/src/robot_navigation_stack'
 source /opt/ros/kinetic/setup.bash
 source ~/catkin_ws/devel/setup.bash
 export ROS_PACKAGE_PATH=$ROS_PACKAGE_PATH:~/catkin_ws/src
 
-
 #install Driver Packages
 sudo sh ~/catkin_ws/src/robot_navigation_stack/setup/install_script.sh
-#*
 #####################################################################
 
 ####################### To Configure The System #######################
-#use usb-connected joystick#
-#*
+#use usb-connected joystick
 sudo apt-get install libusb-dev
 sudo apt-get install libspnav-dev
 
@@ -94,20 +91,32 @@ before exit0
 find . -type f | xargs -n 5 touch
 
 #allow fping
-#*
 sudo apt install fping
 
 #allow ssh [username]@ip
-#*
 sudo apt install openssh-server openssh-client
 
 #network manager
-#*
 sudo apt install network-manager
 
 #permission denied when TAB after roslaunch
 sudo umount /home/useraccount/.gvfs
 sudo rm -rf .gvfs/
+
+#ROS on multiple machines (under same local network)
+* master setup 
+    export ROS_MASTER_URI=http://`[master_ip]`:11311
+    export ROS_IP=`[master_ip]`
+* slaves setup
+    export ROS_MASTER_URI=http://`[master_ip]`:11311
+    export ROS_IP=`[slave_ip]`
+
+#Hardwares that need changing code
+* MCU - motor controller
+* MCU - STM32
+* Laser
+* Camera
+* USB speaker
 #####################################################################
 
 ####################### Optional Configuration #######################
@@ -153,12 +162,4 @@ ffmpeg -i 1.mp3 -i 2.mp3 -filter_complex '[0:0] [1:0] concat=n=2:v=0:a=1 [a]' -m
 
 #install .deb files
 sudo dpkg -i /path/to/deb/file
-
-#ROS on multiple machines (under same local network)
-* master setup 
-    export ROS_MASTER_URI=http://`[master_ip]`:11311
-    export ROS_IP=`[master_ip]`
-* slaves setup
-    export ROS_MASTER_URI=http://`[master_ip]`:11311
-    export ROS_IP=`[slave_ip]`
 #####################################################################

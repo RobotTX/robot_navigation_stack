@@ -2,6 +2,10 @@
 Changelog for Developed Mobile Robot - MOBOT
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+1.2.2 (2018-07-26)
+-------------------
+* add ethernet support for wireless bridge with IP 192.168.188.[1-100]. If wireless bridge IP domain name changes, ping wifi script need to be changed accordingly
+
 1.2.1 (2018-07-25)
 -------------------
 * object tracking done

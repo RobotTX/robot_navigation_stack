@@ -34,7 +34,7 @@ static const std::string sep = std::string(1, 31);
 std::mutex gobotStatusMutex,dockStatusMutex,stageMutex,pathMutex,nameMutex,homeMutex,loopMutex,volumeMutex,wifiMutex,batteryMutex,speedMutex;
 std_srvs::Empty empty_srv;
 
-std::string mission_failed_mp3, auto_docking_mp3, docking_complete_mp3, auto_scan_mp3, scan_complete_mp3, startup_mp3, scan_mp3, reload_map_mp3;
+std::string mission_failed_mp3, auto_docking_mp3, docking_complete_mp3, auto_scan_mp3, scan_complete_mp3, startup_mp3, scan_mp3, reload_map_mp3, mission_complete_mp3;
 
 std::string wifiFile, deleteWifi;
 std::vector<std::string> wifi_;
@@ -601,6 +601,11 @@ void robotResponse(int status, std::string text){
         if(text=="COMPLETE_EXPLORING"){
             n.getParam("scan_complete", scan_complete_mp3);
             std::thread t_audio(playSystemAudio, scan_complete_mp3);
+            t_audio.detach();
+        }
+        else if(text=="COMPLETE_PATH"){
+            n.getParam("mission_complete_mp3", mission_complete_mp3);
+            std::thread t_audio(playSystemAudio, mission_complete_mp3);
             t_audio.detach();
         }
     }

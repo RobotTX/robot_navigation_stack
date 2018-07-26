@@ -542,7 +542,6 @@ bool goToChargingStation(const std::vector<std::string> command){
         }
         else if(GetRobot.getDock()==-3){
             ROS_INFO("(COMMAND_SYSTEM) Unable to go dock now because battery not stabilize yet.");
-            return true;
         }
         else{
             //ROS_INFO("(COMMAND_SYSTEM) Sending the robot home");
@@ -575,11 +574,23 @@ bool savePoints(const std::vector<std::string> command){
 bool changeVolume(const std::vector<std::string> command){
     if(command.size() == 2) {
         //increase volume
-        if(command.at(1)=="1")
+        if(command.at(1)=="1"){
+            gobot_msg_srv::GetInt get_volume;
+            ros::service::call("/gobot_status/get_volume", get_volume);
+            if(get_volume.response.data==100)
+                return false;
+
             SetRobot.setVolume(10);
+        }
         //decrease volume
-        else
+        else{
+            gobot_msg_srv::GetInt get_volume;
+            ros::service::call("/gobot_status/get_volume", get_volume);
+            if(get_volume.response.data==0)
+                return false;
+                
             SetRobot.setVolume(1);
+        }
     }   
 
     return true;
