@@ -4,7 +4,7 @@ Changelog for Developed Mobile Robot - MOBOT
 
 1.2.2 (2018-07-27)
 -------------------
-* 
+* complete object tracking feature
 
 1.2.2 (2018-07-26)
 -------------------

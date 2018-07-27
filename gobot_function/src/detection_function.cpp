@@ -7,7 +7,7 @@ ros::Time lastSignal;
 //positive values -> turn right
 //negative values -> turn left
 bool left_turn_ = true, detection_on_ = false, y_flag_ = false;
-int BASE_SPD = 3, SEARCH_SPD = 6;
+int BASE_SPD = 3, SEARCH_SPD = 6, BACKWARD_SPD = 3;
 
 
 
@@ -84,7 +84,7 @@ void alignmentCb(const std_msgs::Int16::ConstPtr& msg){
 
                 //backward
                 case 0:
-                    MoveRobot.backward(3);
+                    MoveRobot.backward(BACKWARD_SPD);
                     lastSignal = ros::Time::now();
                     break;
                 
@@ -124,6 +124,7 @@ void alignmentCb(const std_msgs::Int16::ConstPtr& msg){
                 case 99:
                     MoveRobot.stop();
                     y_flag_ = true;
+                    lastSignal = ros::Time::now();
                     break;
                 
                 default:
@@ -177,6 +178,7 @@ bool stopDetectionCb(std_srvs::Empty::Request &req, std_srvs::Empty::Response &r
     gobot_msg_srv::SetBool magnet;
     magnet.request.data = false;
     ros::service::call("/gobot_base/set_magnet",magnet);
+    MoveRobot.cancelMove();
     stopDetectionFunc("Stop detection service called!");
 
     ROS_INFO("(OBJECT_DETECTION) Stop Object Detection");
@@ -229,6 +231,7 @@ int main(int argc, char* argv[]){
 
     nh.getParam("SEARCH_SPD", SEARCH_SPD);
     nh.getParam("BASE_SPD", BASE_SPD);
+    nh.getParam("BACKWARD_SPD", BACKWARD_SPD);
     
     ros::ServiceServer findObjectSrv = nh.advertiseService("/gobot_function/find_object", findObjectCb);
     ros::ServiceServer stopDetectionSrv = nh.advertiseService("/gobot_function/stop_detection", stopDetectionCb);

@@ -361,7 +361,7 @@ bool trackObject(const std::vector<std::string> command){
         object_pose.request.data.push_back(command.at(2));
         object_pose.request.data.push_back(std::to_string(SetRobot.appToRobotYaw(std::stod(command.at(3)))));
         ros::service::call("/gobot_function/find_object",object_pose);
-        ROS_INFO("(COMMAND_SYSTEM) Received object tracking command.");
+        //ROS_INFO("(COMMAND_SYSTEM) Received object tracking command.");
     }
 
     return true;

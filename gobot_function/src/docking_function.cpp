@@ -184,8 +184,8 @@ bool startDocking(void){
     if(x != 0 || y != 0){
         /// We want to go 0.5 metre in front of the charging station
         homeYaw = tf::getYaw(tf::Quaternion(oriX , oriY , oriZ, oriW));
-        homeX = x + 0.5 * std::cos(homeYaw);
-        homeY = y + 0.5 * std::sin(homeYaw);
+        homeX = x + 0.4 * std::cos(homeYaw);
+        homeY = y + 0.4 * std::sin(homeYaw);
         //~ROS_INFO("(AUTO_DOCKING::startDocking) landing point : [%f, %f, %f]", homeX, homeY, homeYaw);
 
         startDockingParams();

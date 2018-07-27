@@ -23,6 +23,7 @@
     <node pkg="gobot_function" type="detection_function" name="detection_function"  output="screen" >
         <param name="SEARCH_SPD"    type="int"          value="6"/>
         <param name="BASE_SPD"      type="int"          value="4"/>
+        <param name="BACKWARD_SPD"  type="int"          value="3"/>
     </node>
 
 
