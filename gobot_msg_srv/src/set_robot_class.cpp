@@ -39,11 +39,12 @@ namespace robot_class {
         return degreeToRad(-(yaw+90));
     }
 
-    double SetRobot::robotToAppYaw(double yaw, std::string unit){
+    int SetRobot::robotToAppYaw(double yaw, std::string unit){
         if(unit.compare("deg")!=0){
             yaw = radToDegree(yaw);
         }
-        return  (-yaw-90.0);
+        int result = -yaw-90;
+        return result;
     }
 
     int SetRobot::stopRobotMoving(){

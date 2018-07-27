@@ -3,7 +3,7 @@
 #START CHAR       #COMMAND
      a            rename robot
      b            n.a.
-     c            n.a.
+     c            #start object tracking
      d            pause path
      e            n.a.
      f            pause scan           

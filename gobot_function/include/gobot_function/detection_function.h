@@ -32,7 +32,7 @@ bool stopDetectionCb(std_srvs::Empty::Request &req, std_srvs::Empty::Response &r
 //****************************** FUNCTIONS ******************************
 void startAlignObject();
 
-void stopDetectionFunc(std::string result);
+void stopDetectionFunc(std::string result, std::string status_text="STOP_TRACKING");
 
 void mySigintHandler(int sig);
 

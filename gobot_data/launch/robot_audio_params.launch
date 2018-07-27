@@ -9,6 +9,7 @@
     <param name="docking_complete_mp3"  type="string"       value="docking_complete.mp3" />
     <param name="mission_failed_mp3"    type="string"       value="mission_failed.mp3" />
     <param name="mission_complete_mp3"  type="string"       value="mission_complete.mp3" />
-    <param name="auto_scan"             type="string"       value="auto_scan.mp3" />
-    <param name="scan_complete"         type="string"       value="scan_complete.mp3" />
+    <param name="auto_scan_mp3"         type="string"       value="auto_scan.mp3" />
+    <param name="scan_complete_mp3"     type="string"       value="scan_complete.mp3" />
+    <param name="abort_navigation_mp3"  type="string"       value="abort_navigation.mp3" />
 </launch>

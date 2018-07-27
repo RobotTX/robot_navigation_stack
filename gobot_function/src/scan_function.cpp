@@ -16,7 +16,7 @@ robot_class::RobotMoveClass MoveRobot;
 bool stopExplorationSrv(std_srvs::Empty::Request &req, std_srvs::Empty::Response &res){
     //check whether robot is docking because it is part of auto-scanning process if robot starts scanning from docking station
     if(docking){
-        ros::service::call("/gobot_function/stopDocking", empty_srv);
+        ros::service::call("/gobot_function/stop_docking", empty_srv);
     }
     if(exploring){
         MoveRobot.setStatus(21,"STOP_EXPLORING");
@@ -77,7 +77,7 @@ void backToStart(){
 
                 ROS_INFO("(SCAN_EXPLORE) Complete exploration and send robot home:%s,%s",startPose[0].c_str(),startPose[1].c_str());
 
-                if(ros::service::call("/gobot_function/startDocking", empty_srv))
+                if(ros::service::call("/gobot_function/start_docking", empty_srv))
                     docking = true;
             }
             break;

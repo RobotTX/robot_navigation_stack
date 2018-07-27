@@ -30,7 +30,7 @@ namespace robot_class {
 
             double appToRobotYaw(double yaw, std::string unit = "deg");
 
-            double robotToAppYaw(double yaw, std::string unit = "deg");
+            int robotToAppYaw(double yaw, std::string unit = "deg");
 
             int stopRobotMoving();
 

@@ -9,7 +9,7 @@ GOBOT STATUS
 15 DOCKING
 11 STOP_DOCKING/FAIL_DOKCING/COMPLETE_DOCKING
 16 TRACKING
-12 STOP_TRACKING
+12 STOP_TRACKING/FAIL_TRACKING
 5  PLAY_PATH/PLAY_POINT/WAITING/DELAY/AUDIO_DELAY
 4  PAUSE_PATH
 1  STOP_PATH
@@ -34,7 +34,8 @@ static const std::string sep = std::string(1, 31);
 std::mutex gobotStatusMutex,dockStatusMutex,stageMutex,pathMutex,nameMutex,homeMutex,loopMutex,volumeMutex,wifiMutex,batteryMutex,speedMutex;
 std_srvs::Empty empty_srv;
 
-std::string mission_failed_mp3, auto_docking_mp3, docking_complete_mp3, auto_scan_mp3, scan_complete_mp3, startup_mp3, scan_mp3, reload_map_mp3, mission_complete_mp3;
+std::string mission_failed_mp3, auto_docking_mp3, docking_complete_mp3, auto_scan_mp3, scan_complete_mp3, startup_mp3, scan_mp3, 
+            reload_map_mp3, mission_complete_mp3, abort_navigation_mp3;
 
 std::string wifiFile, deleteWifi;
 std::vector<std::string> wifi_;
@@ -595,15 +596,15 @@ void playSystemAudio(std::string file){
 void robotResponse(int status, std::string text){
     ros::NodeHandle n;
     //permanent green case
-    if (text=="COMPLETE_EXPLORING" || text=="COMPLETE_PATH" || text=="COMPLETE_POINT") {
+    if (text=="COMPLETE_EXPLORING" || text=="COMPLETE_PATH" || text=="COMPLETE_POINT" || text=="COMPLETE_TRACKING") {
         SetRobot.setLed(0,{"green"});
         SetRobot.setSound(1,2);
         if(text=="COMPLETE_EXPLORING"){
-            n.getParam("scan_complete", scan_complete_mp3);
+            n.getParam("scan_complete_mp3", scan_complete_mp3);
             std::thread t_audio(playSystemAudio, scan_complete_mp3);
             t_audio.detach();
         }
-        else if(text=="COMPLETE_PATH"){
+        else if(text=="COMPLETE_PATH" || text=="COMPLETE_TRACKING"){
             n.getParam("mission_complete_mp3", mission_complete_mp3);
             std::thread t_audio(playSystemAudio, mission_complete_mp3);
             t_audio.detach();
@@ -619,12 +620,19 @@ void robotResponse(int status, std::string text){
     else if(text=="DELAY" || text=="WAITING" || text=="AUDIO_DELAY"){
         SetRobot.setLed(1,{"blue","white"});
     }
-    else if(text=="FAIL_DOCKING" || text=="ABORTED_PATH"){
+    else if(text=="FAIL_DOCKING" || text=="ABORTED_PATH" || text=="FAIL_TRACKING"){
         SetRobot.setLed(0,{"red"});
         SetRobot.setSound(3,2);
-        n.getParam("mission_failed_mp3", mission_failed_mp3);
-        std::thread t_audio(playSystemAudio, mission_failed_mp3);
-        t_audio.detach();
+        if(text=="ABORTED_PATH"){
+            n.getParam("abort_navigation_mp3", abort_navigation_mp3);
+            std::thread t_audio(playSystemAudio, abort_navigation_mp3);
+            t_audio.detach();
+        }
+        else{
+            n.getParam("mission_failed_mp3", mission_failed_mp3);
+            std::thread t_audio(playSystemAudio, mission_failed_mp3);
+            t_audio.detach();
+        }
     }
     else if(text=="DOCKING"){
         SetRobot.setLed(1,{"yellow","cyan"});
@@ -645,7 +653,7 @@ void robotResponse(int status, std::string text){
         t_audio.detach();
     }
     else if(text=="START_EXPLORING"){
-        n.getParam("auto_scan", auto_scan_mp3);
+        n.getParam("auto_scan_mp3", auto_scan_mp3);
         std::thread t_audio(playSystemAudio, auto_scan_mp3);
         t_audio.detach();
     }

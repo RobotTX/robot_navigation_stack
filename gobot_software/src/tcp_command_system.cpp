@@ -11,10 +11,11 @@ int robot_pos_port = 4001, map_port = 4002, laser_port = 4003;
 std::string self_ip = "0.0.0.0";
 
 std::vector<char> slient_command({'g','t','u','s','v'}),
-                  scanning_command({'d','i','j','k','l','m','o'}),
-                  docking_command({'d','j','k','o'}),
-                  pause_path_command({'i','m','o','v','t','g'}),
-                  cancel_resume_command({'d','g','i','j','k','l','m','p','t',','});
+                  scanning_command({'c','d','i','j','k','l','m','o'}),
+                  docking_command({'c','d','j','k','o'}),
+                  tracking_command({'d','j','k','o'}),
+                  pause_path_command({'c','i','m','o','v','t','g'}),
+                  cancel_resume_command({'c','d','g','i','j','k','l','m','p','t',','});
 
 bool resume_path = false, resume_point = false;
 std::vector<std::string> resume_pose;
@@ -74,11 +75,27 @@ bool execCommand(const std::string ip, const std::vector<std::string> command){
         }
         //newCS, startScan
         else if(commandStr.at(0)=='n' || commandStr.at(0)=='t' || commandStr.at(0)=='g'){
-            ros::service::call("/gobot_function/stopDocking", empty_srv);
+            ros::service::call("/gobot_function/stop_docking", empty_srv);
         }
         //stopPath
         else if(commandStr.at(0)=='l'){
-            ros::service::call("/gobot_function/stopDocking", empty_srv);
+            ros::service::call("/gobot_function/stop_docking", empty_srv);
+            return true;
+        }
+    }
+    //tracking
+    else if(robot_status_==16){
+        if(std::find(tracking_command.begin(),tracking_command.end(),commandStr.at(0)) != tracking_command.end()){
+            ROS_WARN("(COMMAND_SYSTEM) Gobot is tracking.");
+            return false;
+        }
+        //tracking (another one)
+        else if(commandStr.at(0)=='c'){
+                ros::service::call("/gobot_function/stop_detection", empty_srv);
+        }
+        //stopPath
+        else if(commandStr.at(0)=='l'){
+            ros::service::call("/gobot_function/stop_detection", empty_srv);
             return true;
         }
     }
@@ -130,10 +147,9 @@ bool execCommand(const std::string ip, const std::vector<std::string> command){
             status = previousPath(command);
         break;
         
-        /// not in use
-        /// Command for the robot to move to a point
+        /// Command for the robot to track object
         case 'c':
-            status = newGoal(command);
+            status = trackObject(command);
         break;
 
         /// Command for the robot to pause the path
@@ -337,10 +353,18 @@ bool previousPath(const std::vector<std::string> command){
     }
 }
 
-/// First param = c, second param = goal pos x coordinate, third param = goal pos y coordinate
-bool newGoal(const std::vector<std::string> command){
+/// First param = c, 2nd = object pose x, 3rd = object pose y, 4th = object yaw
+bool trackObject(const std::vector<std::string> command){
+    if(command.size() == 4){
+        gobot_msg_srv::SetStringArray object_pose;
+        object_pose.request.data.push_back(command.at(1));
+        object_pose.request.data.push_back(command.at(2));
+        object_pose.request.data.push_back(std::to_string(SetRobot.appToRobotYaw(std::stod(command.at(3)))));
+        ros::service::call("/gobot_function/find_object",object_pose);
+        ROS_INFO("(COMMAND_SYSTEM) Received object tracking command.");
+    }
 
-        return true;
+    return true;
 }
 
 /// First param = d
@@ -512,9 +536,8 @@ bool newChargingStation(const std::vector<std::string> command){
         
         //Check home from scanned map or new map
         std::string homeX = command.at(1), homeY = command.at(2), homeOri = command.at(3);
-        int orientation = std::stoi(homeOri);
         tf::Quaternion quaternion;
-        quaternion.setRPY(0, 0, SetRobot.appToRobotYaw(orientation));
+        quaternion.setRPY(0, 0, SetRobot.appToRobotYaw(std::stod(homeOri)));
 
         std::string mapType = homeX.substr(0,1);
         if(mapType == "S"){
@@ -545,7 +568,7 @@ bool goToChargingStation(const std::vector<std::string> command){
         }
         else{
             //ROS_INFO("(COMMAND_SYSTEM) Sending the robot home");
-            ros::service::call("/gobot_function/startDocking", empty_srv);
+            ros::service::call("/gobot_function/start_docking", empty_srv);
         }
     }
     return true;
@@ -557,7 +580,7 @@ bool stopGoingToChargingStation(const std::vector<std::string> command){
         //docking
         if(GetRobot.getDock()==3){
             //ROS_INFO("(COMMAND_SYSTEM) Stop sending the robot home");
-            return ros::service::call("/gobot_function/stopDocking", empty_srv);
+            return ros::service::call("/gobot_function/stop_docking", empty_srv);
         }
     }
 
@@ -1019,7 +1042,10 @@ void sendConnectionData(boost::shared_ptr<tcp::socket> sock){
     gobot_msg_srv::GetStringArray get_path;
 	ros::service::call("/gobot_status/get_path", get_path);
     for(int i=0;i<get_path.response.data.size();i++){
-        path += get_path.response.data.at(i) + sep;
+        if(i%7==5)
+            path += std::to_string(SetRobot.robotToAppYaw(std::stod(get_path.response.data.at(i)),"rad")) + sep;
+        else
+            path += get_path.response.data.at(i) + sep;
     }
 
     /// we send the map id along with the time of the last modification of the map
@@ -1061,8 +1087,8 @@ void sendConnectionData(boost::shared_ptr<tcp::socket> sock){
 
     //Send robot information to UI once connected
     sendMessageToSock(sock, std::string("Connected" + sep + mapId + sep + mapDate + sep + homeX + sep + homeY + sep + homeOri + 
-                                       sep + scan + sep + laserStr + sep + following_path_str + sep + looping_str + sep + linear_spd + sep + 
-                                       angular_spd + sep+ battery_lvl + sep +path));
+                                       sep + scan + sep + laserStr + sep + following_path_str + sep + looping_str + sep + 
+                                       linear_spd + sep + angular_spd + sep+ battery_lvl + sep +path));
 
     //Send more robot information to UI once connected
     ros::service::call("/gobot_status/update_status",empty_srv);

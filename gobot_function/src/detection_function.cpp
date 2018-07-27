@@ -8,7 +8,6 @@ ros::Time lastSignal;
 //negative values -> turn left
 bool left_turn_ = true, detection_on_ = false, y_flag_ = false;
 int BASE_SPD = 3, SEARCH_SPD = 6;
-std::string mission_complete_mp3;
 
 
 
@@ -25,7 +24,7 @@ void goalResultCallback(const move_base_msgs::MoveBaseActionResult::ConstPtr& ms
 				break;
 			//OTHER CASE
 			default:
-                stopDetectionFunc("Can not reach object starting pose!");
+                stopDetectionFunc("Can not reach object starting pose!", "FAIL_TRACKING");
 				break;
 		}
     }
@@ -36,10 +35,7 @@ void magnetCb(const std_msgs::Int8::ConstPtr& msg){
         if(msg->data == 1){
             ros::NodeHandle n;
             ROS_INFO("(OBJECT_DETECTION) Successfully fing object!");
-            stopDetectionFunc("Successfully fing object!");
-            MoveRobot.stop();
-            n.getParam("mission_complete_mp3", mission_complete_mp3);
-            MoveRobot.playSystemAudio(mission_complete_mp3, 97);
+            stopDetectionFunc("Successfully fing object!", "COMPLETE_TRACKING");
         }
     }
 }
@@ -60,7 +56,8 @@ void bumpersCb(const gobot_msg_srv::BumperMsg::ConstPtr& bumpers){
 void alignmentCb(const std_msgs::Int16::ConstPtr& msg){
     if(detection_on_){
         if (ros::Time::now()-lastSignal>ros::Duration(30.0)){
-            stopDetectionFunc("Can not find object!");
+            stopDetectionFunc("Can not find object!", "FAIL_TRACKING");
+            return;
         }
 
         if(y_flag_ && abs(msg->data)<=2)
@@ -143,7 +140,10 @@ void alignmentCb(const std_msgs::Int16::ConstPtr& msg){
 
 //****************************** SERVICE ******************************
 bool findObjectCb(gobot_msg_srv::SetStringArray::Request &req, gobot_msg_srv::SetStringArray::Response &res){
-    ros::NodeHandle nh;
+    //power off magnet to detach object before starting new attachment
+    gobot_msg_srv::SetBool magnet;
+    magnet.request.data = false;
+    ros::service::call("/gobot_base/set_magnet",magnet);
 
     robot_class::Point object_pose;
     object_pose.yaw = std::stod(req.data[2]);
@@ -152,12 +152,13 @@ bool findObjectCb(gobot_msg_srv::SetStringArray::Request &req, gobot_msg_srv::Se
 
     MoveRobot.moveFromCS();
 
-    MoveRobot.moveTo(object_pose);
-
     MoveRobot.setStatus(16,"TRACKING");
 
     detection_on_ = true;
+    ros::NodeHandle nh;
     goalStatusSub = nh.subscribe("/move_base/result",1,goalResultCallback);
+    MoveRobot.moveTo(object_pose);
+    
     ROS_INFO("(OBJECT_DETECTION) Start finding object");
     return true;
 }
@@ -172,6 +173,7 @@ bool startDetectionCb(std_srvs::Empty::Request &req, std_srvs::Empty::Response &
 }
 
 bool stopDetectionCb(std_srvs::Empty::Request &req, std_srvs::Empty::Response &res){
+    //power off magnet to detach object
     gobot_msg_srv::SetBool magnet;
     magnet.request.data = false;
     ros::service::call("/gobot_base/set_magnet",magnet);
@@ -187,6 +189,7 @@ void startAlignObject(){
     y_flag_ = false;
     left_turn_ = true;
     lastSignal = ros::Time::now();
+    //power on magnet to get ready for attach object
     gobot_msg_srv::SetBool magnet;
     magnet.request.data = true;
     ros::service::call("/gobot_base/set_magnet",magnet);
@@ -198,14 +201,14 @@ void startAlignObject(){
     ROS_INFO("(OBJECT_DETECTION) Start Align with Object");
 }
 
-void stopDetectionFunc(std::string result){
+void stopDetectionFunc(std::string result, std::string status_text){
     detection_on_ = false;
     alignmentSub.shutdown();
     magnetSub.shutdown();
     bumperSub.shutdown();
     goalStatusSub.shutdown();
-    MoveRobot.setStatus(12,"STOP_TRACKING");
     MoveRobot.stop();
+    MoveRobot.setStatus(12, status_text);
     ROS_WARN("(OBJECT_DETECTION) Mission end: %s", result.c_str());
 }
 

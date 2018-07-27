@@ -47,7 +47,7 @@ bool renameRobot(const std::vector<std::string> command);
 bool previousPath(const std::vector<std::string> command);
 
 /// c
-bool newGoal(const std::vector<std::string> command);
+bool trackObject(const std::vector<std::string> command);
 
 /// d
 bool pausePath(const std::vector<std::string> command);

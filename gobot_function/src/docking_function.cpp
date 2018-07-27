@@ -308,8 +308,8 @@ int main(int argc, char* argv[]){
 
     MoveRobot.moveClientInitialize();
 
-    ros::ServiceServer startDockingSrv = nh.advertiseService("/gobot_function/startDocking", startDockingService);
-    ros::ServiceServer stopDockingSrv = nh.advertiseService("/gobot_function/stopDocking", stopDockingService);
+    ros::ServiceServer startDockingSrv = nh.advertiseService("/gobot_function/start_docking", startDockingService);
+    ros::ServiceServer stopDockingSrv = nh.advertiseService("/gobot_function/stop_docking", stopDockingService);
 
     ros::spin();
     
