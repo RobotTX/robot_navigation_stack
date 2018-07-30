@@ -81,7 +81,7 @@ void newBumpersInfo(const gobot_msg_srv::BumperMsg::ConstPtr& bumpers){
                 if(!charging){
                     //move a bit front to leave space for bumper
                     move_from_collision = true;
-                    MoveRobot.setMotorSpeed('F', 2, 'F', 2);
+                    MoveRobot.setMotorSpeed('F', 1, 'F', 1);
                     ros::Duration(0.5).sleep();
                     MoveRobot.setMotorSpeed('F', 0, 'F', 0);
                     finishedDocking();

@@ -3,12 +3,13 @@
 ros::Subscriber magnetSub, alignmentSub, bumperSub, goalStatusSub;
 robot_class::RobotMoveClass MoveRobot;
 ros::Time lastSignal;
+std_srvs::Empty empty_srv;
 
 //positive values -> turn right
 //negative values -> turn left
-bool left_turn_ = true, detection_on_ = false, y_flag_ = false;
+bool left_turn_ = true, detection_on_ = false, y_flag_ = false, object_attached = false;
 int BASE_SPD = 3, SEARCH_SPD = 6, BACKWARD_SPD = 3;
-
+robot_class::Point object_pose_;
 
 
 //****************************** CALLBACK ******************************
@@ -33,8 +34,9 @@ void goalResultCallback(const move_base_msgs::MoveBaseActionResult::ConstPtr& ms
 void magnetCb(const std_msgs::Int8::ConstPtr& msg){
     if(detection_on_){
         if(msg->data == 1){
-            ros::NodeHandle n;
             ROS_INFO("(OBJECT_DETECTION) Successfully fing object!");
+            //set robot pose to be the object pose
+            MoveRobot.setInitialpose(object_pose_.x,object_pose_.y,object_pose_.yaw);
             stopDetectionFunc("Successfully fing object!", "COMPLETE_TRACKING");
         }
     }
@@ -45,7 +47,7 @@ void bumpersCb(const gobot_msg_srv::BumperMsg::ConstPtr& bumpers){
         bool back = !(bumpers->bumper5 && bumpers->bumper6 && bumpers->bumper7 && bumpers->bumper8);
         if(back){
             stopDetectionFunc("Bumpers are triggered!");
-            MoveRobot.setMotorSpeed('F', BASE_SPD, 'F', BASE_SPD);
+            MoveRobot.setMotorSpeed('F', 12, 'F', 12);
             ros::Duration(1.0).sleep();
             MoveRobot.setMotorSpeed('F', 0, 'F', 0);
         }
@@ -142,14 +144,20 @@ void alignmentCb(const std_msgs::Int16::ConstPtr& msg){
 //****************************** SERVICE ******************************
 bool findObjectCb(gobot_msg_srv::SetStringArray::Request &req, gobot_msg_srv::SetStringArray::Response &res){
     //power off magnet to detach object before starting new attachment
-    gobot_msg_srv::SetBool magnet;
-    magnet.request.data = false;
-    ros::service::call("/gobot_base/set_magnet",magnet);
+    if(object_attached){
+        gobot_msg_srv::SetBool magnet;
+        magnet.request.data = false;
+        ros::service::call("/gobot_base/set_magnet",magnet);
+        object_attached = false;
+        ros::Duration(1.0).sleep();
+        MoveRobot.forward(15);
+        ros::Duration(1.5).sleep();
+        MoveRobot.stop();
+    }
 
-    robot_class::Point object_pose;
-    object_pose.yaw = std::stod(req.data[2]);
-    object_pose.x = std::stod(req.data[0]) + 1.0*std::cos(object_pose.yaw);
-    object_pose.y = std::stod(req.data[1]) + 1.0*std::sin(object_pose.yaw);
+    object_pose_.yaw = std::stod(req.data[2]);
+    object_pose_.x = std::stod(req.data[0]) + 1.0*std::cos(object_pose_.yaw);
+    object_pose_.y = std::stod(req.data[1]) + 1.0*std::sin(object_pose_.yaw);
 
     MoveRobot.moveFromCS();
 
@@ -158,7 +166,7 @@ bool findObjectCb(gobot_msg_srv::SetStringArray::Request &req, gobot_msg_srv::Se
     detection_on_ = true;
     ros::NodeHandle nh;
     goalStatusSub = nh.subscribe("/move_base/result",1,goalResultCallback);
-    MoveRobot.moveTo(object_pose);
+    MoveRobot.moveTo(object_pose_);
     
     ROS_INFO("(OBJECT_DETECTION) Start finding object");
     return true;
@@ -174,10 +182,6 @@ bool startDetectionCb(std_srvs::Empty::Request &req, std_srvs::Empty::Response &
 }
 
 bool stopDetectionCb(std_srvs::Empty::Request &req, std_srvs::Empty::Response &res){
-    //power off magnet to detach object
-    gobot_msg_srv::SetBool magnet;
-    magnet.request.data = false;
-    ros::service::call("/gobot_base/set_magnet",magnet);
     MoveRobot.cancelMove();
     stopDetectionFunc("Stop detection service called!");
 
@@ -210,6 +214,18 @@ void stopDetectionFunc(std::string result, std::string status_text){
     bumperSub.shutdown();
     goalStatusSub.shutdown();
     MoveRobot.stop();
+
+    if(status_text!="COMPLETE_TRACKING"){
+        //power off magnet to detach object
+        gobot_msg_srv::SetBool magnet;
+        magnet.request.data = false;
+        ros::service::call("/gobot_base/set_magnet",magnet);
+        object_attached = false;
+    }
+    else{
+        object_attached = true;
+        ros::service::call("/gobot_status/update_status",empty_srv);
+    }
     MoveRobot.setStatus(12, status_text);
     ROS_WARN("(OBJECT_DETECTION) Mission end: %s", result.c_str());
 }

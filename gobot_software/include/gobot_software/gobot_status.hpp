@@ -21,6 +21,8 @@ void batteryCallback(const gobot_msg_srv::BatteryMsg::ConstPtr& msg);
 
 void bumpersCallback(const gobot_msg_srv::BumperMsg::ConstPtr& bumpers);
 
+void magnetCb(const std_msgs::Int8::ConstPtr& msg);
+
 //****************************** SERVICE ******************************
 bool updateStatusSrvCb(std_srvs::Empty::Request &req, std_srvs::Empty::Response &res);
 

@@ -44,6 +44,8 @@ bool adjustBatteryLvl(const std::vector<std::string> command);
 bool renameRobot(const std::vector<std::string> command);
 
 /// b
+bool detachObject(const std::vector<std::string> command);
+//not in use
 bool previousPath(const std::vector<std::string> command);
 
 /// c

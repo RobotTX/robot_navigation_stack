@@ -144,7 +144,7 @@ nmcli d wifi hotspot ssid "wifiname" password "wifipassword"
 settings >> appearance >> behavior
 sudo apt install unity-tweak-tool
 
-#file transfer
+#file transfer (FileZilla 3.15.0.2)
 sudo apt install filezilla
 protocol: SFTP
 

@@ -9,7 +9,7 @@ using namespace cv;
 
 const int RGB_THRESHOLD = 30;
 int ALIGNMENT_THRESHOLD = 15; 
-double AREA_THRESHOLD = 7200, AREA_DIFF_THRESHOLD = 10;
+double AREA_THRESHOLD = 7200, AREA_DIFF_THRESHOLD = 10, STOP_Y_THRESHOLD = 5500;
 bool y_adjustment = false, right_edge = false;
 
 ros::Time lostSignal;
@@ -122,13 +122,9 @@ void shapeDetection(Mat image){
                 if(abs(p_cen_line.x-image_cen1.x)< ALIGNMENT_THRESHOLD){
                     cv::circle(image, p_cen_line,10, CV_RGB(0,255,0),-1);
                     cv::line(image,image_cen1,image_cen2,CV_RGB(0,255,0),2);
-
-                    //check if robot align with y-axis
-                    if(fabs(area_diff) < AREA_DIFF_THRESHOLD){
-                        alignment.data = 0;
-                        std::cout<< "Perfect alignment"<<std::endl;
-                    }
-                    else{
+                    
+                    //if y-axe alignment needed
+                    if(fabs(area_diff)>AREA_DIFF_THRESHOLD && left_area<STOP_Y_THRESHOLD && right_area<STOP_Y_THRESHOLD){
                         //if left area > right area
                         if(area_diff > 0){
                             alignment.data = 10;
@@ -141,6 +137,11 @@ void shapeDetection(Mat image){
                         }
                         y_adjustment = true;
                         std::cout<< "Start y-axis alignment"<<std::endl;
+                    }
+                    //check if robot align with y-axis
+                    else{
+                        alignment.data = 0;
+                        std::cout<< "Perfect alignment"<<std::endl;
                     }
                 }
                 else if(!y_adjustment){
@@ -210,6 +211,7 @@ int main(int argc, char* argv[])
     nh.getParam("ALIGNMENT_THRESHOLD", ALIGNMENT_THRESHOLD);
     nh.getParam("AREA_THRESHOLD", AREA_THRESHOLD);
     nh.getParam("AREA_DIFF_THRESHOLD", AREA_DIFF_THRESHOLD);
+    nh.getParam("STOP_Y_THRESHOLD", STOP_Y_THRESHOLD);
 
     ros::Subscriber camera_sub = nh.subscribe("/usb_cam/image_raw", 10, imageCb);
     alignment_pub = nh.advertise<std_msgs::Int16>("/gobot_function/object_alignment", 10);

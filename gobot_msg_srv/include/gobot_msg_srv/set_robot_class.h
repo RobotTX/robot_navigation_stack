@@ -6,6 +6,7 @@
 #include <std_msgs/Int8.h>
 #include <std_srvs/Empty.h>
 #include <geometry_msgs/PoseWithCovarianceStamped.h>
+#include <tf/transform_listener.h>
 
 //c++ headers
 #include <string>
@@ -63,6 +64,8 @@ namespace robot_class {
             bool setMotorSpeed(char directionR, int velocityR, char directionL, int velocityL);
 
             void setInitialpose(const double p_x, const double p_y, const double q_x, const double q_y, const double q_z, const double q_w);
+
+            void setInitialpose(const double p_x, const double p_y, const double p_yaw);
             
             void setInitialpose(geometry_msgs::PoseWithCovarianceStamped pose);
 

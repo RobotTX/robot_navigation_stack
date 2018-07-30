@@ -144,7 +144,8 @@ bool execCommand(const std::string ip, const std::vector<std::string> command){
 
         /// Command for the robot to move to the previous point
         case 'b':
-            status = previousPath(command);
+            status = detachObject(command);
+            //status = previousPath(command);
         break;
         
         /// Command for the robot to track object
@@ -159,7 +160,7 @@ bool execCommand(const std::string ip, const std::vector<std::string> command){
 
         /// Command for the robot to move to the next point
         case 'e':
-            status = nextPath(command);
+            //status = nextPath(command);
         break;
 
         /// Command for the robot to move to the previous point
@@ -343,7 +344,14 @@ bool renameRobot(const std::vector<std::string> command){
     return false;
 }
 
-/// Command : b, still developing
+/// Command : b, detach object
+bool detachObject(const std::vector<std::string> command){
+    if(command.size() == 1){
+        ros::service::call("/gobot_function/stop_detection", empty_srv);
+    }
+    return true;
+}
+
 bool previousPath(const std::vector<std::string> command){
     return false;
     if(command.size() == 1) {

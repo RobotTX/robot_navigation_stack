@@ -189,6 +189,14 @@ namespace robot_class {
         initial_pose.pose.pose.orientation.w = q_w;
         setInitialpose(initial_pose);
     }
+
+    void SetRobot::setInitialpose(const double p_x, const double p_y, const double p_yaw){
+        geometry_msgs::PoseWithCovarianceStamped initial_pose;
+        initial_pose.pose.pose.position.x = p_x;
+        initial_pose.pose.pose.position.y = p_y;
+        initial_pose.pose.pose.orientation = tf::createQuaternionMsgFromYaw(p_yaw);
+        setInitialpose(initial_pose);
+    }
             
     void SetRobot::setInitialpose(geometry_msgs::PoseWithCovarianceStamped pose){
         pose.header.frame_id = "map";

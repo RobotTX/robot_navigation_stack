@@ -2,8 +2,8 @@
 
 #START CHAR       #COMMAND
      a            rename robot
-     b            n.a.
-     c            #start object tracking
+     b            detach object (off magnet)
+     c            start object tracking
      d            pause path
      e            n.a.
      f            pause scan           

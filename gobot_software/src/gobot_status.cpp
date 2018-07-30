@@ -92,6 +92,8 @@ robot_class::SetRobot SetRobot;
 //0-auto, 1-manual
 int robot_mode_ = 0;
 
+//0-detached   1-attached
+int magnet_status_ = 0;
 
 //****************************** CALLBACK ******************************
 void batteryCallback(const gobot_msg_srv::BatteryMsg::ConstPtr& msg){
@@ -138,6 +140,10 @@ void bumpersCallback(const gobot_msg_srv::BumperMsg::ConstPtr& bumpers){
             SetRobot.setSound(1,1);
         }
     }
+}
+
+void magnetCb(const std_msgs::Int8::ConstPtr& msg){
+    magnet_status_ = msg->data;
 }
 
 //****************************** SERVICE ******************************
@@ -576,8 +582,13 @@ std::string getCurrentTime(){
 //get updated information
 std::string getUpdateStatus(){
     bool muteFlag = (volume_==0) ? 1 : 0;
-    return hostname_ + sep + std::to_string(stage_) + sep + std::to_string(battery_percent_) + 
+    std::string result = hostname_ + sep + std::to_string(stage_) + sep + std::to_string(battery_percent_) + 
                sep + std::to_string(muteFlag) + sep + std::to_string(dock_status_) + sep + std::to_string(robot_mode_);
+        
+    //if magnet is attached to sth, update UI side
+    if(magnet_status_==1)
+        result = result + sep + std::to_string(magnet_status_);
+    return result;
 } 
 
 //send updated information for ping_servers
@@ -877,6 +888,7 @@ int main(int argc, char* argv[]){
     
     ros::Subscriber battery_sub = n.subscribe("/gobot_base/battery_topic",1, batteryCallback);
     ros::Subscriber bumpers_sub = n.subscribe("/gobot_base/bumpers_topic",1, bumpersCallback);
+    ros::Subscriber magnet_sub = n.subscribe("/gobot_base/magnet_topic", 1, magnetCb);
 
     ros::spin();
 
