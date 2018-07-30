@@ -423,7 +423,7 @@ void readPath(std::vector<std::string> &path){
 void goDockAfterPath(){
 	std::thread([](){
 		dockAfterPath = false;
-		ros::service::call("/gobot_command/goDock", empty_srv);
+		ros::service::call("/gobot_command/start_dock", empty_srv);
 	}).detach();
 }
 
@@ -481,9 +481,9 @@ int main(int argc, char* argv[]){
 	ros::ServiceServer stopPathSrv			= n.advertiseService("/gobot_function/stop_path", 		stopPathService);
 	ros::ServiceServer updatePathSrv		= n.advertiseService("/gobot_function/update_path", 	updatePathService);
 	ros::ServiceServer skipPathSrv			= n.advertiseService("/gobot_function/skip_path", 		skipPathService);
-	ros::ServiceServer startLoopPathSrv		= n.advertiseService("/gobot_function/startLoopPath", 	startLoopPathService);
-	ros::ServiceServer stopLoopPathSrv 		= n.advertiseService("/gobot_function/stopLoopPath", 	stopLoopPathService);
-	ros::ServiceServer goDockAfterPathSrv 	= n.advertiseService("/gobot_function/goDockAfterPath", goDockAfterPathService);
+	ros::ServiceServer startLoopPathSrv		= n.advertiseService("/gobot_function/start_loop", 	startLoopPathService);
+	ros::ServiceServer stopLoopPathSrv 		= n.advertiseService("/gobot_function/stop_loop", 	stopLoopPathService);
+	ros::ServiceServer goDockAfterPathSrv 	= n.advertiseService("/gobot_function/dock_after_path", goDockAfterPathService);
 
 	ros::spin();
 

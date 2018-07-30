@@ -639,14 +639,14 @@ namespace robot_class {
     * @brief start robot to go to docking station
     */
     void RobotCommand::startDock(){
-        ros::service::call("/gobot_command/goDock",empty_srv_);
+        ros::service::call("/gobot_command/start_dock",empty_srv_);
     }
 
     /**
     * @brief stop robot from going to docking station
     */
     void RobotCommand::stopDock(){
-        ros::service::call("/gobot_command/stopGoDock",empty_srv_);
+        ros::service::call("/gobot_command/stop_dock",empty_srv_);
     }
 
     /**

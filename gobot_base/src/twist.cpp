@@ -303,7 +303,7 @@ void joyCallback(const sensor_msgs::Joy::ConstPtr& joy){
                 ros::service::call("/gobot_command/pause_path",empty_srv);
             //button Y
             else if(joy->buttons[3])
-                ros::service::call("/gobot_command/goDock",empty_srv);
+                ros::service::call("/gobot_command/start_dock",empty_srv);
         }
     }
 }

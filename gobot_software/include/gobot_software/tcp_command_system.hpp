@@ -145,6 +145,8 @@ bool goDockSrvCallback(std_srvs::Empty::Request &req, std_srvs::Empty::Response 
 
 bool stopGoDockSrvCallback(std_srvs::Empty::Request &req, std_srvs::Empty::Response &res);
 
+bool stopTrackSrvCallback(std_srvs::Empty::Request &req, std_srvs::Empty::Response &res);
+
 bool highBatterySrvCallback(std_srvs::Empty::Request &req, std_srvs::Empty::Response &res);
 
 bool lowBatterySrvCallback(std_srvs::Empty::Request &req, std_srvs::Empty::Response &res);

@@ -177,8 +177,8 @@ int main(int argc, char* argv[]){
 
     /// Launch service's servers
     //0-don't go back to starting point; 1-go back to charging station; 2-go back to normal staring point
-    ros::ServiceServer startExploration = nh.advertiseService("/gobot_scan/startExploration", startExplorationSrv);
-    ros::ServiceServer stopExploration = nh.advertiseService("/gobot_scan/stopExploration", stopExplorationSrv);
+    ros::ServiceServer startExploration = nh.advertiseService("/gobot_scan/start_exploration", startExplorationSrv);
+    ros::ServiceServer stopExploration = nh.advertiseService("/gobot_scan/stop_exploration", stopExplorationSrv);
 
     MoveRobot.setStatus(20,"EXPLORATION");
 

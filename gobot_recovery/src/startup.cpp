@@ -54,7 +54,11 @@ void getButtonCallback(const std_msgs::Int8::ConstPtr& msg){
       //if go docking, stop it
       else if(robot_status_==15){
         ROS_INFO("(NAV_STARTUP) Stop robot home.");
-        ros::service::call("/gobot_command/stopGoDock",empty_srv);
+        ros::service::call("/gobot_command/stop_dock",empty_srv);
+      }
+      //if go tracking, stop it
+      else if(robot_status_==16){
+        ros::service::call("/gobot_command/stop_track",empty_srv);
       }
     }
     else if(dt>5.0 && dt<=10.0){
@@ -71,7 +75,7 @@ void getButtonCallback(const std_msgs::Int8::ConstPtr& msg){
     }
     else if(dt>10.0 && dt<=20.0){
       ROS_INFO("(NAV_STARTUP) Send robot home.");
-      ros::service::call("/gobot_command/goDock",empty_srv);
+      ros::service::call("/gobot_command/start_dock",empty_srv);
 		}
 	}
 }

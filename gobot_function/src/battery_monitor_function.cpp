@@ -24,7 +24,7 @@ void timerCallback(const ros::TimerEvent&){
         if((battery_percent.response.data<std::stoi(get_battery.response.data) || monitor_state == 1)){
             ROS_WARN("(BATTERY_MONITOR) Battery current percentage: %d, auto-charging percentage: %d ", battery_percent.response.data,std::stoi(get_battery.response.data));
             std_srvs::Empty arg;
-            ros::service::call("/gobot_command/lowBattery", arg);
+            ros::service::call("/gobot_command/low_battery", arg);
             canGoCharge = false;
             monitor_state = 0;
         }
@@ -33,7 +33,7 @@ void timerCallback(const ros::TimerEvent&){
         if((battery_percent.response.data >= resume_work_level && isCharging.response.isCharging) || monitor_state == 2){
             ROS_WARN("(BATTERY_MONITOR) Battery current percentage:%d. Resume to work.", battery_percent.response.data);
             std_srvs::Empty arg;
-            ros::service::call("/gobot_command/highBattery", arg);
+            ros::service::call("/gobot_command/high_battery", arg);
             canGoCharge = true;
             monitor_state = 0;
         }

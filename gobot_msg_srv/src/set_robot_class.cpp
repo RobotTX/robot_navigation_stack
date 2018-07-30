@@ -57,7 +57,11 @@ namespace robot_class {
             return get_gobot_status.response.status;
         }
         else if(get_gobot_status.response.status==15){
-            ros::service::call("/gobot_command/stopGoDock",empty_srv);
+            ros::service::call("/gobot_command/stop_dock",empty_srv);
+            return get_gobot_status.response.status;
+        }
+        else if(get_gobot_status.response.status==16){
+            ros::service::call("/gobot_command/stop_track",empty_srv);
             return get_gobot_status.response.status;
         }
         else if(get_gobot_status.response.status==25){
