@@ -580,6 +580,7 @@ std::string getCurrentTime(){
 }
 
 //get updated information
+// 1-hostname, 2-stage, 3-battery_percent, 4-mute, 5-dock_status, 6-robot_mode, *7-magnet_status(have when magnet_status==1)
 std::string getUpdateStatus(){
     bool muteFlag = (volume_==0) ? 1 : 0;
     std::string result = hostname_ + sep + std::to_string(stage_) + sep + std::to_string(battery_percent_) + 

@@ -45,6 +45,7 @@ bool renameRobot(const std::vector<std::string> command);
 
 /// b
 bool detachObject(const std::vector<std::string> command);
+
 //not in use
 bool previousPath(const std::vector<std::string> command);
 
@@ -55,6 +56,8 @@ bool trackObject(const std::vector<std::string> command);
 bool pausePath(const std::vector<std::string> command);
 
 /// e
+
+//not in use
 bool nextPath(const std::vector<std::string> command);
 
 /// f

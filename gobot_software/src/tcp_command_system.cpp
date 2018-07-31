@@ -352,6 +352,7 @@ bool detachObject(const std::vector<std::string> command){
     return true;
 }
 
+//not in use
 bool previousPath(const std::vector<std::string> command){
     return false;
     if(command.size() == 1) {
@@ -388,14 +389,15 @@ bool pausePath(const std::vector<std::string> command){
 }
 
 /// First param = e
+
+//not in use
 bool nextPath(const std::vector<std::string> command){
+    return false;
     if(command.size() == 1) {
         gobot_msg_srv::SetInt next_path;
         next_path.request.data = 1;
         return ros::service::call("/gobot_function/skip_path",next_path);
     }
-
-    return false;
 }
 /// First param = f
 bool pauseScan(const std::string ip, const std::vector<std::string> command){
