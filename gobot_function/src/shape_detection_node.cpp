@@ -76,7 +76,7 @@ void shapeDetection(Mat image){
             drawContours(image, contours, i, Scalar(0, 255, 0), 1.5);
             
             string image_text = to_string(sd.get_area());
-            putText(image, image_text, sd.get_center(), FONT_HERSHEY_SIMPLEX, 0.5, CV_RGB(255, 255, 255), 1);
+            cv::putText(image, image_text, sd.get_center(), FONT_HERSHEY_SIMPLEX, 0.5, CV_RGB(255, 255, 255), 1);
 
             index++;
             p_cen.push_back(sd.get_center());
@@ -132,7 +132,7 @@ void shapeDetection(Mat image){
                     cv::circle(image, p_cen_line,10, CV_RGB(0,255,0),-1);
                     cv::line(image,image_cen1,image_cen2,CV_RGB(0,255,0),2);
                     
-                    //if y-axe alignment needed
+                    //if y-axis alignment needed
                     if(fabs(area_diff)>AREA_DIFF_THRESHOLD && left_area<STOP_Y_THRESHOLD && right_area<STOP_Y_THRESHOLD){
                         //if left area > right area
                         if(area_diff > 0){

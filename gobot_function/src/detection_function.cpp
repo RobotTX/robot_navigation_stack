@@ -1,5 +1,22 @@
 #include "gobot_function/detection_function.h"
 
+/*
+                 __FF__
+                |      |
+                |  CAM |     
+                |__  __|
+                   BB
+ + alignment data         - alignment data
+ move to object frame    move to object frame 
+   x-axis negative          x-axis positive
+     ______                   ______
+    [      ]                 [      ]
+    [Object]                 [Object]
+    [______]                 [______]
+
+1pixel = 0.1cm = 0.001m in the distance of 0.75 meter
+*/
+
 ros::Subscriber magnetSub, alignmentSub, bumperSub, goalStatusSub;
 robot_class::RobotMoveClass MoveRobot;
 ros::Time lastSignal;
@@ -174,8 +191,8 @@ bool findObjectCb(gobot_msg_srv::SetStringArray::Request &req, gobot_msg_srv::Se
 
     MoveRobot.setStatus(16,"TRACKING");
 
-    detection_on_ = true;
     rough_alignment_ = true;
+    detection_on_ = true;
     ros::NodeHandle nh;
     goalStatusSub = nh.subscribe("/move_base/result",1,goalResultCallback);
     MoveRobot.moveTo(starting_pose);
@@ -261,19 +278,34 @@ bool roughAlignment(){
     rough_alignment_ = false;
     //start camera capture
     ros::service::call("/usb_cam/start_capture",empty_srv);
-    ros::Duration(3.0).sleep();
+    //wait for a while to stabilize the camera
+    ros::Duration(4.0).sleep();
 
     gobot_msg_srv::GetInt alignment_data;
     ros::service::call("/gobot_function/get_object_alignment",alignment_data);
 
-    //if starting pose error is within the threshold
-    if(alignment_data.response.data < rough_threshold){
-        return false;
-    }
-    else{
-        
+    //check whether starting pose error is within the threshold
+    robot_class::Point starting_pose;
+    //if can not detect object in the current pose, re-navigate robot to the given pose
+    if(alignment_data.response.data == 999){
+        starting_pose.yaw =  object_pose_.yaw;
+        starting_pose.x = object_pose_.x + 1.0*std::cos(object_pose_.yaw);
+        starting_pose.y = object_pose_.y + 1.0*std::sin(object_pose_.yaw);
+        MoveRobot.moveTo(starting_pose);
         return true;
     }
+    //if can see object with big error, move horizontally along object frame x-axis
+    else if(alignment_data.response.data > rough_threshold){
+        gobot_msg_srv::GetStringArray robot_pose;
+        ros::service::call("/gobot_status/get_pose",robot_pose);
+        starting_pose.yaw = std::stod(robot_pose.response.data[2]);
+        starting_pose.x = std::stod(robot_pose.response.data[0]) - std::sin(starting_pose.yaw)*alignment_data.response.data*0.001;
+        starting_pose.y = std::stod(robot_pose.response.data[1]) + std::cos(starting_pose.yaw)*alignment_data.response.data*0.001;
+        MoveRobot.moveTo(starting_pose);
+        return true;
+    }
+
+    return false;
 }
 
 void mySigintHandler(int sig)

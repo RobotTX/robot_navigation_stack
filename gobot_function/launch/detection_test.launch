@@ -25,7 +25,7 @@
         <param name="detection_search"    type="int"          value="6"/>
         <param name="detection_base"      type="int"          value="4"/>
         <param name="detection_backward"  type="int"          value="5"/>
-        <param name="rough_threshold"     type="int"          value="200"/>
+        <param name="rough_threshold"     type="int"          value="175"/>
     </node>
 
 

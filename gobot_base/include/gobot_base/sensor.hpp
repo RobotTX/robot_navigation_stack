@@ -35,6 +35,7 @@ class SensorClass {
             nh.getParam("USE_BUMPER", USE_BUMPER);
             nh.getParam("USE_SONAR", USE_SONAR);
             nh.getParam("USE_CLIFF", USE_CLIFF);
+            nh.getParam("USE_MAGNET", USE_MAGNET);
             nh.getParam("WEIGHT_MAX", max_weight_);
             //0x52 = Blue,0x47 = Red,0x42 = Green,0x4D = Magenta,0x43 = Cyan,0x59 = Yellow,0x57 = White, 0x00 = Off
             led_color_ = {{"green",0x42}, {"blue",0x52}, {"yellow",0x59}, {"red",0x47}, {"cyan",0x43}, {"white",0x57}, {"magenta",0x4D}, {"off",0x00}};
@@ -88,6 +89,8 @@ class SensorClass {
             useSonarSrv = nh.advertiseService("/gobot_base/use_sonar", &SensorClass::useSonarSrvCallback, this);
             useCliffSrv = nh.advertiseService("/gobot_base/use_cliff", &SensorClass::useCliffSrvCallback, this);
             useBumperSrv = nh.advertiseService("/gobot_base/use_bumper", &SensorClass::useBumperSrvCallback, this);
+            useMagnetSrv = nh.advertiseService("/gobot_base/use_magnet", &SensorClass::useMagnetSrvCallback, this);
+
             magnetSrv = nh.advertiseService("/gobot_base/set_magnet", &SensorClass::magnetSrvCallback, this);
             setChargingSrv = nh.advertiseService("/gobot_base/set_charging", &SensorClass::setChargingSrvCallback, this);
             shutdownSrv = nh.advertiseService("/gobot_base/shutdown_robot", &SensorClass::shutdownSrvCallback, this);
@@ -366,7 +369,7 @@ class SensorClass {
 
                     int8_t magnet_status = buff.at(48);
                     std_msgs::Int8 magnet_data;
-                    magnet_data.data = magnet_status;
+                    magnet_data.data = USE_MAGNET ? magnet_status : -1;
                     sensors_msg.magnet = magnet_data;
 
                     /// Gyro+Accelerametor = D46-D57 / B48-B59
@@ -473,12 +476,17 @@ class SensorClass {
         }
 
         bool magnetSrvCallback(gobot_msg_srv::SetBool::Request &req, gobot_msg_srv::SetBool::Response &res){
-            //Electro magnet on
-            if(req.data)
-                std::vector<uint8_t> buff = writeAndRead(std::vector<uint8_t>({0x20,0x01,0x01,0x01,0x00,0x00,0x00,0x00,0x00,0x00,0x1B}),5);
-            //Electro magenet off
-            else
-                std::vector<uint8_t> buff = writeAndRead(std::vector<uint8_t>({0x20,0x01,0x01,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x1B}),5);
+            if(USE_MAGNET){
+                //Electro magnet on
+                if(req.data)
+                    std::vector<uint8_t> buff = writeAndRead(std::vector<uint8_t>({0x20,0x01,0x01,0x01,0x00,0x00,0x00,0x00,0x00,0x00,0x1B}),5);
+                //Electro magenet off
+                else
+                    std::vector<uint8_t> buff = writeAndRead(std::vector<uint8_t>({0x20,0x01,0x01,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x1B}),5);
+            }
+            else{
+                ROS_INFO("(SENSORS::magnetSrv) Magnet is not in use!");
+            }
 
             return true;
         }
@@ -490,6 +498,11 @@ class SensorClass {
 
         bool useBumperSrvCallback(gobot_msg_srv::SetBool::Request &req, gobot_msg_srv::SetBool::Response &res){
             USE_BUMPER = req.data;
+            return true;
+        }
+
+        bool useMagnetSrvCallback(gobot_msg_srv::SetBool::Request &req, gobot_msg_srv::SetBool::Response &res){
+            USE_MAGNET = req.data;
             return true;
         }
 
@@ -703,7 +716,7 @@ class SensorClass {
         std::string SENSOR_PORT, restart_script;
 
         int16_t last_charging_current_;
-        bool charging_flag_, low_battery_, led_flag_, USE_BUMPER, USE_SONAR, USE_CLIFF;
+        bool charging_flag_, low_battery_, led_flag_, USE_BUMPER, USE_SONAR, USE_CLIFF, USE_MAGNET;
         int battery_percent_, error_count_, volume_, max_weight_, robot_status_, charge_check_;
         int SENSOR_RATE, SENSOR_BYTES;
         std::string low_battery_mp3, poweroff_mp3;
@@ -716,7 +729,7 @@ class SensorClass {
         ros::Timer ledTimer_;
         ros::Publisher sensors_pub_, bumper_pub_, ir_pub_, proximity_pub_, sonar_pub_, weight_pub_, battery_pub_, 
                        cliff_pub_, button_pub_, gyro_pub_, temperature_pub_, magnet_pub_;
-        ros::ServiceServer shutdownSrv, displayDataSrv, sensorsReadySrv, setChargingSrv, useBumperSrv, useSonarSrv, useCliffSrv, magnetSrv;
+        ros::ServiceServer shutdownSrv, displayDataSrv, sensorsReadySrv, setChargingSrv, useBumperSrv, useSonarSrv, useCliffSrv, useMagnetSrv, magnetSrv;
         ros::Subscriber led_sub_, sound_sub_, volume_sub_, status_sub_;
 
         boost::thread *sensor_thread_;

@@ -1,5 +1,21 @@
 #include <gobot_base/sensor.hpp>
 
+/*     
+       B5 B6 B7 B8     
+          IR_B
+       C3       C4
+       S3 P2 P1 S4
+         __BB__
+        |      |
+  IR_R  |      |  IR_L
+        |__FF__|
+          LASER
+        S2    S1
+        C2    C1
+       B4 B3 B2 B1
+*/
+
+
 int main(int argc, char** argv){
     ros::init(argc, argv, "sensor_node");
     ros::NodeHandle n;

@@ -42,6 +42,7 @@
     <param name="USE_BUMPER"            type="bool"         value="true" />
     <param name="USE_SONAR"             type="bool"         value="true" />
     <param name="USE_CLIFF"             type="bool"         value="true" />
+    <param name="USE_MAGNET"            type="bool"         value="true" />
     <!--BUMPER CLOUD RELATED -->
     <param name="USE_BUMPER_PC"         type="bool"         value="true" />
     <param name="DIM_X"                 type="double"       value="0.255" />
