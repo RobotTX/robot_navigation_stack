@@ -7,8 +7,8 @@ std_srvs::Empty empty_srv;
 
 //positive values -> turn right
 //negative values -> turn left
-bool left_turn_ = true, detection_on_ = false, y_flag_ = false, object_attached = false;
-int BASE_SPD = 3, SEARCH_SPD = 6, BACKWARD_SPD = 3;
+bool left_turn_ = true, detection_on_ = false, y_flag_ = false, object_attached_ = false, rough_alignment_ = true;
+int detection_base = 3, detection_search = 6, detection_backward = 3, rough_threshold = 200;
 robot_class::Point object_pose_;
 
 
@@ -20,8 +20,14 @@ void goalResultCallback(const move_base_msgs::MoveBaseActionResult::ConstPtr& ms
                 break;
 			//SUCCEED
 			case 3:
-				/// if we reached the goal for the fisrt time
-                startAlignObject();
+				/// rough_alignment when first reaching the starting pose
+                if(rough_alignment_){
+                    if(!roughAlignment())
+                        startAlignObject();
+                }
+                else{
+                    startAlignObject();
+                }
 				break;
 			//OTHER CASE
 			default:
@@ -67,26 +73,26 @@ void alignmentCb(const std_msgs::Int16::ConstPtr& msg){
             
         if(y_flag_){
             if(left_turn_)
-                MoveRobot.turnRight(SEARCH_SPD, 0);
+                MoveRobot.turnRight(detection_search, 0);
             else
-                MoveRobot.turnLeft(0, SEARCH_SPD);
+                MoveRobot.turnLeft(0, detection_search);
         }
         else{  
             switch(msg->data){
                 case 100:
                     if(ros::Time::now()-lastSignal>ros::Duration(1.0)){
                         if(left_turn_){
-                            MoveRobot.turnRight(SEARCH_SPD);
+                            MoveRobot.turnRight(detection_search);
                         }
                         else{
-                            MoveRobot.turnLeft(SEARCH_SPD);
+                            MoveRobot.turnLeft(detection_search);
                         }
                     }
                     break;
 
                 //backward
                 case 0:
-                    MoveRobot.backward(BACKWARD_SPD);
+                    MoveRobot.backward(detection_backward);
                     lastSignal = ros::Time::now();
                     break;
                 
@@ -99,11 +105,11 @@ void alignmentCb(const std_msgs::Int16::ConstPtr& msg){
                     break;
                 
                 case 5:
-                    MoveRobot.turnRight(BASE_SPD);
+                    MoveRobot.turnRight(detection_base);
                     break;
                 
                 case 10:
-                    MoveRobot.turnRight(SEARCH_SPD, 0);
+                    MoveRobot.turnRight(detection_search, 0);
                     break;
                 
                 //turn left
@@ -116,11 +122,11 @@ void alignmentCb(const std_msgs::Int16::ConstPtr& msg){
                     break;
                 
                 case -5:
-                    MoveRobot.turnLeft(BASE_SPD);
+                    MoveRobot.turnLeft(detection_base);
                     break;
                 
                 case -10:
-                    MoveRobot.turnLeft(0, SEARCH_SPD);
+                    MoveRobot.turnLeft(0, detection_search);
                     break;
                 
                 case 99:
@@ -144,11 +150,11 @@ void alignmentCb(const std_msgs::Int16::ConstPtr& msg){
 //****************************** SERVICE ******************************
 bool findObjectCb(gobot_msg_srv::SetStringArray::Request &req, gobot_msg_srv::SetStringArray::Response &res){
     //power off magnet to detach object before starting new attachment
-    if(object_attached){
+    if(object_attached_){
         gobot_msg_srv::SetBool magnet;
         magnet.request.data = false;
         ros::service::call("/gobot_base/set_magnet",magnet);
-        object_attached = false;
+        object_attached_ = false;
         ros::Duration(1.0).sleep();
         MoveRobot.forward(15);
         ros::Duration(1.5).sleep();
@@ -156,17 +162,23 @@ bool findObjectCb(gobot_msg_srv::SetStringArray::Request &req, gobot_msg_srv::Se
     }
 
     object_pose_.yaw = std::stod(req.data[2]);
-    object_pose_.x = std::stod(req.data[0]) + 1.0*std::cos(object_pose_.yaw);
-    object_pose_.y = std::stod(req.data[1]) + 1.0*std::sin(object_pose_.yaw);
+    object_pose_.x = std::stod(req.data[0]);
+    object_pose_.y = std::stod(req.data[1]);
+
+    robot_class::Point starting_pose;
+    starting_pose.yaw =  object_pose_.yaw;
+    starting_pose.x = object_pose_.x + 1.0*std::cos(object_pose_.yaw);
+    starting_pose.y = object_pose_.y + 1.0*std::sin(object_pose_.yaw);
 
     MoveRobot.moveFromCS();
 
     MoveRobot.setStatus(16,"TRACKING");
 
     detection_on_ = true;
+    rough_alignment_ = true;
     ros::NodeHandle nh;
     goalStatusSub = nh.subscribe("/move_base/result",1,goalResultCallback);
-    MoveRobot.moveTo(object_pose_);
+    MoveRobot.moveTo(starting_pose);
     
     ROS_INFO("(OBJECT_DETECTION) Start finding object");
     return true;
@@ -174,6 +186,10 @@ bool findObjectCb(gobot_msg_srv::SetStringArray::Request &req, gobot_msg_srv::Se
 
 bool startDetectionCb(std_srvs::Empty::Request &req, std_srvs::Empty::Response &res){
     MoveRobot.setLed(1,{"green","blue"});
+
+    //start camera capture
+    ros::service::call("/usb_cam/start_capture",empty_srv);
+    ros::Duration(1.0).sleep();
 
     startAlignObject();
     
@@ -199,6 +215,7 @@ void startAlignObject(){
     gobot_msg_srv::SetBool magnet;
     magnet.request.data = true;
     ros::service::call("/gobot_base/set_magnet",magnet);
+    //start subscribe relevant topics
     ros::NodeHandle nh;
     alignmentSub = nh.subscribe("/gobot_function/object_alignment",1,alignmentCb);
     bumperSub = nh.subscribe("/gobot_base/bumpers_topic", 1, bumpersCb);
@@ -208,30 +225,60 @@ void startAlignObject(){
 }
 
 void stopDetectionFunc(std::string result, std::string status_text){
+    //stop all subscribers and camera capture to release computation load
     detection_on_ = false;
+
     alignmentSub.shutdown();
     magnetSub.shutdown();
     bumperSub.shutdown();
     goalStatusSub.shutdown();
     MoveRobot.stop();
+    ros::service::call("/usb_cam/stop_capture",empty_srv);
 
     if(status_text!="COMPLETE_TRACKING"){
         //power off magnet to detach object
         gobot_msg_srv::SetBool magnet;
         magnet.request.data = false;
         ros::service::call("/gobot_base/set_magnet",magnet);
-        object_attached = false;
+        //move robot forward a bit to give some back between robot and attached object
+        if(object_attached_){
+            ros::Duration(1.0).sleep();
+            MoveRobot.forward(15);
+            ros::Duration(1.5).sleep();
+            MoveRobot.stop();
+            object_attached_ = false;
+        }
     }
     else{
-        object_attached = true;
+        object_attached_ = true;
         ros::service::call("/gobot_status/update_status",empty_srv);
     }
     MoveRobot.setStatus(12, status_text);
     ROS_WARN("(OBJECT_DETECTION) Mission end: %s", result.c_str());
 }
 
+bool roughAlignment(){
+    rough_alignment_ = false;
+    //start camera capture
+    ros::service::call("/usb_cam/start_capture",empty_srv);
+    ros::Duration(3.0).sleep();
+
+    gobot_msg_srv::GetInt alignment_data;
+    ros::service::call("/gobot_function/get_object_alignment",alignment_data);
+
+    //if starting pose error is within the threshold
+    if(alignment_data.response.data < rough_threshold){
+        return false;
+    }
+    else{
+        
+        return true;
+    }
+}
+
 void mySigintHandler(int sig)
 {   
+    detection_on_ = false;
     gobot_msg_srv::SetBool magnet;
     magnet.request.data = false;
     ros::service::call("/gobot_base/set_magnet",magnet);
@@ -243,12 +290,22 @@ int main(int argc, char* argv[]){
     ros::NodeHandle nh;
     signal(SIGINT, mySigintHandler);
     
+    //Startup begin
+	//sleep for 1 second, otherwise waitForService not work properly
+    ros::Duration(1.0).sleep();
+    ros::service::waitForService("/gobot_startup/pose_ready", ros::Duration(60.0));
+	ros::service::waitForService("/usb_cam/stop_capture",ros::Duration(60.0));
+    //Startup end
+
     MoveRobot.moveClientInitialize();
 
-    nh.getParam("SEARCH_SPD", SEARCH_SPD);
-    nh.getParam("BASE_SPD", BASE_SPD);
-    nh.getParam("BACKWARD_SPD", BACKWARD_SPD);
-    
+    nh.getParam("detection_search", detection_search);
+    nh.getParam("detection_base", detection_base);
+    nh.getParam("detection_backward", detection_backward);
+    nh.getParam("rough_threshold", rough_threshold);
+
+    ros::service::call("/usb_cam/stop_capture",empty_srv);
+
     ros::ServiceServer findObjectSrv = nh.advertiseService("/gobot_function/find_object", findObjectCb);
     ros::ServiceServer stopDetectionSrv = nh.advertiseService("/gobot_function/stop_detection", stopDetectionCb);
 

@@ -1,7 +1,7 @@
 #include "gobot_function/docking_function.h"
 
 int attempt = 0;
-bool docking = false, collision = false, lostIrSignal = false, leftFlag = false, charging = false, move_from_collision = true;
+bool docking_on_ = false, collision = false, lostIrSignal = false, leftFlag = false, charging = false, move_from_collision = true;
 tfScalar x, y, oriX, oriY, oriZ, oriW;
 double homeX, homeY, homeYaw;
 
@@ -16,7 +16,7 @@ robot_class::GetRobot GetRobot;
 
 //****************************** CALLBACK ******************************
 void goalResultCallback(const move_base_msgs::MoveBaseActionResult::ConstPtr& msg){
-    if(docking){
+    if(docking_on_){
         ROS_INFO("(AUTO_DOCKING::goalResultCallback) Goal status %d",msg->status.status);
         switch(msg->status.status){
             case 2:
@@ -38,7 +38,7 @@ void goalResultCallback(const move_base_msgs::MoveBaseActionResult::ConstPtr& ms
 
 void newBatteryInfo(const gobot_msg_srv::BatteryMsg::ConstPtr& batteryInfo){
     /// if we are charging
-    if(docking && !charging && batteryInfo->ChargingFlag){
+    if(docking_on_ && !charging && batteryInfo->ChargingFlag){
         if(!collision){
             charging = true;
             irSub.shutdown();
@@ -52,7 +52,7 @@ void newBatteryInfo(const gobot_msg_srv::BatteryMsg::ConstPtr& batteryInfo){
 void newBumpersInfo(const gobot_msg_srv::BumperMsg::ConstPtr& bumpers){
     int base_spd = 2;
     /// 0 : collision; 1 : no collision
-    if(docking){
+    if(docking_on_){
         bool back = !(bumpers->bumper5 && bumpers->bumper6 && bumpers->bumper7 && bumpers->bumper8);
         /// check if we have a collision
         if(back){
@@ -95,7 +95,7 @@ void newBumpersInfo(const gobot_msg_srv::BumperMsg::ConstPtr& bumpers){
 void newIrSignal(const gobot_msg_srv::IrMsg::ConstPtr& irSignal){
     /// if we are charging
     int base_spd = 8;
-    if(docking && !collision){
+    if(docking_on_ && !collision){
         if (irSignal->rearSignal != 0){
             lostIrSignal = false;
             /// rear ir received 1 and 2 signal, so robot goes backward
@@ -201,18 +201,20 @@ bool startDocking(void){
 }
 
 void findChargingStation(){
-    //~ROS_INFO("(AUTO_DOCKING::findChargingStation) start to find charging station");
     ros::NodeHandle nh;
     goalStatusSub.shutdown();
+
+    lostIrSignal = false;
+    leftFlag = false;
+    collision = false;
+    charging = false;
+    move_from_collision = true;
+    lastIrSignalTime = ros::Time::now();
     /// To check if we are charging
     batterySub = nh.subscribe("/gobot_base/battery_topic", 1, newBatteryInfo);
 
     /// To check for collision
     bumperSub = nh.subscribe("/gobot_base/bumpers_topic", 1, newBumpersInfo);
-
-    lostIrSignal = false;
-    leftFlag = false;
-    lastIrSignalTime = ros::Time::now();
     /// Pid control with the ir signal
     irSub = nh.subscribe("/gobot_base/ir_topic", 1, newIrSignal);
 }
@@ -240,9 +242,11 @@ void finishedDocking(bool move_forward){
 
             startDockingParams();
             if(attempt == 1){
+                //a bit right
                 MoveRobot.moveTo(homeX+0.05*std::sin(homeYaw), homeY-0.05*std::cos(homeYaw), homeYaw);
             }
             else if(attempt == 2){
+                //a bit left
                 MoveRobot.moveTo(homeX-0.05*std::sin(homeYaw), homeY+0.05*std::cos(homeYaw), homeYaw);
             }
             else {
@@ -261,12 +265,12 @@ void finishedDocking(bool move_forward){
 }
 
 void resetDockingParams(){
+    docking_on_ = false;
     bumperSub.shutdown();
     irSub.shutdown();
     batterySub.shutdown();
     goalStatusSub.shutdown();
     charging = false;
-    docking = false;
     collision = false;
     move_from_collision = true;
     MoveRobot.stop();
@@ -276,7 +280,7 @@ void startDockingParams(){
     ros::NodeHandle nh;
     MoveRobot.setDock(3);
     MoveRobot.setStatus(15,"DOCKING");
-    docking = true;
+    docking_on_ = true;
     goalStatusSub = nh.subscribe("/move_base/result",1,goalResultCallback);
 }
 
@@ -288,10 +292,7 @@ void failedDocking(std::string reason){
 
 void mySigintHandler(int sig)
 {   
-    goalStatusSub.shutdown();
-    bumperSub.shutdown();
-    irSub.shutdown();
-    batterySub.shutdown();
+    docking_on_ = false;
     ros::shutdown();
 }
 

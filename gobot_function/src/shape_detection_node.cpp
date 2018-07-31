@@ -3,6 +3,7 @@
 #include <sensor_msgs/Image.h>
 #include "cv_bridge/cv_bridge.h"
 #include <std_msgs/Int16.h>
+#include <gobot_msg_srv/robot_msgs.h>
 
 using namespace std;
 using namespace cv;
@@ -11,6 +12,7 @@ const int RGB_THRESHOLD = 30;
 int ALIGNMENT_THRESHOLD = 15; 
 double AREA_THRESHOLD = 7200, AREA_DIFF_THRESHOLD = 10, STOP_Y_THRESHOLD = 5500;
 bool y_adjustment = false, right_edge = false;
+int alignment_data_ = 0; 
 
 ros::Time lostSignal;
 ros::Publisher alignment_pub;
@@ -26,6 +28,11 @@ bool shapeFilter(int area, string shape, rgbcolor color){
         return false;
     }
 
+    return true;
+}
+
+bool getAlignmentCb(gobot_msg_srv::GetInt::Request &req, gobot_msg_srv::GetInt::Response &res){
+    res.data = alignment_data_;
     return true;
 }
 
@@ -96,6 +103,7 @@ void shapeDetection(Mat image){
             left_area = p_area[1];
             right_area = p_area[0];
         }
+        
         std::cout<< "left triangle: center@"<<left_x<<"; area@"<<left_area<<endl;
         std::cout<< "right triangle: center@"<<right_x<<"; area@"<<right_area<<endl;
 
@@ -104,6 +112,7 @@ void shapeDetection(Mat image){
         std::cout<< "Analyze area: difference@" <<  left_area-right_area <<"; Percentage@"<<area_diff<<"%"<<std::endl;
         cv::Point p_cen_line((p_cen[0].x + p_cen[1].x)/2, (p_cen[0].y + p_cen[1].y)/2);
 
+        alignment_data_ = p_cen_line.x-image_cen1.x;
 
         //check if robot is close to the target
         if(left_area>AREA_THRESHOLD || right_area>AREA_THRESHOLD){
@@ -178,11 +187,12 @@ void shapeDetection(Mat image){
             alignment.data = right_edge ? 10 : -10;
             std::cout<< "Y-axis alignment"<<std::endl;
         }
+        alignment_data_ = 999;
     }
     else{
         std::cout<< "Can not find object"<<std::endl;
+        alignment_data_ = 999;
     }
-
 
     alignment_pub.publish(alignment);
     imshow("Result", image);
@@ -215,6 +225,8 @@ int main(int argc, char* argv[])
 
     ros::Subscriber camera_sub = nh.subscribe("/usb_cam/image_raw", 10, imageCb);
     alignment_pub = nh.advertise<std_msgs::Int16>("/gobot_function/object_alignment", 10);
+
+    ros::ServiceServer getAlignmentSrv = nh.advertiseService("/gobot_function/get_object_alignment", getAlignmentCb);
 
 
     ros::spin();

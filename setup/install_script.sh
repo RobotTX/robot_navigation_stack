@@ -18,6 +18,11 @@ echo "[hector-nav-msgs] installing..."
 echo "y" | sudo apt install ros-kinetic-hector-nav-msgs
 echo "[hector-nav-msgs] installed!"
 sleep 2s
+#teb_local_planner package
+echo "[teb-local-planner] installing..."
+echo "y" | sudo apt install ros-kinetic-teb-local-planner
+echo "[teb-local-planner] installed!"
+sleep 2s
 #yocs_velocity_smoother package
 echo "[ecl] installing..."
 echo "y" | sudo apt install ros-kinetic-ecl

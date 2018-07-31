@@ -34,6 +34,8 @@ void startAlignObject();
 
 void stopDetectionFunc(std::string result, std::string status_text="STOP_TRACKING");
 
+bool roughAlignment();
+
 void mySigintHandler(int sig);
 
 #endif

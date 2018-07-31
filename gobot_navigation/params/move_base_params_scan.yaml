@@ -11,4 +11,4 @@ NavfnROS:
     allow_unknown: true
     # attempt to create a plan that is as close to the specified goal as possible 
     # but no further than default_tolerance away
-    default_tolerance: 0.4
+    default_tolerance: 0.3
