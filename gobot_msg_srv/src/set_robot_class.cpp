@@ -226,6 +226,12 @@ namespace robot_class {
         led_pub_.publish(ledCmd);
     }
 
+    void SetRobot::setMagnet(bool status){
+        gobot_msg_srv::SetBool magnet;
+        magnet.request.data = status;
+        ros::service::call("/gobot_base/set_magnet",magnet);
+    }
+
     std::string SetRobot::killList(){
         return "rosnode kill /move_base"; 
     }

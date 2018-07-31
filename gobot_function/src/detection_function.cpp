@@ -168,12 +168,10 @@ void alignmentCb(const std_msgs::Int16::ConstPtr& msg){
 bool findObjectCb(gobot_msg_srv::SetStringArray::Request &req, gobot_msg_srv::SetStringArray::Response &res){
     //power off magnet to detach object before starting new attachment
     if(object_attached_){
-        gobot_msg_srv::SetBool magnet;
-        magnet.request.data = false;
-        ros::service::call("/gobot_base/set_magnet",magnet);
+        MoveRobot.setMagnet(false);
         object_attached_ = false;
         ros::Duration(1.0).sleep();
-        MoveRobot.forward(15);
+        MoveRobot.forward(12);
         ros::Duration(1.5).sleep();
         MoveRobot.stop();
     }
@@ -206,7 +204,7 @@ bool startDetectionCb(std_srvs::Empty::Request &req, std_srvs::Empty::Response &
 
     //start camera capture
     ros::service::call("/usb_cam/start_capture",empty_srv);
-    ros::Duration(1.0).sleep();
+    ros::Duration(2.0).sleep();
 
     startAlignObject();
     
@@ -229,9 +227,7 @@ void startAlignObject(){
     left_turn_ = true;
     lastSignal = ros::Time::now();
     //power on magnet to get ready for attach object
-    gobot_msg_srv::SetBool magnet;
-    magnet.request.data = true;
-    ros::service::call("/gobot_base/set_magnet",magnet);
+    MoveRobot.setMagnet(true);
     //start subscribe relevant topics
     ros::NodeHandle nh;
     alignmentSub = nh.subscribe("/gobot_function/object_alignment",1,alignmentCb);
@@ -254,13 +250,11 @@ void stopDetectionFunc(std::string result, std::string status_text){
 
     if(status_text!="COMPLETE_TRACKING"){
         //power off magnet to detach object
-        gobot_msg_srv::SetBool magnet;
-        magnet.request.data = false;
-        ros::service::call("/gobot_base/set_magnet",magnet);
+        MoveRobot.setMagnet(false);
         //move robot forward a bit to give some back between robot and attached object
         if(object_attached_){
             ros::Duration(1.0).sleep();
-            MoveRobot.forward(15);
+            MoveRobot.forward(12);
             ros::Duration(1.5).sleep();
             MoveRobot.stop();
             object_attached_ = false;
@@ -311,9 +305,7 @@ bool roughAlignment(){
 void mySigintHandler(int sig)
 {   
     detection_on_ = false;
-    gobot_msg_srv::SetBool magnet;
-    magnet.request.data = false;
-    ros::service::call("/gobot_base/set_magnet",magnet);
+    MoveRobot.setMagnet(false);
     ros::shutdown();
 }
 

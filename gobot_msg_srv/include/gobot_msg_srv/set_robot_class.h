@@ -75,6 +75,8 @@ namespace robot_class {
 
             void setLed(int mode, const std::vector<std::string> &color);
             
+            void setMagnet(bool status);
+
             std::string killList();
 
             void reloadMap();
