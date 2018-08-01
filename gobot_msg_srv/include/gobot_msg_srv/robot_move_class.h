@@ -9,8 +9,6 @@
 #include <move_base_msgs/MoveBaseActionResult.h>
 #include <actionlib_msgs/GoalStatusArray.h>
 #include <actionlib/client/simple_action_client.h>
-#include <dynamic_reconfigure/Reconfigure.h>
-#include <dynamic_reconfigure/DoubleParameter.h>
 
 //c++ headers
 #include <vector>

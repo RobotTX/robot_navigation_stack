@@ -14,3 +14,5 @@ KERNEL=="ttyUSB*", ACTION=="add", ATTRS{idVendor}=="10c4", ATTRS{idProduct}=="ea
 KERNEL=="ttyUSB*", ACTION=="add", ATTRS{idVendor}=="1a86", ATTRS{idProduct}=="7523", MODE="0777", SYMLINK+="GYRO" 
 
 KERNEL=="video0", ACTION=="add", MODE="0777"
+
+KERNEL=="video1", ACTION=="add", MODE="0777"

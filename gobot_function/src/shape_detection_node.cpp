@@ -156,10 +156,10 @@ void shapeDetection(Mat image){
                 else if(!y_adjustment){
                     cv::circle(image, p_cen_line,10, CV_RGB(255,0,0),2);
                     cv::line(image,image_cen1,image_cen2,CV_RGB(0,0,255),2);
-                    if(abs(p_cen_line.x-image_cen1.x) < 30){
+                    if(abs(p_cen_line.x-image_cen1.x) < 40){
                         alignment.data = p_cen_line.x>image_cen1.x ? 1 : -1;
                     }
-                    else if(abs(p_cen_line.x-image_cen1.x) < 60){
+                    else if(abs(p_cen_line.x-image_cen1.x) < 80){
                         alignment.data = p_cen_line.x>image_cen1.x ? 2 : -2;
                     }
                     else{
@@ -190,7 +190,7 @@ void shapeDetection(Mat image){
         alignment_data_ = 999;
     }
     else{
-        std::cout<< "Can not find object"<<std::endl;
+        //std::cout<< "Can not find object"<<std::endl;
         alignment_data_ = 999;
     }
 

@@ -148,8 +148,7 @@ bool initializePoseSrvCallback(std_srvs::Empty::Request &req, std_srvs::Empty::R
                         break;
                 }
             }
-            //clear costmap after finish
-            ros::service::call("/move_base/clear_costmaps",empty_srv);
+
             if(found_pose){
                 findPoseResult(FOUND);
                 //Update and record last pose when found

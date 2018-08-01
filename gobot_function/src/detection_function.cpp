@@ -1,20 +1,34 @@
 #include "gobot_function/detection_function.h"
 
 /*
-                 __FF__
-                |      |
-                |  CAM |     
-                |__  __|
-                   BB
- + alignment data         - alignment data
- move to object frame    move to object frame 
-   x-axis negative          x-axis positive
-     ______                   ______
-    [      ]                 [      ]
-    [Object]                 [Object]
-    [______]                 [______]
+                       __FF__
+                      |      |
+                      |  CAM |     
+                      |__  __|
+                         BB
+  + alignment data               - alignment data
+ move to object frame          move to object frame 
+   x-axis negative                x-axis positive
+     ______                         ______
+    [      ]                       [      ]
+    [Object]                       [Object]
+    [______]                       [______]
 
 1pixel = 0.1cm = 0.001m in the distance of 0.75 meter
+
+
+Alignment:  VALUE   COMMENT                 MOTION
+            100     not detected            turn spot
+            99      end alignment           ---
+            0       aligned                 backward
+            1       center in right         turn spot right slowest
+            2       center in right         turn spot right slower
+            5       center in right         turn spot right
+            10      left area>right area    backward right wheel to turn right
+            -1      center in left          turn spot left slowest
+            -2      center in left          turn spot left slower
+            -5      center in left          turn spot left
+            -10     right area>left area    backward left wheel to turn left
 */
 
 ros::Subscriber magnetSub, alignmentSub, bumperSub, goalStatusSub;
@@ -25,7 +39,7 @@ std_srvs::Empty empty_srv;
 //positive values -> turn right
 //negative values -> turn left
 bool left_turn_ = true, detection_on_ = false, y_flag_ = false, object_attached_ = false, rough_alignment_ = true;
-int detection_base = 3, detection_search = 6, detection_backward = 3, rough_threshold = 200;
+int detection_search = 6, detection_base = 3, rough_threshold = 200;
 robot_class::Point object_pose_;
 
 
@@ -70,8 +84,8 @@ void bumpersCb(const gobot_msg_srv::BumperMsg::ConstPtr& bumpers){
         bool back = !(bumpers->bumper5 && bumpers->bumper6 && bumpers->bumper7 && bumpers->bumper8);
         if(back){
             stopDetectionFunc("Bumpers are triggered!");
-            MoveRobot.setMotorSpeed('F', 12, 'F', 12);
-            ros::Duration(1.0).sleep();
+            MoveRobot.setMotorSpeed('F', 15, 'F', 15);
+            ros::Duration(1.5).sleep();
             MoveRobot.setMotorSpeed('F', 0, 'F', 0);
         }
     }
@@ -109,16 +123,18 @@ void alignmentCb(const std_msgs::Int16::ConstPtr& msg){
 
                 //backward
                 case 0:
-                    MoveRobot.backward(detection_backward);
+                    MoveRobot.backward(detection_base);
                     lastSignal = ros::Time::now();
                     break;
                 
                 case 1:
-                    MoveRobot.turnRight(1);
+                    //MoveRobot.turnRight(1);
+                    MoveRobot.turnRight(2, 0);
                     break;
                 
                 case 2:
-                    MoveRobot.turnRight(2);
+                    //MoveRobot.turnRight(2);
+                    MoveRobot.turnRight(detection_base, 0);
                     break;
                 
                 case 5:
@@ -127,15 +143,18 @@ void alignmentCb(const std_msgs::Int16::ConstPtr& msg){
                 
                 case 10:
                     MoveRobot.turnRight(detection_search, 0);
+                    lastSignal = ros::Time::now();
                     break;
                 
                 //turn left
                 case -1:
-                    MoveRobot.turnLeft(1);
+                    //MoveRobot.turnLeft(1);
+                    MoveRobot.turnLeft(0, 2);
                     break;
 
                 case -2:
-                    MoveRobot.turnLeft(2);
+                    //MoveRobot.turnLeft(2);
+                    MoveRobot.turnLeft(0, detection_base);
                     break;
                 
                 case -5:
@@ -144,9 +163,11 @@ void alignmentCb(const std_msgs::Int16::ConstPtr& msg){
                 
                 case -10:
                     MoveRobot.turnLeft(0, detection_search);
+                    lastSignal = ros::Time::now();
                     break;
                 
                 case 99:
+                    ros::Duration(0.5).sleep();
                     MoveRobot.stop();
                     y_flag_ = true;
                     lastSignal = ros::Time::now();
@@ -171,8 +192,8 @@ bool findObjectCb(gobot_msg_srv::SetStringArray::Request &req, gobot_msg_srv::Se
         MoveRobot.setMagnet(false);
         object_attached_ = false;
         ros::Duration(1.0).sleep();
-        MoveRobot.forward(12);
-        ros::Duration(1.5).sleep();
+        MoveRobot.forward(15);
+        ros::Duration(2.0).sleep();
         MoveRobot.stop();
     }
 
@@ -254,8 +275,8 @@ void stopDetectionFunc(std::string result, std::string status_text){
         //move robot forward a bit to give some back between robot and attached object
         if(object_attached_){
             ros::Duration(1.0).sleep();
-            MoveRobot.forward(12);
-            ros::Duration(1.5).sleep();
+            MoveRobot.forward(15);
+            ros::Duration(2.0).sleep();
             MoveRobot.stop();
             object_attached_ = false;
         }
@@ -273,7 +294,7 @@ bool roughAlignment(){
     //start camera capture
     ros::service::call("/usb_cam/start_capture",empty_srv);
     //wait for a while to stabilize the camera
-    ros::Duration(4.0).sleep();
+    ros::Duration(3.0).sleep();
 
     gobot_msg_srv::GetInt alignment_data;
     ros::service::call("/gobot_function/get_object_alignment",alignment_data);
@@ -289,7 +310,7 @@ bool roughAlignment(){
         return true;
     }
     //if can see object with big error, move horizontally along object frame x-axis
-    else if(alignment_data.response.data > rough_threshold){
+    else if(abs(alignment_data.response.data) > rough_threshold){
         gobot_msg_srv::GetStringArray robot_pose;
         ros::service::call("/gobot_status/get_pose",robot_pose);
         starting_pose.yaw = std::stod(robot_pose.response.data[2]);
@@ -325,16 +346,17 @@ int main(int argc, char* argv[]){
 
     nh.getParam("detection_search", detection_search);
     nh.getParam("detection_base", detection_base);
-    nh.getParam("detection_backward", detection_backward);
     nh.getParam("rough_threshold", rough_threshold);
-
-    ros::service::call("/usb_cam/stop_capture",empty_srv);
 
     ros::ServiceServer findObjectSrv = nh.advertiseService("/gobot_function/find_object", findObjectCb);
     ros::ServiceServer stopDetectionSrv = nh.advertiseService("/gobot_function/stop_detection", stopDetectionCb);
 
     ros::ServiceServer startDetectionSrv = nh.advertiseService("/gobot_test/start_detection", startDetectionCb);
 
+    ros::Duration(1.0).sleep();
+    ros::service::call("/usb_cam/stop_capture",empty_srv);
+
+    std::cout<<"Search spd:"<<detection_search<<"; Backward spd:"<<detection_base<<"; Rough threshold:"<<rough_threshold<<std::endl;
     ros::spin();
     
     return 0;

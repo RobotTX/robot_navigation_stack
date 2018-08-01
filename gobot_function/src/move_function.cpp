@@ -10,8 +10,7 @@
 		*Negative - goal_x = object_pose.x - dis*std::cos(object_pose.yaw), goal_y = object_pose.y - dis*std::sin(object_pose.yaw);
 */
 
-//the stage of the robot within the path (if path going from first point to second point, stage is 0, 
-//if going from point before last point to last point stage is #points-1
+//stage counts from 0 to #points-1
 bool looping = false, dockAfterPath = false;
 bool waitingForAction = false, readAction=true, interruptDelay=false, stop_flag=false, delayOn=false, audioOn = false;
 std::vector<PathPoint> path_;

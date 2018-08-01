@@ -12,7 +12,7 @@
     <param name="WHEEL_SEP"             type="double"       value="0.35" />
     <param name="WHEEL_RADIUS"          type="double"       value="0.075" />
     <param name="WAIT_COLLISION"        type="double"       value="4.0" />
-    <param name="AVOID_SPD"             type="int"          value="12" />
+    <param name="AVOID_SPD"             type="int"          value="15" />
     <param name="FACTOR_A"              type="double"       value="15.6" />
     <param name="FACTOR_B"              type="double"       value="-20.0" />
     <param name="TICKS_PER_ROT"         type="double"       value="982" />

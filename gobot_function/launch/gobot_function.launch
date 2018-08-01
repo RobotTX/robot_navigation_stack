@@ -1,8 +1,12 @@
 <?xml version="1.0"?>
 <launch>
 	<include file="$(find gobot_software)/launch/robot_infos_params.launch"/>
-
+	<!--
+	<include file="$(find gobot_function)/launch/object_detection.launch"/>
+	-->
+	
 	<node pkg="gobot_function" type="move_function" 			name="move_function" 			output="screen" respawn="true"/>
 	<node pkg="gobot_function" type="docking_function" 			name="docking_function" 		output="screen" respawn="true" />
 	<node pkg="gobot_function" type="battery_monitor_function" 	name="battery_monitor_function" output="screen" respawn="true" />
+
 </launch>

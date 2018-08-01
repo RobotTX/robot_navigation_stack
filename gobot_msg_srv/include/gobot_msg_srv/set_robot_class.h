@@ -7,6 +7,9 @@
 #include <std_srvs/Empty.h>
 #include <geometry_msgs/PoseWithCovarianceStamped.h>
 #include <tf/transform_listener.h>
+#include <dynamic_reconfigure/Reconfigure.h>
+#include <dynamic_reconfigure/DoubleParameter.h>
+#include <dynamic_reconfigure/StrParameter.h>
 
 //c++ headers
 #include <string>
@@ -76,6 +79,8 @@ namespace robot_class {
             void setLed(int mode, const std::vector<std::string> &color);
             
             void setMagnet(bool status);
+
+            void setFootprint(std::string footprint);
 
             std::string killList();
 

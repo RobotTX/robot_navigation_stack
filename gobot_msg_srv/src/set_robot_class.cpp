@@ -210,6 +210,9 @@ namespace robot_class {
             pose.pose.pose.orientation.w = 1.0;
         }
         initial_pose_pub_.publish(pose);
+
+        //clear costmap after manually setting robot pose
+        ros::service::call("/move_base/clear_costmaps",empty_srv);
     }
 
     void SetRobot::setBatteryLed(){
@@ -230,6 +233,32 @@ namespace robot_class {
         gobot_msg_srv::SetBool magnet;
         magnet.request.data = status;
         ros::service::call("/gobot_base/set_magnet",magnet);
+    }
+
+    void SetRobot::setFootprint(std::string footprint){
+        dynamic_reconfigure::Reconfigure config;
+        dynamic_reconfigure::StrParameter param;
+        param.name = "footprint";
+        param.value = footprint;
+        config.request.config.strs.push_back(param);
+        ros::service::call("/move_base/global_costmap//set_parameters",config);
+        ros::service::call("/move_base/local_costmap//set_parameters",config);
+
+        ros::param::set("/amcl/footprint",footprint);
+        ros::param::set("/amcl/robot_footprint",footprint);
+        ros::param::set("/amcl/footprint_model/vertices",footprint);
+
+        ros::param::set("/move_base/TebLocalPlannerROS/footprint",footprint);
+        ros::param::set("/move_base/TebLocalPlannerROS/robot_footprint",footprint);
+        ros::param::set("/move_base/TebLocalPlannerROS/footprint_model/vertices",footprint);
+
+        ros::param::set("/move_base/global_costmap/footprint",footprint);
+        ros::param::set("/move_base/global_costmap/robot_footprint",footprint);
+        ros::param::set("/move_base/global_costmap/footprint_model/vertices",footprint);
+
+        ros::param::set("/move_base/local_costmap/footprint",footprint);
+        ros::param::set("/move_base/local_costmap/robot_footprint",footprint);
+        ros::param::set("/move_base/local_costmap/footprint_model/vertices",footprint);
     }
 
     std::string SetRobot::killList(){

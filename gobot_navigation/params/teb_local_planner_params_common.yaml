@@ -27,7 +27,7 @@ max_global_plan_lookahead_dist: 2.0
 global_plan_viapoint_sep: 0.5 # -0.1
 
 # GoalTolerance
-xy_goal_tolerance: 0.2
+xy_goal_tolerance: 0.1
 yaw_goal_tolerance: 0.1 #5.7 degrees
 free_goal_vel: false
 

@@ -236,7 +236,7 @@ void finishedDocking(bool move_forward){
             ROS_WARN("(AUTO_DOCKING::finishedDocking) Failed docking %d time(s)", attempt);
             if(move_forward){
                 MoveRobot.forward(15);
-                ros::Duration(1.5).sleep();
+                ros::Duration(2.0).sleep();
                 MoveRobot.stop();
             }
 
