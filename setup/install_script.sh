@@ -85,6 +85,10 @@ echo "[fping] installing..."
 echo "y" | sudo apt install fping
 echo "[fping] installed!"
 sleep 2s
+echo "[vim] installing..."
+echo "y" | sudo apt install vim
+echo "[vim] installed!"
+sleep 2s
 echo "[wmctrl] installing..."
 echo "y" | sudo apt install wmctrl
 echo "[wmctrl] installed!"

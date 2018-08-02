@@ -33,13 +33,14 @@ Alignment:  VALUE   COMMENT                 MOTION
 
 ros::Subscriber magnetSub, alignmentSub, bumperSub, goalStatusSub;
 robot_class::RobotMoveClass MoveRobot;
-ros::Time lastSignal;
+ros::Time lastSignal, runningTime;
+ros::Timer running_timer;
 std_srvs::Empty empty_srv;
 
 //positive values -> turn right
 //negative values -> turn left
 bool left_turn_ = true, detection_on_ = false, y_flag_ = false, object_attached_ = false, rough_alignment_ = true;
-int detection_search = 6, detection_base = 3, rough_threshold = 200;
+int detection_search = 6, detection_base = 4, rough_threshold = 150;
 robot_class::Point object_pose_;
 
 
@@ -247,8 +248,14 @@ void startAlignObject(){
     y_flag_ = false;
     left_turn_ = true;
     lastSignal = ros::Time::now();
+
+    //start counting time
+    runningTime = ros::Time::now();
+    running_timer.start();
+
     //power on magnet to get ready for attach object
     MoveRobot.setMagnet(true);
+
     //start subscribe relevant topics
     ros::NodeHandle nh;
     alignmentSub = nh.subscribe("/gobot_function/object_alignment",1,alignmentCb);
@@ -262,6 +269,7 @@ void stopDetectionFunc(std::string result, std::string status_text){
     //stop all subscribers and camera capture to release computation load
     detection_on_ = false;
 
+    running_timer.stop();
     alignmentSub.shutdown();
     magnetSub.shutdown();
     bumperSub.shutdown();
@@ -323,6 +331,16 @@ bool roughAlignment(){
     return false;
 }
 
+
+void timerCallback(const ros::TimerEvent&){
+    if(detection_on_){
+        //it is treated as failed tracking if task is still on-going after certain secs (usually it takes 30~40 secs to complete)
+        if(ros::Time::now()-runningTime>ros::Duration(77.0)){
+            stopDetectionFunc("Time out for tracking object!", "FAIL_TRACKING");
+        }
+    }
+}
+
 void mySigintHandler(int sig)
 {   
     detection_on_ = false;
@@ -352,6 +370,9 @@ int main(int argc, char* argv[]){
     ros::ServiceServer stopDetectionSrv = nh.advertiseService("/gobot_function/stop_detection", stopDetectionCb);
 
     ros::ServiceServer startDetectionSrv = nh.advertiseService("/gobot_test/start_detection", startDetectionCb);
+
+    running_timer = nh.createTimer(ros::Duration(10), timerCallback);
+    running_timer.stop();
 
     ros::Duration(1.0).sleep();
     ros::service::call("/usb_cam/stop_capture",empty_srv);

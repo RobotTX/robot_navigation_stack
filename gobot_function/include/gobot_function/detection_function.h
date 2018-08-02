@@ -36,6 +36,8 @@ void stopDetectionFunc(std::string result, std::string status_text="STOP_TRACKIN
 
 bool roughAlignment();
 
+void timerCallback(const ros::TimerEvent&);
+    
 void mySigintHandler(int sig);
 
 #endif

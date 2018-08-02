@@ -2,6 +2,12 @@
 Changelog for Developed Mobile Robot - MOBOT
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+1.2.3 (2018-08-01)
+-------------------
+* add rough alignment feature for object tracking
+* add drawings for sensor layout and equation for movement along object frame axis in sensor, detection and move nodes
+
+
 1.2.2 (2018-07-27)
 -------------------
 * complete object tracking feature
