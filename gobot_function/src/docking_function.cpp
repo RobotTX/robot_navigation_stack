@@ -1,7 +1,7 @@
 #include "gobot_function/docking_function.h"
 
 int attempt = 0;
-bool docking_on_ = false, collision = false, lostIrSignal = false, leftFlag = false, charging = false, move_from_collision = true;
+bool docking_on_ = false, collision = false, leftFlag = false, charging = false, move_from_collision = true;
 tfScalar x, y, oriX, oriY, oriZ, oriW;
 double homeX, homeY, homeYaw;
 
@@ -38,8 +38,8 @@ void goalResultCallback(const move_base_msgs::MoveBaseActionResult::ConstPtr& ms
 
 void newBatteryInfo(const gobot_msg_srv::BatteryMsg::ConstPtr& batteryInfo){
     /// if we are charging
-    if(docking_on_ && !charging && batteryInfo->ChargingFlag){
-        if(!collision){
+    if(docking_on_ ){
+        if(!charging && batteryInfo->ChargingFlag && !collision){
             charging = true;
             irSub.shutdown();
             MoveRobot.stop();
@@ -95,9 +95,10 @@ void newBumpersInfo(const gobot_msg_srv::BumperMsg::ConstPtr& bumpers){
 void newIrSignal(const gobot_msg_srv::IrMsg::ConstPtr& irSignal){
     /// if we are charging
     int base_spd = 8;
+    
     if(docking_on_ && !collision){
         if (irSignal->rearSignal != 0){
-            lostIrSignal = false;
+            lastIrSignalTime = ros::Time::now();
             /// rear ir received 1 and 2 signal, so robot goes backward
             if (irSignal->rearSignal == 3){
                 MoveRobot.backward(base_spd);
@@ -133,23 +134,17 @@ void newIrSignal(const gobot_msg_srv::IrMsg::ConstPtr& irSignal){
             else if (irSignal->rightSignal == 1)
                 MoveRobot.turnLeft(base_spd/2, base_spd);
         }
+        else{
+            if(leftFlag)
+                MoveRobot.turnRight(base_spd);
+            else
+                MoveRobot.turnLeft(base_spd);
+        }
 
-        if (irSignal->rearSignal == 0){
-            if(!lostIrSignal){
-                //ROS_WARN("(AUTO_DOCKING::newIrSignal) just lost the ir signal");
-                lostIrSignal = true;
-                lastIrSignalTime = ros::Time::now();
-                //make the robot turn on itself
-                if(leftFlag)
-                    MoveRobot.turnRight(base_spd);
-                else
-                    MoveRobot.turnLeft(base_spd);
-            } 
-            /// if we lost the rear signal for more than 20 seconds, we failed docking, else, the robot should still be turning on itself
-            else if((ros::Time::now() - lastIrSignalTime) > ros::Duration(20.0)){
-                MoveRobot.stop();
-                finishedDocking(false);
-            } 
+        /// if we lost the rear signal for more than 20 seconds, we failed docking, else, the robot should still be turning on itself
+        if((ros::Time::now() - lastIrSignalTime) > ros::Duration(20.0)){
+            MoveRobot.stop();
+            finishedDocking(false);
         }
     }
 }
@@ -184,8 +179,8 @@ bool startDocking(void){
     if(x != 0 || y != 0){
         /// We want to go 0.5 metre in front of the charging station
         homeYaw = tf::getYaw(tf::Quaternion(oriX , oriY , oriZ, oriW));
-        homeX = x + 0.4 * std::cos(homeYaw);
-        homeY = y + 0.4 * std::sin(homeYaw);
+        homeX = x + 0.5 * std::cos(homeYaw);
+        homeY = y + 0.5 * std::sin(homeYaw);
         //~ROS_INFO("(AUTO_DOCKING::startDocking) landing point : [%f, %f, %f]", homeX, homeY, homeYaw);
 
         startDockingParams();
@@ -204,7 +199,6 @@ void findChargingStation(){
     ros::NodeHandle nh;
     goalStatusSub.shutdown();
 
-    lostIrSignal = false;
     leftFlag = false;
     collision = false;
     charging = false;
@@ -212,7 +206,6 @@ void findChargingStation(){
     lastIrSignalTime = ros::Time::now();
     /// To check if we are charging
     batterySub = nh.subscribe("/gobot_base/battery_topic", 1, newBatteryInfo);
-
     /// To check for collision
     bumperSub = nh.subscribe("/gobot_base/bumpers_topic", 1, newBumpersInfo);
     /// Pid control with the ir signal
@@ -277,10 +270,10 @@ void resetDockingParams(){
 }
 
 void startDockingParams(){
-    ros::NodeHandle nh;
     MoveRobot.setDock(3);
     MoveRobot.setStatus(15,"DOCKING");
     docking_on_ = true;
+    ros::NodeHandle nh;
     goalStatusSub = nh.subscribe("/move_base/result",1,goalResultCallback);
 }
 
