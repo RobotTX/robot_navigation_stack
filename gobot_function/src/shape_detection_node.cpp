@@ -11,6 +11,7 @@ using namespace cv;
 const int RGB_THRESHOLD = 30;
 int ALIGNMENT_THRESHOLD = 15; 
 double AREA_THRESHOLD = 7200, AREA_DIFF_THRESHOLD = 10, STOP_Y_THRESHOLD = 5500;
+bool SHOW_IMAGE = true;
 bool y_adjustment = false, right_edge = false;
 int alignment_data_ = 0; 
 
@@ -62,8 +63,11 @@ void shapeDetection(Mat image){
     vector<Point> p_cen;
     vector<double> p_area;
     ShapeDetector sd;
-    std_msgs::Int16 alignment;
-    alignment.data = 100;
+    gobot_msg_srv::AlignmentMsg alignment;
+    alignment.status = 100;
+    alignment.left_area = 0.0;
+    alignment.right_area = 0.0;
+    alignment.area_difference = 0.0;
 
     for (size_t i = 0; i < contours.size(); i++)
     {
@@ -113,16 +117,18 @@ void shapeDetection(Mat image){
         cv::Point p_cen_line((p_cen[0].x + p_cen[1].x)/2, (p_cen[0].y + p_cen[1].y)/2);
 
         alignment_data_ = p_cen_line.x-image_cen1.x;
-
+        alignment.left_area = left_area;
+        alignment.right_area = right_area;
+        alignment.area_difference = area_diff;
         //check if robot is close to the target
         if(left_area>AREA_THRESHOLD || right_area>AREA_THRESHOLD){
-            alignment.data = 0;
+            alignment.status = 0;
             std::cout<< "Near to target"<<std::endl;
         }
         //check if robot align with center of image
         else {
             if(y_adjustment){
-                alignment.data = right_edge ? 10 : -10;
+                alignment.status = right_edge ? 10 : -10;
                 std::cout<< "Y-axis alignment"<<std::endl;
                 cv::circle(image, p_cen_line,10, CV_RGB(255,0,0),2);
                 cv::line(image,image_cen1,image_cen2,CV_RGB(0,0,255),2);
@@ -136,12 +142,12 @@ void shapeDetection(Mat image){
                     if(fabs(area_diff)>AREA_DIFF_THRESHOLD && left_area<STOP_Y_THRESHOLD && right_area<STOP_Y_THRESHOLD){
                         //if left area > right area
                         if(area_diff > 0){
-                            alignment.data = 10;
+                            alignment.status = 10;
                             right_edge = true;
                         }
                         //if right area > left area
                         else{
-                            alignment.data = -10;
+                            alignment.status = -10;
                             right_edge = false;
                         }
                         y_adjustment = true;
@@ -149,21 +155,22 @@ void shapeDetection(Mat image){
                     }
                     //check if robot align with y-axis
                     else{
-                        alignment.data = 0;
+                        alignment.status = 0;
                         std::cout<< "Perfect alignment"<<std::endl;
                     }
                 }
                 else if(!y_adjustment){
                     cv::circle(image, p_cen_line,10, CV_RGB(255,0,0),2);
                     cv::line(image,image_cen1,image_cen2,CV_RGB(0,0,255),2);
+
                     if(abs(p_cen_line.x-image_cen1.x) < 40){
-                        alignment.data = p_cen_line.x>image_cen1.x ? 1 : -1;
+                        alignment.status = p_cen_line.x>image_cen1.x ? 1 : -1;
                     }
                     else if(abs(p_cen_line.x-image_cen1.x) < 80){
-                        alignment.data = p_cen_line.x>image_cen1.x ? 2 : -2;
+                        alignment.status = p_cen_line.x>image_cen1.x ? 2 : -2;
                     }
                     else{
-                        alignment.data = p_cen_line.x>image_cen1.x ? 5 : -5;
+                        alignment.status = p_cen_line.x>image_cen1.x ? 5 : -5;
                     }
                     std::cout<< "Miss alignment"<<std::endl;
                 }
@@ -180,11 +187,11 @@ void shapeDetection(Mat image){
     else if(y_adjustment){
         if(ros::Time::now()-lostSignal>ros::Duration(1.0)){
             y_adjustment = false;
-            alignment.data = 99;
+            alignment.status = 99;
             std::cout<< "End Y-axis alignment"<<std::endl;
         }
         else{
-            alignment.data = right_edge ? 10 : -10;
+            alignment.status = right_edge ? 10 : -10;
             std::cout<< "Y-axis alignment"<<std::endl;
         }
         alignment_data_ = 999;
@@ -194,9 +201,12 @@ void shapeDetection(Mat image){
         alignment_data_ = 999;
     }
 
+    alignment.distance = alignment_data_;
     alignment_pub.publish(alignment);
-    imshow("Result", image);
-    waitKey(3);
+    if(SHOW_IMAGE){
+        imshow("Result", image);
+        waitKey(3);
+    }
 }
 
 void imageCb(const sensor_msgs::ImageConstPtr &image){
@@ -222,9 +232,10 @@ int main(int argc, char* argv[])
     nh.getParam("AREA_THRESHOLD", AREA_THRESHOLD);
     nh.getParam("AREA_DIFF_THRESHOLD", AREA_DIFF_THRESHOLD);
     nh.getParam("STOP_Y_THRESHOLD", STOP_Y_THRESHOLD);
+    nh.getParam("SHOW_IMAGE", SHOW_IMAGE);
 
     ros::Subscriber camera_sub = nh.subscribe("/usb_cam/image_raw", 10, imageCb);
-    alignment_pub = nh.advertise<std_msgs::Int16>("/gobot_function/object_alignment", 10);
+    alignment_pub = nh.advertise<gobot_msg_srv::AlignmentMsg>("/gobot_function/object_alignment", 10);
 
     ros::ServiceServer getAlignmentSrv = nh.advertiseService("/gobot_function/get_object_alignment", getAlignmentCb);
 

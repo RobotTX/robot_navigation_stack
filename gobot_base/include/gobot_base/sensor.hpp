@@ -366,10 +366,14 @@ class SensorClass {
                     reset_button.data = resetwifi_button;
                     sensors_msg.reset_button = reset_button;
 
-
-                    int8_t magnet_status = buff.at(48);
                     std_msgs::Int8 magnet_data;
-                    magnet_data.data = USE_MAGNET ? magnet_status : -1;
+                    if(USE_MAGNET){
+                        int8_t magnet_status = buff.at(48);
+                        magnet_data.data = magnet_status;
+                    }
+                    else{
+                        magnet_data.data = -1;
+                    }
                     sensors_msg.magnet = magnet_data;
 
                     /// Gyro+Accelerametor = D46-D57 / B48-B59
@@ -561,9 +565,8 @@ class SensorClass {
         void statusCallback(const std_msgs::Int8::ConstPtr& msg){
             ros::NodeHandle n;
             robot_status_ = msg->data;
-            //enable led change when moving away from CS
-            if(!led_flag_ && (robot_status_==5 || robot_status_==25)){
-                setLed(1,{"green","white"});
+            //enable led change when moving away from CS for playing path/point, tracking or scanning
+            if(!led_flag_ && (robot_status_==5 || robot_status_==16 ||robot_status_==25)){
                 led_flag_ = true;
             }
         }

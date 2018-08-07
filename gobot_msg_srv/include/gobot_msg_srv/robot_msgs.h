@@ -3,6 +3,7 @@
 
 //ros messages header
 #include <gobot_msg_srv/AllSensorsMsg.h>
+#include <gobot_msg_srv/AlignmentMsg.h>
 #include <gobot_msg_srv/BatteryMsg.h>
 #include <gobot_msg_srv/BumperMsg.h>
 #include <gobot_msg_srv/CliffMsg.h>

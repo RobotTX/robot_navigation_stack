@@ -16,11 +16,11 @@
 //****************************** CALLBACK ******************************
 void goalResultCallback(const move_base_msgs::MoveBaseActionResult::ConstPtr& msg);
 
-void magnetCb(const std_msgs::Int8::ConstPtr& msg);
+void magnetCb(const std_msgs::Int8::ConstPtr& magnet);
 
 void bumpersCb(const gobot_msg_srv::BumperMsg::ConstPtr& bumpers);
 
-void alignmentCb(const std_msgs::Int16::ConstPtr& msg);
+void alignmentCb(const gobot_msg_srv::AlignmentMsg::ConstPtr& msg);
 
 //****************************** SERVICE ******************************
 bool findObjectCb(gobot_msg_srv::SetStringArray::Request &req, gobot_msg_srv::SetStringArray::Response &res);

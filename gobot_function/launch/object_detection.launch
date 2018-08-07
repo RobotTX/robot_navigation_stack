@@ -17,12 +17,13 @@
     <param name="AREA_THRESHOLD"        type="double"   value="6500.0"/>
     <param name="AREA_DIFF_THRESHOLD"   type="double"   value="8.0"/>
     <param name="STOP_Y_THRESHOLD"      type="double"   value="3300.0"/>
-    <node pkg="gobot_function" type="shape_detection_node" name="shape_detection_node"  output="screen" />
+    <param name="SHOW_IMAGE"      type="bool"   value="false"/>
+    <node pkg="gobot_function" type="shape_detection_node" name="shape_detection_node"  output="screen" respawn="true"/>
 
-    <param name="detection_search"    type="int"          value="6"/>
+    <param name="detection_search"    type="int"          value="10"/>
     <param name="detection_base"      type="int"          value="4"/>
     <param name="rough_threshold"     type="int"          value="110"/>
-    <node pkg="gobot_function" type="detection_function" name="detection_function"  output="screen" />
+    <node pkg="gobot_function" type="detection_function" name="detection_function"  output="screen" respawn="true"/>
 
 
 </launch>

@@ -69,9 +69,9 @@ void goalResultCallback(const move_base_msgs::MoveBaseActionResult::ConstPtr& ms
     }
 }
 
-void magnetCb(const std_msgs::Int8::ConstPtr& msg){
+void magnetCb(const std_msgs::Int8::ConstPtr& magnet){
     if(detection_on_){
-        if(msg->data == 1){
+        if(magnet->data == 1){
             ROS_INFO("(OBJECT_DETECTION) Successfully fing object!");
             //set robot pose to be the object pose
             MoveRobot.setInitialpose(object_pose_.x,object_pose_.y,object_pose_.yaw);
@@ -93,14 +93,14 @@ void bumpersCb(const gobot_msg_srv::BumperMsg::ConstPtr& bumpers){
 }
 
 
-void alignmentCb(const std_msgs::Int16::ConstPtr& msg){
+void alignmentCb(const gobot_msg_srv::AlignmentMsg::ConstPtr& msg){
     if(detection_on_){
         if (ros::Time::now()-lastSignal>ros::Duration(30.0)){
             stopDetectionFunc("Can not find object!", "FAIL_TRACKING");
             return;
         }
 
-        if(y_flag_ && abs(msg->data)<=2)
+        if(y_flag_ && abs(msg->status)<=2)
             y_flag_ = false;
             
         if(y_flag_){
@@ -110,7 +110,7 @@ void alignmentCb(const std_msgs::Int16::ConstPtr& msg){
                 MoveRobot.turnLeft(0, detection_search);
         }
         else{  
-            switch(msg->data){
+            switch(msg->status){
                 case 100:
                     if(ros::Time::now()-lastSignal>ros::Duration(1.0)){
                         if(left_turn_){
@@ -178,8 +178,8 @@ void alignmentCb(const std_msgs::Int16::ConstPtr& msg){
                     break;
             }
 
-            if(msg->data != 99 && msg->data != 100){
-                left_turn_ = msg->data>0 ? false : true;
+            if(msg->status != 99 && msg->status != 100){
+                left_turn_ = msg->status>0 ? false : true;
             }
         }
     }
@@ -376,6 +376,12 @@ int main(int argc, char* argv[]){
 
     ros::Duration(1.0).sleep();
     ros::service::call("/usb_cam/stop_capture",empty_srv);
+
+    //enable magnet function for object tracking
+    gobot_msg_srv::SetBool set_magnet;
+    set_magnet.request.data = true;
+    ros::service::call("/gobot_base/use_magnet",set_magnet);
+    
 
     std::cout<<"Search spd:"<<detection_search<<"; Backward spd:"<<detection_base<<"; Rough threshold:"<<rough_threshold<<std::endl;
     ros::spin();

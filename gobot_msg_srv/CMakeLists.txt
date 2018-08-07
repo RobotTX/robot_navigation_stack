@@ -61,6 +61,7 @@ find_package(Boost REQUIRED COMPONENTS system)
 add_message_files(
     FILES
     AllSensorsMsg.msg
+    AlignmentMsg.msg
     BatteryMsg.msg
     BumperMsg.msg
     CliffMsg.msg
