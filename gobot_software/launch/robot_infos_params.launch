@@ -29,6 +29,9 @@
     <param name="speed_file"        type="string"     value="$(find gobot_data)/data/speed.txt" />
     <param name="audio_folder"      type="string"     value="$(find gobot_data)/data/audio/" />
     <param name="audio_device"      type="string"     value="alsa_output.usb-Generic_USB2.0_Device_20130100ph0-00.analog-stereo" />
+    <param name="ori_footprint"       type="string"     value="[[0.250,0],[0.245,-0.165],[0.215,-0.215],[0.165,-0.240],[0,-0.245],[-0.165,-0.240],[-0.215,-0.215],[-0.245,-0.165],[-0.250,0],[-0.245,0.165],[-0.215,0.215],[-0.165,0.240],[0,0.245],[0.165,0.240],[0.215,0.215],[0.245,0.165]]" />
+    #this footprint is based on the 740*480mm trolley
+    <param name="new_footprint"       type="string"     value="[[0.250,0],[0.245,-0.165],[0.215,-0.215],[0.165,-0.240],[0,-0.245],[-0.99,-0.245],[-0.99,0],[-0.99,0.245],[0,0.245],[0.165,0.240],[0.215,0.215],[0.245,0.165]]" />
     <!--WIFI RELATED -->
     <param name="wifi_file"         type="string"     value="$(find gobot_data)/data/wifi.txt" />
     <param name="ping_file"         type="string"     value="$(find gobot_data)/IP/ping.sh" />

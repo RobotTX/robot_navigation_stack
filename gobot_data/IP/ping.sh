@@ -57,7 +57,7 @@ else
         ### delete servers that we don't want to connect ###
         #sed -i "/$var.14/d" $isAlive
         ### only one server available for simulation purpose ###
-        #echo "$var.19" > $isAlive
+        #echo "$var.84" > $isAlive
     else
         #if can not find assigned wifi in the list, build robot hotspot for user to connect
         echo "(PING WIFI) Unable to find assigned wifi:#$wifiname# in the scan list"

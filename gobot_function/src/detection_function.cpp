@@ -41,6 +41,7 @@ std_srvs::Empty empty_srv;
 //negative values -> turn left
 bool left_turn_ = true, detection_on_ = false, y_flag_ = false, object_attached_ = false, rough_alignment_ = true;
 int detection_search = 6, detection_base = 4, rough_threshold = 150;
+std::string new_footprint, ori_footprint;
 robot_class::Point object_pose_;
 
 
@@ -190,12 +191,16 @@ void alignmentCb(const gobot_msg_srv::AlignmentMsg::ConstPtr& msg){
 bool findObjectCb(gobot_msg_srv::SetStringArray::Request &req, gobot_msg_srv::SetStringArray::Response &res){
     //power off magnet to detach object before starting new attachment
     if(object_attached_){
+        //power off magnet to detach object
         MoveRobot.setMagnet(false);
         object_attached_ = false;
+        //move robot forward a bit to give some back between robot and attached object
         ros::Duration(1.0).sleep();
         MoveRobot.forward(15);
         ros::Duration(2.0).sleep();
         MoveRobot.stop();
+        //revert robot footprint
+        MoveRobot.setFootprint(ori_footprint);
     }
 
     object_pose_.yaw = std::stod(req.data[2]);
@@ -280,17 +285,21 @@ void stopDetectionFunc(std::string result, std::string status_text){
     if(status_text!="COMPLETE_TRACKING"){
         //power off magnet to detach object
         MoveRobot.setMagnet(false);
-        //move robot forward a bit to give some back between robot and attached object
         if(object_attached_){
+            //move robot forward a bit to give some back between robot and attached object
             ros::Duration(1.0).sleep();
             MoveRobot.forward(15);
             ros::Duration(2.0).sleep();
             MoveRobot.stop();
             object_attached_ = false;
+            //revert robot footprint
+            MoveRobot.setFootprint(ori_footprint);
         }
     }
     else{
         object_attached_ = true;
+        //set new footprint including trolley for robot
+        MoveRobot.setFootprint(new_footprint);
         ros::service::call("/gobot_status/update_status",empty_srv);
     }
     MoveRobot.setStatus(12, status_text);
@@ -365,6 +374,8 @@ int main(int argc, char* argv[]){
     nh.getParam("detection_search", detection_search);
     nh.getParam("detection_base", detection_base);
     nh.getParam("rough_threshold", rough_threshold);
+    nh.getParam("new_footprint", new_footprint);
+    nh.getParam("ori_footprint", ori_footprint);
 
     ros::ServiceServer findObjectSrv = nh.advertiseService("/gobot_function/find_object", findObjectCb);
     ros::ServiceServer stopDetectionSrv = nh.advertiseService("/gobot_function/stop_detection", stopDetectionCb);
@@ -382,7 +393,6 @@ int main(int argc, char* argv[]){
     set_magnet.request.data = true;
     ros::service::call("/gobot_base/use_magnet",set_magnet);
     
-
     std::cout<<"Search spd:"<<detection_search<<"; Backward spd:"<<detection_base<<"; Rough threshold:"<<rough_threshold<<std::endl;
     ros::spin();
     
