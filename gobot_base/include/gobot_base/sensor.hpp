@@ -581,7 +581,7 @@ class SensorClass {
                 }
                 //Show battery status if no stage for certain period, show battery status
                 else if ((ros::Time::now()-last_led_time_)>ros::Duration(300.0)){
-                    if(robot_status_!=5 && robot_status_!=15 && robot_status_!=25)
+                    if(robot_status_!=5 && robot_status_!=15 && robot_status_!=16 && robot_status_!=25)
                         displayBatteryLed();
                 }   
             }

@@ -6,18 +6,25 @@ using boost::asio::ip::tcp;
 
 const int max_length = 1024;
 
-ros::Publisher teleop_pub;
-ros::Publisher stop_pub;
+ros::Publisher teleop_pub, stop_pub;
 
 std::mutex socketsMutex;
 std::map<std::string, boost::shared_ptr<tcp::socket>> sockets;
+double speed = 0.25, turnSpeed = 0.5;
+
+void send_speed(int linear, int angular){
+    /// Send the teleoperation command
+    geometry_msgs::Twist twist;
+    twist.linear.x = linear * speed;
+    twist.angular.z = angular * turnSpeed;
+
+    teleop_pub.publish(twist);
+}
 
 void tcp_teleop_control(const int8_t val){
-    ROS_INFO("(TELE_CONTROL) got data %d", val);
-    double speed = 0.25;
-    double turnSpeed = 0.5;
+    ROS_INFO("(TELE_CONTROL) Received data %d", val);
     // x == 1 -> forward       x == -1 -> backward
-    // th == 1 -> left         th == -1 -> right
+    // th == 1 -> left             th == -1 -> right
     int x(0), th(0);
     /// the value we got determine which way we go
     switch(val){
@@ -59,29 +66,18 @@ void tcp_teleop_control(const int8_t val){
         break;
     }
 
-    /// Before sending the teleoperation command, we stop all potential goals
-    actionlib_msgs::GoalID cancel;
-    cancel.stamp = ros::Time::now();
-    cancel.id = "map";
-
-    stop_pub.publish(cancel);
-    
-    /// Send the teleoperation command
-    geometry_msgs::Twist twist;
-    twist.linear.x = x * speed;
-    twist.linear.y = 0;
-    twist.linear.z = 0;
-    twist.angular.x = 0;
-    twist.angular.y = 0;
-    twist.angular.z = th * turnSpeed;
-
-    teleop_pub.publish(twist);
+    send_speed(x, th);
 }
 
 void session(boost::shared_ptr<tcp::socket> sock){
     std::string ip = sock->remote_endpoint().address().to_string();
     //~ROS_INFO("(TELE_CONTROL) session launched %s", ip.c_str());
-
+    /// Before sending the teleoperation command, we stop all potential goals
+    actionlib_msgs::GoalID cancel;
+    cancel.stamp = ros::Time::now();
+    cancel.id = "map";
+    stop_pub.publish(cancel);
+    
     while(ros::ok() && sockets.count(ip)){
         char data[max_length];
 
@@ -89,9 +85,11 @@ void session(boost::shared_ptr<tcp::socket> sock){
         size_t length = sock->read_some(boost::asio::buffer(data), error);
         if ((error == boost::asio::error::eof) || (error == boost::asio::error::connection_reset)){
             //~ROS_INFO("(TELE_CONTROL) Connection closed");
+            send_speed(0, 0);
             return;
         } 
         else if (error){
+            send_speed(0, 0);
             throw boost::system::system_error(error); // Some other error.
             return;
         }

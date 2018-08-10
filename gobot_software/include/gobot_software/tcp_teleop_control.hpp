@@ -14,6 +14,8 @@
 
 using boost::asio::ip::tcp;
 
+void send_speed(int linear, int angular);
+
 void tcp_teleop_control(const int8_t val);
 
 void session(boost::shared_ptr<tcp::socket> sock);

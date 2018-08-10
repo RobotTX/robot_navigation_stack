@@ -1,6 +1,10 @@
 #!/bin/bash
 echo "#################################"
 echo "START ROS PACKAGES INSTALLMENT..........."
+echo "[update]..."
+sudo apt update
+echo "[update] completed!"
+sleep 2s
 echo "#################################"
 echo "[navigation] installing..."
 echo "y" | sudo apt install ros-kinetic-navigation

@@ -17,7 +17,7 @@
      n            new charging station
      o            auto docking
      p            stop auto docking
-     q            send point
+     q            send point  //not in use
      r            set volume
      s            send map once
      t            start new scan
