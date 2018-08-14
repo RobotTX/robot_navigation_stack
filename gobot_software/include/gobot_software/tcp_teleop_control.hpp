@@ -25,6 +25,7 @@ void session(boost::shared_ptr<tcp::socket> sock);
 void server(void);
 
 /*********************************** DISCONNECTION FUNCTIONS ***********************************/
+void timerCallback(const ros::TimerEvent&);
 
 void serverDisconnected(const std_msgs::String::ConstPtr& msg);
 

@@ -5,14 +5,24 @@
 using boost::asio::ip::tcp;
 
 const int max_length = 1024;
-
-ros::Publisher teleop_pub, stop_pub;
-
-std::mutex socketsMutex;
-std::map<std::string, boost::shared_ptr<tcp::socket>> sockets;
 double speed = 0.25, turnSpeed = 0.5;
+bool teleop_on = false;
+std::map<std::string, boost::shared_ptr<tcp::socket>> sockets;
+std::mutex socketsMutex;
+ros::Publisher teleop_pub, stop_pub;
+ros::Time last_signal_time;
 
 void send_speed(int linear, int angular){
+    //if command is stop robot, set teleop to be false
+    if(linear == 0 && angular == 0){
+        teleop_on = false;
+    }
+    else{
+        teleop_on = true;
+    }
+    //update the last signal time
+    last_signal_time = ros::Time::now();
+
     /// Send the teleoperation command
     geometry_msgs::Twist twist;
     twist.linear.x = linear * speed;
@@ -25,20 +35,12 @@ void tcp_teleop_control(const int8_t val){
     ROS_INFO("(TELE_CONTROL) Received data %d", val);
     // x == 1 -> forward       x == -1 -> backward
     // th == 1 -> left             th == -1 -> right
-    int x(0), th(0);
+    int x = 0, th = 0;
     /// the value we got determine which way we go
     switch(val){
-        case 0: /// Forward + Left
-            x = 1;
-            th = 1;
-        break;
         case 1: /// Forward
             x = 1;
             th = 0;
-        break;
-        case 2: /// Forward + right
-            x = 1;
-            th = -1;
         break;
         case 3: /// Left
             x = 0;
@@ -48,17 +50,9 @@ void tcp_teleop_control(const int8_t val){
             x = 0;
             th = -1;
         break;
-        case 6: /// Backward + left
-            x = -1;
-            th = -1;
-        break;
         case 7: /// Backward
             x = -1;
             th = 0;
-        break;
-        case 8: /// Backward + right
-            x = -1;
-            th = 1;
         break;
         default: /// Stop
             x = 0;
@@ -85,11 +79,13 @@ void session(boost::shared_ptr<tcp::socket> sock){
         size_t length = sock->read_some(boost::asio::buffer(data), error);
         if ((error == boost::asio::error::eof) || (error == boost::asio::error::connection_reset)){
             //~ROS_INFO("(TELE_CONTROL) Connection closed");
-            send_speed(0, 0);
+            if(teleop_on)
+                send_speed(0, 0);
             return;
         } 
         else if (error){
-            send_speed(0, 0);
+            if(teleop_on)
+                send_speed(0, 0);
             throw boost::system::system_error(error); // Some other error.
             return;
         }
@@ -130,6 +126,16 @@ void server(void){
 }
 
 /*********************************** DISCONNECTION FUNCTIONS ***********************************/
+//timer to check whether the signal is received continuously
+void timerCallback(const ros::TimerEvent&){
+    //if have servers connected and teleop is on
+    if(sockets.size()>0 && teleop_on){
+        //if not received motion message for more than 1.5 seconds, stop the robot
+        if(ros::Time::now()-last_signal_time > ros::Duration(1.5)){
+            send_speed(0, 0);
+        }
+    }
+}
 
 void serverDisconnected(const std_msgs::String::ConstPtr& msg){
     /// Close and remove the socket
@@ -163,6 +169,8 @@ int main(int argc, char **argv){
     /// Advertise that we are going to publish to /teleop_cmd_vel & /move_base/cancel
     teleop_pub = n.advertise<geometry_msgs::Twist>("/teleop_cmd_vel", 1);
     stop_pub = n.advertise<actionlib_msgs::GoalID>("/move_base/cancel", 1);
+
+    ros::Timer signal_timer = n.createTimer(ros::Duration(1.0), timerCallback);
 
     std::thread t(server);
 

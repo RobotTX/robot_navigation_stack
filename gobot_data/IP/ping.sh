@@ -13,13 +13,15 @@ do
     if [ $n -eq 1 ]
     then
         wifiname="$line"
-    else
+        n=2
+    elif [ $n -eq 2 ]
+    then
         wifipassword="$line"
+        n=3
     fi
-    n=2
 done  < $wififile
 echo -n "" > $isAlive #clear recorded servers' IP
-#echo "(Ping_Servers)" name:$wifiname password:$wifipassword
+echo "(Ping_Servers)" name:$wifiname password:$wifipassword
 if [ -z "$wifiname" ]  #if no assigned wifi, build hotspot
 then
     connection="hotspot"

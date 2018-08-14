@@ -151,7 +151,7 @@ protocol: SFTP
 #Picture editor GIMP
 sudo apt install gimp
 
-#QT 5.8
+#QT 5.10
 sudo ./qt.run
 
 #roboware studio
