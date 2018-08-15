@@ -119,8 +119,8 @@ namespace robot_class {
 
     void RobotMoveClass::setManualSpeedLimit(double linear_v, double angular_v){
         gobot_msg_srv::SetFloatArray joy_speed;
-        joy_speed.request.data.push_back(0.4);
-        joy_speed.request.data.push_back(0.8);
+        joy_speed.request.data.push_back(linear_v);
+        joy_speed.request.data.push_back(angular_v);
         ros::service::call("/gobot_base/set_joy_speed",joy_speed);
     }
 };

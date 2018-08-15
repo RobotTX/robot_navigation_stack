@@ -148,7 +148,7 @@ void initData(){
 	MoveRobot.setAutoSpeedLimit(0.2, 0.5);
 
 	//Set lower manual speed for scan process
-	MoveRobot.setManualSpeedLimit(0.4, 0.8);
+	MoveRobot.setManualSpeedLimit(0.2, 0.5);
 }
 
 void mySigintHandler(int sig)

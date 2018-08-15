@@ -286,6 +286,7 @@ bool setSpeedSrvCallback(gobot_msg_srv::SetStringArray::Request &req, gobot_msg_
         ROS_INFO("(STATUS_SYSTEM) Set robot speed: %.2f, %.2f", std::stod(linear_spd_),std::stod(angular_spd_));
     }
 
+    //set the navigation speed limit
     dynamic_reconfigure::Reconfigure config;
     dynamic_reconfigure::DoubleParameter linear_param,angular_param;
     linear_param.name = "max_vel_x";
@@ -296,6 +297,12 @@ bool setSpeedSrvCallback(gobot_msg_srv::SetStringArray::Request &req, gobot_msg_
     config.request.config.doubles.push_back(linear_param);
     config.request.config.doubles.push_back(angular_param);
     ros::service::call("/move_base/TebLocalPlannerROS/set_parameters",config);
+
+    //update UI manual teleop speed limit
+    gobot_msg_srv::SetFloatArray change_speed;
+    change_speed.request.data.push_back(linear_param.value);
+    change_speed.request.data.push_back(angular_param.value);
+    ros::service::call("/gobot_software/change_speed",change_speed);
 
     return true;
 }

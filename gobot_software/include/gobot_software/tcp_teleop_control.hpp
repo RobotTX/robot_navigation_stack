@@ -11,8 +11,12 @@
 #include <mutex>
 #include <thread>
 #include <boost/asio.hpp>
+#include <gobot_msg_srv/GetStringArray.h>
+#include <gobot_msg_srv/SetFloatArray.h>
 
 using boost::asio::ip::tcp;
+
+bool changeSpeedSrvCb(gobot_msg_srv::SetFloatArray::Request &req, gobot_msg_srv::SetFloatArray::Response &res);
 
 void send_speed(int linear, int angular);
 

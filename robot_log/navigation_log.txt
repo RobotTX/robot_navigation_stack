@@ -3670,3 +3670,1225 @@ core service [/rosout] found
 shutting down processing monitor...
 ... shutting down processing monitor complete
 [1mdone[0m
+... logging to /home/tx/.ros/log/732a5ea4-a05c-11e8-8052-705a0f1db814/roslaunch-gt-tx-6249.log
+Checking log directory for disk usage. This may take awhile.
+Press Ctrl-C to interrupt
+Done checking log file disk usage. Usage is <1GB.
+]2;/home/tx/catkin_ws/src/robot_navigation_stack/gobot_navigation/launch/gobot_scan.launch
+[1mstarted roslaunch server http://gt-tx:43588/[0m
+
+SUMMARY
+========
+
+PARAMETERS
+ * /AVOID_SPD: 15
+ * /CLIFF_THRESHOLD: 170.0
+ * /DIM_X: 0.255
+ * /DIM_Y: 0.25
+ * /DIM_Z: 0.11
+ * /FACTOR_A: 15.6
+ * /FACTOR_B: -20.0
+ * /GYRO_PORT: /dev/GYRO
+ * /MOTOR_PORT: /dev/MD
+ * /ODOM_RATE: 10
+ * /PC_FRAME: base_link
+ * /SENSOR_BYTES: 63
+ * /SENSOR_PORT: /dev/STM
+ * /SENSOR_RATE: 4
+ * /SONAR_MAX: 1.4
+ * /SONAR_MIN: 0.2
+ * /SONAR_VIEW_ANGLE: 0.25
+ * /TICKS_PER_ROT: 982.0
+ * /UPDATE_DURATION: 5.0
+ * /UPDATE_NUM: 30
+ * /USE_BUMPER: True
+ * /USE_BUMPER_PC: True
+ * /USE_CLIFF: True
+ * /USE_CLIFF_PC: True
+ * /USE_MAGNET: False
+ * /USE_SONAR: True
+ * /USE_SONAR_PC: True
+ * /WAIT_COLLISION: 4.0
+ * /WEIGHT_MAX: 200000
+ * /WHEEL_RADIUS: 0.075
+ * /WHEEL_SEP: 0.35
+ * /abort_navigation_mp3: abort_navigation.mp3
+ * /angle_compensate: True
+ * /angle_disable_max: 1040.0
+ * /angle_disable_min: 400.0
+ * /angle_max: 105.0
+ * /angle_min: -95.0
+ * /audio_device: alsa_output.usb-G...
+ * /audio_folder: /home/tx/catkin_w...
+ * /auto_docking_mp3: auto_docking.mp3
+ * /auto_scan_mp3: auto_scan.mp3
+ * /battery_log: /home/tx/catkin_w...
+ * /deleteWIFI: /home/tx/catkin_w...
+ * /disconnected_file: /home/tx/catkin_w...
+ * /docking_complete_mp3: docking_complete.mp3
+ * /hector_exploration_node/global_costmap/footprint: [[0.25, 0], [0.24...
+ * /hector_exploration_node/global_costmap/footprint_model/type: polygon
+ * /hector_exploration_node/global_costmap/footprint_model/vertices: [[0.25, 0], [0.24...
+ * /hector_exploration_node/global_costmap/footprint_padding: 0.0001
+ * /hector_exploration_node/global_costmap/global_frame: map
+ * /hector_exploration_node/global_costmap/inflation_layer/cost_scaling_factor: 1.2
+ * /hector_exploration_node/global_costmap/inflation_layer/inflation_radius: 0.55
+ * /hector_exploration_node/global_costmap/laser_distance1: 4.5
+ * /hector_exploration_node/global_costmap/laser_distance2: 5.0
+ * /hector_exploration_node/global_costmap/laser_max_range: 5.0
+ * /hector_exploration_node/global_costmap/laser_min_range: -1.0
+ * /hector_exploration_node/global_costmap/map_type: costmap
+ * /hector_exploration_node/global_costmap/maxRange: 5.0
+ * /hector_exploration_node/global_costmap/maxUrange: 4.5
+ * /hector_exploration_node/global_costmap/obstacle_layer/backLeft_cliff/clearing: True
+ * /hector_exploration_node/global_costmap/obstacle_layer/backLeft_cliff/data_type: PointCloud2
+ * /hector_exploration_node/global_costmap/obstacle_layer/backLeft_cliff/marking: True
+ * /hector_exploration_node/global_costmap/obstacle_layer/backLeft_cliff/max_obstacle_height: 0.1
+ * /hector_exploration_node/global_costmap/obstacle_layer/backLeft_cliff/min_obstacle_height: 0.0
+ * /hector_exploration_node/global_costmap/obstacle_layer/backLeft_cliff/obstacle_range: 0.5
+ * /hector_exploration_node/global_costmap/obstacle_layer/backLeft_cliff/raytrace_range: 1.0
+ * /hector_exploration_node/global_costmap/obstacle_layer/backLeft_cliff/topic: /gobot_pc/BL_clif...
+ * /hector_exploration_node/global_costmap/obstacle_layer/backRight_cliff/clearing: True
+ * /hector_exploration_node/global_costmap/obstacle_layer/backRight_cliff/data_type: PointCloud2
+ * /hector_exploration_node/global_costmap/obstacle_layer/backRight_cliff/marking: True
+ * /hector_exploration_node/global_costmap/obstacle_layer/backRight_cliff/max_obstacle_height: 0.1
+ * /hector_exploration_node/global_costmap/obstacle_layer/backRight_cliff/min_obstacle_height: 0.0
+ * /hector_exploration_node/global_costmap/obstacle_layer/backRight_cliff/obstacle_range: 0.5
+ * /hector_exploration_node/global_costmap/obstacle_layer/backRight_cliff/raytrace_range: 1.0
+ * /hector_exploration_node/global_costmap/obstacle_layer/backRight_cliff/topic: /gobot_pc/BR_clif...
+ * /hector_exploration_node/global_costmap/obstacle_layer/bumpers/clearing: True
+ * /hector_exploration_node/global_costmap/obstacle_layer/bumpers/data_type: PointCloud2
+ * /hector_exploration_node/global_costmap/obstacle_layer/bumpers/marking: True
+ * /hector_exploration_node/global_costmap/obstacle_layer/bumpers/max_obstacle_height: 0.2
+ * /hector_exploration_node/global_costmap/obstacle_layer/bumpers/min_obstacle_height: 0.1
+ * /hector_exploration_node/global_costmap/obstacle_layer/bumpers/obstacle_range: 0.5
+ * /hector_exploration_node/global_costmap/obstacle_layer/bumpers/raytrace_range: 1.0
+ * /hector_exploration_node/global_costmap/obstacle_layer/bumpers/topic: /gobot_pc/bumpers_pc
+ * /hector_exploration_node/global_costmap/obstacle_layer/frontLeft_cliff/clearing: True
+ * /hector_exploration_node/global_costmap/obstacle_layer/frontLeft_cliff/data_type: PointCloud2
+ * /hector_exploration_node/global_costmap/obstacle_layer/frontLeft_cliff/marking: True
+ * /hector_exploration_node/global_costmap/obstacle_layer/frontLeft_cliff/max_obstacle_height: 0.1
+ * /hector_exploration_node/global_costmap/obstacle_layer/frontLeft_cliff/min_obstacle_height: 0.0
+ * /hector_exploration_node/global_costmap/obstacle_layer/frontLeft_cliff/obstacle_range: 0.5
+ * /hector_exploration_node/global_costmap/obstacle_layer/frontLeft_cliff/raytrace_range: 1.0
+ * /hector_exploration_node/global_costmap/obstacle_layer/frontLeft_cliff/topic: /gobot_pc/FL_clif...
+ * /hector_exploration_node/global_costmap/obstacle_layer/frontRight_cliff/clearing: True
+ * /hector_exploration_node/global_costmap/obstacle_layer/frontRight_cliff/data_type: PointCloud2
+ * /hector_exploration_node/global_costmap/obstacle_layer/frontRight_cliff/marking: True
+ * /hector_exploration_node/global_costmap/obstacle_layer/frontRight_cliff/max_obstacle_height: 0.1
+ * /hector_exploration_node/global_costmap/obstacle_layer/frontRight_cliff/min_obstacle_height: 0.0
+ * /hector_exploration_node/global_costmap/obstacle_layer/frontRight_cliff/obstacle_range: 0.5
+ * /hector_exploration_node/global_costmap/obstacle_layer/frontRight_cliff/raytrace_range: 1.0
+ * /hector_exploration_node/global_costmap/obstacle_layer/frontRight_cliff/topic: /gobot_pc/FR_clif...
+ * /hector_exploration_node/global_costmap/obstacle_layer/laser_scan_sensor/clearing: True
+ * /hector_exploration_node/global_costmap/obstacle_layer/laser_scan_sensor/data_type: LaserScan
+ * /hector_exploration_node/global_costmap/obstacle_layer/laser_scan_sensor/expected_update_rate: 10
+ * /hector_exploration_node/global_costmap/obstacle_layer/laser_scan_sensor/inf_is_valid: True
+ * /hector_exploration_node/global_costmap/obstacle_layer/laser_scan_sensor/marking: True
+ * /hector_exploration_node/global_costmap/obstacle_layer/laser_scan_sensor/max_obstacle_height: 0.3
+ * /hector_exploration_node/global_costmap/obstacle_layer/laser_scan_sensor/min_obstacle_height: 0.2
+ * /hector_exploration_node/global_costmap/obstacle_layer/laser_scan_sensor/obstacle_range: 4.5
+ * /hector_exploration_node/global_costmap/obstacle_layer/laser_scan_sensor/raytrace_range: 5.0
+ * /hector_exploration_node/global_costmap/obstacle_layer/laser_scan_sensor/sensor_frame: base_laser
+ * /hector_exploration_node/global_costmap/obstacle_layer/laser_scan_sensor/topic: /scan
+ * /hector_exploration_node/global_costmap/obstacle_layer/observation_sources: laser_scan_sensor...
+ * /hector_exploration_node/global_costmap/obstacle_layer/origin_z: 0.0
+ * /hector_exploration_node/global_costmap/obstacle_layer/publish_voxel_map: True
+ * /hector_exploration_node/global_costmap/obstacle_layer/track_unknown_space: True
+ * /hector_exploration_node/global_costmap/obstacle_layer/z_resolution: 0.1
+ * /hector_exploration_node/global_costmap/obstacle_layer/z_voxels: 5
+ * /hector_exploration_node/global_costmap/plugins: [{'type': 'costma...
+ * /hector_exploration_node/global_costmap/publish_frequency: 0.0
+ * /hector_exploration_node/global_costmap/resolution: 0.04
+ * /hector_exploration_node/global_costmap/robot_base_frame: base_link
+ * /hector_exploration_node/global_costmap/robot_footprint: [[0.25, 0], [0.24...
+ * /hector_exploration_node/global_costmap/rolling_window: False
+ * /hector_exploration_node/global_costmap/sonar_layer/clear_on_max_reading: True
+ * /hector_exploration_node/global_costmap/sonar_layer/clear_threshold: 0.2
+ * /hector_exploration_node/global_costmap/sonar_layer/mark_threshold: 0.6
+ * /hector_exploration_node/global_costmap/sonar_layer/no_readings_timeout: 0.0
+ * /hector_exploration_node/global_costmap/sonar_layer/topics: ['/gobot_pc/sonar...
+ * /hector_exploration_node/global_costmap/static_map/map_topic: /map
+ * /hector_exploration_node/global_costmap/static_map/track_unknown_space: True
+ * /hector_exploration_node/global_costmap/static_map/unknown_cost_value: -1
+ * /hector_exploration_node/global_costmap/static_map: False
+ * /hector_exploration_node/global_costmap/transform_tolerance: 0.5
+ * /hector_exploration_node/global_costmap/update_frequency: 2.0
+ * /home_file: /home/tx/catkin_w...
+ * /inverted: False
+ * /ip_update: 30.0
+ * /ips_file: /home/tx/catkin_w...
+ * /last_pose_file: /home/tx/catkin_w...
+ * /low_battery_file: /home/tx/catkin_w...
+ * /low_battery_mp3: low_battery.mp3
+ * /ls_frame: base_laser
+ * /ls_port: /dev/2Dlidar
+ * /ls_topic: scan
+ * /map_config_used: /home/tx/catkin_w...
+ * /map_id_file: /home/tx/catkin_w...
+ * /map_image_used: /home/tx/catkin_w...
+ * /map_path: /home/tx/catkin_w...
+ * /min_as_zero: True
+ * /mission_complete_mp3: mission_complete.mp3
+ * /mission_failed_mp3: mission_failed.mp3
+ * /move_base/NavfnROS/allow_unknown: True
+ * /move_base/NavfnROS/default_tolerance: 0.3
+ * /move_base/TebLocalPlannerROS/acc_lim_theta: 0.5
+ * /move_base/TebLocalPlannerROS/acc_lim_x: 0.2
+ * /move_base/TebLocalPlannerROS/acc_lim_y: 0.0
+ * /move_base/TebLocalPlannerROS/allow_init_with_backwards_motion: False
+ * /move_base/TebLocalPlannerROS/costmap_converter/CostmapToPolygonsDBSMCCH/cluster_max_distance: 0.45
+ * /move_base/TebLocalPlannerROS/costmap_converter/CostmapToPolygonsDBSMCCH/cluster_max_pts: 99
+ * /move_base/TebLocalPlannerROS/costmap_converter/CostmapToPolygonsDBSMCCH/cluster_min_pts: 2
+ * /move_base/TebLocalPlannerROS/costmap_converter/CostmapToPolygonsDBSMCCH/convex_hull_min_pt_separation: 0.25
+ * /move_base/TebLocalPlannerROS/costmap_converter_plugin: costmap_converter...
+ * /move_base/TebLocalPlannerROS/costmap_converter_rate: 5
+ * /move_base/TebLocalPlannerROS/costmap_converter_spin_thread: True
+ * /move_base/TebLocalPlannerROS/costmap_obstacles_behind_robot_dist: 1.0
+ * /move_base/TebLocalPlannerROS/dt_hysteresis: 0.1
+ * /move_base/TebLocalPlannerROS/dt_ref: 0.3
+ * /move_base/TebLocalPlannerROS/dynamic_obstacle_inflation_dist: 0.8
+ * /move_base/TebLocalPlannerROS/enable_homotopy_class_planning: True
+ * /move_base/TebLocalPlannerROS/enable_multithreading: True
+ * /move_base/TebLocalPlannerROS/exact_arc_length: False
+ * /move_base/TebLocalPlannerROS/feasibility_check_no_poses: 3
+ * /move_base/TebLocalPlannerROS/footprint: [[0.25, 0], [0.24...
+ * /move_base/TebLocalPlannerROS/footprint_model/type: polygon
+ * /move_base/TebLocalPlannerROS/footprint_model/vertices: [[0.25, 0], [0.24...
+ * /move_base/TebLocalPlannerROS/free_goal_vel: False
+ * /move_base/TebLocalPlannerROS/global_plan_overwrite_orientation: True
+ * /move_base/TebLocalPlannerROS/global_plan_viapoint_sep: 0.5
+ * /move_base/TebLocalPlannerROS/h_signature_prescaler: 0.5
+ * /move_base/TebLocalPlannerROS/h_signature_threshold: 0.1
+ * /move_base/TebLocalPlannerROS/include_costmap_obstacles: True
+ * /move_base/TebLocalPlannerROS/include_dynamic_obstacles: True
+ * /move_base/TebLocalPlannerROS/inflation_dist: 0.5
+ * /move_base/TebLocalPlannerROS/laser_distance1: 4.5
+ * /move_base/TebLocalPlannerROS/laser_distance2: 5.0
+ * /move_base/TebLocalPlannerROS/laser_max_range: 5.0
+ * /move_base/TebLocalPlannerROS/laser_min_range: -1.0
+ * /move_base/TebLocalPlannerROS/map_frame: map
+ * /move_base/TebLocalPlannerROS/maxRange: 5.0
+ * /move_base/TebLocalPlannerROS/maxUrange: 4.5
+ * /move_base/TebLocalPlannerROS/max_global_plan_lookahead_dist: 2.0
+ * /move_base/TebLocalPlannerROS/max_number_classes: 4
+ * /move_base/TebLocalPlannerROS/max_vel_theta: 0.6
+ * /move_base/TebLocalPlannerROS/max_vel_x: 0.3
+ * /move_base/TebLocalPlannerROS/max_vel_x_backwards: 0.1
+ * /move_base/TebLocalPlannerROS/max_vel_y: 0.0
+ * /move_base/TebLocalPlannerROS/min_obstacle_dist: 0.1
+ * /move_base/TebLocalPlannerROS/min_turning_radius: 0.0
+ * /move_base/TebLocalPlannerROS/no_inner_iterations: 4
+ * /move_base/TebLocalPlannerROS/no_outer_iterations: 3
+ * /move_base/TebLocalPlannerROS/obstacle_heading_threshold: 0.5
+ * /move_base/TebLocalPlannerROS/obstacle_keypoint_offset: 0.1
+ * /move_base/TebLocalPlannerROS/obstacle_layer/laser_scan_sensor/obstacle_range: 4.5
+ * /move_base/TebLocalPlannerROS/obstacle_layer/laser_scan_sensor/raytrace_range: 5.0
+ * /move_base/TebLocalPlannerROS/obstacle_poses_affected: 30
+ * /move_base/TebLocalPlannerROS/odom_topic: /odom
+ * /move_base/TebLocalPlannerROS/optimization_activate: True
+ * /move_base/TebLocalPlannerROS/optimization_verbose: False
+ * /move_base/TebLocalPlannerROS/oscillation_recovery: True
+ * /move_base/TebLocalPlannerROS/penalty_epsilon: 0.08
+ * /move_base/TebLocalPlannerROS/roadmap_graph_area_width: 5
+ * /move_base/TebLocalPlannerROS/roadmap_graph_no_samples: 15
+ * /move_base/TebLocalPlannerROS/robot_footprint: [[0.25, 0], [0.24...
+ * /move_base/TebLocalPlannerROS/selection_alternative_time_cost: False
+ * /move_base/TebLocalPlannerROS/selection_cost_hysteresis: 1.05
+ * /move_base/TebLocalPlannerROS/shrink_horizon_min_duration: 10.0
+ * /move_base/TebLocalPlannerROS/simple_exploration: False
+ * /move_base/TebLocalPlannerROS/teb_autosize: True
+ * /move_base/TebLocalPlannerROS/visualize_hc_graph: False
+ * /move_base/TebLocalPlannerROS/weight_acc_lim_theta: 1.0
+ * /move_base/TebLocalPlannerROS/weight_acc_lim_x: 1.0
+ * /move_base/TebLocalPlannerROS/weight_acc_lim_y: 0.0
+ * /move_base/TebLocalPlannerROS/weight_dynamic_obstacle: 50.0
+ * /move_base/TebLocalPlannerROS/weight_inflation: 0.5
+ * /move_base/TebLocalPlannerROS/weight_kinematics_forward_drive: 999.0
+ * /move_base/TebLocalPlannerROS/weight_kinematics_nh: 1500.0
+ * /move_base/TebLocalPlannerROS/weight_kinematics_turning_radius: 0.0
+ * /move_base/TebLocalPlannerROS/weight_max_vel_theta: 2.0
+ * /move_base/TebLocalPlannerROS/weight_max_vel_x: 1.0
+ * /move_base/TebLocalPlannerROS/weight_obstacle: 30.0
+ * /move_base/TebLocalPlannerROS/weight_optimaltime: 4.0
+ * /move_base/TebLocalPlannerROS/weight_viapoint: 80.0
+ * /move_base/TebLocalPlannerROS/wheelbase: 0.0
+ * /move_base/TebLocalPlannerROS/xy_goal_tolerance: 0.1
+ * /move_base/TebLocalPlannerROS/yaw_goal_tolerance: 0.1
+ * /move_base/aggressive_reset/layer_names: ['sonar_layer', '...
+ * /move_base/aggressive_reset/reset_distance: 0.4
+ * /move_base/angular_spd_limit: 0.2
+ * /move_base/angular_spd_size: 4
+ * /move_base/base_global_planner: navfn/NavfnROS
+ * /move_base/base_local_planner: teb_local_planner...
+ * /move_base/conservative_reset/layer_names: ['sonar_layer', '...
+ * /move_base/conservative_reset/reset_distance: 2.5
+ * /move_base/conservative_reset_dist: 2.5
+ * /move_base/controller_frequency: 10
+ * /move_base/controller_patience: 10
+ * /move_base/costmap_threshold_value: 225
+ * /move_base/global_costmap/footprint: [[0.25, 0], [0.24...
+ * /move_base/global_costmap/footprint_model/type: polygon
+ * /move_base/global_costmap/footprint_model/vertices: [[0.25, 0], [0.24...
+ * /move_base/global_costmap/footprint_padding: 0.0001
+ * /move_base/global_costmap/global_frame: map
+ * /move_base/global_costmap/inflation_layer/cost_scaling_factor: 1.2
+ * /move_base/global_costmap/inflation_layer/inflation_radius: 0.55
+ * /move_base/global_costmap/laser_distance1: 4.5
+ * /move_base/global_costmap/laser_distance2: 5.0
+ * /move_base/global_costmap/laser_max_range: 5.0
+ * /move_base/global_costmap/laser_min_range: -1.0
+ * /move_base/global_costmap/map_type: costmap
+ * /move_base/global_costmap/maxRange: 5.0
+ * /move_base/global_costmap/maxUrange: 4.5
+ * /move_base/global_costmap/obstacle_layer/backLeft_cliff/clearing: True
+ * /move_base/global_costmap/obstacle_layer/backLeft_cliff/data_type: PointCloud2
+ * /move_base/global_costmap/obstacle_layer/backLeft_cliff/marking: True
+ * /move_base/global_costmap/obstacle_layer/backLeft_cliff/max_obstacle_height: 0.1
+ * /move_base/global_costmap/obstacle_layer/backLeft_cliff/min_obstacle_height: 0.0
+ * /move_base/global_costmap/obstacle_layer/backLeft_cliff/obstacle_range: 0.5
+ * /move_base/global_costmap/obstacle_layer/backLeft_cliff/raytrace_range: 1.0
+ * /move_base/global_costmap/obstacle_layer/backLeft_cliff/topic: /gobot_pc/BL_clif...
+ * /move_base/global_costmap/obstacle_layer/backRight_cliff/clearing: True
+ * /move_base/global_costmap/obstacle_layer/backRight_cliff/data_type: PointCloud2
+ * /move_base/global_costmap/obstacle_layer/backRight_cliff/marking: True
+ * /move_base/global_costmap/obstacle_layer/backRight_cliff/max_obstacle_height: 0.1
+ * /move_base/global_costmap/obstacle_layer/backRight_cliff/min_obstacle_height: 0.0
+ * /move_base/global_costmap/obstacle_layer/backRight_cliff/obstacle_range: 0.5
+ * /move_base/global_costmap/obstacle_layer/backRight_cliff/raytrace_range: 1.0
+ * /move_base/global_costmap/obstacle_layer/backRight_cliff/topic: /gobot_pc/BR_clif...
+ * /move_base/global_costmap/obstacle_layer/bumpers/clearing: True
+ * /move_base/global_costmap/obstacle_layer/bumpers/data_type: PointCloud2
+ * /move_base/global_costmap/obstacle_layer/bumpers/marking: True
+ * /move_base/global_costmap/obstacle_layer/bumpers/max_obstacle_height: 0.2
+ * /move_base/global_costmap/obstacle_layer/bumpers/min_obstacle_height: 0.1
+ * /move_base/global_costmap/obstacle_layer/bumpers/obstacle_range: 0.5
+ * /move_base/global_costmap/obstacle_layer/bumpers/raytrace_range: 1.0
+ * /move_base/global_costmap/obstacle_layer/bumpers/topic: /gobot_pc/bumpers_pc
+ * /move_base/global_costmap/obstacle_layer/frontLeft_cliff/clearing: True
+ * /move_base/global_costmap/obstacle_layer/frontLeft_cliff/data_type: PointCloud2
+ * /move_base/global_costmap/obstacle_layer/frontLeft_cliff/marking: True
+ * /move_base/global_costmap/obstacle_layer/frontLeft_cliff/max_obstacle_height: 0.1
+ * /move_base/global_costmap/obstacle_layer/frontLeft_cliff/min_obstacle_height: 0.0
+ * /move_base/global_costmap/obstacle_layer/frontLeft_cliff/obstacle_range: 0.5
+ * /move_base/global_costmap/obstacle_layer/frontLeft_cliff/raytrace_range: 1.0
+ * /move_base/global_costmap/obstacle_layer/frontLeft_cliff/topic: /gobot_pc/FL_clif...
+ * /move_base/global_costmap/obstacle_layer/frontRight_cliff/clearing: True
+ * /move_base/global_costmap/obstacle_layer/frontRight_cliff/data_type: PointCloud2
+ * /move_base/global_costmap/obstacle_layer/frontRight_cliff/marking: True
+ * /move_base/global_costmap/obstacle_layer/frontRight_cliff/max_obstacle_height: 0.1
+ * /move_base/global_costmap/obstacle_layer/frontRight_cliff/min_obstacle_height: 0.0
+ * /move_base/global_costmap/obstacle_layer/frontRight_cliff/obstacle_range: 0.5
+ * /move_base/global_costmap/obstacle_layer/frontRight_cliff/raytrace_range: 1.0
+ * /move_base/global_costmap/obstacle_layer/frontRight_cliff/topic: /gobot_pc/FR_clif...
+ * /move_base/global_costmap/obstacle_layer/laser_scan_sensor/clearing: True
+ * /move_base/global_costmap/obstacle_layer/laser_scan_sensor/data_type: LaserScan
+ * /move_base/global_costmap/obstacle_layer/laser_scan_sensor/expected_update_rate: 10
+ * /move_base/global_costmap/obstacle_layer/laser_scan_sensor/inf_is_valid: True
+ * /move_base/global_costmap/obstacle_layer/laser_scan_sensor/marking: True
+ * /move_base/global_costmap/obstacle_layer/laser_scan_sensor/max_obstacle_height: 0.3
+ * /move_base/global_costmap/obstacle_layer/laser_scan_sensor/min_obstacle_height: 0.2
+ * /move_base/global_costmap/obstacle_layer/laser_scan_sensor/obstacle_range: 4.5
+ * /move_base/global_costmap/obstacle_layer/laser_scan_sensor/raytrace_range: 5.0
+ * /move_base/global_costmap/obstacle_layer/laser_scan_sensor/sensor_frame: base_laser
+ * /move_base/global_costmap/obstacle_layer/laser_scan_sensor/topic: /scan
+ * /move_base/global_costmap/obstacle_layer/observation_sources: laser_scan_sensor...
+ * /move_base/global_costmap/obstacle_layer/origin_z: 0.0
+ * /move_base/global_costmap/obstacle_layer/publish_voxel_map: True
+ * /move_base/global_costmap/obstacle_layer/track_unknown_space: True
+ * /move_base/global_costmap/obstacle_layer/z_resolution: 0.1
+ * /move_base/global_costmap/obstacle_layer/z_voxels: 5
+ * /move_base/global_costmap/plugins: [{'type': 'costma...
+ * /move_base/global_costmap/publish_frequency: 0.0
+ * /move_base/global_costmap/resolution: 0.04
+ * /move_base/global_costmap/robot_base_frame: base_link
+ * /move_base/global_costmap/robot_footprint: [[0.25, 0], [0.24...
+ * /move_base/global_costmap/rolling_window: False
+ * /move_base/global_costmap/sonar_layer/clear_on_max_reading: True
+ * /move_base/global_costmap/sonar_layer/clear_threshold: 0.2
+ * /move_base/global_costmap/sonar_layer/mark_threshold: 0.6
+ * /move_base/global_costmap/sonar_layer/no_readings_timeout: 0.0
+ * /move_base/global_costmap/sonar_layer/topics: ['/gobot_pc/sonar...
+ * /move_base/global_costmap/static_map/map_topic: /map
+ * /move_base/global_costmap/static_map/track_unknown_space: True
+ * /move_base/global_costmap/static_map/unknown_cost_value: -1
+ * /move_base/global_costmap/static_map: False
+ * /move_base/global_costmap/transform_tolerance: 0.5
+ * /move_base/global_costmap/update_frequency: 2.0
+ * /move_base/linear_spd_incre: 1.0
+ * /move_base/local_costmap/footprint: [[0.25, 0], [0.24...
+ * /move_base/local_costmap/footprint_model/type: polygon
+ * /move_base/local_costmap/footprint_model/vertices: [[0.25, 0], [0.24...
+ * /move_base/local_costmap/footprint_padding: 0.0001
+ * /move_base/local_costmap/global_frame: odom
+ * /move_base/local_costmap/height: 5.0
+ * /move_base/local_costmap/inflation_layer/cost_scaling_factor: 1.2
+ * /move_base/local_costmap/inflation_layer/inflation_radius: 0.55
+ * /move_base/local_costmap/laser_distance1: 4.5
+ * /move_base/local_costmap/laser_distance2: 5.0
+ * /move_base/local_costmap/laser_max_range: 5.0
+ * /move_base/local_costmap/laser_min_range: -1.0
+ * /move_base/local_costmap/map_type: costmap
+ * /move_base/local_costmap/maxRange: 5.0
+ * /move_base/local_costmap/maxUrange: 4.5
+ * /move_base/local_costmap/obstacle_layer/backLeft_cliff/clearing: True
+ * /move_base/local_costmap/obstacle_layer/backLeft_cliff/data_type: PointCloud2
+ * /move_base/local_costmap/obstacle_layer/backLeft_cliff/marking: True
+ * /move_base/local_costmap/obstacle_layer/backLeft_cliff/max_obstacle_height: 0.1
+ * /move_base/local_costmap/obstacle_layer/backLeft_cliff/min_obstacle_height: 0.0
+ * /move_base/local_costmap/obstacle_layer/backLeft_cliff/obstacle_range: 0.5
+ * /move_base/local_costmap/obstacle_layer/backLeft_cliff/raytrace_range: 1.0
+ * /move_base/local_costmap/obstacle_layer/backLeft_cliff/topic: /gobot_pc/BL_clif...
+ * /move_base/local_costmap/obstacle_layer/backRight_cliff/clearing: True
+ * /move_base/local_costmap/obstacle_layer/backRight_cliff/data_type: PointCloud2
+ * /move_base/local_costmap/obstacle_layer/backRight_cliff/marking: True
+ * /move_base/local_costmap/obstacle_layer/backRight_cliff/max_obstacle_height: 0.1
+ * /move_base/local_costmap/obstacle_layer/backRight_cliff/min_obstacle_height: 0.0
+ * /move_base/local_costmap/obstacle_layer/backRight_cliff/obstacle_range: 0.5
+ * /move_base/local_costmap/obstacle_layer/backRight_cliff/raytrace_range: 1.0
+ * /move_base/local_costmap/obstacle_layer/backRight_cliff/topic: /gobot_pc/BR_clif...
+ * /move_base/local_costmap/obstacle_layer/bumpers/clearing: True
+ * /move_base/local_costmap/obstacle_layer/bumpers/data_type: PointCloud2
+ * /move_base/local_costmap/obstacle_layer/bumpers/marking: True
+ * /move_base/local_costmap/obstacle_layer/bumpers/max_obstacle_height: 0.2
+ * /move_base/local_costmap/obstacle_layer/bumpers/min_obstacle_height: 0.1
+ * /move_base/local_costmap/obstacle_layer/bumpers/obstacle_range: 0.5
+ * /move_base/local_costmap/obstacle_layer/bumpers/raytrace_range: 1.0
+ * /move_base/local_costmap/obstacle_layer/bumpers/topic: /gobot_pc/bumpers_pc
+ * /move_base/local_costmap/obstacle_layer/frontLeft_cliff/clearing: True
+ * /move_base/local_costmap/obstacle_layer/frontLeft_cliff/data_type: PointCloud2
+ * /move_base/local_costmap/obstacle_layer/frontLeft_cliff/marking: True
+ * /move_base/local_costmap/obstacle_layer/frontLeft_cliff/max_obstacle_height: 0.1
+ * /move_base/local_costmap/obstacle_layer/frontLeft_cliff/min_obstacle_height: 0.0
+ * /move_base/local_costmap/obstacle_layer/frontLeft_cliff/obstacle_range: 0.5
+ * /move_base/local_costmap/obstacle_layer/frontLeft_cliff/raytrace_range: 1.0
+ * /move_base/local_costmap/obstacle_layer/frontLeft_cliff/topic: /gobot_pc/FL_clif...
+ * /move_base/local_costmap/obstacle_layer/frontRight_cliff/clearing: True
+ * /move_base/local_costmap/obstacle_layer/frontRight_cliff/data_type: PointCloud2
+ * /move_base/local_costmap/obstacle_layer/frontRight_cliff/marking: True
+ * /move_base/local_costmap/obstacle_layer/frontRight_cliff/max_obstacle_height: 0.1
+ * /move_base/local_costmap/obstacle_layer/frontRight_cliff/min_obstacle_height: 0.0
+ * /move_base/local_costmap/obstacle_layer/frontRight_cliff/obstacle_range: 0.5
+ * /move_base/local_costmap/obstacle_layer/frontRight_cliff/raytrace_range: 1.0
+ * /move_base/local_costmap/obstacle_layer/frontRight_cliff/topic: /gobot_pc/FR_clif...
+ * /move_base/local_costmap/obstacle_layer/laser_scan_sensor/clearing: True
+ * /move_base/local_costmap/obstacle_layer/laser_scan_sensor/data_type: LaserScan
+ * /move_base/local_costmap/obstacle_layer/laser_scan_sensor/expected_update_rate: 10
+ * /move_base/local_costmap/obstacle_layer/laser_scan_sensor/inf_is_valid: True
+ * /move_base/local_costmap/obstacle_layer/laser_scan_sensor/marking: True
+ * /move_base/local_costmap/obstacle_layer/laser_scan_sensor/max_obstacle_height: 0.3
+ * /move_base/local_costmap/obstacle_layer/laser_scan_sensor/min_obstacle_height: 0.2
+ * /move_base/local_costmap/obstacle_layer/laser_scan_sensor/obstacle_range: 4.5
+ * /move_base/local_costmap/obstacle_layer/laser_scan_sensor/raytrace_range: 5.0
+ * /move_base/local_costmap/obstacle_layer/laser_scan_sensor/sensor_frame: base_laser
+ * /move_base/local_costmap/obstacle_layer/laser_scan_sensor/topic: /scan
+ * /move_base/local_costmap/obstacle_layer/observation_sources: laser_scan_sensor...
+ * /move_base/local_costmap/obstacle_layer/origin_z: 0.0
+ * /move_base/local_costmap/obstacle_layer/publish_voxel_map: True
+ * /move_base/local_costmap/obstacle_layer/track_unknown_space: True
+ * /move_base/local_costmap/obstacle_layer/z_resolution: 0.1
+ * /move_base/local_costmap/obstacle_layer/z_voxels: 5
+ * /move_base/local_costmap/plugins: [{'type': 'range_...
+ * /move_base/local_costmap/publish_frequency: 0.0
+ * /move_base/local_costmap/resolution: 0.04
+ * /move_base/local_costmap/robot_base_frame: base_link
+ * /move_base/local_costmap/robot_footprint: [[0.25, 0], [0.24...
+ * /move_base/local_costmap/rolling_window: True
+ * /move_base/local_costmap/sonar_layer/clear_on_max_reading: True
+ * /move_base/local_costmap/sonar_layer/clear_threshold: 0.2
+ * /move_base/local_costmap/sonar_layer/mark_threshold: 0.6
+ * /move_base/local_costmap/sonar_layer/no_readings_timeout: 0.0
+ * /move_base/local_costmap/sonar_layer/topics: ['/gobot_pc/sonar...
+ * /move_base/local_costmap/static_map/map_topic: /map
+ * /move_base/local_costmap/static_map/track_unknown_space: True
+ * /move_base/local_costmap/static_map/unknown_cost_value: -1
+ * /move_base/local_costmap/static_map: False
+ * /move_base/local_costmap/transform_tolerance: 0.5
+ * /move_base/local_costmap/update_frequency: 10.0
+ * /move_base/local_costmap/width: 5.0
+ * /move_base/max_planning_retries: 2
+ * /move_base/move_slow_and_clear/clearing_distance: 0.5
+ * /move_base/move_slow_and_clear/limited_distance: 0.3
+ * /move_base/move_slow_and_clear/limited_rot_speed: 0.2
+ * /move_base/move_slow_and_clear/limited_trans_speed: 0.1
+ * /move_base/move_slow_and_clear/planner_namespace: DWAPlannerROS
+ * /move_base/obstacle_stop_dist: 2.0
+ * /move_base/oscillation_distance: 0.4
+ * /move_base/oscillation_timeout: 15.0
+ * /move_base/planner_frequency: 2
+ * /move_base/planner_patience: 6
+ * /move_base/recovery_behavior_enabled: True
+ * /move_base/recovery_behaviors: [{'type': 'clear_...
+ * /move_base/recovery_count_threshold: 8
+ * /move_base/rotate_recovery/acc_lim_th: 0.5
+ * /move_base/rotate_recovery/max_rotational_vel: 0.8
+ * /move_base/rotate_recovery/min_in_place_rotational_vel: 0.6
+ * /move_base/rotate_recovery/sim_frequency: 10
+ * /move_base/rotate_recovery/sim_granularity: 0.05
+ * /move_base/scan_mode: True
+ * /move_base/shutdown_costmaps: False
+ * /new_footprint: [[0.250,0],[0.245...
+ * /ori_footprint: [[0.250,0],[0.245...
+ * /path_file: /home/tx/catkin_w...
+ * /path_loop_file: /home/tx/catkin_w...
+ * /path_stage_file: /home/tx/catkin_w...
+ * /ping_file: /home/tx/catkin_w...
+ * /poweroff_mp3: poweroff.mp3
+ * /reload_map_mp3: reload_map.mp3
+ * /restart_file: /home/tx/catkin_w...
+ * /resume_work_level: 90
+ * /robot_name_file: /home/tx/catkin_w...
+ * /rosdistro: kinetic
+ * /rosversion: 1.12.7
+ * /rp_frame: base_laser
+ * /rp_port: /dev/2Dlidar
+ * /rp_topic: scan
+ * /scan_complete_mp3: scan_complete.mp3
+ * /scan_function/no_frontier_threshold: 5
+ * /scan_mp3: scan.mp3
+ * /serial_baudrate: 115200
+ * /shutdown_file: /home/tx/catkin_w...
+ * /simulation: False
+ * /slam_gmapping/angularUpdate: 0.5
+ * /slam_gmapping/base_frame: base_link
+ * /slam_gmapping/delta: 0.04
+ * /slam_gmapping/footprint: [[0.25, 0], [0.24...
+ * /slam_gmapping/footprint_model/type: polygon
+ * /slam_gmapping/footprint_model/vertices: [[0.25, 0], [0.24...
+ * /slam_gmapping/iterations: 5
+ * /slam_gmapping/laser_distance1: 4.5
+ * /slam_gmapping/laser_distance2: 5.0
+ * /slam_gmapping/laser_max_range: 5.0
+ * /slam_gmapping/laser_min_range: -1.0
+ * /slam_gmapping/linearUpdate: 0.5
+ * /slam_gmapping/map_frame: map
+ * /slam_gmapping/map_update_interval: 4.0
+ * /slam_gmapping/maxRange: 5.0
+ * /slam_gmapping/maxUrange: 4.5
+ * /slam_gmapping/minimumScore: 250
+ * /slam_gmapping/obstacle_layer/laser_scan_sensor/obstacle_range: 4.5
+ * /slam_gmapping/obstacle_layer/laser_scan_sensor/raytrace_range: 5.0
+ * /slam_gmapping/odom_frame: odom
+ * /slam_gmapping/particles: 60
+ * /slam_gmapping/robot_footprint: [[0.25, 0], [0.24...
+ * /slam_gmapping/srr: 0.01
+ * /slam_gmapping/srt: 0.02
+ * /slam_gmapping/str: 0.01
+ * /slam_gmapping/stt: 0.02
+ * /slam_gmapping/use_footprint: True
+ * /slam_gmapping/xmax: 1.0
+ * /slam_gmapping/xmin: -1.0
+ * /slam_gmapping/ymax: 1.0
+ * /slam_gmapping/ymin: -1.0
+ * /speed_file: /home/tx/catkin_w...
+ * /startup_mp3: startup.mp3
+ * /status_update: 8.0
+ * /velocity_smoother/accel_lim_v: 0.3
+ * /velocity_smoother/accel_lim_w: 1.1
+ * /velocity_smoother/decel_factor: 5.0
+ * /velocity_smoother/frequency: 10.0
+ * /velocity_smoother/robot_feedback: 1
+ * /velocity_smoother/speed_lim_v: 1.0
+ * /velocity_smoother/speed_lim_w: 2.0
+ * /volume_file: /home/tx/catkin_w...
+ * /wifi_file: /home/tx/catkin_w...
+ * /zero_as_max: True
+
+NODES
+  /
+    back_left_cliff_to_base_link (tf/static_transform_publisher)
+    back_right_cliff_to_base_link (tf/static_transform_publisher)
+    battery_monitor_function (gobot_function/battery_monitor_function)
+    bumpers2pc (gobot_sensors2pc/bumpers2pc)
+    cliffs2pc (gobot_sensors2pc/cliffs2pc)
+    docking_function (gobot_function/docking_function)
+    front_left_cliff_to_base_link (tf/static_transform_publisher)
+    front_left_sonar_to_base_link (tf/static_transform_publisher)
+    front_right_cliff_to_base_link (tf/static_transform_publisher)
+    front_right_sonar_to_base_link (tf/static_transform_publisher)
+    hector_exploration_node (hector_exploration_node/exploration_planner_node)
+    move_base (move_base/move_base)
+    move_function (gobot_function/move_function)
+    nodelet_manager (nodelet/nodelet)
+    rear_left_sonar_to_base_link (tf/static_transform_publisher)
+    rear_right_sonar_to_base_link (tf/static_transform_publisher)
+    robot_pose_publisher (robot_pose_publisher/robot_pose_publisher)
+    scan_function (gobot_function/scan_function)
+    scan_startup (gobot_recovery/scan_startup)
+    slam_gmapping (gmapping/slam_gmapping)
+    sonars2pc (gobot_sensors2pc/sonars2pc)
+    velocity_smoother (nodelet/nodelet)
+
+[1mROS_MASTER_URI=http://localhost:11311[0m
+]2;/home/tx/catkin_ws/src/robot_navigation_stack/gobot_navigation/launch/gobot_scan.launch http://localhost:11311
+core service [/rosout] found
+[1mprocess[front_right_son[0m[ INFO] [1534318269.661078380, 741.089000000]: Using plugin "static_map"[0m
+[0m[ INFO] [1534318269.705663864, 741.125000000]: Requesting the map...[0m
+[0m[ INFO] [1534318269.991385452, 741.344000000]: Resizing costmap to 384 X 416 at 0.040000 m/pix[0m
+[0m[ INFO] [1534318270.116803275, 741.443000000]: Received a 384 X 416 map at 0.040000 m/pix[0m
+[0m[ INFO] [1534318270.126031594, 741.451000000]: Using plugin "sonar_layer"[0m
+[0m[ INFO] [1534318270.145692571, 741.464000000]: global_costmap/sonar_layer: ALL as input_sensor_type given[0m
+[0m[ INFO] [1534318270.160365323, 741.477000000]: RangeSensorLayer: subscribed to topic /gobot_pc/sonar_range1[0m
+[0m[ INFO] [1534318270.183678787, 741.491000000]: RangeSensorLayer: subscribed to topic /gobot_pc/sonar_range2[0m
+[0m[ INFO] [1534318270.195782256, 741.501000000]: RangeSensorLayer: subscribed to topic /gobot_pc/sonar_range3[0m
+[0m[ INFO] [1534318270.222361131, 741.522000000]: RangeSensorLayer: subscribed to topic /gobot_pc/sonar_range4[0m
+[0m[ INFO] [1534318270.314302813, 741.593000000]: Using plugin "obstacle_layer"[0m
+[0m[ INFO] [1534318270.326399790, 741.601000000]:     Subscribed to Topics: laser_scan_sensor bumpers frontRight_cliff frontLeft_cliff backRight_cliff backLeft_cliff[0m
+[0m[ INFO] [1534318271.277596291, 742.313000000]: Using plugin "inflation_layer"[0m
+[33m[ WARN] [1534318271.587263883, 742.567000000]: Illegal bounds change, was [tl: (-179769313486231570814527423731704356798070567525844996598917476803157260780028538760589558632766878171540458953514382464234321326889464182768467546703537516986049910576551282076245490090389328944075868508455133942304583236903222948165808559332123348274797826204144723168738177180919299881250404026184124858368.000000, -179769313486231570814527423731704356798070567525844996598917476803157260780028538760589558632766878171540458953514382464234321326889464182768467546703537516986049910576551282076245490090389328944075868508455133942304583236903222948165808559332123348274797826204144723168738177180919299881250404026184124858368.000000), br: (179769313486231570814527423731704356798070567525844996598917476803157260780028538760589558632766878171540458953514382464234321326889464182768467546703537516986049910576551282076245490090389328944075868508455133942304583236903222948165808559332123348274797826204144723168738177180919299881250404026184124858368.000000, 179769313486231570814527423731704356798070567525844996598917476803157260780028538760589558632766878171540458953514382464234321326889464182768467546703537516986049910576551282076245490090389328944075868508455133942304583236903222948165808559332123348274797826204144723168738177180919299881250404026184124858368.000000)], but is now [tl: (-340282346638528859811704183484516925440.000000, -340282346638528859811704183484516925440.000000), br: (340282346638528859811704183484516925440.000000, 340282346638528859811704183484516925440.000000)]. The offending layer is global_costmap/inflation_layer[0m
+[0m[ INFO] [1534318271.825415524, 742.765000000]: Using plugin "sonar_layer"[0m
+[0m[ INFO] [1534318271.837071618, 742.776000000]: local_costmap/sonar_layer: ALL as input_sensor_type given[0m
+[0m[ INFO] [1534318271.856032455, 742.791000000]: RangeSensorLayer: subscribed to topic /gobot_pc/sonar_range1[0m
+[0m[ INFO] [1534318271.871130965, 742.800000000]: RangeSensorLayer: subscribed to topic /gobot_pc/sonar_range2[0m
+[0m[ INFO] [1534318271.889858310, 742.816000000]: RangeSensorLayer: subscribed to topic /gobot_pc/sonar_range3[0m
+[0m[ INFO] [1534318271.908725264, 742.832000000]: RangeSensorLayer: subscribed to topic /gobot_pc/sonar_range4[0m
+[0m[ INFO] [1534318271.982202759, 742.894000000]: Using plugin "obstacle_layer"[0m
+[0m[ INFO] [1534318271.995546802, 742.902000000]:     Subscribed to Topics: laser_scan_sensor bumpers frontRight_cliff frontLeft_cliff backRight_cliff backLeft_cliff[0m
+[0m[ INFO] [1534318272.381087111, 743.221000000]: Using plugin "inflation_layer"[0m
+[0m[ INFO] [1534318272.621543359, 743.418000000]: Created local_planner teb_local_planner/TebLocalPlannerROS[0m
+[0m[ INFO] [1534318273.078685003, 743.796000000]: Footprint model 'polygon' loaded for trajectory optimization.[0m
+[0m[ INFO] [1534318273.078844020, 743.796000000]: Parallel planning in distinctive topologies enabled.[0m
+[0m[ INFO] [1534318273.215606131, 743.904000000]: Costmap conversion plugin costmap_converter::CostmapToPolygonsDBSMCCH loaded.[0m
+[0m[ INFO] [1534318274.214248550, 744.707000000]: Recovery behavior will clear layer sonar_layer[0m
+[0m[ INFO] [1534318274.214293442, 744.707000000]: Recovery behavior will clear layer obstacle_layer[0m
+[0m[ INFO] [1534318274.400558636, 744.850000000]: Recovery behavior will clear layer sonar_layer[0m
+[0m[ INFO] [1534318274.400614182, 744.850000000]: Recovery behavior will clear layer obstacle_layer[0m
+[0m[ INFO] [1534318274.583292303, 744.991000000]: odom received![0m
+[0m[ INFO] [1534318290.504263606, 758.082000000]: Resizing costmap to 704 X 416 at 0.040000 m/pix[0m
+[0m[ INFO] [1534318305.091040642, 770.083000000]: Resizing costmap to 704 X 704 at 0.040000 m/pix[0m
+[33m[ WARN] [1534318320.228117642, 782.332000000]: Shutdown request received.[0m
+[33m[ WARN] [1534318320.228155488, 782.332000000]: Reason given for shutdown: [user request][0m
+[0m[ INFO] [1534318270.621135837, 741.815000000]: waitForService: Service [/gobot_startup/pose_ready] has not been advertised, waiting...[0m
+[0m[ INFO] [1534318274.149641363, 744.663000000]: waitForService: Service [/gobot_startup/pose_ready] is now available.[0m
+[0m[ INFO] [1534318270.537186142, 741.756000000]: (SCAN_STARTUP) Waiting for Robot setting hardware...[0m
+[0m[ INFO] [1534318270.558923358, 741.771000000]: waitForService: Service [/move_base/clear_costmaps] has not been advertised, waiting...[0m
+[0m[ INFO] [1534318274.103923195, 744.635000000]: waitForService: Service [/move_base/clear_costmaps] is now available.[0m
+[0m[ INFO] [1534318274.103979329, 744.635000000]: (SCAN_STARTUP) Robot setting hardware is ready.[0m
+[0m[ INFO] [1534318274.132800179, 744.651000000]: (SCAN_STARTUP) map_path: /home/tx/catkin_ws/src/robot_navigation_stack/gobot_data/maps/used_map.[0m
+[0m[ INFO] [1534318270.607396529, 741.804000000]: waitForService: Service [/gobot_startup/pose_ready] has not been advertised, waiting...[0m
+[0m[ INFO] [1534318274.140083619, 744.656000000]: waitForService: Service [/gobot_startup/pose_ready] is now available.[0m
+[0m[ INFO] [1534318270.606235124, 741.803000000]: (SCAN_EXPLORE) Waiting for Robot setting hardware...[0m
+[0m[ INFO] [1534318270.620073369, 741.814000000]: waitForService: Service [/gobot_startup/pose_ready] has not been advertised, waiting...[0m
+[0m[ INFO] [1534318274.172563509, 744.673000000]: waitForService: Service [/gobot_startup/pose_ready] is now available.[0m
+[0m[ INFO] [1534318274.172604825, 744.673000000]: (SCAN_EXPLORE) Robot setting hardware is ready.[0m
+[0m[ INFO] [1534318274.732759796, 745.108000000]: (SCAN_EXPLORE) running...[0m
+[0m[ INFO] [1534318270.619472455, 741.813000000]: waitForService: Service [/gobot_startup/pose_ready] has not been advertised, waiting...[0m
+[0m[ INFO] [1534318274.157689890, 744.669000000]: waitForService: Service [/gobot_startup/pose_ready] is now available.[0m
+[0m[ INFO] [1534318275.184131266, 745.430000000]: (MOVE_IT) play path main running...[0m
+[0m[ INFO] [1534318319.983182663, 782.173000000]: (MOVE_IT) Updated robot path[0m
+... logging to /home/tx/.ros/log/732a5ea4-a05c-11e8-8052-705a0f1db814/roslaunch-gt-tx-17111.log
+Checking log directory for disk usage. This may take awhile.
+Press Ctrl-C to interrupt
+Done checking log file disk usage. Usage is <1GB.
+]2;/home/tx/catkin_ws/src/robot_navigation_stack/gobot_navigation/launch/gobot_navigation.launch
+[1mstarted roslaunch server http://gt-tx:40469/[0m
+
+SUMMARY
+========
+
+PARAMETERS
+ * /AVOID_SPD: 15
+ * /CLIFF_THRESHOLD: 170.0
+ * /DIM_X: 0.255
+ * /DIM_Y: 0.25
+ * /DIM_Z: 0.11
+ * /FACTOR_A: 15.6
+ * /FACTOR_B: -20.0
+ * /GYRO_PORT: /dev/GYRO
+ * /MOTOR_PORT: /dev/MD
+ * /ODOM_RATE: 10
+ * /PC_FRAME: base_link
+ * /SENSOR_BYTES: 63
+ * /SENSOR_PORT: /dev/STM
+ * /SENSOR_RATE: 4
+ * /SONAR_MAX: 1.4
+ * /SONAR_MIN: 0.2
+ * /SONAR_VIEW_ANGLE: 0.25
+ * /TICKS_PER_ROT: 982.0
+ * /UPDATE_DURATION: 5.0
+ * /UPDATE_NUM: 30
+ * /USE_BUMPER: True
+ * /USE_BUMPER_PC: True
+ * /USE_CLIFF: True
+ * /USE_CLIFF_PC: True
+ * /USE_MAGNET: False
+ * /USE_SONAR: True
+ * /USE_SONAR_PC: True
+ * /WAIT_COLLISION: 4.0
+ * /WEIGHT_MAX: 200000
+ * /WHEEL_RADIUS: 0.075
+ * /WHEEL_SEP: 0.35
+ * /abort_navigation_mp3: abort_navigation.mp3
+ * /amcl/base_frame_id: base_link
+ * /amcl/footprint: [[0.25, 0], [0.24...
+ * /amcl/footprint_model/type: polygon
+ * /amcl/footprint_model/vertices: [[0.25, 0], [0.24...
+ * /amcl/global_frame_id: map
+ * /amcl/kld_err: 0.05
+ * /amcl/kld_z: 0.99
+ * /amcl/laser_distance1: 4.5
+ * /amcl/laser_distance2: 5.0
+ * /amcl/laser_max_beams: 40
+ * /amcl/laser_max_range: 5.0
+ * /amcl/laser_min_range: -1.0
+ * /amcl/maxRange: 5.0
+ * /amcl/maxUrange: 4.5
+ * /amcl/max_particles: 5000
+ * /amcl/min_particles: 100
+ * /amcl/obstacle_layer/laser_scan_sensor/obstacle_range: 4.5
+ * /amcl/obstacle_layer/laser_scan_sensor/raytrace_range: 5.0
+ * /amcl/odom_alpha1: 0.03
+ * /amcl/odom_alpha2: 0.03
+ * /amcl/odom_alpha3: 0.015
+ * /amcl/odom_alpha4: 0.03
+ * /amcl/odom_alpha5: 0.001
+ * /amcl/odom_frame_id: odom
+ * /amcl/odom_model_type: diff-corrected
+ * /amcl/resample_interval: 2
+ * /amcl/robot_footprint: [[0.25, 0], [0.24...
+ * /amcl/save_pose_rate: 1
+ * /amcl/tf_broadcast: True
+ * /amcl/transform_tolerance: 0.5
+ * /amcl/update_min_a: 0.2
+ * /amcl/update_min_d: 0.25
+ * /amcl/use_map_topic: True
+ * /angle_compensate: True
+ * /angle_disable_max: 1040.0
+ * /angle_disable_min: 400.0
+ * /angle_max: 105.0
+ * /angle_min: -95.0
+ * /audio_device: alsa_output.usb-G...
+ * /audio_folder: /home/tx/catkin_w...
+ * /auto_docking_mp3: auto_docking.mp3
+ * /auto_scan_mp3: auto_scan.mp3
+ * /battery_log: /home/tx/catkin_w...
+ * /deleteWIFI: /home/tx/catkin_w...
+ * /disconnected_file: /home/tx/catkin_w...
+ * /docking_complete_mp3: docking_complete.mp3
+ * /home_file: /home/tx/catkin_w...
+ * /inverted: False
+ * /ip_update: 30.0
+ * /ips_file: /home/tx/catkin_w...
+ * /last_pose_file: /home/tx/catkin_w...
+ * /low_battery_file: /home/tx/catkin_w...
+ * /low_battery_mp3: low_battery.mp3
+ * /ls_frame: base_laser
+ * /ls_port: /dev/2Dlidar
+ * /ls_topic: scan
+ * /map_config_used: /home/tx/catkin_w...
+ * /map_id_file: /home/tx/catkin_w...
+ * /map_image_used: /home/tx/catkin_w...
+ * /map_server/frame_id: map
+ * /min_as_zero: True
+ * /mission_complete_mp3: mission_complete.mp3
+ * /mission_failed_mp3: mission_failed.mp3
+ * /move_base/NavfnROS/allow_unknown: False
+ * /move_base/NavfnROS/default_tolerance: 0.3
+ * /move_base/TebLocalPlannerROS/acc_lim_theta: 0.5
+ * /move_base/TebLocalPlannerROS/acc_lim_x: 0.2
+ * /move_base/TebLocalPlannerROS/acc_lim_y: 0.0
+ * /move_base/TebLocalPlannerROS/allow_init_with_backwards_motion: False
+ * /move_base/TebLocalPlannerROS/costmap_converter/CostmapToPolygonsDBSMCCH/cluster_max_distance: 0.45
+ * /move_base/TebLocalPlannerROS/costmap_converter/CostmapToPolygonsDBSMCCH/cluster_max_pts: 99
+ * /move_base/TebLocalPlannerROS/costmap_converter/CostmapToPolygonsDBSMCCH/cluster_min_pts: 2
+ * /move_base/TebLocalPlannerROS/costmap_converter/CostmapToPolygonsDBSMCCH/convex_hull_min_pt_separation: 0.25
+ * /move_base/TebLocalPlannerROS/costmap_converter_plugin: costmap_converter...
+ * /move_base/TebLocalPlannerROS/costmap_converter_rate: 5
+ * /move_base/TebLocalPlannerROS/costmap_converter_spin_thread: True
+ * /move_base/TebLocalPlannerROS/costmap_obstacles_behind_robot_dist: 1.0
+ * /move_base/TebLocalPlannerROS/dt_hysteresis: 0.1
+ * /move_base/TebLocalPlannerROS/dt_ref: 0.3
+ * /move_base/TebLocalPlannerROS/dynamic_obstacle_inflation_dist: 0.8
+ * /move_base/TebLocalPlannerROS/enable_homotopy_class_planning: True
+ * /move_base/TebLocalPlannerROS/enable_multithreading: True
+ * /move_base/TebLocalPlannerROS/exact_arc_length: False
+ * /move_base/TebLocalPlannerROS/feasibility_check_no_poses: 3
+ * /move_base/TebLocalPlannerROS/footprint: [[0.25, 0], [0.24...
+ * /move_base/TebLocalPlannerROS/footprint_model/type: polygon
+ * /move_base/TebLocalPlannerROS/footprint_model/vertices: [[0.25, 0], [0.24...
+ * /move_base/TebLocalPlannerROS/free_goal_vel: False
+ * /move_base/TebLocalPlannerROS/global_plan_overwrite_orientation: True
+ * /move_base/TebLocalPlannerROS/global_plan_viapoint_sep: 0.5
+ * /move_base/TebLocalPlannerROS/h_signature_prescaler: 0.5
+ * /move_base/TebLocalPlannerROS/h_signature_threshold: 0.1
+ * /move_base/TebLocalPlannerROS/include_costmap_obstacles: True
+ * /move_base/TebLocalPlannerROS/include_dynamic_obstacles: True
+ * /move_base/TebLocalPlannerROS/inflation_dist: 0.5
+ * /move_base/TebLocalPlannerROS/laser_distance1: 4.5
+ * /move_base/TebLocalPlannerROS/laser_distance2: 5.0
+ * /move_base/TebLocalPlannerROS/laser_max_range: 5.0
+ * /move_base/TebLocalPlannerROS/laser_min_range: -1.0
+ * /move_base/TebLocalPlannerROS/map_frame: map
+ * /move_base/TebLocalPlannerROS/maxRange: 5.0
+ * /move_base/TebLocalPlannerROS/maxUrange: 4.5
+ * /move_base/TebLocalPlannerROS/max_global_plan_lookahead_dist: 2.0
+ * /move_base/TebLocalPlannerROS/max_number_classes: 4
+ * /move_base/TebLocalPlannerROS/max_vel_theta: 0.8
+ * /move_base/TebLocalPlannerROS/max_vel_x: 0.4
+ * /move_base/TebLocalPlannerROS/max_vel_x_backwards: 0.1
+ * /move_base/TebLocalPlannerROS/max_vel_y: 0.0
+ * /move_base/TebLocalPlannerROS/min_obstacle_dist: 0.1
+ * /move_base/TebLocalPlannerROS/min_turning_radius: 0.0
+ * /move_base/TebLocalPlannerROS/no_inner_iterations: 4
+ * /move_base/TebLocalPlannerROS/no_outer_iterations: 3
+ * /move_base/TebLocalPlannerROS/obstacle_heading_threshold: 0.5
+ * /move_base/TebLocalPlannerROS/obstacle_keypoint_offset: 0.1
+ * /move_base/TebLocalPlannerROS/obstacle_layer/laser_scan_sensor/obstacle_range: 4.5
+ * /move_base/TebLocalPlannerROS/obstacle_layer/laser_scan_sensor/raytrace_range: 5.0
+ * /move_base/TebLocalPlannerROS/obstacle_poses_affected: 30
+ * /move_base/TebLocalPlannerROS/odom_topic: /odom
+ * /move_base/TebLocalPlannerROS/optimization_activate: True
+ * /move_base/TebLocalPlannerROS/optimization_verbose: False
+ * /move_base/TebLocalPlannerROS/oscillation_recovery: True
+ * /move_base/TebLocalPlannerROS/penalty_epsilon: 0.08
+ * /move_base/TebLocalPlannerROS/roadmap_graph_area_width: 5
+ * /move_base/TebLocalPlannerROS/roadmap_graph_no_samples: 15
+ * /move_base/TebLocalPlannerROS/robot_footprint: [[0.25, 0], [0.24...
+ * /move_base/TebLocalPlannerROS/selection_alternative_time_cost: False
+ * /move_base/TebLocalPlannerROS/selection_cost_hysteresis: 1.05
+ * /move_base/TebLocalPlannerROS/shrink_horizon_min_duration: 10.0
+ * /move_base/TebLocalPlannerROS/simple_exploration: False
+ * /move_base/TebLocalPlannerROS/teb_autosize: True
+ * /move_base/TebLocalPlannerROS/visualize_hc_graph: False
+ * /move_base/TebLocalPlannerROS/weight_acc_lim_theta: 1.0
+ * /move_base/TebLocalPlannerROS/weight_acc_lim_x: 1.0
+ * /move_base/TebLocalPlannerROS/weight_acc_lim_y: 0.0
+ * /move_base/TebLocalPlannerROS/weight_dynamic_obstacle: 50.0
+ * /move_base/TebLocalPlannerROS/weight_inflation: 0.5
+ * /move_base/TebLocalPlannerROS/weight_kinematics_forward_drive: 999.0
+ * /move_base/TebLocalPlannerROS/weight_kinematics_nh: 1500.0
+ * /move_base/TebLocalPlannerROS/weight_kinematics_turning_radius: 0.0
+ * /move_base/TebLocalPlannerROS/weight_max_vel_theta: 2.0
+ * /move_base/TebLocalPlannerROS/weight_max_vel_x: 1.0
+ * /move_base/TebLocalPlannerROS/weight_obstacle: 30.0
+ * /move_base/TebLocalPlannerROS/weight_optimaltime: 4.0
+ * /move_base/TebLocalPlannerROS/weight_viapoint: 80.0
+ * /move_base/TebLocalPlannerROS/wheelbase: 0.0
+ * /move_base/TebLocalPlannerROS/xy_goal_tolerance: 0.1
+ * /move_base/TebLocalPlannerROS/yaw_goal_tolerance: 0.1
+ * /move_base/aggressive_reset/layer_names: ['sonar_layer', '...
+ * /move_base/aggressive_reset/reset_distance: 0.4
+ * /move_base/angular_spd_limit: 0.2
+ * /move_base/angular_spd_size: 4
+ * /move_base/base_global_planner: navfn/NavfnROS
+ * /move_base/base_local_planner: teb_local_planner...
+ * /move_base/conservative_reset/layer_names: ['sonar_layer', '...
+ * /move_base/conservative_reset/reset_distance: 2.5
+ * /move_base/conservative_reset_dist: 2.5
+ * /move_base/controller_frequency: 10
+ * /move_base/controller_patience: 10
+ * /move_base/costmap_threshold_value: 225
+ * /move_base/global_costmap/footprint: [[0.25, 0], [0.24...
+ * /move_base/global_costmap/footprint_model/type: polygon
+ * /move_base/global_costmap/footprint_model/vertices: [[0.25, 0], [0.24...
+ * /move_base/global_costmap/footprint_padding: 0.0001
+ * /move_base/global_costmap/global_frame: map
+ * /move_base/global_costmap/inflation_layer/cost_scaling_factor: 1.2
+ * /move_base/global_costmap/inflation_layer/inflation_radius: 0.55
+ * /move_base/global_costmap/laser_distance1: 4.5
+ * /move_base/global_costmap/laser_distance2: 5.0
+ * /move_base/global_costmap/laser_max_range: 5.0
+ * /move_base/global_costmap/laser_min_range: -1.0
+ * /move_base/global_costmap/map_type: costmap
+ * /move_base/global_costmap/maxRange: 5.0
+ * /move_base/global_costmap/maxUrange: 4.5
+ * /move_base/global_costmap/obstacle_layer/backLeft_cliff/clearing: True
+ * /move_base/global_costmap/obstacle_layer/backLeft_cliff/data_type: PointCloud2
+ * /move_base/global_costmap/obstacle_layer/backLeft_cliff/marking: True
+ * /move_base/global_costmap/obstacle_layer/backLeft_cliff/max_obstacle_height: 0.1
+ * /move_base/global_costmap/obstacle_layer/backLeft_cliff/min_obstacle_height: 0.0
+ * /move_base/global_costmap/obstacle_layer/backLeft_cliff/obstacle_range: 0.5
+ * /move_base/global_costmap/obstacle_layer/backLeft_cliff/raytrace_range: 1.0
+ * /move_base/global_costmap/obstacle_layer/backLeft_cliff/topic: /gobot_pc/BL_clif...
+ * /move_base/global_costmap/obstacle_layer/backRight_cliff/clearing: True
+ * /move_base/global_costmap/obstacle_layer/backRight_cliff/data_type: PointCloud2
+ * /move_base/global_costmap/obstacle_layer/backRight_cliff/marking: True
+ * /move_base/global_costmap/obstacle_layer/backRight_cliff/max_obstacle_height: 0.1
+ * /move_base/global_costmap/obstacle_layer/backRight_cliff/min_obstacle_height: 0.0
+ * /move_base/global_costmap/obstacle_layer/backRight_cliff/obstacle_range: 0.5
+ * /move_base/global_costmap/obstacle_layer/backRight_cliff/raytrace_range: 1.0
+ * /move_base/global_costmap/obstacle_layer/backRight_cliff/topic: /gobot_pc/BR_clif...
+ * /move_base/global_costmap/obstacle_layer/bumpers/clearing: True
+ * /move_base/global_costmap/obstacle_layer/bumpers/data_type: PointCloud2
+ * /move_base/global_costmap/obstacle_layer/bumpers/marking: True
+ * /move_base/global_costmap/obstacle_layer/bumpers/max_obstacle_height: 0.2
+ * /move_base/global_costmap/obstacle_layer/bumpers/min_obstacle_height: 0.1
+ * /move_base/global_costmap/obstacle_layer/bumpers/obstacle_range: 0.5
+ * /move_base/global_costmap/obstacle_layer/bumpers/raytrace_range: 1.0
+ * /move_base/global_costmap/obstacle_layer/bumpers/topic: /gobot_pc/bumpers_pc
+ * /move_base/global_costmap/obstacle_layer/frontLeft_cliff/clearing: True
+ * /move_base/global_costmap/obstacle_layer/frontLeft_cliff/data_type: PointCloud2
+ * /move_base/global_costmap/obstacle_layer/frontLeft_cliff/marking: True
+ * /move_base/global_costmap/obstacle_layer/frontLeft_cliff/max_obstacle_height: 0.1
+ * /move_base/global_costmap/obstacle_layer/frontLeft_cliff/min_obstacle_height: 0.0
+ * /move_base/global_costmap/obstacle_layer/frontLeft_cliff/obstacle_range: 0.5
+ * /move_base/global_costmap/obstacle_layer/frontLeft_cliff/raytrace_range: 1.0
+ * /move_base/global_costmap/obstacle_layer/frontLeft_cliff/topic: /gobot_pc/FL_clif...
+ * /move_base/global_costmap/obstacle_layer/frontRight_cliff/clearing: True
+ * /move_base/global_costmap/obstacle_layer/frontRight_cliff/data_type: PointCloud2
+ * /move_base/global_costmap/obstacle_layer/frontRight_cliff/marking: True
+ * /move_base/global_costmap/obstacle_layer/frontRight_cliff/max_obstacle_height: 0.1
+ * /move_base/global_costmap/obstacle_layer/frontRight_cliff/min_obstacle_height: 0.0
+ * /move_base/global_costmap/obstacle_layer/frontRight_cliff/obstacle_range: 0.5
+ * /move_base/global_costmap/obstacle_layer/frontRight_cliff/raytrace_range: 1.0
+ * /move_base/global_costmap/obstacle_layer/frontRight_cliff/topic: /gobot_pc/FR_clif...
+ * /move_base/global_costmap/obstacle_layer/laser_scan_sensor/clearing: True
+ * /move_base/global_costmap/obstacle_layer/laser_scan_sensor/data_type: LaserScan
+ * /move_base/global_costmap/obstacle_layer/laser_scan_sensor/expected_update_rate: 10
+ * /move_base/global_costmap/obstacle_layer/laser_scan_sensor/inf_is_valid: True
+ * /move_base/global_costmap/obstacle_layer/laser_scan_sensor/marking: True
+ * /move_base/global_costmap/obstacle_layer/laser_scan_sensor/max_obstacle_height: 0.3
+ * /move_base/global_costmap/obstacle_layer/laser_scan_sensor/min_obstacle_height: 0.2
+ * /move_base/global_costmap/obstacle_layer/laser_scan_sensor/obstacle_range: 4.5
+ * /move_base/global_costmap/obstacle_layer/laser_scan_sensor/raytrace_range: 5.0
+ * /move_base/global_costmap/obstacle_layer/laser_scan_sensor/sensor_frame: base_laser
+ * /move_base/global_costmap/obstacle_layer/laser_scan_sensor/topic: /scan
+ * /move_base/global_costmap/obstacle_layer/observation_sources: laser_scan_sensor...
+ * /move_base/global_costmap/obstacle_layer/origin_z: 0.0
+ * /move_base/global_costmap/obstacle_layer/publish_voxel_map: True
+ * /move_base/global_costmap/obstacle_layer/track_unknown_space: True
+ * /move_base/global_costmap/obstacle_layer/z_resolution: 0.1
+ * /move_base/global_costmap/obstacle_layer/z_voxels: 5
+ * /move_base/global_costmap/plugins: [{'type': 'costma...
+ * /move_base/global_costmap/publish_frequency: 0.0
+ * /move_base/global_costmap/resolution: 0.04
+ * /move_base/global_costmap/robot_base_frame: base_link
+ * /move_base/global_costmap/robot_footprint: [[0.25, 0], [0.24...
+ * /move_base/global_costmap/rolling_window: False
+ * /move_base/global_costmap/sonar_layer/clear_on_max_reading: True
+ * /move_base/global_costmap/sonar_layer/clear_threshold: 0.2
+ * /move_base/global_costmap/sonar_layer/mark_threshold: 0.6
+ * /move_base/global_costmap/sonar_layer/no_readings_timeout: 0.0
+ * /move_base/global_costmap/sonar_layer/topics: ['/gobot_pc/sonar...
+ * /move_base/global_costmap/static_map/map_topic: /map
+ * /move_base/global_costmap/static_map/track_unknown_space: True
+ * /move_base/global_costmap/static_map/unknown_cost_value: -1
+ * /move_base/global_costmap/static_map: True
+ * /move_base/global_costmap/transform_tolerance: 0.5
+ * /move_base/global_costmap/update_frequency: 2.0
+ * /move_base/linear_spd_incre: 1.0
+ * /move_base/local_costmap/footprint: [[0.25, 0], [0.24...
+ * /move_base/local_costmap/footprint_model/type: polygon
+ * /move_base/local_costmap/footprint_model/vertices: [[0.25, 0], [0.24...
+ * /move_base/local_costmap/footprint_padding: 0.0001
+ * /move_base/local_costmap/global_frame: odom
+ * /move_base/local_costmap/height: 5.0
+ * /move_base/local_costmap/inflation_layer/cost_scaling_factor: 1.2
+ * /move_base/local_costmap/inflation_layer/inflation_radius: 0.55
+ * /move_base/local_costmap/laser_distance1: 4.5
+ * /move_base/local_costmap/laser_distance2: 5.0
+ * /move_base/local_costmap/laser_max_range: 5.0
+ * /move_base/local_costmap/laser_min_range: -1.0
+ * /move_base/local_costmap/map_type: costmap
+ * /move_base/local_costmap/maxRange: 5.0
+ * /move_base/local_costmap/maxUrange: 4.5
+ * /move_base/local_costmap/obstacle_layer/backLeft_cliff/clearing: True
+ * /move_base/local_costmap/obstacle_layer/backLeft_cliff/data_type: PointCloud2
+ * /move_base/local_costmap/obstacle_layer/backLeft_cliff/marking: True
+ * /move_base/local_costmap/obstacle_layer/backLeft_cliff/max_obstacle_height: 0.1
+ * /move_base/local_costmap/obstacle_layer/backLeft_cliff/min_obstacle_height: 0.0
+ * /move_base/local_costmap/obstacle_layer/backLeft_cliff/obstacle_range: 0.5
+ * /move_base/local_costmap/obstacle_layer/backLeft_cliff/raytrace_range: 1.0
+ * /move_base/local_costmap/obstacle_layer/backLeft_cliff/topic: /gobot_pc/BL_clif...
+ * /move_base/local_costmap/obstacle_layer/backRight_cliff/clearing: True
+ * /move_base/local_costmap/obstacle_layer/backRight_cliff/data_type: PointCloud2
+ * /move_base/local_costmap/obstacle_layer/backRight_cliff/marking: True
+ * /move_base/local_costmap/obstacle_layer/backRight_cliff/max_obstacle_height: 0.1
+ * /move_base/local_costmap/obstacle_layer/backRight_cliff/min_obstacle_height: 0.0
+ * /move_base/local_costmap/obstacle_layer/backRight_cliff/obstacle_range: 0.5
+ * /move_base/local_costmap/obstacle_layer/backRight_cliff/raytrace_range: 1.0
+ * /move_base/local_costmap/obstacle_layer/backRight_cliff/topic: /gobot_pc/BR_clif...
+ * /move_base/local_costmap/obstacle_layer/bumpers/clearing: True
+ * /move_base/local_costmap/obstacle_layer/bumpers/data_type: PointCloud2
+ * /move_base/local_costmap/obstacle_layer/bumpers/marking: True
+ * /move_base/local_costmap/obstacle_layer/bumpers/max_obstacle_height: 0.2
+ * /move_base/local_costmap/obstacle_layer/bumpers/min_obstacle_height: 0.1
+ * /move_base/local_costmap/obstacle_layer/bumpers/obstacle_range: 0.5
+ * /move_base/local_costmap/obstacle_layer/bumpers/raytrace_range: 1.0
+ * /move_base/local_costmap/obstacle_layer/bumpers/topic: /gobot_pc/bumpers_pc
+ * /move_base/local_costmap/obstacle_layer/frontLeft_cliff/clearing: True
+ * /move_base/local_costmap/obstacle_layer/frontLeft_cliff/data_type: PointCloud2
+ * /move_base/local_costmap/obstacle_layer/frontLeft_cliff/marking: True
+ * /move_base/local_costmap/obstacle_layer/frontLeft_cliff/max_obstacle_height: 0.1
+ * /move_base/local_costmap/obstacle_layer/frontLeft_cliff/min_obstacle_height: 0.0
+ * /move_base/local_costmap/obstacle_layer/frontLeft_cliff/obstacle_range: 0.5
+ * /move_base/local_costmap/obstacle_layer/frontLeft_cliff/raytrace_range: 1.0
+ * /move_base/local_costmap/obstacle_layer/frontLeft_cliff/topic: /gobot_pc/FL_clif...
+ * /move_base/local_costmap/obstacle_layer/frontRight_cliff/clearing: True
+ * /move_base/local_costmap/obstacle_layer/frontRight_cliff/data_type: PointCloud2
+ * /move_base/local_costmap/obstacle_layer/frontRight_cliff/marking: True
+ * /move_base/local_costmap/obstacle_layer/frontRight_cliff/max_obstacle_height: 0.1
+ * /move_base/local_costmap/obstacle_layer/frontRight_cliff/min_obstacle_height: 0.0
+ * /move_base/local_costmap/obstacle_layer/frontRight_cliff/obstacle_range: 0.5
+ * /move_base/local_costmap/obstacle_layer/frontRight_cliff/raytrace_range: 1.0
+ * /move_base/local_costmap/obstacle_layer/frontRight_cliff/topic: /gobot_pc/FR_clif...
+ * /move_base/local_costmap/obstacle_layer/laser_scan_sensor/clearing: True
+ * /move_base/local_costmap/obstacle_layer/laser_scan_sensor/data_type: LaserScan
+ * /move_base/local_costmap/obstacle_layer/laser_scan_sensor/expected_update_rate: 10
+ * /move_base/local_costmap/obstacle_layer/laser_scan_sensor/inf_is_valid: True
+ * /move_base/local_costmap/obstacle_layer/laser_scan_sensor/marking: True
+ * /move_base/local_costmap/obstacle_layer/laser_scan_sensor/max_obstacle_height: 0.3
+ * /move_base/local_costmap/obstacle_layer/laser_scan_sensor/min_obstacle_height: 0.2
+ * /move_base/local_costmap/obstacle_layer/laser_scan_sensor/obstacle_range: 4.5
+ * /move_base/local_costmap/obstacle_layer/laser_scan_sensor/raytrace_range: 5.0
+ * /move_base/local_costmap/obstacle_layer/laser_scan_sensor/sensor_frame: base_laser
+ * /move_base/local_costmap/obstacle_layer/laser_scan_sensor/topic: /scan
+ * /move_base/local_costmap/obstacle_layer/observation_sources: laser_scan_sensor...
+ * /move_base/local_costmap/obstacle_layer/origin_z: 0.0
+ * /move_base/local_costmap/obstacle_layer/publish_voxel_map: True
+ * /move_base/local_costmap/obstacle_layer/track_unknown_space: True
+ * /move_base/local_costmap/obstacle_layer/z_resolution: 0.1
+ * /move_base/local_costmap/obstacle_layer/z_voxels: 5
+ * /move_base/local_costmap/plugins: [{'type': 'range_...
+ * /move_base/local_costmap/publish_frequency: 0.0
+ * /move_base/local_costmap/resolution: 0.04
+ * /move_base/local_costmap/robot_base_frame: base_link
+ * /move_base/local_costmap/robot_footprint: [[0.25, 0], [0.24...
+ * /move_base/local_costmap/rolling_window: True
+ * /move_base/local_costmap/sonar_layer/clear_on_max_reading: True
+ * /move_base/local_costmap/sonar_layer/clear_threshold: 0.2
+ * /move_base/local_costmap/sonar_layer/mark_threshold: 0.6
+ * /move_base/local_costmap/sonar_layer/no_readings_timeout: 0.0
+ * /move_base/local_costmap/sonar_layer/topics: ['/gobot_pc/sonar...
+ * /move_base/local_costmap/static_map/map_topic: /map
+ * /move_base/local_costmap/static_map/track_unknown_space: True
+ * /move_base/local_costmap/static_map/unknown_cost_value: -1
+ * /move_base/local_costmap/static_map: False
+ * /move_base/local_costmap/transform_tolerance: 0.5
+ * /move_base/local_costmap/update_frequency: 10.0
+ * /move_base/local_costmap/width: 5.0
+ * /move_base/max_planning_retries: 2
+ * /move_base/move_slow_and_clear/clearing_distance: 0.5
+ * /move_base/move_slow_and_clear/limited_distance: 0.3
+ * /move_base/move_slow_and_clear/limited_rot_speed: 0.2
+ * /move_base/move_slow_and_clear/limited_trans_speed: 0.1
+ * /move_base/move_slow_and_clear/planner_namespace: DWAPlannerROS
+ * /move_base/obstacle_stop_dist: 2.0
+ * /move_base/oscillation_distance: 0.4
+ * /move_base/oscillation_timeout: 15.0
+ * /move_base/planner_frequency: 2
+ * /move_base/planner_patience: 6
+ * /move_base/recovery_behavior_enabled: True
+ * /move_base/recovery_behaviors: [{'type': 'clear_...
+ * /move_base/recovery_count_threshold: 6
+ * /move_base/rotate_recovery/acc_lim_th: 0.5
+ * /move_base/rotate_recovery/max_rotational_vel: 0.8
+ * /move_base/rotate_recovery/min_in_place_rotational_vel: 0.6
+ * /move_base/rotate_recovery/sim_frequency: 10
+ * /move_base/rotate_recovery/sim_granularity: 0.05
+ * /move_base/scan_mode: False
+ * /move_base/shutdown_costmaps: False
+ * /new_footprint: [[0.250,0],[0.245...
+ * /ori_footprint: [[0.250,0],[0.245...
+ * /path_file: /home/tx/catkin_w...
+ * /path_loop_file: /home/tx/catkin_w...
+ * /path_stage_file: /home/tx/catkin_w...
+ * /ping_file: /home/tx/catkin_w...
+ * /poweroff_mp3: poweroff.mp3
+ * /reload_map_mp3: reload_map.mp3
+ * /restart_file: /home/tx/catkin_w...
+ * /resume_work_level: 90
+ * /robot_name_file: /home/tx/catkin_w...
+ * /rosdistro: kinetic
+ * /rosversion: 1.12.7
+ * /rp_frame: base_laser
+ * /rp_port: /dev/2Dlidar
+ * /rp_topic: scan
+ * /scan_complete_mp3: scan_complete.mp3
+ * /scan_mp3: scan.mp3
+ * /serial_baudrate: 115200
+ * /shutdown_file: /home/tx/catkin_w...
+ * /simulation: False
+ * /speed_file: /home/tx/catkin_w...
+ * /startup_mp3: startup.mp3
+ * /status_update: 8.0
+ * /velocity_smoother/accel_lim_v: 0.3
+ * /velocity_smoother/accel_lim_w: 1.1
+ * /velocity_smoother/decel_factor: 5.0
+ * /velocity_smoother/frequency: 10.0
+ * /velocity_smoother/robot_feedback: 1
+ * /velocity_smoother/speed_lim_v: 1.0
+ * /velocity_smoother/speed_lim_w: 2.0
+ * /volume_file: /home/tx/catkin_w...
+ * /wifi_file: /home/tx/catkin_w...
+ * /zero_as_max: True
+
+NODES
+  /
+    amcl (amcl/amcl)
+    back_left_cliff_to_base_link (tf/static_transform_publisher)
+    back_right_cliff_to_base_link (tf/static_transform_publisher)
+    battery_monitor_function (gobot_function/battery_monitor_function)
+    bumpers2pc (gobot_sensors2pc/bumpers2pc)
+    cliffs2pc (gobot_sensors2pc/cliffs2pc)
+    docking_function (gobot_function/docking_function)
+    front_left_cliff_to_base_link (tf/static_transform_publisher)
+    front_left_sonar_to_base_link (tf/static_transform_publisher)
+    front_right_cliff_to_base_link (tf/static_transform_publisher)
+    front_right_sonar_to_base_link (tf/static_transform_publisher)
+    map_server (map_server/map_server)
+    move_base (move_base/move_base)
+    move_function (gobot_function/move_function)
+    nodelet_manager (nodelet/nodelet)
+    rear_left_sonar_to_base_link (tf/static_transform_publisher)
+    rear_right_sonar_to_base_link (tf/static_transform_[0m[ INFO] [1534318328.450677420, 789.276000000]: Using plugin "static_map"[0m
+[0m[ INFO] [1534318328.465563440, 789.289000000]: Requesting the map...[0m
+[0m[ INFO] [1534318328.612724574, 789.403000000]: Resizing costmap to 2496 X 2496 at 0.040000 m/pix[0m
+[0m[ INFO] [1534318328.743415737, 789.500000000]: Received a 2496 X 2496 map at 0.040000 m/pix[0m
+[0m[ INFO] [1534318328.757430877, 789.508000000]: Using plugin "sonar_layer"[0m
+[0m[ INFO] [1534318328.781479113, 789.523000000]: global_costmap/sonar_layer: ALL as input_sensor_type given[0m
+[0m[ INFO] [1534318328.789474451, 789.524000000]: RangeSensorLayer: subscribed to topic /gobot_pc/sonar_range1[0m
+[0m[ INFO] [1534318328.800605740, 789.535000000]: RangeSensorLayer: subscribed to topic /gobot_pc/sonar_range2[0m
+[0m[ INFO] [1534318328.834061996, 789.556000000]: RangeSensorLayer: subscribed to topic /gobot_pc/sonar_range3[0m
+[0m[ INFO] [1534318328.871799550, 789.581000000]: RangeSensorLayer: subscribed to topic /gobot_pc/sonar_range4[0m
+[0m[ INFO] [1534318329.020976706, 789.678000000]: Using plugin "obstacle_layer"[0m
+[0m[ INFO] [1534318329.049416755, 789.698000000]:     Subscribed to Topics: laser_scan_sensor bumpers frontRight_cliff frontLeft_cliff backRight_cliff backLeft_cliff[0m
+[0m[ INFO] [1534318329.597514414, 790.109000000]: Using plugin "inflation_layer"[0m
+[33m[ WARN] [1534318329.769279336, 790.233000000]: Illegal bounds change, was [tl: (-179769313486231570814527423731704356798070567525844996598917476803157260780028538760589558632766878171540458953514382464234321326889464182768467546703537516986049910576551282076245490090389328944075868508455133942304583236903222948165808559332123348274797826204144723168738177180919299881250404026184124858368.000000, -179769313486231570814527423731704356798070567525844996598917476803157260780028538760589558632766878171540458953514382464234321326889464182768467546703537516986049910576551282076245490090389328944075868508455133942304583236903222948165808559332123348274797826204144723168738177180919299881250404026184124858368.000000), br: (179769313486231570814527423731704356798070567525844996598917476803157260780028538760589558632766878171540458953514382464234321326889464182768467546703537516986049910576551282076245490090389328944075868508455133942304583236903222948165808559332123348274797826204144723168738177180919299881250404026184124858368.000000, 179769313486231570814527423731704356798070567525844996598917476803157260780028538760589558632766878171540458953514382464234321326889464182768467546703537516986049910576551282076245490090389328944075868508455133942304583236903222948165808559332123348274797826204144723168738177180919299881250404026184124858368.000000)], but is now [tl: (-340282346638528859811704183484516925440.000000, -340282346638528859811704183484516925440.000000), br: (340282346638528859811704183484516925440.000000, 340282346638528859811704183484516925440.000000)]. The offending layer is global_costmap/inflation_layer[0m
+[0m[ INFO] [1534318329.953244832, 790.379000000]: Using plugin "sonar_layer"[0m
+[0m[ INFO] [1534318329.959632591, 790.384000000]: local_costmap/sonar_layer: ALL as input_sensor_type given[0m
+[0m[ INFO] [1534318329.986146753, 790.404000000]: RangeSensorLayer: subscribed to topic /gobot_pc/sonar_range1[0m
+[0m[ INFO] [1534318330.005249647, 790.421000000]: RangeSensorLayer: subscribed to topic /gobot_pc/sonar_range2[0m
+[0m[ INFO] [1534318330.021900968, 790.431000000]: RangeSensorLayer: subscribed to topic /gobot_pc/sonar_range3[0m
+[0m[ INFO] [1534318330.031044164, 790.438000000]: RangeSensorLayer: subscribed to topic /gobot_pc/sonar_range4[0m
+[0m[ INFO] [1534318330.106698043, 790.491000000]: Using plugin "obstacle_layer"[0m
+[0m[ INFO] [1534318330.148478086, 790.521000000]:     Subscribed to Topics: laser_scan_sensor bumpers frontRight_cliff frontLeft_cliff backRight_cliff backLeft_cliff[0m
+[0m[ INFO] [1534318330.679108134, 790.921000000]: Using plugin "inflation_layer"[0m
+[0m[ INFO] [1534318330.979847672, 791.152000000]: Created local_planner teb_local_plaar_to_base_link-1]: started with pid [6377][0m
+[1mprocess[front_left_sonar_to_base_link-2]: started with pid [6379][0m
+[1mprocess[rear_right_sonar_to_base_link-3]: started with pid [6390][0m
+[1mprocess[rear_left_sonar_to_base_link-4]: started with pid [6403][0m
+[1mprocess[front_right_cliff_to_base_link-5]: started with pid [6423][0m
+[1mprocess[front_left_cliff_to_base_link-6]: started with pid [6439][0m
+[1mprocess[back_right_cliff_to_base_link-7]: started with pid [6451][0m
+[1mprocess[back_left_cliff_to_base_link-8]: started with pid [6459][0m
+[1mprocess[bumpers2pc-9]: started with pid [6470][0m
+[1mprocess[sonars2pc-10]: started with pid [6484][0m
+[1mprocess[cliffs2pc-11]: started with pid [6496][0m
+[1mprocess[slam_gmapping-12]: started with pid [6498][0m
+[1mprocess[scan_startup-13]: started with pid [6544][0m
+[1mprocess[robot_pose_publisher-14]: started with pid [6553][0m
+[1mprocess[move_base-15]: started with pid [6562][0m
+[1mprocess[hector_exploration_node-16]: started with pid [6571][0m
+[1mprocess[scan_function-17]: started with pid [6582][0m
+[1mprocess[move_function-18]: started with pid [6594][0m
+[1mprocess[docking_function-19]: started with pid [6601][0m
+[1mprocess[battery_monitor_function-20]: started with pid [6615][0m
+[1mprocess[nodelet_manager-21]: started with pid [6651][0m
+[1mprocess[velocity_smoother-22]: started with pid [6671][0m
+[velocity_smoother-22] killing on exit
+[battery_monitor_function-20] killing on exit
+[docking_function-19] killing on exit
+[scan_function-17] killing on exit
+[nodelet_manager-21] killing on exit
+[move_function-18] killing on exit
+[hector_exploration_node-16] killing on exit
+[move_base-15] killing on exit
+[robot_pose_publisher-14] killing on exit
+[scan_startup-13] killing on exit
+[slam_gmapping-12] killing on exit
+[cliffs2pc-11] killing on exit
+[sonars2pc-10] killing on exit
+[bumpers2pc-9] killing on exit
+[back_left_cliff_to_base_link-8] killing on exit
+[back_right_cliff_to_base_link-7] killing on exit
+[front_left_cliff_to_base_link-6] killing on exit
+[front_right_cliff_to_base_link-5] killing on exit
+[rear_left_sonar_to_base_link-4] killing on exit
+[rear_right_sonar_to_base_link-3] killing on exit
+[front_left_sonar_to_base_link-2] killing on exit
+[front_right_sonar_to_base_link-1] killing on exit
+shutting down processing monitor...
+... shutting down processing monitor complete
+[1mdone[0m
+[0m[ INFO] [1534318328.590216726, 789.383000000]: waitForService: Service [/gobot_startup/pose_ready] has not been advertised, waiting...[0m
+[0m[ INFO] [1534318332.395987348, 792.241000000]: waitForService: Service [/gobot_startup/pose_ready] is now available.[0m
+[0m[ INFO] [1534318328.591476365, 789.383000000]: waitForService: Service [/gobot_startup/pose_ready] has not been advertised, waiting...[0m
+[0m[ INFO] [1534318332.414544130, 792.250000000]: waitForService: Service [/gobot_startup/pose_ready] is now available.[0m
+[0m[ INFO] [1534318328.585808673, 789.380000000]: waitForService: Service [/gobot_startup/pose_ready] has not been advertised, waiting...[0m
+[0m[ INFO] [1534318332.392977803, 792.237000000]: waitForService: Service [/gobot_startup/pose_ready] is now available.[0m
+[0m[ INFO] [1534318333.206539126, 792.779000000]: (MOVE_IT) play path main running...[0m
+[0m[ INFO] [1534318328.466175255, 789.290000000]: (NAV_STARTUP) Waiting for Robot setting hardware...[0m
+[0m[ INFO] [1534318328.470039952, 789.291000000]: (NAV_STARTUP) Robot setting hardware is ready.[0m
+[0m[ INFO] [1534318328.493073781, 789.312000000]: waitForService: Service [/move_base/clear_costmaps] has not been advertised, waiting...[0m
+[0m[ INFO] [1534318332.306036071, 792.182000000]: waitForService: Service [/move_base/clear_costmaps] is now available.[0m
+[0m[ INFO] [1534318332.322391063, 792.193000000]: (POSE_ESTIMATION) HOME_POSE: pos(36.27,36.03),cov(0.02,0.02,0.02).[0m
+[0m[ INFO] [1534318332.346067063, 792.210000000]: (POSE_ESTIMATION) ROS POSE: pos(-2.42,1.40,2.98), cov(0.01,0.01,0.01).[0m
+[0m[ INFO] [1534318332.358423971, 792.218000000]: (POSE_ESTIMATION) Last POSE: pos(-1.65,1.47),cov(0.02,0.02,0.02).[0m
+[0m[ INFO] [1534318332.358477502, 792.218000000]: (POSE_ESTIMATION) Start finding initial pose...[0m
+[33m[ WARN] [1534318332.358518330, 792.218000000]: (POSE_ESTIMATION) Robot is near the rosparam server pose.[0m
+[0m[ INFO] [1534318327.456880890, 788.509000000]: Subscribed to map topic.[0m
+[0m[ INFO] [1534318327.712861834, 788.718000000]: Received a 2496 X 2496 map @ 0.040 m/pix
+[0m
+[0m[ INFO] [1534318327.927656311, 788.868000000]: Initializing likelihood field model; this can take some time on large maps...[0m
+[0m[ INFO] [1534318328.200730362, 789.069000000]: Done initializing likelihood field model.[0m
+[0m[ INFO] [1534318333.189561702, 792.770000000]: Setting pose (792.770000): 36.275 36.032 0.016[0m
+nner/TebLocalPlannerROS[0m
+[0m[ INFO] [1534318331.411912201, 791.495000000]: Footprint model 'polygon' loaded for trajectory optimization.[0m
+[0m[ INFO] [1534318331.412002331, 791.495000000]: Parallel planning in distinctive topologies enabled.[0m
+[0m[ INFO] [1534318331.572110972, 791.615000000]: Costmap conversion plugin costmap_converter::CostmapToPolygonsDBSMCCH loaded.[0m
+[0m[ INFO] [1534318332.435049489, 792.265000000]: Recovery behavior will clear layer sonar_layer[0m
+[0m[ INFO] [1534318332.435107841, 792.265000000]: Recovery behavior will clear layer obstacle_layer[0m
+[0m[ INFO] [1534318332.674765084, 792.411000000]: Recovery behavior will clear layer sonar_layer[0m
+[0m[ INFO] [1534318332.674904551, 792.411000000]: Recovery behavior will clear layer obstacle_layer[0m
+[0m[ INFO] [1534318332.943779895, 792.594000000]: odom received![0m
+publisher)
+    recovery_allow_teb_back (gobot_recovery/allow_teb_back)
+    recovery_pose_estimation (gobot_recovery/pose_estimation)
+    recovery_startup (gobot_recovery/startup)
+    robot_pose_publisher (robot_pose_publisher/robot_pose_publisher)
+    sonars2pc (gobot_sensors2pc/sonars2pc)
+    velocity_smoother (nodelet/nodelet)
+
+[1mROS_MASTER_URI=http://localhost:11311[0m
+]2;/home/tx/catkin_ws/src/robot_navigation_stack/gobot_navigation/launch/gobot_navigation.launch http://localhost:11311
+core service [/rosout] found
+[1mprocess[map_server-1]: started with pid [17229][0m
+[1mprocess[amcl-2]: started with pid [17230][0m
+[1mprocess[robot_pose_publisher-3]: started with pid [17241][0m
+[1mprocess[move_base-4]: started with pid [17252][0m
+[1mprocess[recovery_allow_teb_back-5]: started with pid [17265][0m
+[1mprocess[recovery_pose_estimation-6]: started with pid [17277][0m
+[1mprocess[recovery_startup-7]: started with pid [17287][0m
+[1mprocess[front_right_sonar_to_base_link-8]: started with pid [17295][0m
+[1mprocess[front_left_sonar_to_base_link-9]: started with pid [17310][0m
+[1mprocess[rear_right_sonar_to_base_link-10]: started with pid [17314][0m
+[1mprocess[rear_left_sonar_to_base_link-11]: started with pid [17324][0m
+[1mprocess[front_right_cliff_to_base_link-12]: started with pid [17348][0m
+[1mprocess[front_left_cliff_to_base_link-13]: started with pid [17364][0m
+[1mprocess[back_right_cliff_to_base_link-14]: started with pid [17368][0m
+[1mprocess[back_left_cliff_to_base_link-15]: started with pid [17378][0m
+[1mprocess[bumpers2pc-16]: started with pid [17392][0m
+[1mprocess[sonars2pc-17]: started with pid [17406][0m
+[1mprocess[cliffs2pc-18]: started with pid [17422][0m
+[1mprocess[move_function-19]: started with pid [17437][0m
+[1mprocess[docking_function-20]: started with pid [17447][0m
+[1mprocess[battery_monitor_function-21]: started with pid [17475][0m
+[1mprocess[nodelet_manager-22]: started with pid [17480][0m
+[1mprocess[velocity_smoother-23]: started with pid [17482][0m
+[velocity_smoother-23] killing on exit
+[nodelet_manager-22] killing on exit
+[docking_function-20] killing on exit
+[cliffs2pc-18] killing on exit
+[move_function-19] killing on exit
+[battery_monitor_function-21] killing on exit
+[bumpers2pc-16] killing on exit
+[back_right_cliff_to_base_link-14] killing on exit
+[sonars2pc-17] killing on exit
+[back_left_cliff_to_base_link-15] killing on exit
+[front_left_cliff_to_base_link-13] killing on exit
+[front_right_cliff_to_base_link-12] killing on exit
+[rear_left_sonar_to_base_link-11] killing on exit
+[rear_right_sonar_to_base_link-10] killing on exit
+[front_left_sonar_to_base_link-9] killing on exit
+[front_right_sonar_to_base_link-8] killing on exit
+[recovery_startup-7] killing on exit
+[recovery_pose_estimation-6] killing on exit
+[recovery_allow_teb_back-5] killing on exit
+[move_base-4] killing on exit
+[robot_pose_publisher-3] killing on exit
+[amcl-2] killing on exit
+[map_server-1] killing on exit
+shutting down processing monitor...
+... shutting down processing monitor complete
+[1mdone[0m

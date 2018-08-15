@@ -12,6 +12,14 @@ std::mutex socketsMutex;
 ros::Publisher teleop_pub, stop_pub;
 ros::Time last_signal_time;
 
+
+bool changeSpeedSrvCb(gobot_msg_srv::SetFloatArray::Request &req, gobot_msg_srv::SetFloatArray::Response &res){
+    speed = req.data[0];
+    turnSpeed = req.data[1];
+
+    return true;
+}
+
 void send_speed(int linear, int angular){
     //if command is stop robot, set teleop to be false
     if(linear == 0 && angular == 0){
@@ -71,7 +79,7 @@ void session(boost::shared_ptr<tcp::socket> sock){
     cancel.stamp = ros::Time::now();
     cancel.id = "map";
     stop_pub.publish(cancel);
-    
+
     while(ros::ok() && sockets.count(ip)){
         char data[max_length];
 
@@ -165,10 +173,18 @@ int main(int argc, char **argv){
 
     /// Subscribe to know when we disconnect from the server
     ros::Subscriber sub = n.subscribe("/gobot_software/server_disconnected", 1, serverDisconnected);
-
+    
     /// Advertise that we are going to publish to /teleop_cmd_vel & /move_base/cancel
     teleop_pub = n.advertise<geometry_msgs::Twist>("/teleop_cmd_vel", 1);
     stop_pub = n.advertise<actionlib_msgs::GoalID>("/move_base/cancel", 1);
+
+    ros::ServiceServer changeSpeedSrv    = n.advertiseService("/gobot_software/change_speed", changeSpeedSrvCb);
+
+    //set the manual control speed
+    gobot_msg_srv::GetStringArray get_speed;
+	ros::service::call("/gobot_status/get_speed",get_speed);
+    speed = std::stod(get_speed.response.data[0]);
+    turnSpeed = (std::stod(get_speed.response.data[1])*3.1415926)/180.0;
 
     ros::Timer signal_timer = n.createTimer(ros::Duration(1.0), timerCallback);
 
