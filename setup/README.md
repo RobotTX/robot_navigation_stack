@@ -3,7 +3,7 @@ install Ubuntu 16.04 LTS using USB drive
 
 #space allocation
 swap=4GB,ext4/boot=2GB,ext4/=20GB,ext4/home=rest
-#####################################################################
+##############################################################
 
 ####################### To install ROS #######################
 install ros-kinetic-desktop (without gazebo)
