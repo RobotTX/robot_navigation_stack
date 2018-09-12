@@ -830,7 +830,7 @@ void initialData(){
 
     n.getParam("battery_log", recordBatteryFile);
 
-    //set sound output device
+    //set sound output device - if speaker is changed, need to change the audio_device parameters accordingly
     std::string audio_device;
     n.getParam("audio_device", audio_device);
     std::string cmd = "pacmd set-default-sink " + audio_device;

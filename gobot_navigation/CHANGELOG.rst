@@ -2,6 +2,10 @@
 Changelog for Developed Mobile Robot - MOBOT
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+1.2.5 (2018-08-16)
+-------------------
+* last date of Tx
+
 1.2.4 (2018-08-15)
 -------------------
 * revise teleop node
